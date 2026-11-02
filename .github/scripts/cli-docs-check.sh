@@ -111,7 +111,7 @@ check() { # <label> <dir> <doc>...
   echo "✅ $label: $(echo "$cmds" | tr '\n' ' ')"
 }
 
-check "brevis"     ./cmd/brevis      docs/COMMANDS.md site/content/pt/docs/08-cli.md site/content/en/docs/08-cli.md
+check "brevis"     ./cmd/brevis      docs/COMMANDS.md
 check "brevis-sdk" ./cmd/brevis-sdk  docs/COMMANDS.md cmd/brevis-sdk/README.md
 
 # THE THIRD BINARY, which this never knew about.
@@ -166,6 +166,6 @@ check_sql() {
   echo "✅ $label: $(echo "$cmds" | tr '\n' ' ')"
 }
 
-check_sql docs/COMMANDS.md site/content/en/docs/21-sql.md site/content/pt/docs/21-sql.md
+check_sql docs/COMMANDS.md
 
 exit $fail

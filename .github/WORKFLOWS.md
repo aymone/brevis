@@ -60,23 +60,17 @@ git tag sdk/v0.52.0
 git push origin sdk/v0.52.0
 ```
 
-### 4. `build-site.yml` — build and deploy the site
-
-Runs on `push` to main and on `pull_request`, when `site/` changes. It validates
-the HTML, the CSS and the links, runs Lighthouse CI on pull requests, and builds
-and pushes the site's Docker image on main.
-
-### 5. `release-notes.yml` — generate the release notes
+### 4. `release-notes.yml` — generate the release notes
 
 Runs on `release`. It extracts the commits since the previous version and
 updates the GitHub Release's body.
 
-### 6. `quality.yml` — code quality
+### 5. `quality.yml` — code quality
 
 Runs on `push` to main and on `pull_request`. gofmt, go vet, and a coverage
 figure with a badge updated on main.
 
-### 7. `dependabot.yml` and `dependabot-auto-merge.yml` — dependency updates
+### 6. `dependabot.yml` and `dependabot-auto-merge.yml` — dependency updates
 
 The same model as the other Zarv repositories. Weekly, Mondays at 09:00 BRT, for
 the seven Go modules, the Python library, the Dockerfiles, docker-compose and
@@ -98,8 +92,8 @@ warns, and the PR waits for a person.
 decides which of the rest run. The repo-wide gates (English language, no tracked
 binary, image pins, writes, Helm, image labels) are the exception: the
 `gates` job has no condition and runs for every change, because each reads files
-outside the module the diff touched. A change under `site/`, `docs/` or a `.md`
-file runs no other job (the site has its own workflow); `gateway/`, `sql/`,
+outside the module the diff touched. A change under `docs/` or a `.md`
+file runs no other job (the website lives in [brevis-sh/website](https://github.com/brevis-sh/website)); `gateway/`, `sql/`,
 `lib/` and `examples/` run the checks that cover them; a change in `sdk/` runs
 the engine's, the gateway's and the examples' too, because they build against
 `../sdk`; the console and the engine (`cmd/`, `internal/`, `web/`, the root
@@ -114,7 +108,6 @@ answer, runs everything. `quality.yml` only runs when `sdk/` changes.
 | `release.yml` | — | — | — | ✅ (`v*`) |
 | `publish-sdk.yml` | — | — | — | ✅ (`sdk/v*`) |
 | [`publish-python.yml`](workflows/publish-python.yml) | a `py/v*` tag | tests on 3.10 and 3.13, refuses a dependency, checks the version against the tag, publishes to PyPI |
-| `build-site.yml` | ✅ (`site/`) | ✅ (`site/`) | — | — |
 | `release-notes.yml` | — | — | ✅ | — |
 | `quality.yml` | ✅ | ✅ | — | — |
 | `dependabot.yml` | — | — | — | weekly |
@@ -128,14 +121,8 @@ Configured under `Settings → Secrets and variables → Actions`.
 |---|---|---|
 | `DOCKERHUB_USERNAME` | `release.yml` | publishing the engine's images |
 | `DOCKERHUB_TOKEN` | `release.yml` | a Docker Hub token with *Read & Write*, never the password |
-| `DOCKER_USERNAME` | `build-site.yml` | publishing the site's image |
-| `DOCKER_PASSWORD` | `build-site.yml` | idem |
 | `GCP_CREDENTIALS` | `test.yml` | the BigQuery and GCS integration. Without it those tests skip, and the job says which ones did not run |
 | — | `test.yml` | Codecov runs without a token (a public repository) and with `fail_ci_if_error: false`, so an outage there does not turn the run red |
-
-The two pairs are different on purpose: the engine's images and the site's
-images go to different repositories, and one credential should not be able to
-publish both.
 
 ## The four gates
 

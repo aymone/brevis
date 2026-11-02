@@ -20,8 +20,6 @@
 #   - CHANGELOG.md and CHANGELOG-motor.md. They record decisions made on a
 #     date, and rewriting a record is not translating a project. New entries
 #     are in English.
-#   - site/. The website is translated for users on purpose: pt-BR, English
-#     and Spanish.
 #   - The MESSAGES in *_test.go, but not their comments. 471 t.Errorf strings
 #     are still Portuguese; nobody outside the project reads them, so they were
 #     left for a sweep of their own rather than mixed into a release. Test
@@ -98,7 +96,7 @@ DESCRIBE = re.compile(r"^func \([^)]*\) Describe\(\) string \{")
 STRING = re.compile(r'"((?:[^"\\]|\\.){6,})"')
 COMENTARIO = re.compile(r"^\s*(//|#|--)\s*(.+)$")
 
-FORA = ("/vendor/", "/node_modules/", "site/", "/.git/", "/testdata/",
+FORA = ("/vendor/", "/node_modules/", "/.git/", "/testdata/",
         "_templ.go", "CHANGELOG.md", "CHANGELOG-motor.md", "NOTES.md")
 EXTS = {".go", ".md", ".yml", ".yaml", ".sh", ".templ"}
 # Makefile and Dockerfile carry operator-facing echoes and have no extension --
