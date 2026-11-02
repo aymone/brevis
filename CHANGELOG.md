@@ -8,9 +8,10 @@ up to 0.87.0). The format follows
 A nested module's tag carries the directory's prefix: `sdk/v0.2.1`.
 
 `sdk/metrics/otelmeter` is a module of its own and versions independently
-(`sdk/metrics/otelmeter/v0.1.0`). It carries the OTLP exporter, and it is
+(`sdk/metrics/otelmeter/v0.2.0`). It carries the OTLP exporter, and it is
 separate precisely so that weight never reaches anybody who does not ask for it
-— see 0.54.0 below.
+— see 0.54.0 below. So does the SDK's CLI, `cmd/brevis-sdk`
+(`cmd/brevis-sdk/v0.1.0`). Their entries are here, under their own names.
 
 The engine has its own: [`CHANGELOG-motor.md`](CHANGELOG-motor.md).
 
@@ -19,13 +20,17 @@ and stay as written: a changelog records what was decided on a date.
 
 ---
 
-## [Unreleased]
+## [otelmeter 0.2.0, brevis-sdk 0.1.0] — 2026-11-02
 
 ### Changed: `otelmeter` and `brevis-sdk` follow the SDK to `brevis.sh`
 
 - `sdk/metrics/otelmeter` is `brevis.sh/brevis/sdk/metrics/otelmeter`, and
-  `cmd/brevis-sdk` is `brevis.sh/brevis/cmd/brevis-sdk`; both require
-  `brevis.sh/brevis/sdk v0.88.0` and are tagged under the new path next.
+  requires `brevis.sh/brevis/sdk v0.88.0`. `v0.2.0` is its first version
+  under the new path; `v0.1.0` stays under
+  `github.com/AreteAcademy/brevis/sdk/metrics/otelmeter`.
+- `cmd/brevis-sdk` is `brevis.sh/brevis/cmd/brevis-sdk`, and requires
+  `brevis.sh/brevis/sdk v0.88.0`. `v0.1.0` is its first tag: until now
+  `go install ...@latest` resolved a pseudo-version of the default branch.
 
 ## [0.88.0] — 2026-11-02
 
