@@ -19,7 +19,7 @@ appVersion: "0.41.0"
 
 home: https://brevis.sh
 sources:
-  - https://github.com/AreteAcademy/brevis
+  - https://github.com/brevis-sh/brevis
 keywords: [orchestration, etl, elt, data, scheduler, dbt]
 maintainers:
   - name: Aretê Academy

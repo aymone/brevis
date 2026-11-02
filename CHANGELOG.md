@@ -336,7 +336,7 @@ through the SDK; the reporter's flush end to end; and their scratch case.
 Against the previous version the last two fail with the issue's own two
 errors.
 
-Reported in [#43](https://github.com/AreteAcademy/brevis/issues/43).
+Reported in [#43](https://github.com/brevis-sh/brevis/issues/43).
 
 ## [0.82.0] — 2026-10-08
 
@@ -492,7 +492,7 @@ the same list.
 ### Fixed: `No such field` on every new table the gateway creates
 
 **A regression in 0.78.0.** Reported on
-[#42](https://github.com/AreteAcademy/brevis/issues/42) after a load test:
+[#42](https://github.com/brevis-sh/brevis/issues/42) after a load test:
 4,500 events, 8 batches, every one dead-lettered, the table at 0 rows.
 
 ```
@@ -560,7 +560,7 @@ declared-against-table check, and `CheckRow` in five drivers.
 ### Fixed: a declared column that arrives `null` no longer refuses the load
 
 **A regression in 0.77.0.** Reported on
-[#42](https://github.com/AreteAcademy/brevis/issues/42#issuecomment-5934850593)
+[#42](https://github.com/brevis-sh/brevis/issues/42#issuecomment-5934850593)
 and reproduced against the published artifact before a line was changed.
 
 A pipeline that lands with a declared schema:
@@ -625,7 +625,7 @@ repository calls it.
 
 ### Fixed: a `null` no longer decides a column's type
 
-Reported in [#42](https://github.com/AreteAcademy/brevis/issues/42), with the
+Reported in [#42](https://github.com/brevis-sh/brevis/issues/42), with the
 measurement that makes it undeniable: over ninety days one field arrived
 `null` 786 times and as an array 62 times.
 
@@ -663,7 +663,7 @@ with the nil is what `Reconcile` exists to refuse.
 
 ### Fixed: `ClusterBy` is checked against what makes the table
 
-Also [#42](https://github.com/AreteAcademy/brevis/issues/42). With a declared
+Also [#42](https://github.com/brevis-sh/brevis/issues/42). With a declared
 `Schema` the table is created by `createFromSchema`, from the Schema — and the
 check read the ROWS, so a first load whose rows omitted the clustering column
 failed twice and logged a misleading warning before succeeding.
@@ -1277,7 +1277,7 @@ old behaviour exactly.
 Tested against floci, which is what the emulator was added for last week — and
 it earned it on the first real bug.
 
-[Issue #34]: https://github.com/AreteAcademy/brevis/issues/34
+[Issue #34]: https://github.com/brevis-sh/brevis/issues/34
 
 ---
 
@@ -4923,35 +4923,35 @@ Primeira versão que compila.
 > versão de `proxy.golang.org`, então ela permanece publicada e quebrada para
 > sempre. Comece pela `v0.1.1`.
 
-[0.24.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.24.0
-[0.23.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.23.0
-[0.22.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.22.0
-[0.21.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.21.1
-[0.21.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.21.0
-[0.20.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.20.0
-[0.19.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.19.0
-[0.18.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.18.0
-[0.17.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.17.1
-[0.17.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.17.0
-[0.16.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.16.0
-[0.15.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.15.0
-[0.14.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.14.0
-[0.13.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.13.0
-[0.12.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.12.1
-[0.12.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.12.0
-[0.11.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.11.0
-[0.10.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.10.1
-[0.10.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.10.0
-[0.9.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.9.1
-[0.9.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.9.0
-[0.8.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.8.0
-[0.7.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.7.0
-[0.6.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.6.0
-[0.5.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.5.0
-[0.4.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.4.1
-[0.4.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.4.0
-[0.3.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.3.0
-[0.2.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.2.1
-[0.2.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.2.0
-[0.1.1]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.1.1
-[0.1.0]: https://github.com/AreteAcademy/brevis/releases/tag/sdk%2Fv0.1.0
+[0.24.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.24.0
+[0.23.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.23.0
+[0.22.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.22.0
+[0.21.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.21.1
+[0.21.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.21.0
+[0.20.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.20.0
+[0.19.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.19.0
+[0.18.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.18.0
+[0.17.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.17.1
+[0.17.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.17.0
+[0.16.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.16.0
+[0.15.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.15.0
+[0.14.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.14.0
+[0.13.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.13.0
+[0.12.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.12.1
+[0.12.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.12.0
+[0.11.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.11.0
+[0.10.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.10.1
+[0.10.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.10.0
+[0.9.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.9.1
+[0.9.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.9.0
+[0.8.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.8.0
+[0.7.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.7.0
+[0.6.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.6.0
+[0.5.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.5.0
+[0.4.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.4.1
+[0.4.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.4.0
+[0.3.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.3.0
+[0.2.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.2.1
+[0.2.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.2.0
+[0.1.1]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.1.1
+[0.1.0]: https://github.com/brevis-sh/brevis/releases/tag/sdk%2Fv0.1.0

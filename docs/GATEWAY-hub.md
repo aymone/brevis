@@ -77,6 +77,6 @@ destination.
 ## Documentation
 
 Full reference, configuration and the reasoning behind each refusal:
-**[docs/GATEWAY.md](https://github.com/AreteAcademy/brevis/blob/master/docs/GATEWAY.md)**
+**[docs/GATEWAY.md](https://github.com/brevis-sh/brevis/blob/master/docs/GATEWAY.md)**
 
 MIT licensed. Built at [Aretê Academy](https://areteacademy.com.br/).

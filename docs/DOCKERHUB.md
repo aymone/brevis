@@ -29,7 +29,7 @@ A full stack — Postgres, the API, the scheduler and a worker — is one compos
 file:
 
 ```bash
-curl -O https://raw.githubusercontent.com/AreteAcademy/brevis/master/examples/quickstart/docker-compose.yml
+curl -O https://raw.githubusercontent.com/brevis-sh/brevis/master/examples/quickstart/docker-compose.yml
 docker compose up -d
 open http://localhost:8080
 ```
@@ -38,7 +38,7 @@ open http://localhost:8080
 
 - **[brevis.sh](https://brevis.sh)** — the website
 - **[Documentation](https://brevis.sh/docs/)** · [Quickstart](https://brevis.sh/docs/quickstart/) · [Kubernetes](https://brevis.sh/docs/kubernetes/)
-- **[GitHub](https://github.com/AreteAcademy/brevis)** — source, issues, discussions
+- **[GitHub](https://github.com/brevis-sh/brevis)** — source, issues, discussions
 - **[Go SDK](https://pkg.go.dev/brevis.sh/brevis/sdk)** — for writing the steps
 
 MIT licensed.

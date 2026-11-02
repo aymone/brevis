@@ -49,6 +49,6 @@ browser is public.
 
 ## Documentation
 
-**[docs/ENDPOINTS.md](https://github.com/AreteAcademy/brevis/blob/master/docs/ENDPOINTS.md)**
+**[docs/ENDPOINTS.md](https://github.com/brevis-sh/brevis/blob/master/docs/ENDPOINTS.md)**
 
 MIT licensed. Built at [Aretê Academy](https://areteacademy.com.br/).

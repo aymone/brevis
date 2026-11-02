@@ -69,7 +69,7 @@ the header is the explicit override for the rare miss.
 
 Models never take a template. An endpoint of `brevis-sql-api`, which exists
 to take parameters, gets a Jinja subset for its shape only -- every value is
-a bound argument. See [ENDPOINTS.md](https://github.com/AreteAcademy/brevis/blob/master/docs/ENDPOINTS.md).
+a bound argument. See [ENDPOINTS.md](https://github.com/brevis-sh/brevis/blob/master/docs/ENDPOINTS.md).
 
 ## A model can process only what is new
 
@@ -173,6 +173,6 @@ jaffle-shop, built by this image on the same seed data dbt used:
 ## Documentation
 
 Source, issues and the full reference:
-<https://github.com/AreteAcademy/brevis>
+<https://github.com/brevis-sh/brevis>
 
 Licence: MIT.

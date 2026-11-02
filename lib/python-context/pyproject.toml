@@ -32,8 +32,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/AreteAcademy/brevis"
-Source = "https://github.com/AreteAcademy/brevis/tree/master/lib/python-context"
+Homepage = "https://github.com/brevis-sh/brevis"
+Source = "https://github.com/brevis-sh/brevis/tree/master/lib/python-context"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/brevis"]

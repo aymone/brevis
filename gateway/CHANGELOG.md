@@ -311,7 +311,7 @@ producer the age exists to rebalance.
 The boot line says which policy is in force, because a connection policy
 nobody can see is one nobody tunes.
 
-Reported in [#44](https://github.com/AreteAcademy/brevis/issues/44), and the
+Reported in [#44](https://github.com/brevis-sh/brevis/issues/44), and the
 proposal is what shipped: `ConnContext` to stamp the accept time, a handler
 wrapper that sets the header once past the limit, and `IdleTimeout` straight
 through.
@@ -401,7 +401,7 @@ merge two fields a producer meant to keep apart.
 
 Measured against a real BigQuery project, by a load job and not only by DML.
 
-Reported in [#43](https://github.com/AreteAcademy/brevis/issues/43).
+Reported in [#43](https://github.com/brevis-sh/brevis/issues/43).
 
 ---
 
@@ -527,7 +527,7 @@ batches on every new table.**
 
 ### `No such field` on a new table with an empty optional field
 
-Reported on [#42](https://github.com/AreteAcademy/brevis/issues/42): a 15
+Reported on [#42](https://github.com/brevis-sh/brevis/issues/42): a 15
 minute load test, 4,500 events, 8 batches, all parked, the table at 0 rows.
 
 A field that is `null` in every event of a batch creates no column — right —
@@ -577,7 +577,7 @@ column `STRING`, so the first array after it refused the batch — stays fixed.
 ## [0.19.0] — 2026-10-01
 
 Requires sdk v0.77.0. All three findings of
-[#42](https://github.com/AreteAcademy/brevis/issues/42).
+[#42](https://github.com/brevis-sh/brevis/issues/42).
 
 ### Fixed: the dead letter no longer inherits the deadline that just expired
 
@@ -919,7 +919,7 @@ built on returned 108k to 166k events/s for the same binary and config. What is
 deterministic: the keyless admission path allocates nothing new, and a keyed
 request costs one or two allocations and 13–24 bytes per event.
 
-[issue #38]: https://github.com/AreteAcademy/brevis/issues/38
+[issue #38]: https://github.com/brevis-sh/brevis/issues/38
 
 ## [0.14.0] — 2026-09-27
 
@@ -1017,7 +1017,7 @@ Fail-open verified by killing Redis mid-run: 40 of 40 events landed, nothing
 held, deliveries returning to the uncoordinated rate. The coordination is lost;
 the data is not.
 
-[issue #36]: https://github.com/AreteAcademy/brevis/issues/36
+[issue #36]: https://github.com/brevis-sh/brevis/issues/36
 
 ---
 
@@ -1059,7 +1059,7 @@ documented value is a bare number. `60s`, `500ms` and `2h` all carry their unit
 naturally, and there a bare number is a mistake worth refusing rather than a
 spelling worth accepting. Say so if the other four should move too.
 
-[issue #35]: https://github.com/AreteAcademy/brevis/issues/35
+[issue #35]: https://github.com/brevis-sh/brevis/issues/35
 
 ---
 
@@ -1111,7 +1111,7 @@ through the fix.
 Verified on a running gateway: the gauge is on the **first** scrape, before any
 event, and reads the second the process logged `listening`.
 
-[issue #33]: https://github.com/AreteAcademy/brevis/issues/33
+[issue #33]: https://github.com/brevis-sh/brevis/issues/33
 
 ---
 
@@ -1181,7 +1181,7 @@ ALTER TABLE `<dataset>.<table>` ADD COLUMN IF NOT EXISTS brevis_received_bytes I
 
 From `0.13.0` on, the gateway does it.
 
-[issue #34]: https://github.com/AreteAcademy/brevis/issues/34
+[issue #34]: https://github.com/brevis-sh/brevis/issues/34
 
 ---
 
@@ -1265,7 +1265,7 @@ silently never hits. Over thirty days it now sends the timestamp.
 Verified against a real Redis and a real memcached: a zero-TTL entry is still
 there after 2.5 seconds, and a one-second entry is gone.
 
-[issue #35]: https://github.com/AreteAcademy/brevis/issues/35
+[issue #35]: https://github.com/brevis-sh/brevis/issues/35
 
 ---
 

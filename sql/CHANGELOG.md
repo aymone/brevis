@@ -472,4 +472,4 @@ brevis-sql and for about half of a real dbt project once SQL functions are
 first-class; it does not hold for dbt packages, 40% of which introspect the
 warehouse. Saying so is better than a half-compatibility nobody can predict.
 
-[#62](https://github.com/AreteAcademy/brevis/issues/62)
+[#62](https://github.com/brevis-sh/brevis/issues/62)

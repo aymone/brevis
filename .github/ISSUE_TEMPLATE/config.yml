@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Usage question
-    url: https://github.com/AreteAcademy/brevis/discussions
+    url: https://github.com/brevis-sh/brevis/discussions
     about: Questions about how to use the SDK or the CLI
   - name: SDK documentation
     url: https://pkg.go.dev/brevis.sh/brevis/sdk

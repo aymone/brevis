@@ -56,7 +56,7 @@ jobs:
             - [SDK Reference](https://pkg.go.dev/brevis.sh/brevis/sdk@${{ steps.version.outputs.version }})
             - [Extract Package](https://pkg.go.dev/brevis.sh/brevis/sdk/extract@${{ steps.version.outputs.version }})
             - [Load Package](https://pkg.go.dev/brevis.sh/brevis/sdk/load@${{ steps.version.outputs.version }})
-            - [Examples](https://github.com/AreteAcademy/brevis/tree/main/examples)
+            - [Examples](https://github.com/brevis-sh/brevis/tree/master/examples)
 
             ## Recent Changes
             ```
@@ -76,6 +76,6 @@ jobs:
             - 📊 Optional metadata: _brevis_* fields for tracking
 
             ---
-            **Powered by [Brevis](https://github.com/AreteAcademy/brevis)**
+            **Powered by [Brevis](https://github.com/brevis-sh/brevis)**
           draft: false
           prerelease: false

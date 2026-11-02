@@ -141,9 +141,9 @@ the top of each script.
 ## Status badges
 
 ```markdown
-[![Tests](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml)
-[![SDK Version](https://img.shields.io/github/v/tag/AreteAcademy/brevis?filter=sdk/*&label=SDK)](https://github.com/AreteAcademy/brevis/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/AreteAcademy/brevis/sdk)](https://goreportcard.com/report/github.com/AreteAcademy/brevis/sdk)
+[![Tests](https://github.com/brevis-sh/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/brevis-sh/brevis/actions/workflows/test.yml)
+[![SDK Version](https://img.shields.io/github/v/tag/brevis-sh/brevis?filter=sdk/*&label=SDK)](https://github.com/brevis-sh/brevis/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/brevis-sh/brevis/sdk)](https://goreportcard.com/report/github.com/brevis-sh/brevis/sdk)
 ```
 
 ## Debugging a red run

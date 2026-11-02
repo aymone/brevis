@@ -10,11 +10,11 @@ Declarative transformation, workflow orchestration, a persistent queue, a
 scheduler and an operational interface — in one binary. Every step runs as its
 own Kubernetes pod, with its own image.
 
-[**Website**](https://brevis.sh) · [**Documentation**](https://brevis.sh/docs/) · [Quickstart](https://brevis.sh/docs/quickstart/) · [SDK](https://pkg.go.dev/brevis.sh/brevis/sdk) · [Discussions](https://github.com/AreteAcademy/brevis/discussions)
+[**Website**](https://brevis.sh) · [**Documentation**](https://brevis.sh/docs/) · [Quickstart](https://brevis.sh/docs/quickstart/) · [SDK](https://pkg.go.dev/brevis.sh/brevis/sdk) · [Discussions](https://github.com/brevis-sh/brevis/discussions)
 
-[![Test & Lint](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml) [![Code Quality](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/AreteAcademy/brevis/sdk.svg)](https://pkg.go.dev/brevis.sh/brevis/sdk)
+[![Test & Lint](https://github.com/brevis-sh/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/brevis-sh/brevis/actions/workflows/test.yml) [![Code Quality](https://github.com/brevis-sh/brevis/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/brevis-sh/brevis/actions/workflows/quality.yml) [![Go Reference](https://pkg.go.dev/badge/brevis.sh/brevis/sdk.svg)](https://pkg.go.dev/brevis.sh/brevis/sdk)
 
-[![engine](https://img.shields.io/github/v/tag/AreteAcademy/brevis?filter=v*&label=engine&color=c7d66d)](https://github.com/AreteAcademy/brevis/releases) [![sdk](https://img.shields.io/github/v/tag/AreteAcademy/brevis?filter=sdk/*&label=sdk&color=c7d66d)](https://github.com/AreteAcademy/brevis/releases) [![PyPI](https://img.shields.io/pypi/v/brevis?label=pypi&color=c7d66d)](https://pypi.org/project/brevis/) [![License: MIT](https://img.shields.io/badge/license-MIT-c7d66d.svg)](LICENSE)
+[![engine](https://img.shields.io/github/v/tag/brevis-sh/brevis?filter=v*&label=engine&color=c7d66d)](https://github.com/brevis-sh/brevis/releases) [![sdk](https://img.shields.io/github/v/tag/brevis-sh/brevis?filter=sdk/*&label=sdk&color=c7d66d)](https://github.com/brevis-sh/brevis/releases) [![PyPI](https://img.shields.io/pypi/v/brevis?label=pypi&color=c7d66d)](https://pypi.org/project/brevis/) [![License: MIT](https://img.shields.io/badge/license-MIT-c7d66d.svg)](LICENSE)
 
 </div>
 
@@ -63,7 +63,7 @@ install and keep alive:
 | **Start here** | [Quickstart](https://brevis.sh/docs/quickstart/) · [Installation](https://brevis.sh/docs/installation/) |
 | **Reference** | [CLI](https://brevis.sh/docs/cli/) · [Workflow YAML](https://brevis.sh/docs/workflows/) · [Configuration](https://brevis.sh/docs/configuration/) |
 | **Writing a step** | [Go SDK](https://brevis.sh/docs/sdk/) · [Python](https://brevis.sh/docs/python/) |
-| **In this repo** | [Documentation index](docs/) · [Contributing](CONTRIBUTING.md) · [What is planned](https://github.com/AreteAcademy/brevis/issues) |
+| **In this repo** | [Documentation index](docs/) · [Contributing](CONTRIBUTING.md) · [What is planned](https://github.com/brevis-sh/brevis/issues) |
 | **For agents** | [llms.txt](https://brevis.sh/llms.txt) — the docs as Markdown |
 
 ## SDK

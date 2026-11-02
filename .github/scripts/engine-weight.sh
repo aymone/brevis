@@ -48,7 +48,7 @@ failed=0
 # exposition this repository writes by hand. This check measures what
 # ./cmd/brevis links, which is the thing that ships.
 for forbidden in \
-  "AreteAcademy/brevis/sdk" \
+  "brevis.sh/brevis/sdk" \
   "cloud.google.com/go/bigquery" \
   "cloud.google.com/go/storage" \
   "aws/aws-sdk-go" \

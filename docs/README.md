@@ -1,7 +1,7 @@
 # docs
 
 Everything here describes the **current state**. What was done is in the git
-history; what is planned is in the [issues](https://github.com/AreteAcademy/brevis/issues).
+history; what is planned is in the [issues](https://github.com/brevis-sh/brevis/issues).
 
 ## SDK
 

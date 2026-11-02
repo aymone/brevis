@@ -19,7 +19,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/AreteAcademy/brevis.git
+    repoURL: https://github.com/brevis-sh/brevis.git
     targetRevision: BREVIS_GIT_REVISION
     path: deployments/helm/brevis
     helm:
