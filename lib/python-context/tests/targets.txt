@@ -25,9 +25,12 @@ valid s3://acme-landing/vendors/2026/report.csv  # a step may name an object; Lo
 valid gs://acme-landing/vendors/
 valid file:///var/data/out/
 valid pubsub://acme-prod/clicks-raw
+valid iceberg://lake/bronze/events
+valid iceberg://lake/bronze.raw/events  # a dotted namespace is one segment
 
 pattern bigquery://acme-prod/bronze/*
 pattern postgres://analytics/raw/*
+pattern iceberg://lake/bronze/*
 
 invalid   # empty
 invalid bigquery  # no scheme separator
@@ -49,3 +52,7 @@ invalid file://relative/path/  # a file target is absolute
 invalid bigquery://acme-prod/bronze/clicks*  # a pattern must be a whole segment
 invalid bigquery://acme-prod/*/clicks  # only the last segment may be a pattern
 invalid s3://acme-landing/*  # object stores take no pattern
+invalid iceberg://lake/events  # a catalog, a namespace and a table: three segments
+invalid iceberg://lake/bronze/events/2026  # too many segments
+invalid iceberg://lake:8181/bronze/events  # a port is an address, not a name
+invalid Iceberg://lake/bronze/events  # scheme not lower-case

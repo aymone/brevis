@@ -17,6 +17,7 @@ wrote and where.
     mysql://{database}/{table}
     s3://{bucket}/{prefix}/     gs://{bucket}/{prefix}/     file:///{dir}/
     pubsub://{project}/{topic}
+    iceberg://{catalog}/{namespace}/{table}
 
 No host, no port, no user, no password. A host moves with a failover, and a
 DSN is the string most likely to carry a credential: a catalog keyed by either
@@ -51,7 +52,7 @@ __all__ = ["LandingError", "check_target", "landed"]
 _EXAMPLE = "bigquery://project/dataset/table"
 
 # Path segments per table scheme; object schemes take a bucket and a prefix.
-_TABLE_SEGMENTS = {"bigquery": 3, "postgres": 3, "redshift": 3, "mysql": 2, "pubsub": 2}
+_TABLE_SEGMENTS = {"bigquery": 3, "postgres": 3, "redshift": 3, "mysql": 2, "pubsub": 2, "iceberg": 3}
 _OBJECT_SCHEMES = {"s3", "gs", "file"}
 _CEILING = 512
 

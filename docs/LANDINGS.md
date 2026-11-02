@@ -28,6 +28,7 @@ is the whole contract, and it is the same in every language. The console's
 | `s3`, `gs` | `s3://{bucket}/{prefix}/` — the prefix written under |
 | `file` | `file:///{absolute dir}/` |
 | `pubsub` | `pubsub://{project}/{topic}` |
+| `iceberg` | `iceberg://{catalog}/{namespace}/{table}` — a dotted namespace is one segment |
 
 **No host, no port, no user, no password.** A host moves with a failover, and a
 DSN is the string most likely to carry a credential: keyed by either, one table
