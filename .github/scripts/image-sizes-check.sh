@@ -19,9 +19,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 repo="brevissh/brevis-gateway"
 version=$(tr -d '[:space:]' < "$root/gateway/VERSION")
-docs=(docs/GATEWAY-hub.md
-      site/content/en/docs/19-ingestion-sinks.md
-      site/content/pt/docs/19-ingestion-sinks.md)
+docs=(docs/GATEWAY-hub.md)
 
 # The size Docker Hub reports for the amd64 image of a tag, in MB with one
 # decimal; empty when the tag is not published.

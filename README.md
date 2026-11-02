@@ -50,8 +50,8 @@ The operational interface is in that same binary — there is no second service 
 install and keep alive:
 
 <p align="center">
-  <a href="https://brevis.sh/#console"><img src="site/assets/console.svg" width="49%" alt="The overview screen: a 94.2 per cent success rate over 344 runs, a bar chart of runs per hour with average duration, a distribution ring, what is in progress, and the next scheduled runs."></a>
-  <a href="https://brevis.sh/#console"><img src="site/assets/console-workflow.svg" width="49%" alt="One workflow: its cron and tags, a form to run it with parameters, its success rate, the DAG with each step's state, and a calendar of a year of runs where each square is a day coloured by that day's worst outcome."></a>
+  <a href="https://brevis.sh/#console"><img src=".github/assets/console.svg" width="49%" alt="The overview screen: a 94.2 per cent success rate over 344 runs, a bar chart of runs per hour with average duration, a distribution ring, what is in progress, and the next scheduled runs."></a>
+  <a href="https://brevis.sh/#console"><img src=".github/assets/console-workflow.svg" width="49%" alt="One workflow: its cron and tags, a form to run it with parameters, its success rate, the DAG with each step's state, and a calendar of a year of runs where each square is a day coloured by that day's worst outcome."></a>
 </p>
 
 <p align="center"><sub>The overview, and one workflow. Four more screens at <a href="https://brevis.sh/#console">brevis.sh</a> — the run list, a single run with its auto params, and projects.</sub></p>

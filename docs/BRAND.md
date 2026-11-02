@@ -54,8 +54,8 @@ systems and dark on others, and a bare mark disappears against one of them.
 
 | file | used by |
 |---|---|
-| [`site/assets/mark.svg`](../site/assets/mark.svg) | the website |
-| [`site/assets/favicon.svg`](../site/assets/favicon.svg) | browser tabs |
+| [`assets/mark.svg`](https://github.com/brevis-sh/website/blob/master/assets/mark.svg) in brevis-sh/website | the website |
+| [`assets/favicon.svg`](https://github.com/brevis-sh/website/blob/master/assets/favicon.svg) in brevis-sh/website | browser tabs |
 | [`web/assets/logo.svg`](../web/assets/logo.svg) | the console, and any client brand |
 
 The three carry the same path. If one changes, all three change.

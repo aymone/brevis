@@ -7,7 +7,7 @@ on:
     branches: [main, master, develop]
 
 jobs:
-  # WHAT THIS CHANGE TOUCHES, so a docs or site change does not wait for the
+  # WHAT THIS CHANGE TOUCHES, so a docs change does not wait for the
   # engine's integration run, and a gateway change does not run the console's
   # tests. Plain `git diff` against the base, no third-party action: the answer
   # is a few lines of shell and the file's own paths are the only input.
@@ -60,7 +60,7 @@ jobs:
               sql/*) sql=true ;;
               lib/*) python=true ;;
               examples/*) examples=true ;;
-              site/*|docs/*|*.md) ;;
+              docs/*|*.md) ;;
               *) engine=true ;;
             esac
           done <<<"${files:-}"

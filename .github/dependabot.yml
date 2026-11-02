@@ -124,20 +124,9 @@ updates:
       pip-minor-and-patch: { applies-to: version-updates, update-types: [minor, patch] }
       security: { applies-to: security-updates, patterns: ["*"] }
 
-  # The engine's image, the site's and the examples'.
+  # The engine's image and the examples'.
   - package-ecosystem: docker
     directory: "/"
-    schedule: { interval: weekly, day: monday, time: "09:00", timezone: America/Sao_Paulo }
-    cooldown: { default-days: 7 }
-    commit-message: { prefix: chore, include: scope }
-    open-pull-requests-limit: 5
-    labels: ["dependencies"]
-    groups:
-      docker: { applies-to: version-updates, patterns: ["*"], update-types: [minor, patch] }
-      security: { applies-to: security-updates, patterns: ["*"] }
-
-  - package-ecosystem: docker
-    directory: "/site"
     schedule: { interval: weekly, day: monday, time: "09:00", timezone: America/Sao_Paulo }
     cooldown: { default-days: 7 }
     commit-message: { prefix: chore, include: scope }

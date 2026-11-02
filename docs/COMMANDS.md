@@ -1,7 +1,7 @@
 # Commands
 
 > **This file is the contributor's reference.** The user-facing one is the
-> website (`site/content/{pt,en}/docs/08-cli.md`), which is translated.
+> website (`content/{pt,en}/docs/08-cli.md` in [brevis-sh/website](https://github.com/brevis-sh/website)), which is translated.
 >
 > Both documented every subcommand and every flag, and they agreed only because
 > both were written from the same `--help`. Nothing kept them agreeing, so
