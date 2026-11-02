@@ -890,6 +890,24 @@ jobs:
           go test ./... -count=1
           echo "✅ the OTel meter builds and passes"
 
+      - name: Build and test sdk/iceberg
+        run: |
+          # The Iceberg destination, a module of its own for the otelmeter's
+          # reason: iceberg-go brings Arrow, 172 packages and 40 MB measured,
+          # and a module-level requirement is not pruned by what a consumer
+          # imports. It requires the PUBLISHED sdk, like otelmeter, so it too
+          # only breaks on a bump.
+          #
+          # CGO_ENABLED=0 is not a preference: it is what every image here is
+          # built with, and iceberg-go is pure Go. A dependency that needed cgo
+          # would fail right here, before it reached a Dockerfile.
+          cd sdk/iceberg
+          start=$(date +%s)
+          CGO_ENABLED=0 go build ./...
+          go vet ./...
+          go test ./... -count=1
+          echo "✅ sdk/iceberg builds and passes in $(( $(date +%s) - start ))s"
+
       - name: Build and test brevis-sql
         run: |
           # Its own module, and it reached master with no CI at all: every job
@@ -958,6 +976,13 @@ jobs:
         with:
           version: v2.13.2
           working-directory: sdk/metrics/otelmeter
+          args: --timeout=5m
+
+      - name: Lint sdk/iceberg
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13.2
+          working-directory: sdk/iceberg
           args: --timeout=5m
 
       # It is a module of its own, and it was never linted: four errcheck
