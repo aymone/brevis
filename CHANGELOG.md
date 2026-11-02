@@ -1,6 +1,7 @@
 # Changelog
 
-The SDK's versions (`github.com/AreteAcademy/brevis/sdk`). The format follows
+The SDK's versions (`brevis.sh/brevis/sdk`; `github.com/AreteAcademy/brevis/sdk`
+up to 0.87.0). The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow
 [SemVer](https://semver.org/).
 
@@ -19,6 +20,28 @@ and stay as written: a changelog records what was decided on a date.
 ---
 
 ## [Unreleased]
+
+## [0.88.0] — 2026-11-02
+
+### Changed: the module is `brevis.sh/brevis/sdk`
+
+- The SDK's module path moves from `github.com/AreteAcademy/brevis/sdk` to
+  **`brevis.sh/brevis/sdk`**, a path on the project's own domain: the
+  repository moved to the `brevis-sh` organization, and a path on the domain
+  does not move with an organization again. `brevis.sh` serves the `go-import`
+  page that points `go get` at `github.com/brevis-sh/brevis`.
+- To upgrade, change the import paths and require the new module:
+
+  ```bash
+  go get brevis.sh/brevis/sdk@v0.88.0
+  # in your code: "github.com/AreteAcademy/brevis/sdk/..." -> "brevis.sh/brevis/sdk/..."
+  ```
+
+  For Go, the two are different modules: a program must not import both, and
+  every package of the SDK moves at once.
+- Every version up to 0.87.0 stays where it is, under the old path, and keeps
+  working; there will be no new one there.
+- The extractor's `User-Agent` names `https://github.com/brevis-sh/brevis`.
 
 ### Fixed: a retried or paged POST sent no body
 
