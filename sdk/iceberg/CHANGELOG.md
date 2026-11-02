@@ -17,6 +17,30 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: integration against Postgres, S3 and a REST catalog, and DuckDB as the oracle
+
+- `integration_test.go` runs the destination against the catalogs it will
+  meet, each test behind its variable and skipped without it: the SQL
+  catalog on Postgres with S3 (`BREVIS_ICEBERG_TEST_PG_DSN`,
+  `BREVIS_ICEBERG_TEST_S3_ENDPOINT`), and REST through
+  `apache/iceberg-rest-fixture` backed by the same S3
+  (`BREVIS_ICEBERG_TEST_REST_URI`). Each one creates the table, replays a
+  batch key and lands nothing, appends a second batch, and has two more
+  writers on connections of their own land every batch: ten snapshots, the
+  record count the sum. The compose file gains the `lake` profile with the
+  fixture; CI runs both tests and fails if either skipped.
+- A reader that is not iceberg-go reads what the destination wrote: the
+  DuckDB CLI, pinned to 2.0.0 as the spike S2 measured, scans the table by
+  its `metadata.json` path and has to find the row count and the
+  `sum(quantity)` the SQL test left for it in `BREVIS_ICEBERG_TEST_ORACLE`.
+  `.github/scripts/iceberg-oracle.sh` refuses to pass without that file,
+  because a green oracle that read nothing is the defect the workflow's own
+  comments warn about.
+- Learned on the way, and now on `Catalog.Name`: in the SQL catalog the
+  Name is also the `catalog_name` the tables are registered under in
+  Postgres, so two processes that share a lake share the Name, and a
+  different Name is a different catalog with no tables in it.
+
 ### Added: the commit, with the batch key and a retry
 
 - Every snapshot this destination writes carries `brevis.batch-key`, the

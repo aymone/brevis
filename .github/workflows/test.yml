@@ -397,6 +397,70 @@ jobs:
           cd sdk
           go test -v -timeout 10m -run Integration ./to/postgres/ ./to/mysql/
 
+      # The Iceberg destination (sdk/iceberg) against the catalogs it will
+      # meet: SQL on the Postgres above with the S3 above, and REST through
+      # the Iceberg project's own fixture, backed by the same S3. Then a
+      # reader that is not iceberg-go -- DuckDB, pinned -- reads what the
+      # destination wrote, because iceberg-go reading its own files proves
+      # consistency and not interoperability. AND EACH STEP CHECKS THAT IT
+      # RAN: the tests skip without their variables, and the oracle refuses
+      # to pass without the file the test leaves for it.
+      - name: Start the Iceberg REST catalog
+        run: |
+          docker compose -f docker-compose.drivers.yml up -d iceberg-rest
+          for i in $(seq 1 60); do
+            if curl -fs -o /dev/null http://localhost:8181/v1/config; then
+              echo "REST catalog up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the Iceberg REST catalog did not start; its test would not have run"
+          docker compose -f docker-compose.drivers.yml logs iceberg-rest
+          exit 1
+
+      - name: Integration - the Iceberg destination
+        env:
+          BREVIS_ICEBERG_TEST_PG_DSN: postgres://brevis:brevis@localhost:55432/brevis_it
+          BREVIS_ICEBERG_TEST_S3_ENDPOINT: http://localhost:9000
+          BREVIS_ICEBERG_TEST_REST_URI: http://localhost:8181
+          BREVIS_ICEBERG_TEST_ORACLE: ${{ runner.temp }}/iceberg-oracle.json
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: brevis
+          AWS_SECRET_ACCESS_KEY: brevis-secret
+        run: |
+          cd sdk/iceberg
+          out=$(go test -v -timeout 10m -run Integration ./... 2>&1) || {
+            echo "$out"; exit 1;
+          }
+          echo "$out"
+          for t in TestIntegrationSQLCatalogOnPostgresWithS3 \
+                   TestIntegrationRESTCatalogWithS3; do
+            if ! echo "$out" | grep -q "^--- PASS: $t "; then
+              echo "::error::$t did not run; its variable did not reach it"
+              exit 1
+            fi
+          done
+
+      # Pinned to the version the spike measured (S2, 2026-11-02), as a
+      # tarball from the release and not through an install script that
+      # would hand us whatever is newest on the morning something breaks.
+      - name: Install the DuckDB CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/duckdb"
+          curl -fsSL https://github.com/duckdb/duckdb/releases/download/v2.0.0/duckdb-cli-linux-amd64.tar.gz \
+            | tar -xz -C "$RUNNER_TEMP/duckdb"
+          "$RUNNER_TEMP/duckdb/duckdb" --version
+
+      - name: The DuckDB oracle reads what the destination wrote
+        env:
+          BREVIS_ICEBERG_TEST_S3_ENDPOINT: http://localhost:9000
+          BREVIS_ICEBERG_TEST_ORACLE: ${{ runner.temp }}/iceberg-oracle.json
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: brevis
+          AWS_SECRET_ACCESS_KEY: brevis-secret
+        run: DUCKDB="$RUNNER_TEMP/duckdb/duckdb" .github/scripts/iceberg-oracle.sh
+
       # brevis-sql's conformance suite, which is the only thing that proves
       # the Postgres dialect BUILDS what its statements say -- the unit tests
       # prove the strings, and a dialect returning the right strings and

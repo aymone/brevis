@@ -43,7 +43,10 @@ const (
 // credential. A refusal names fields, not values.
 type Catalog struct {
 	// Name is the catalog's name in locators and in the cache. Required,
-	// unless Conn is set.
+	// unless Conn is set. In a SQL catalog it is also the catalog_name the
+	// tables are registered under in Postgres: two processes that share a
+	// lake share this Name, and a different Name is a different catalog
+	// with no tables in it.
 	Name string
 
 	// Type is REST or SQL. Required, unless Conn is set.
