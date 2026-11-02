@@ -15,15 +15,12 @@ the versions follow [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.1.0] - 2026-11-02
 
-### Changed: the module path is `brevis.sh/brevis/sdk/iceberg`
-
-- The module follows the repository to brevis.sh (#234, 2026-11-02): its path
-  is `brevis.sh/brevis/sdk/iceberg`, and it requires the published
-  `brevis.sh/brevis/sdk v0.88.0`, the first SDK release under the new path.
-  Nothing else changes; a `go get` of the old path never resolved to a
-  release of this module, since it had none.
+The first release: an append-only Iceberg destination for the SDK, in a
+module of its own, `brevis.sh/brevis/sdk/iceberg`, on the published
+`brevis.sh/brevis/sdk v0.88.0`. Everything below is what it does on day one,
+in the order it was built.
 
 ### Added: the pruning case, and the destination in the SDK's documents
 
@@ -185,9 +182,8 @@ the versions follow [SemVer](https://semver.org/).
   is the serialised document as a `string`. A type outside the table is
   refused naming the column and the type; a schema with no columns is
   refused before it becomes a table with none.
-- The module now requires `github.com/apache/iceberg-go v0.7.0`,
-  `github.com/apache/arrow-go/v18 v18.8.0` and the published
-  `github.com/AreteAcademy/brevis/sdk v0.87.0` (since moved; see the entry on the path).
+- The module requires `github.com/apache/iceberg-go v0.7.0`,
+  `github.com/apache/arrow-go/v18 v18.8.0` and the published SDK.
 
 ### Added: the module
 
