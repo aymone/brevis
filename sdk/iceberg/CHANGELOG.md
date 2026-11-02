@@ -17,6 +17,21 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: the asymmetric reconciliation, as a pure function
+
+- `Reconcile` takes the table's schema, the batch and the write options and
+  gives back the schema `Records` converts with: every table column in the
+  table's order, typed as the consumer declared it when they did and as the
+  table holds it when they did not, required where the table or the
+  declaration says so. The rule is the SDK's 2.8: a field the table does not
+  have is refused naming it, a table column the records do not carry stays
+  null, incompatible types are refused naming the column and both types --
+  the declaration against the table, and the table against what this
+  destination writes -- and a required column no record carries is refused
+  before a Parquet file with an all-null required column exists. A `Columns`
+  entry the Transform chain did not produce is its own refusal, distinct
+  from a table column nobody sent. No catalog, no context.
+
 ### Added: envelopes become Arrow batches, 65,536 rows at a time
 
 - `Records` turns a `Write`'s envelopes into Arrow record batches in the
