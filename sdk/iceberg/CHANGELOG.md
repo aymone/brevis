@@ -17,6 +17,22 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: envelopes become Arrow batches, 65,536 rows at a time
+
+- `Records` turns a `Write`'s envelopes into Arrow record batches in the
+  declared schema's shape, `BatchRows` rows per batch, with one batch alive
+  at a time: a million rows of ten columns go through with the heap under
+  512 MB, and the test measures it. Every value is converted by the column's
+  declared type and nothing else: `int64` takes an integer or an integral
+  float, `numeric` takes plain decimal text with at most nine fractional
+  digits or a number, `timestamp` takes RFC 3339 or a `time.Time`, `date`
+  takes `YYYY-MM-DD` or a `time.Time`'s calendar day, `json` takes a document
+  serialised or already serialised, `bytes` takes `[]byte` or standard
+  base64. A value that does not fit is refused naming the record, the column,
+  the declared type and what arrived; a number into a timestamp is refused
+  rather than guessed between seconds and milliseconds. An absent or null
+  value is null in a column that takes it, and a refusal in a required one.
+
 ### Added: the type map, as two pure functions
 
 - `IcebergSchema` and `ArrowSchema` turn a declared `sdk.Schema` into the

@@ -36,7 +36,7 @@ var types = map[sdk.ColumnType]mapping{
 	sdk.TypeString:    {ice.PrimitiveTypes.String, arrow.BinaryTypes.String},
 	sdk.TypeInt64:     {ice.PrimitiveTypes.Int64, arrow.PrimitiveTypes.Int64},
 	sdk.TypeFloat64:   {ice.PrimitiveTypes.Float64, arrow.PrimitiveTypes.Float64},
-	sdk.TypeNumeric:   {ice.DecimalTypeOf(38, 9), &arrow.Decimal128Type{Precision: 38, Scale: 9}},
+	sdk.TypeNumeric:   {ice.DecimalTypeOf(precision, scale), &arrow.Decimal128Type{Precision: precision, Scale: scale}},
 	sdk.TypeBool:      {ice.PrimitiveTypes.Bool, arrow.FixedWidthTypes.Boolean},
 	sdk.TypeTimestamp: {ice.PrimitiveTypes.TimestampTz, &arrow.TimestampType{Unit: arrow.Microsecond, TimeZone: "UTC"}},
 	sdk.TypeDate:      {ice.PrimitiveTypes.Date, arrow.FixedWidthTypes.Date32},
