@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // Handler serves the three routes the engine calls, and one it does not.

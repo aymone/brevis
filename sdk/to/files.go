@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Files writes records to files, on disk or in object storage.

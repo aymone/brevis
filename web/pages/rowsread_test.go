@@ -3,7 +3,7 @@ package pages
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // ROWS READ COME FROM THE RUN'S STAGES (screen-load-v2 LV2): the landing

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // fakeTopic is the topic, and it exists because the case this driver is built

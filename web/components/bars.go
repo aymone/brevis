@@ -1,9 +1,9 @@
 package components
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
 	"fmt"
-	"github.com/AreteAcademy/brevis/web/i18n"
 	"html"
 	"io"
 

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // The two halves of the return path, set together.

@@ -3,7 +3,7 @@ package postgres
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // Locate and New must name the same table, or the catalog would list one

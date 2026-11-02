@@ -1,19 +1,19 @@
 package pages
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/AreteAcademy/brevis/web/i18n"
 	"github.com/a-h/templ"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/endpointcall"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/endpointcall"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // EndpointsView is Data → Endpoints (screen-endpoints): every published

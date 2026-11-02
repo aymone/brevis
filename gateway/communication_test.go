@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // unauthed is `authed` with no `listen.auth`: the endpoint nobody holds a key to.

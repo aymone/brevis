@@ -21,7 +21,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // ProcessExecutor runs arbitrary commands as host processes.

@@ -7,6 +7,6 @@
 // with a registration between them.
 package main
 
-import "github.com/AreteAcademy/brevis/sql/api"
+import "brevis.sh/brevis/sql/api"
 
 func main() { api.Main(api.NewHooks()) }

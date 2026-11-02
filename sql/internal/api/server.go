@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/api/cache"
-	"github.com/AreteAcademy/brevis/sql/internal/api/render"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/api/cache"
+	"brevis.sh/brevis/sql/internal/api/render"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/generation"
 )
 
 // Server answers the endpoints of one file.

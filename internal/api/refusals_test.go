@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/auth"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/auth"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 var signedIn = auth.Credential{User: "ana", Hash: "$2a$10$notarealhash"}

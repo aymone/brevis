@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // CronText says a schedule in words -- "every day at 04:00" -- for the few

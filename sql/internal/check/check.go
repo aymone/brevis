@@ -18,8 +18,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/model"
 )
 
 // Check is one assertion, ready to run.

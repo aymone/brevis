@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
 )
 
 // shares records what budget each table's sink was handed, and lets a named

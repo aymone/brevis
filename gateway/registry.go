@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // Build is what a sink's constructor is handed.

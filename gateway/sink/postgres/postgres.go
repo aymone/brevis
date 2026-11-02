@@ -7,9 +7,9 @@ package postgres
 import (
 	"context"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 )
 
 // Sink is what the YAML calls this driver.

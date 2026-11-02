@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // optionsAllowing is what an installation that authorized this Secret passes.

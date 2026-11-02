@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	"brevis.sh/brevis/internal/scheduler"
 	"github.com/spf13/cobra"
 )
 

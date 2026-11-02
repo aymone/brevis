@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
-	"github.com/AreteAcademy/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/model"
 )
 
 var pg = postgres.Dialect{}

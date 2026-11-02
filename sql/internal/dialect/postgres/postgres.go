@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/model"
 )
 
 // Dialect is the PostgreSQL half of building a model.

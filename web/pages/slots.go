@@ -3,7 +3,7 @@ package pages
 import (
 	"time"
 
-	sch "github.com/AreteAcademy/brevis/internal/domain/schedule"
+	sch "brevis.sh/brevis/internal/domain/schedule"
 )
 
 // Slot is one past slot of a schedule, and the window it processes: from the

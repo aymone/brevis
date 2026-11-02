@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // persisted waits for the file a finished execution is written to: it is

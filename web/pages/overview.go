@@ -5,8 +5,8 @@ import (
 
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // Window is the span the Overview reads (screen-overview-v2): its key in the

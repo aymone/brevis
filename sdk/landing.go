@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // The landing table's layout: the columns every such table carries, the id

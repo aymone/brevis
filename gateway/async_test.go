@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // The caller does not pay the sink's latency.

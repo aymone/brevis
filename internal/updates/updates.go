@@ -41,7 +41,7 @@ type listed struct {
 // an hour; this uses four a day.
 const Interval = 6 * time.Hour
 
-const releasesURL = "https://api.github.com/repos/AreteAcademy/brevis/releases?per_page=30"
+const releasesURL = "https://api.github.com/repos/brevis-sh/brevis/releases?per_page=30"
 
 // Checker holds the newest release seen.
 type Checker struct {

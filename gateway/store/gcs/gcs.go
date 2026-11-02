@@ -11,8 +11,8 @@ import (
 
 	"cloud.google.com/go/storage"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	gcsstore "github.com/AreteAcademy/brevis/sdk/store/gcs"
+	"brevis.sh/brevis/sdk"
+	gcsstore "brevis.sh/brevis/sdk/store/gcs"
 )
 
 // Scheme is the URL scheme this backend serves.

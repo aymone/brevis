@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // metered is a warehouse whose ESTIMATE and whose BILL can differ, which is

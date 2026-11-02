@@ -13,12 +13,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/notify"
-	"github.com/AreteAcademy/brevis/web/components"
+	"brevis.sh/brevis/internal/alerts"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/notify"
+	"brevis.sh/brevis/web/components"
 )
 
 type alertsFake struct {

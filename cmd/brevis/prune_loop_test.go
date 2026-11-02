@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/config"
+	"brevis.sh/brevis/internal/config"
 )
 
 // Disabled is the default: the loop must return at once and never touch the

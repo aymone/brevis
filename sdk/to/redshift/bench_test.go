@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // BenchmarkEncodeNDJSON stays in the repository because it is what showed the

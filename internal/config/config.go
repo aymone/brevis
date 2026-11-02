@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/auth"
+	"brevis.sh/brevis/internal/auth"
 )
 
 // Config is the immutable state derived from the environment. Everything the

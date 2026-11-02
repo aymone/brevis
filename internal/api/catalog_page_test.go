@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // catalogEntries are destinations whose status does not hang on the minute:

@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // priced is a warehouse that can say what a query would cost, and remembers

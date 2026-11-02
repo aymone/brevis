@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // What a fetcher compares emit's error with is sdk.ErrStopped, so it can tell

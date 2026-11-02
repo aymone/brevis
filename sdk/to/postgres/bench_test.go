@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 )
 
 // BenchmarkPostgresLoad mede a carga contra o servidor de verdade.

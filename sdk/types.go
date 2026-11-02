@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // The shared types live in an internal package so that sdk/extract and

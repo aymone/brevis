@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // A series nobody incremented is absent, not zero.

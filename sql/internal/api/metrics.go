@@ -15,7 +15,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // The exposition is written BY HAND, for `serve`'s reason, measured there:

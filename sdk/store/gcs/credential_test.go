@@ -14,7 +14,7 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/option"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // fakeGCS is a pretend GCS with what matters here: a per-object generation,

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // WHAT A WORKFLOW TALKS TO IS WHAT IT WROTE, recently: the scheme of each

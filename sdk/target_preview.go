@@ -3,7 +3,7 @@ package sdk
 import (
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // targetPreview samples the rows on their way to the destination.

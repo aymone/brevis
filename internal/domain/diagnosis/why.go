@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/run"
 )
 
 // StepAttempt is one attempt of one step, as the engine stored it.

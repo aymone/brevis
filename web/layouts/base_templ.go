@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/AreteAcademy/brevis/internal/auth"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	"github.com/AreteAcademy/brevis/web/assets"
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/auth"
+	"brevis.sh/brevis/internal/branding"
+	"brevis.sh/brevis/web/assets"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // Base is the skeleton of every page.

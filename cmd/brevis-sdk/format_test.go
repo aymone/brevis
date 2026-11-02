@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // The case table for the one decision this CLI got wrong three ways.

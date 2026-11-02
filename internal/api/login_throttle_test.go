@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/auth"
+	"brevis.sh/brevis/internal/auth"
 )
 
 // Concurrent logins beyond the hash slots are refused at once with a 429, and

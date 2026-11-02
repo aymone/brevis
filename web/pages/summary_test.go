@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func fields(pairs ...any) *postgres.WriterConfig {

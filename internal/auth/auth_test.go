@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/auth"
+	"brevis.sh/brevis/internal/auth"
 )
 
 func credential(t *testing.T, user, password string) auth.Credential {

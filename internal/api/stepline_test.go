@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	dom "brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func ms(v int64) *int64 { return &v }

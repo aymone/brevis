@@ -10,12 +10,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/queue"
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	"brevis.sh/brevis/internal/alerts"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/queue"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 // cancelable reads the requests often, and would retry a failure at once:

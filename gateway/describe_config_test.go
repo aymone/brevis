@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 func describeExample(t *testing.T, name string) *gateway.Manifest {

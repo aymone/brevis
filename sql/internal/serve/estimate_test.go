@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 const oneStatement = `{"target":"bigquery://acme-prod/bronze/orders","statement":"SELECT 1"}`

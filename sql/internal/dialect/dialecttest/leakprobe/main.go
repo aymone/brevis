@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/dialecttest"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/dialect/dialecttest"
 )
 
 func main() {

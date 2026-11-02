@@ -6,11 +6,11 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/graph"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/graph"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // StepOutput is one step of the "Step output" section: one per NODE, as the

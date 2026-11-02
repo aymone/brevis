@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/dialecttest"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect/dialecttest"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // The conformance suite, against a real server.

@@ -18,14 +18,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	sch "github.com/AreteAcademy/brevis/internal/domain/schedule"
-	wfdom "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/notify"
-	"github.com/AreteAcademy/brevis/internal/observability/metrics"
-	"github.com/AreteAcademy/brevis/internal/queue"
+	"brevis.sh/brevis/internal/alerts"
+	dom "brevis.sh/brevis/internal/domain/run"
+	sch "brevis.sh/brevis/internal/domain/schedule"
+	wfdom "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/notify"
+	"brevis.sh/brevis/internal/observability/metrics"
+	"brevis.sh/brevis/internal/queue"
 )
 
 // Executar runs a Run. Injected so the dispatcher knows nothing of executors,

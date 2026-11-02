@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 // A GRID THAT CHANGES A NUMBER IS A GRID THAT LIES.

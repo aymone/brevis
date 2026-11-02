@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // Summary is a writer's configuration in one sentence -- a gateway stream's or

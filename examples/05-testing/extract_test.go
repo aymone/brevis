@@ -11,8 +11,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // FetchAndProcess is the kind of function you would actually write: it uses

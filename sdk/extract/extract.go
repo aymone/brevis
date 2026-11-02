@@ -24,7 +24,7 @@ import (
 	"time"
 	"unicode"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // CSV fetches and decodes CSV data from the given source.
@@ -602,7 +602,7 @@ func checkPagination(source core.Source) error {
 // release and that nobody remembers to bump -- and a UA that LIES about the
 // version is worse than one that does not state it. Whoever needs one puts it
 // on their own Header.
-const UserAgent = "brevis-sdk (+https://github.com/AreteAcademy/brevis)"
+const UserAgent = "brevis-sdk (+https://github.com/brevis-sh/brevis)"
 
 // newClient builds the one client the whole walk shares.
 //

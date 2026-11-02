@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // A fake BigQuery, so every rule below is pinned without a credential.

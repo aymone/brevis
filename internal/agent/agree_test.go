@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/local"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/local"
 )
 
 // One step source, two executors, the same published context.

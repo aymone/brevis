@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/metastore/memcached"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/metastore/memcached"
 )
 
 // stalled answers the handshake and nothing else.

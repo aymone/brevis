@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	spec "github.com/AreteAcademy/brevis/internal/application/workflow"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	spec "brevis.sh/brevis/internal/application/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // resolve parses a set of files and expands `uses:` across it, the way both

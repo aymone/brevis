@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/from"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // --- Key e Field ---------------------------------------------------------

@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	frommy "github.com/AreteAcademy/brevis/sdk/from/mysql"
-	tomy "github.com/AreteAcademy/brevis/sdk/to/mysql"
+	frommy "brevis.sh/brevis/sdk/from/mysql"
+	tomy "brevis.sh/brevis/sdk/to/mysql"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // docker compose -f docker-compose.drivers.yml up -d mysql

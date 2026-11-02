@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/run"
 )
 
 var created = time.Date(2026, 10, 15, 4, 0, 0, 0, time.UTC)

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/schedule"
+	"brevis.sh/brevis/internal/domain/schedule"
 )
 
 func sched(cron, tz string) *schedule.Schedule {

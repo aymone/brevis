@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	app "brevis.sh/brevis/internal/application/execution"
+	dom "brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // A SUBSCRIPTION IS READ FROM THE PUBLISHED DOCUMENT, and only from there.

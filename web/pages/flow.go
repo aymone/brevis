@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // Flow is how data reaches a destination, as one writer's configuration

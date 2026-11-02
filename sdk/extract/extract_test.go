@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // TestRetryOn429 verifies retry on rate limit.

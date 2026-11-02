@@ -16,7 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"github.com/AreteAcademy/brevis/migrations"
+	"brevis.sh/brevis/migrations"
 )
 
 // Pool wraps pgxpool. The type exists so the rest of the system depends on

@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/store/s3"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/store/s3"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"

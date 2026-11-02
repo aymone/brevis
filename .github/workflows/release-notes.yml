@@ -49,7 +49,7 @@ jobs:
 
             ## Installation
             ```bash
-            go get github.com/AreteAcademy/brevis/sdk@${{ steps.version.outputs.version }}
+            go get brevis.sh/brevis/sdk@${{ steps.version.outputs.version }}
             ```
 
             ## Documentation
@@ -65,7 +65,7 @@ jobs:
 
             ## Testing
             ```bash
-            go test github.com/AreteAcademy/brevis/sdk/...@${{ steps.version.outputs.version }}
+            go test brevis.sh/brevis/sdk/...@${{ steps.version.outputs.version }}
             ```
 
             ## Features

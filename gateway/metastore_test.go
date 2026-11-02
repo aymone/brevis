@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/metastore/memcached"
-	"github.com/AreteAcademy/brevis/gateway/metastore/redis"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/metastore/memcached"
+	"brevis.sh/brevis/gateway/metastore/redis"
 )
 
 // The three backends have to behave the same, because the code above them does

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 func executor(t *testing.T) *ProcessExecutor {

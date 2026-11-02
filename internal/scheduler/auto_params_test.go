@@ -8,11 +8,11 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	wfdom "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/queue"
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	dom "brevis.sh/brevis/internal/domain/run"
+	wfdom "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/queue"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 // scheduled creates a run for a slot, with a schedule on its definition.

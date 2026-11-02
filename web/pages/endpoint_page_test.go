@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // endpointPageFixture is the endpoints fixture with the fresh table's writer

@@ -8,10 +8,10 @@ import (
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/diagnosis"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/domain/diagnosis"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 func failedRunPage() RunPage {

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/web/i18n"
 )
 
 func everyType() wf.Workflow {

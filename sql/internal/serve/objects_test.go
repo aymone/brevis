@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // lister is a warehouse that can say what it holds, and counts being asked.

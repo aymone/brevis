@@ -21,12 +21,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/graph"
-	"github.com/AreteAcademy/brevis/internal/observability/metrics"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/graph"
+	"brevis.sh/brevis/internal/observability/metrics"
 	"time"
 )
 

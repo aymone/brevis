@@ -47,7 +47,7 @@ import (
 	"strings"
 	"sync"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // EnvURL is where the engine says the context lives. A step declares

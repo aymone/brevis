@@ -59,7 +59,7 @@ for forbidden in \
   "cloud.google.com/go/storage" \
   "google.golang.org/api" \
   "google.golang.org/grpc" \
-  "github.com/AreteAcademy/brevis/sdk/to"
+  "brevis.sh/brevis/sdk/to"
 do
   n="$(echo "$deps" | grep -c "^$forbidden" || true)"
   if [ "$n" != "0" ]; then
@@ -76,7 +76,7 @@ done
 # four lines above forbid. A leaf under `sdk/from/` is a reader and is
 # allowed; `sdk/to/` is a WRITE PATH and is refused twice over -- by weight
 # and by the rule that nothing here writes.
-if echo "$deps" | grep -qx "github.com/AreteAcademy/brevis/sdk"; then
+if echo "$deps" | grep -qx "brevis.sh/brevis/sdk"; then
   echo "::error::brevis-sql compiles the SDK's root package, which is the"
   echo "    pipeline runner and brings every client this file forbids."
   echo "    A reader under sdk/from/<driver> is what this module may share."
@@ -120,7 +120,7 @@ fi
 # pipeline that builds a model, and an HTTP server, a cache and a compressor
 # are weight a build never uses. One import from cmd/brevis-sql would undo
 # the split and every number above would still look fine for a while.
-if echo "$deps" | grep -q "^github.com/AreteAcademy/brevis/sql/internal/api"; then
+if echo "$deps" | grep -q "^brevis.sh/brevis/sql/internal/api"; then
   echo "::error::brevis-sql imports the API's packages (sql/internal/api);"
   echo "    they belong to ./cmd/brevis-sql-api alone."
   failed=1
@@ -140,7 +140,7 @@ for forbidden in \
   "cloud.google.com/go/storage" \
   "google.golang.org/api" \
   "google.golang.org/grpc" \
-  "github.com/AreteAcademy/brevis/sdk/to"
+  "brevis.sh/brevis/sdk/to"
 do
   n="$(echo "$api_deps" | grep -c "^$forbidden" || true)"
   if [ "$n" != "0" ]; then

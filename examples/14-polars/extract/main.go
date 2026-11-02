@@ -12,10 +12,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	bctx "github.com/AreteAcademy/brevis/sdk/context"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to"
+	"brevis.sh/brevis/sdk"
+	bctx "brevis.sh/brevis/sdk/context"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to"
 )
 
 func main() {

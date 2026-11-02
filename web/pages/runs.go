@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // longestDuration is the page's longest run, the scale of its duration bars.

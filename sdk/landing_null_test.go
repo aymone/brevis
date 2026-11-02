@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // A `null` does not decide a column's type, because a null has no shape.

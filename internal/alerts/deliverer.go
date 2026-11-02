@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/notify"
-	"github.com/AreteAcademy/brevis/internal/observability/metrics"
+	"brevis.sh/brevis/internal/notify"
+	"brevis.sh/brevis/internal/observability/metrics"
 )
 
 // Config parameterises the delivery loop.

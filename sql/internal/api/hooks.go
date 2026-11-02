@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/api/render"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/api/render"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // Request is what a before hook sees of one call. Query is the caller's query

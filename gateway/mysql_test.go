@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 	_ "github.com/go-sql-driver/mysql"
 )
 

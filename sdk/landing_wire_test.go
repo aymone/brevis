@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	"brevis.sh/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/load"
 )
 
 // A column declared JSON receives a JSON VALUE, not a string of one.

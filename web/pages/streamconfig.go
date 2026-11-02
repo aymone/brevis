@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // A stream's configuration, explained (screen-streams T4): the settings a

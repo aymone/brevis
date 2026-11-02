@@ -20,12 +20,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/AreteAcademy/brevis/sql/internal/api/cache"
-	"github.com/AreteAcademy/brevis/sql/internal/api/render"
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
-	"github.com/AreteAcademy/brevis/sql/internal/refs"
+	"brevis.sh/brevis/sql/internal/api/cache"
+	"brevis.sh/brevis/sql/internal/api/render"
+	"brevis.sh/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/refs"
 )
 
 // DefaultMaxRows is the row ceiling when the file names none.

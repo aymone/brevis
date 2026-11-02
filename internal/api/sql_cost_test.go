@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
+	"brevis.sh/brevis/internal/api"
 )
 
 // THE COST LINE IS A POST, AND THE REASON IS THE ONE THIS CONSOLE REPEATS.

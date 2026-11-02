@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 func collect(t *testing.T, lines func(func(core.Envelope, error) bool)) []core.Envelope {

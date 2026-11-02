@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // Envelope is what a sink receives, re-exported so an implementation of Sinker

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/to"
+	sdk "brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/to"
 )
 
 // filesDead is a dead letter the way the files sink writes one: to.Files, one

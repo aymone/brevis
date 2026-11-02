@@ -425,6 +425,69 @@ def preencher(tpl, valores):
     return out
 
 
+# ---------------------------------------------------------------- go-import ---
+# Os módulos Go moram em brevis.sh/brevis/... desde 2026-11-02, e não mais em
+# github.com/AreteAcademy/brevis: o caminho não depende do nome de uma
+# organização no GitHub. O `go get` pede https://<caminho do pacote>?go-get=1 e
+# lê a meta go-import, então cada pacote importável ganha uma página aqui.
+#
+# A LISTA SAI DO REPOSITÓRIO, NÃO DE `go list`: o Cloudflare constrói o site sem
+# Go, mas com o repositório inteiro clonado. Um pacote é um diretório com .go
+# que não é de teste, sob o go.mod mais próximo; o caminho é o `module` dele
+# mais o diretório relativo.
+#
+# GO_VCS é o endereço novo do repositório; REPO, acima, ainda é o antigo (os
+# links do site mudam numa mudança à parte) e o GitHub o redireciona.
+GO_PREFIXO = "brevis.sh/brevis"
+GO_VCS = "https://github.com/brevis-sh/brevis"
+
+
+def pacotes_go():
+    """Cada caminho de import sob GO_PREFIXO que um `go get` pode pedir."""
+    repo = RAIZ.parent
+    pula = ("testdata", "node_modules", "vendor")
+
+    def ignorado(rel):
+        return any(p in pula or p.startswith((".", "_")) for p in rel.parts)
+
+    modulos = {}
+    for gomod in repo.rglob("go.mod"):
+        rel = gomod.parent.relative_to(repo)
+        if ignorado(rel):
+            continue
+        m = re.search(r"^module\s+(\S+)", gomod.read_text(encoding="utf-8"), re.M)
+        if m and (m.group(1) == GO_PREFIXO or m.group(1).startswith(GO_PREFIXO + "/")):
+            modulos[gomod.parent] = m.group(1)
+
+    # A raiz e cada módulo, mesmo sem .go próprio: o `go get` confere a página
+    # do prefixo que a meta declara (GO_PREFIXO), e um módulo se resolve pelo
+    # seu caminho.
+    caminhos = {GO_PREFIXO} | set(modulos.values())
+    for raiz_mod, modulo in modulos.items():
+        for d, subdirs, arquivos in os.walk(raiz_mod):
+            d = Path(d)
+            rel = d.relative_to(raiz_mod)
+            # Um diretório com go.mod próprio é outro módulo: ele mesmo responde.
+            subdirs[:] = sorted(x for x in subdirs
+                                if not ignorado(Path(x)) and not (d / x / "go.mod").exists())
+            if any(a.endswith(".go") and not a.endswith("_test.go") for a in arquivos):
+                caminhos.add(modulo if str(rel) == "." else modulo + "/" + rel.as_posix())
+    return sorted(caminhos)
+
+
+def pagina_go(caminho):
+    """A página que o `go get` lê para um pacote, e que manda uma pessoa ao pkg.go.dev."""
+    docs = "https://pkg.go.dev/" + caminho
+    return ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="go-import" content="%s git %s">\n'
+            '<meta name="go-source" content="%s %s %s/tree/master{/dir} %s/blob/master{/dir}/{file}#L{line}">\n'
+            '<meta name="robots" content="noindex">\n'
+            '<meta http-equiv="refresh" content="0; url=%s">\n'
+            '<title>%s</title>\n</head>\n<body><a href="%s">%s</a></body>\n</html>\n'
+            % (GO_PREFIXO, GO_VCS, GO_PREFIXO, GO_VCS, GO_VCS, GO_VCS,
+               html.escape(docs), html.escape(caminho), html.escape(docs), html.escape(caminho)))
+
+
 # ------------------------------------------------------------------ geração ---
 
 def escrever(destino, caminho, conteudo):
@@ -691,6 +754,12 @@ def gerar(destino):
                 "c": re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", corpo_html))[:1400],
             })
 
+    # ---- go-import ----
+    # Fora do sitemap: são para o `go get`, não para quem lê.
+    for caminho in pacotes_go():
+        rel = caminho[len("brevis.sh/"):]
+        escritos.append(escrever(destino, rel + "/index.html", pagina_go(caminho)))
+
     # ---- llms.txt ----
     # Um só, em inglês: é o que um agente espera e o idioma que o repositório
     # adotou. Aponta para o .md das páginas naquele idioma, e diz onde estão as
@@ -902,7 +971,8 @@ def jsonld_doc(lang, s, p):
 SERVIDO = ("index.html", "404.html", "robots.txt", "sitemap.xml",
            "search-index.json", "_headers", "_redirects",
            "llms.txt", "llms-full.txt",
-           "docs", "assets", "css", "js") + tuple(lang for lang in IDIOMAS if lang != PADRAO)
+           "docs", "assets", "css", "js", GO_PREFIXO.split("/", 1)[1]) \
+    + tuple(lang for lang in IDIOMAS if lang != PADRAO)
 
 
 def montar_dist(destino):

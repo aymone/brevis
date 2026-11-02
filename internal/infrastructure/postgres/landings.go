@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	exec "github.com/AreteAcademy/brevis/internal/application/execution"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
+	exec "brevis.sh/brevis/internal/application/execution"
+	dom "brevis.sh/brevis/internal/domain/run"
 )
 
 // RecordLandings keeps what one attempt declared it wrote.

@@ -10,7 +10,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // THE REAL LAYER, and the one floci_test.go has named in a comment since it

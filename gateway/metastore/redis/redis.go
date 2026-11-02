@@ -19,7 +19,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // Name is what the YAML calls this backend.

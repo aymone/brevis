@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // RunsScreen is Runs as one screen (screen-runs): the list as a column, and

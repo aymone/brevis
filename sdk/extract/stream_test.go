@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // A Stream reads the body itself, so DataKey would sit there unwrapping

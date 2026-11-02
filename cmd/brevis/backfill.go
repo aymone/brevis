@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 // backfillReport says which of four things happened.

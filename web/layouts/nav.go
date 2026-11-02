@@ -3,7 +3,7 @@ package layouts
 import (
 	"context"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // section is one place in the sidebar. Tip is what the place is FOR, shown

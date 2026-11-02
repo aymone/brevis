@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/generation"
 )
 
 // writeGenerations records that each model was rebuilt, so the API's cached

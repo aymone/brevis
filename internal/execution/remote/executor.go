@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // Agent is the host's side, as this executor needs it.

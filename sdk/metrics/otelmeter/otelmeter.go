@@ -27,7 +27,7 @@ import (
 	api "go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // secondsBuckets are the boundaries for anything named *_seconds.

@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // One source per value, each carrying its own. Without this the whole feature

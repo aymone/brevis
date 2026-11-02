@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // fonteFalsa entrega N registros, ou falha.

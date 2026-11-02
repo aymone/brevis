@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	app "brevis.sh/brevis/internal/application/execution"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // brevis-sql ON /data, through the real pipe.

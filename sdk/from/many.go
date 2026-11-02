@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Many reads from N sources and delivers everything as a single sequence.

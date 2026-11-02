@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // The hook runs after a load that worked, and gets the Result.

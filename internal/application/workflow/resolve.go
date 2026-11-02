@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	dominio "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	dominio "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // Resolve expands every `uses:` across a set of workflows.

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 func edgeOf(t *testing.T, w wf.Workflow, from, to string) wf.Edge {

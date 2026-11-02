@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/run"
 )
 
 // THE RUN IS NAMED IN THE TOP BAR (screen-run-v2 RV1): the workflow and the

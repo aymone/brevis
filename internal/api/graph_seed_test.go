@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // seedOf is the graph a page embeds in #dag, decoded.

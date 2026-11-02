@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // The commands the converter generates have to RENDER with the real defaults. A

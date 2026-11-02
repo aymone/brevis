@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // One route, N tables, nothing declared — end to end against a real Postgres.

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func loadDay(n int, runs int, rows, bytesOut, extractMs, loadMs int64) postgres.LoadDay {

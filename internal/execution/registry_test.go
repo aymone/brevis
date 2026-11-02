@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 func task(name string) execution.Task {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // THE FOUR NEW KEYS ARE ON DISK, AND ONLY WHEN SET: a param that uses none of

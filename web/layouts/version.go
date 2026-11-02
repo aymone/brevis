@@ -7,7 +7,7 @@ import (
 
 	"github.com/a-h/templ"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 type versionKey struct{}

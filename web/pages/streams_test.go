@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // streamsFixture is the prints' streams, the clicks stream with its note: the

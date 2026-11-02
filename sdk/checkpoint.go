@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/checkpoint"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/checkpoint"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Checkpoint keeps this run's raw extract so that a SECOND ATTEMPT of the same

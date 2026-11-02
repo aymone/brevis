@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 
-	"github.com/AreteAcademy/brevis/migrations"
+	"brevis.sh/brevis/migrations"
 )
 
 // RecentStatesSQL is the query itself, for a test to EXPLAIN (#109).

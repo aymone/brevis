@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 func keepRequest(context.Context, *Request) error          { return nil }

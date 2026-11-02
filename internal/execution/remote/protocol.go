@@ -47,7 +47,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // Protocol is the wire version. It goes in every request, and an agent that

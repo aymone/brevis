@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // rowOf is the table row of a workflow, from <tr to </tr>.

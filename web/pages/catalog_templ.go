@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // Catalog is /data (screen-catalog): every destination the ecosystem wrote,

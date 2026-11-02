@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	tomysql "github.com/AreteAcademy/brevis/sdk/to/mysql"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	tomysql "brevis.sh/brevis/sdk/to/mysql"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 )
 
 // oneRecord is a source that yields exactly the record under test.

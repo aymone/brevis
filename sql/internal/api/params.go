@@ -7,8 +7,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/AreteAcademy/brevis/sql/internal/api/render"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/api/render"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // Param is one query-string parameter an endpoint takes.

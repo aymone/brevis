@@ -7,8 +7,8 @@ import (
 
 	"github.com/a-h/templ"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // capped is the wrapper every screen used to get unless it remembered to ask

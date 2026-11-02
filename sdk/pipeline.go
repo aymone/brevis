@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Pipeline is a whole fetcher as a value. Run takes it from here: flags,

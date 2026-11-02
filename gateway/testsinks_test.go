@@ -1,18 +1,18 @@
 package gateway_test
 
 import (
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/metastore/memcached"
-	"github.com/AreteAcademy/brevis/gateway/metastore/redis"
-	"github.com/AreteAcademy/brevis/gateway/sink/autotable"
-	"github.com/AreteAcademy/brevis/gateway/sink/bigquery"
-	"github.com/AreteAcademy/brevis/gateway/sink/files"
-	"github.com/AreteAcademy/brevis/gateway/sink/mysql"
-	"github.com/AreteAcademy/brevis/gateway/sink/postgres"
-	"github.com/AreteAcademy/brevis/gateway/sink/pubsub"
-	"github.com/AreteAcademy/brevis/gateway/sink/redshift"
-	"github.com/AreteAcademy/brevis/gateway/store/gcs"
-	"github.com/AreteAcademy/brevis/gateway/store/s3"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/metastore/memcached"
+	"brevis.sh/brevis/gateway/metastore/redis"
+	"brevis.sh/brevis/gateway/sink/autotable"
+	"brevis.sh/brevis/gateway/sink/bigquery"
+	"brevis.sh/brevis/gateway/sink/files"
+	"brevis.sh/brevis/gateway/sink/mysql"
+	"brevis.sh/brevis/gateway/sink/postgres"
+	"brevis.sh/brevis/gateway/sink/pubsub"
+	"brevis.sh/brevis/gateway/sink/redshift"
+	"brevis.sh/brevis/gateway/store/gcs"
+	"brevis.sh/brevis/gateway/store/s3"
 )
 
 // everything is what cmd/gateway registers, so the tests exercise the

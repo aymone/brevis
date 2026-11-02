@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/project"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/project"
 )
 
 // Failure is a check that found rows.

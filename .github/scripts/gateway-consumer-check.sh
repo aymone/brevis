@@ -19,9 +19,9 @@ cp -R "$root/gateway" "$work/gateway"
 cd "$work/gateway"
 
 # The one line that makes this a consumer's build.
-go mod edit -dropreplace=github.com/AreteAcademy/brevis/sdk
+go mod edit -dropreplace=brevis.sh/brevis/sdk
 
-sdk_version="$(go list -m -f '{{.Version}}' github.com/AreteAcademy/brevis/sdk)"
+sdk_version="$(go list -m -f '{{.Version}}' brevis.sh/brevis/sdk)"
 echo "building the gateway against the PUBLISHED sdk $sdk_version"
 
 if ! GOFLAGS=-mod=mod go build ./... 2>"$work/err"; then

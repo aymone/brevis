@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 const workflowIndex = "runs_workflow_criado_idx"

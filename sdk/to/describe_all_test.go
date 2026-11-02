@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/to"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
-	"github.com/AreteAcademy/brevis/sdk/to/mysql"
-	"github.com/AreteAcademy/brevis/sdk/to/postgres"
-	"github.com/AreteAcademy/brevis/sdk/to/pubsub"
-	"github.com/AreteAcademy/brevis/sdk/to/redshift"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/to"
+	"brevis.sh/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk/to/mysql"
+	"brevis.sh/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk/to/pubsub"
+	"brevis.sh/brevis/sdk/to/redshift"
 )
 
 // A planted credential, in every place a DSN carries one: the user, the

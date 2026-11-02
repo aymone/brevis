@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Param reads one of the run's parameters.

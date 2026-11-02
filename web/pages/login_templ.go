@@ -9,10 +9,10 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/AreteAcademy/brevis/internal/branding"
-	"github.com/AreteAcademy/brevis/web/assets"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/internal/branding"
+	"brevis.sh/brevis/web/assets"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // LoginData is the sign-in screen's state.

@@ -18,5 +18,5 @@
 //
 // # Module path
 //
-// Published at github.com/AreteAcademy/brevis/sdk
+// Published at brevis.sh/brevis/sdk
 package sdk

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // WHAT BIGQUERY CALLS A STATEMENT, ASKED OF BIGQUERY.

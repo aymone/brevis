@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	app "brevis.sh/brevis/internal/application/execution"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // speakerThatFails prints its lines and then exits non-zero.

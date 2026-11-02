@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
 )
 
 // THE GATEWAY'S OWN UNION. [#43]

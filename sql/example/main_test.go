@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/api"
-	internalapi "github.com/AreteAcademy/brevis/sql/internal/api"
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/api"
+	internalapi "brevis.sh/brevis/sql/internal/api"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 // THE EXAMPLE IS A TEST. A binary somebody copies to start their own, and

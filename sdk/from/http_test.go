@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // from.HTTP is an adapter: it copies its fields into the core.Source extract

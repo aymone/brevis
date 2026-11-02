@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/dialecttest"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/dialect/dialecttest"
 )
 
 // THE SAME SUITE, against a real BigQuery project.

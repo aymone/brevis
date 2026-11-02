@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // ThemeCookie names the visitor's choice of theme.

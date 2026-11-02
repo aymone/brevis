@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // The gateway reads the job off a write's error with the public name. It must

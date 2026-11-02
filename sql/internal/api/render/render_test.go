@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 func mustParse(t *testing.T, dia, src string) *Template {

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // gatewayPage renders a destination whose one writer is a gateway stream with

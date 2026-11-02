@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	rt "github.com/AreteAcademy/brevis/internal/domain/runtimes"
+	rt "brevis.sh/brevis/internal/domain/runtimes"
 )
 
 // Every workflow in the repository, detected, against a written-down answer.

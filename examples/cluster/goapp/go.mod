@@ -8,6 +8,6 @@
 // build's context is this directory alone -- a module with no requirements
 // builds with no network, which is what makes `make cluster-goapp` work on a
 // laptop with the wifi off.
-module github.com/AreteAcademy/brevis/examples/cluster/goapp
+module brevis.sh/brevis/examples/cluster/goapp
 
 go 1.27.0

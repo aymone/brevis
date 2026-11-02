@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/sink/autotable"
-	"github.com/AreteAcademy/brevis/gateway/store/gcs"
-	"github.com/AreteAcademy/brevis/gateway/store/s3"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/sink/autotable"
+	"brevis.sh/brevis/gateway/store/gcs"
+	"brevis.sh/brevis/gateway/store/s3"
 )
 
 // The shipped examples have to load.

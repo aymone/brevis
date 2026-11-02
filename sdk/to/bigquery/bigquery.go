@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	core "brevis.sh/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/load"
 )
 
 // Table writes to a BigQuery table.

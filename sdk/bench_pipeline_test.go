@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // BenchmarkExtractTransform mede o caminho quente inteiro: decodificar a

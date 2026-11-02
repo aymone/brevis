@@ -1,14 +1,14 @@
 package pages
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
-	"github.com/AreteAcademy/brevis/web/i18n"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func kinds(f *Flow) string {

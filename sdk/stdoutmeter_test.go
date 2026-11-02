@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 type buffer struct {

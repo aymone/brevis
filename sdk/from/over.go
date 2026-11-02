@@ -1,7 +1,7 @@
 package from
 
 import (
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Over expands a list of values into one source per value.

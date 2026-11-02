@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

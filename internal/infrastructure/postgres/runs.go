@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/alerts"
+	dom "brevis.sh/brevis/internal/domain/run"
 )
 
 // RunRepo persiste Runs e TaskRuns.

@@ -4,10 +4,10 @@ import (
 	"context"
 	"slices"
 
-	"github.com/AreteAcademy/brevis/internal/domain/runtimes"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/pages"
+	"brevis.sh/brevis/internal/domain/runtimes"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/pages"
 )
 
 // logosShown is how many marks a Runs item carries: what a workflow runs in

@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/events"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/events"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // beforeTheEnds is the last migration before the one that fills in when the

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	spec "github.com/AreteAcademy/brevis/internal/application/workflow"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	spec "brevis.sh/brevis/internal/application/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 func parse(t *testing.T, yaml string) (wf.Workflow, error) {

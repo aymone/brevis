@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // What the COPY names, which is the one part of this path that needs no

@@ -14,7 +14,7 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/googleapi"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Credential keeps the rotated credential in a GCS object.

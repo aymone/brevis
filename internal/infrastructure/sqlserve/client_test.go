@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 func serving(t *testing.T, h http.HandlerFunc) *httptest.Server {

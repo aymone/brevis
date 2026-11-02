@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	core "brevis.sh/brevis/sdk/internal/core"
 	"cloud.google.com/go/bigquery"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
 )
 
 // loadWithMerge stages the batch in a temporary table and MERGEs it into

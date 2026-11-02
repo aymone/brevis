@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // STEP OUTPUT IS A TABLE WHOSE ROWS OPEN (screen-run-v2 RV4): one 34px row per

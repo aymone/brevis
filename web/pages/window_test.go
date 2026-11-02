@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // THE OVERVIEW'S WINDOW COMES FROM THE URL, AND ONLY THREE ARE ACCEPTED

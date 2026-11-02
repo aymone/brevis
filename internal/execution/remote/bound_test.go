@@ -3,7 +3,7 @@ package remote_test
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // An agent says where to come back to, and the engine does not simply believe

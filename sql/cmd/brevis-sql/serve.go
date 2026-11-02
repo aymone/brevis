@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
 	// Named, because the command is also called `serve`: the function is the
 	// verb somebody types and the package is where the rules live.
-	svc "github.com/AreteAcademy/brevis/sql/internal/serve"
+	svc "brevis.sh/brevis/sql/internal/serve"
 )
 
 // serve answers read-only previews over HTTP.

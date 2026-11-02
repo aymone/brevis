@@ -1,6 +1,6 @@
 package autotable
 
-import "github.com/AreteAcademy/brevis/sdk"
+import "brevis.sh/brevis/sdk"
 
 // columns gives each of the record's fields a column of its own.
 //

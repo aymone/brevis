@@ -14,9 +14,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // Endpoints is Data → Endpoints (screen-endpoints): metrics published as an

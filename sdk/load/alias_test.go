@@ -3,7 +3,7 @@ package load
 import (
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // TestDeprecatedNamesStillResolve guards the aliases this package kept.

@@ -1,6 +1,6 @@
 package bigquery
 
-import "github.com/AreteAcademy/brevis/sdk/internal/core"
+import "brevis.sh/brevis/sdk/internal/core"
 
 var _ core.Configured = Table{}
 

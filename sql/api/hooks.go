@@ -1,6 +1,6 @@
 package api
 
-import api "github.com/AreteAcademy/brevis/sql/internal/api"
+import api "brevis.sh/brevis/sql/internal/api"
 
 // ALIASES, NOT COPIES. The server loads and runs these types, so the ones a
 // binary of your own registers are the same types the server calls -- no

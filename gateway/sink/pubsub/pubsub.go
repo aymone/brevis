@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	topubsub "github.com/AreteAcademy/brevis/sdk/to/pubsub"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	topubsub "brevis.sh/brevis/sdk/to/pubsub"
 )
 
 // Sink is what the YAML calls this driver.

@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	bctx "github.com/AreteAcademy/brevis/sdk/context"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	bctx "brevis.sh/brevis/sdk/context"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 )
 
 // discover lists what there is to load and publishes it.

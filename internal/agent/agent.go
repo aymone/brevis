@@ -39,8 +39,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // Options configure one agent.

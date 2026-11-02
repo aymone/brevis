@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // The description belongs BEHIND the question mark, not in the page.

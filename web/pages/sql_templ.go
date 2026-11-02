@@ -9,13 +9,13 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"brevis.sh/brevis/web/assets"
+	"brevis.sh/brevis/web/components"
 	"fmt"
-	"github.com/AreteAcademy/brevis/web/assets"
-	"github.com/AreteAcademy/brevis/web/components"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // editorAssets is the island's load order, and the order is not style: each

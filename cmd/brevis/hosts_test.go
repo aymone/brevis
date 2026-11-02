@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/config"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/config"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // The switch reaches the executor: a flag that parses into a field nobody

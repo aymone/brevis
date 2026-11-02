@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/catalog"
 )
 
 // WriterConfig is how a step's pipeline described itself, ready to store:

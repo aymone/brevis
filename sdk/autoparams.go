@@ -1,6 +1,6 @@
 package sdk
 
-import "github.com/AreteAcademy/brevis/sdk/internal/core"
+import "brevis.sh/brevis/sdk/internal/core"
 
 // AutoParams are what the Brevis engine worked out about this run. Reached
 // through Pipeline.Run.Auto, or through RunContextFromEnv().Auto in a step that

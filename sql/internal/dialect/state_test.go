@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/model"
 )
 
 // Rebuild is DERIVED and never stored, which is the whole reason it is a

@@ -12,7 +12,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/option"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // emulated points the SDK at the fake BigQuery for one test, with an empty

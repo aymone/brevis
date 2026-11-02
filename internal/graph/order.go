@@ -4,7 +4,7 @@ package graph
 import (
 	"fmt"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // Niveis returns the nodes grouped by topological level: everything at level N

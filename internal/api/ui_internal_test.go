@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/pages"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/pages"
 )
 
 func list() []postgres.WorkflowSummary {

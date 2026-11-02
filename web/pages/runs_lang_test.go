@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/alerts"
+	"brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // THE RUNS SCREEN SPEAKS THE READER'S LANGUAGE, ALL OF IT (screen-runs T8):

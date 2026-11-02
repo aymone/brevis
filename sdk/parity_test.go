@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/pycompat"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/pycompat"
 )
 
 // These live in the sdk package because they exercise the SEAM -- KeyWith and

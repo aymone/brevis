@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 // `serve` IS A COMMAND, and the help says so. A command the usage does not

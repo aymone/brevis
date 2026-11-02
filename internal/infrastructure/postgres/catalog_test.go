@@ -7,10 +7,10 @@ import (
 
 	"github.com/google/uuid"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	app "brevis.sh/brevis/internal/application/execution"
+	"brevis.sh/brevis/internal/domain/catalog"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // landAt records one landing for a fresh run of `slug` whose slot was `slot`

@@ -12,7 +12,7 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // TestStagingErrorNamesTheBucketAndTheWayOut: the error the consumer saw was

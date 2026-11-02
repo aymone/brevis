@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 // sqlFixture is a workbench over two BigQuery datasets on one project, a

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 var now = time.Date(2026, 10, 7, 12, 30, 0, 0, time.UTC)

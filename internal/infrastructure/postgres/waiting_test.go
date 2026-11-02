@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/queue"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/queue"
 )
 
 // waitingRun queues one run. claimed puts it in flight the way the claim does

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // paginatorWithMeta serves N pages and says, in the body, whether there is a

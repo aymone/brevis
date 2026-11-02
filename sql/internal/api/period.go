@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 const (

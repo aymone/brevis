@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 var update = flag.Bool("update", false, "rewrite the golden files")

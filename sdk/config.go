@@ -3,7 +3,7 @@ package sdk
 import (
 	"log/slog"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Environment variables the SDK reads. See core for the precedence rules.

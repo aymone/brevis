@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
+	core "brevis.sh/brevis/sdk/internal/core"
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/storage"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
 	"google.golang.org/api/option"
 )
 
@@ -224,7 +224,7 @@ func sourceFormat(format string) (bigquery.DataFormat, error) {
 		return bigquery.JSON, nil
 	case "csv", "parquet":
 		return "", fmt.Errorf("format %q is not implemented in this version: the SDK writes ndjson. "+
-			"Track it at https://github.com/AreteAcademy/brevis/issues", format)
+			"Track it at https://github.com/brevis-sh/brevis/issues", format)
 	default:
 		return "", fmt.Errorf("unknown format %q, want \"ndjson\"", format)
 	}

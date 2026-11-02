@@ -25,8 +25,8 @@ import (
 
 	"github.com/andybalholm/brotli"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/generation"
 )
 
 // KV is the three commands this needs, which generation.Client has.

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // writeReport puts a report for date in dir, written `age` ago.

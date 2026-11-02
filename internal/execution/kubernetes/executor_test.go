@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
-	k8s "github.com/AreteAcademy/brevis/internal/execution/kubernetes"
+	"brevis.sh/brevis/internal/execution"
+	k8s "brevis.sh/brevis/internal/execution/kubernetes"
 )
 
 // fakeAPI stands in for the API server: a sequence of phases, the log and a

@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
+	dom "brevis.sh/brevis/internal/domain/run"
 )
 
 func at(t time.Time) *time.Time { return &t }

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/catalog"
 )
 
 // CatalogEntry is one destination on /data: what wrote it and what it received.

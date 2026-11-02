@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	tobq "github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	tobq "brevis.sh/brevis/sdk/to/bigquery"
 )
 
 // Sink is what the YAML calls this driver.

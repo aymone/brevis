@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/domain/schedule"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/schedule"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // lastLoad is the destination's most recent load across its writers: when,

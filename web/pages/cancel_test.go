@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/run"
 )
 
 func head(t *testing.T, r run.Run) string {

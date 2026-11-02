@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
+	dom "brevis.sh/brevis/internal/domain/run"
 )
 
 // streakSQL counts a workflow's failed runs since its last success. Only

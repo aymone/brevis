@@ -24,10 +24,10 @@
 package main
 
 import (
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/sink/autotable"
-	"github.com/AreteAcademy/brevis/gateway/sink/files"
-	"github.com/AreteAcademy/brevis/gateway/sink/postgres"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/sink/autotable"
+	"brevis.sh/brevis/gateway/sink/files"
+	"brevis.sh/brevis/gateway/sink/postgres"
 )
 
 func main() {

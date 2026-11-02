@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/api"
+	"brevis.sh/brevis/sql/api"
 )
 
 func main() { api.Main(registered()) }

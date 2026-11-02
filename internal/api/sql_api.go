@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
-	"github.com/AreteAcademy/brevis/web/pages"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/web/pages"
 )
 
 // The workbench's two fragment endpoints.

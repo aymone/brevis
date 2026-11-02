@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 // ranFixture is the workbench after a query: two rows, 91.9 MB read, 523 ms.

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/persist"
+	"brevis.sh/brevis/sdk/persist"
 )
 
 // The case that asked for this: 11,276 station codes, 99 KB, twenty-five times

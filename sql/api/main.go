@@ -30,8 +30,8 @@ import (
 	"syscall"
 	"time"
 
-	api "github.com/AreteAcademy/brevis/sql/internal/api"
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	api "brevis.sh/brevis/sql/internal/api"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 // Main is the brevis-sql-api command, serving with hooks. It exits.

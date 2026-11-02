@@ -6,8 +6,8 @@ module testfetcher
 
 go 1.25.0
 
-require github.com/AreteAcademy/brevis/sdk v0.0.0
+require brevis.sh/brevis/sdk v0.0.0
 
 require github.com/google/uuid v1.6.0 // indirect
 
-replace github.com/AreteAcademy/brevis/sdk => ../../../../../sdk
+replace brevis.sh/brevis/sdk => ../../../../../sdk

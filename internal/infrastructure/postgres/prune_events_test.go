@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/events"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func eventsLeft(t *testing.T, pool *postgres.Pool) int {

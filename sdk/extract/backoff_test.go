@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // TestBackoffWithoutJitterDoesNotPanic: rand.Int63n panics on a non-positive

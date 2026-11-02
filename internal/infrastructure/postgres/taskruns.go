@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	exec "github.com/AreteAcademy/brevis/internal/application/execution"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	exec "brevis.sh/brevis/internal/application/execution"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // This file closes a debt left open since PHASE 2: the `task_runs` table existed

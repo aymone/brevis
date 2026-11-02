@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
+	"brevis.sh/brevis/internal/domain/runcontext"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // containerName is fixed: the pod has a single container, and a stable name

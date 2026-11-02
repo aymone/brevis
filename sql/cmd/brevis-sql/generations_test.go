@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/generation"
 )
 
 // A GENERATION THAT CANNOT BE WRITTEN IS A WARNING, NEVER A FAILED BUILD.

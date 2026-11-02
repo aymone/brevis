@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
+	"brevis.sh/brevis/internal/api"
 )
 
 func pageIn(t *testing.T, ui *api.UI, path, cookie, accept string, login bool) string {

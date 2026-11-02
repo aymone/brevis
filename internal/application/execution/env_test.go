@@ -1,10 +1,10 @@
 package execution
 
 import (
-	run "github.com/AreteAcademy/brevis/internal/domain/run"
+	run "brevis.sh/brevis/internal/domain/run"
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // TestTheEnvironmentsPrecedence: weakest to strongest -- the engine's global

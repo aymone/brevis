@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/model"
 )
 
 // Kind is what a relation IS in the warehouse right now.

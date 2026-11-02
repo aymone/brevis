@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	bctx "github.com/AreteAcademy/brevis/sdk/context"
+	bctx "brevis.sh/brevis/sdk/context"
 )
 
 func main() {

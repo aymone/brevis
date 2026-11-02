@@ -5,7 +5,7 @@ import (
 	"iter"
 	"strings"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Stage is one phase between the source and the destination: a Map that

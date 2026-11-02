@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strconv"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/jsontext"
+	"brevis.sh/brevis/sdk/internal/jsontext"
 )
 
 // writeScalar writes the types a JSON record almost always carries, without

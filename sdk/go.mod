@@ -1,4 +1,4 @@
-module github.com/AreteAcademy/brevis/sdk
+module brevis.sh/brevis/sdk
 
 go 1.26.0
 

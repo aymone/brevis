@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
 )
 
 // slowAsk is a table whose question takes a while to answer, and counts how

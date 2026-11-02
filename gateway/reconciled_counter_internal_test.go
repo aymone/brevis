@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
+	sdk "brevis.sh/brevis/sdk"
 )
 
 // okSink takes every batch inside the window.

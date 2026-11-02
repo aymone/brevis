@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // A RERUN STARTS FROM WHAT THE RUN USED (screen-run-v2 RV2): each param the

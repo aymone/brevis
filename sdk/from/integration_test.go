@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
-	"github.com/AreteAcademy/brevis/sdk/store/gcs"
-	"github.com/AreteAcademy/brevis/sdk/store/s3"
-	"github.com/AreteAcademy/brevis/sdk/to"
+	"brevis.sh/brevis/sdk/from"
+	core "brevis.sh/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/store/gcs"
+	"brevis.sh/brevis/sdk/store/s3"
+	"brevis.sh/brevis/sdk/to"
 )
 
 // Os testes de object storage rodam contra o MinIO do

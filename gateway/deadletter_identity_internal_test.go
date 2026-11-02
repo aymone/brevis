@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
+	sdk "brevis.sh/brevis/sdk"
 )
 
 // keyedRefusal refuses every batch and remembers the batch key each write saw

@@ -17,7 +17,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // THE REST ENDPOINT AND NOT THE OFFICIAL CLIENT, and the reason is measured

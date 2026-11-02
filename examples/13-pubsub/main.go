@@ -36,9 +36,9 @@ import (
 
 	gps "cloud.google.com/go/pubsub"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/pubsub"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/pubsub"
 )
 
 const (

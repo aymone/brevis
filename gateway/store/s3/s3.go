@@ -13,8 +13,8 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	s3store "github.com/AreteAcademy/brevis/sdk/store/s3"
+	"brevis.sh/brevis/sdk"
+	s3store "brevis.sh/brevis/sdk/store/s3"
 )
 
 // Scheme is the URL scheme this backend serves.

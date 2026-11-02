@@ -11,7 +11,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // describer is a warehouse that can say what one relation holds.

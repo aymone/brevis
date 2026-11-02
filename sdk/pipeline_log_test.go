@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // fakeTarget is a Writer that returns a result and an error together, which is

@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // readsFake answers the two reads the palette needs; anything else it is asked

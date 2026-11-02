@@ -14,7 +14,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // registers the "mysql" driver
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Query reads the result of a SELECT, one row per record.

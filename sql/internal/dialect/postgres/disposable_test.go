@@ -3,8 +3,8 @@ package postgres_test
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // POSTGRES DOES NOT IMPLEMENT IT, and that is the assertion.

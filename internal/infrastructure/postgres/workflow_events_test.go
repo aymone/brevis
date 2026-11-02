@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func project(t *testing.T, pool *postgres.Pool, slug string) uuid.UUID {

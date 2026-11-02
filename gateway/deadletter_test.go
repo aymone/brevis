@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // A sink that refuses must not lose the events, and before this the refusal was

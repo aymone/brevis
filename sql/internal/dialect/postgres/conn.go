@@ -9,9 +9,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	sdkpg "github.com/AreteAcademy/brevis/sdk/from/postgres"
+	sdkpg "brevis.sh/brevis/sdk/from/postgres"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // Open connects.

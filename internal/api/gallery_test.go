@@ -1,7 +1,7 @@
 package api_test
 
 import (
-	"github.com/AreteAcademy/brevis/web/components"
+	"brevis.sh/brevis/web/components"
 	"net/http"
 	"strings"
 	"testing"

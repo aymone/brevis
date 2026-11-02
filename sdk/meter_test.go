@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // recorder is the whole implementation surface a consumer has to write, which

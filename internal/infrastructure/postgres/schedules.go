@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/internal/domain/events"
-	sch "github.com/AreteAcademy/brevis/internal/domain/schedule"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/domain/events"
+	sch "brevis.sh/brevis/internal/domain/schedule"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // WorkflowRepo persiste a definicao publicada de um workflow.

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // THE LAST N RUNS OF EACH WORKFLOW ON A PAGE, IN ONE QUERY: oldest to newest,

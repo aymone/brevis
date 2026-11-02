@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	app "brevis.sh/brevis/internal/application/execution"
+	dom "brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // sdkSpeaker is a step that speaks the way the SDK speaks: one marked line

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // A process that dies between creating a run and enqueueing it must not lose

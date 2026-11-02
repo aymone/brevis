@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/model"
-	"github.com/AreteAcademy/brevis/sql/internal/refs"
+	"brevis.sh/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/refs"
 )
 
 // Project is every model under a root, with the edges between them.

@@ -6,10 +6,10 @@ import (
 
 	"github.com/google/uuid"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/queue"
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/queue"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 // Every way a run is made carries the group, or the claim cannot hold it.

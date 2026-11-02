@@ -228,7 +228,7 @@ func SDKVersion() string {
 	}
 }
 
-const modulePath = "github.com/AreteAcademy/brevis/sdk"
+const modulePath = "brevis.sh/brevis/sdk"
 
 // sourceNumbers is what the source phase produced, plus WHICH source it was.
 //

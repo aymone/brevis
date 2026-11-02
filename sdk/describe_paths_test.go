@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to"
-	"github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to"
+	"brevis.sh/brevis/sdk/to/postgres"
 )
 
 // describedValues is a pipeline's description, by path, as the engine reads

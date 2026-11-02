@@ -1,10 +1,10 @@
-module github.com/AreteAcademy/brevis/examples
+module brevis.sh/brevis/examples
 
 go 1.26.0
 
 require (
 	cloud.google.com/go/pubsub v1.51.1
-	github.com/AreteAcademy/brevis/sdk v0.10.0
+	brevis.sh/brevis/sdk v0.10.0
 	github.com/jackc/pgx/v5 v5.12.0
 )
 
@@ -80,4 +80,4 @@ require (
 
 // Examples are a gate on the working tree, not a consumer of the release:
 // CI builds them against ../sdk so a breaking change shows up here first.
-replace github.com/AreteAcademy/brevis/sdk => ../sdk
+replace brevis.sh/brevis/sdk => ../sdk

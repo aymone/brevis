@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	"github.com/AreteAcademy/brevis/internal/domain/runtimes"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	"brevis.sh/brevis/internal/domain/runtimes"
 )
 
 // Kind distinguishes how the graph was declared. `chain` is syntactic sugar:

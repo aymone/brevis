@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // slowJobSink is a BigQuery-like sink whose load job outlives the send window:

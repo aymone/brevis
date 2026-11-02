@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 // sqlFake is a `brevis-sql serve` that remembers what it was sent.

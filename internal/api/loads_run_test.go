@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // loadsRunUI is loadCatalog's console with the workflows' definitions --

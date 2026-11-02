@@ -3,7 +3,7 @@ package catalog_test
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/catalog"
 )
 
 // THE TARGETS brevis-sql EMITS, CHECKED HERE because they cannot be checked

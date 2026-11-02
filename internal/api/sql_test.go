@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
 )
 
 // runSQL submits the workbench's form, the way a browser does.

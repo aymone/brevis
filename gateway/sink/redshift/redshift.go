@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	toredshift "github.com/AreteAcademy/brevis/sdk/to/redshift"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	toredshift "brevis.sh/brevis/sdk/to/redshift"
 )
 
 // Sink is what the YAML calls this driver.

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/jsontext"
+	"brevis.sh/brevis/sdk/internal/jsontext"
 )
 
 // CanonicalJSON serializes the record the way Python serializes it in

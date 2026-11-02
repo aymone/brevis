@@ -20,9 +20,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 func main() {

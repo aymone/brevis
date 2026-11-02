@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution/local"
-	"github.com/AreteAcademy/brevis/internal/observability/metrics"
+	app "brevis.sh/brevis/internal/application/execution"
+	"brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution/local"
+	"brevis.sh/brevis/internal/observability/metrics"
 )
 
 // The acceptance criterion: THREE languages, one run, real processes.

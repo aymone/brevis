@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
 )
 
 // This sink declares with Schema and NEVER with Columns, and that is the fact

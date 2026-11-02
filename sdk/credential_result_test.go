@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // TestResultCarriesTheCredentialsExpiry: the expiry warning has to reach the

@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // status is how one state looks: the shape its mark is drawn in (a class

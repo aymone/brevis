@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	rc "github.com/AreteAcademy/brevis/internal/domain/runcontext"
+	rc "brevis.sh/brevis/internal/domain/runcontext"
 )
 
 // The pipeline the request described: extract, transform, load.

@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/AreteAcademy/brevis/sdk/extract"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/extract"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 var (

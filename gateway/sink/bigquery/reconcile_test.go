@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
 )
 
 // The BigQuery sink is the one whose writes outlive the call: a load job keeps

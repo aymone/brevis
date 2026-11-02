@@ -9,8 +9,8 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // Gallery is every component the screens are built from, with sample data:

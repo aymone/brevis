@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	core "brevis.sh/brevis/sdk/internal/core"
 	"cloud.google.com/go/bigquery"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
 )
 
 // The EMULATED layer: does the driver speak BigQuery's protocol?

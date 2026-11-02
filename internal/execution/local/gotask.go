@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // GoExecutor roda tasks Go registradas, dentro do proprio processo.

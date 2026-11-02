@@ -23,13 +23,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/check"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
-	"github.com/AreteAcademy/brevis/sql/internal/generation"
-	"github.com/AreteAcademy/brevis/sql/internal/project"
-	runner "github.com/AreteAcademy/brevis/sql/internal/run"
+	"brevis.sh/brevis/sql/internal/check"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/generation"
+	"brevis.sh/brevis/sql/internal/project"
+	runner "brevis.sh/brevis/sql/internal/run"
 )
 
 // dialects is every warehouse this binary can build against.

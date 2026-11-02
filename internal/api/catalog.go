@@ -7,11 +7,11 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/web/layouts"
 
-	"github.com/AreteAcademy/brevis/web/pages"
+	"brevis.sh/brevis/web/pages"
 )
 
 // catalogPage is /data (screen-catalog): every destination, worst first,

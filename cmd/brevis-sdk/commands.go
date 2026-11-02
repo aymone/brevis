@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/load"
 	"github.com/spf13/cobra"
 )
 

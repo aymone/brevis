@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // WHAT A WRITE ANSWERS, ASKED OF POSTGRES.

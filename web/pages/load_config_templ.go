@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // loadConfiguration is a step's configuration on its load's page, in tabs

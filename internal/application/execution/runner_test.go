@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/local"
+	app "brevis.sh/brevis/internal/application/execution"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/local"
 )
 
 type coletor struct {

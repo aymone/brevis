@@ -16,7 +16,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
+	sdk "brevis.sh/brevis/sdk"
 )
 
 // THE DEAD LETTER, READ BACK (#86).

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/notify"
+	"brevis.sh/brevis/internal/notify"
 )
 
 func sendReport(t *testing.T, r notify.Report) string {

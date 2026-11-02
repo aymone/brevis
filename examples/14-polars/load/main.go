@@ -13,10 +13,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	bctx "github.com/AreteAcademy/brevis/sdk/context"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	bctx "brevis.sh/brevis/sdk/context"
+	"brevis.sh/brevis/sdk/from"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 
 	"github.com/jackc/pgx/v5"
 )

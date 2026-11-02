@@ -3,7 +3,7 @@ package postgres
 import (
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 var _ core.Configured = Table{}

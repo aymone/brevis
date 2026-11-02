@@ -88,8 +88,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/observability"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/observability"
 )
 
 func main() {

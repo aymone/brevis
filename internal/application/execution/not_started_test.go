@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/AreteAcademy/brevis/internal/application/execution"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	app "brevis.sh/brevis/internal/application/execution"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // fates is an executor that gives each node the outcome the test names:

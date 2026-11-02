@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/to/postgres"
 )
 
 // The three invariants of §14 of SDK_DECISIONS, as tests.

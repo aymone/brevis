@@ -3,7 +3,7 @@ package sdk
 import (
 	"fmt"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Expander turns one decoded document into the records it contains.

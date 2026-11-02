@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // A CALLER THAT HANGS UP DOES NOT FAIL THE OTHERS waiting on the same key.

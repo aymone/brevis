@@ -6,7 +6,7 @@ import (
 
 	gomysql "github.com/go-sql-driver/mysql"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 var _ core.Configured = Query{}

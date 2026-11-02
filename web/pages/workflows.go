@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // RecentRuns is how many of a workflow's last runs its row draws.

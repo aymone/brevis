@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
-	"github.com/AreteAcademy/brevis/sql/internal/project"
-	"github.com/AreteAcademy/brevis/sql/internal/run"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/project"
+	"brevis.sh/brevis/sql/internal/run"
 )
 
 // FIFTY MODELS ON A REAL POSTGRES, UNDER TEN SECONDS. #62's acceptance

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	api "github.com/AreteAcademy/brevis/sql/internal/api"
+	api "brevis.sh/brevis/sql/internal/api"
 )
 
 func example(t *testing.T, name string) string {

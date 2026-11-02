@@ -15,7 +15,7 @@
 # by them.
 set -euo pipefail
 
-MODULO="github.com/AreteAcademy/brevis/sdk"
+MODULO="brevis.sh/brevis/sdk"
 VERSION="${1:?usage: consumer-check.sh <version|local>}"
 TREE="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../sdk" && pwd)}"
 

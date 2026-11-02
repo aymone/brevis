@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func groupedWorkflow(slug, group string, limit int) wf.Workflow {

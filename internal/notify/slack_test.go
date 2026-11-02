@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/notify"
+	"brevis.sh/brevis/internal/notify"
 )
 
 func capture(t *testing.T, status int, response string) (*notify.Slack, *string) {

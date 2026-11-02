@@ -9,8 +9,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/events"
 )
 
 // GatewayRepo stores what gateways were published with.

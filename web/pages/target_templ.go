@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"fmt"
 
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // configurations is how each writer of this destination is configured: its

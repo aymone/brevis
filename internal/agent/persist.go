@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // A finished execution outlives the process that ran it (#137).

@@ -3,7 +3,7 @@ package catalog
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/schedule"
+	"brevis.sh/brevis/internal/domain/schedule"
 )
 
 // Status is how a destination stands against its writer's schedule.

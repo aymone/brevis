@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
+	"brevis.sh/brevis/internal/agent"
 )
 
 // A kubelet sends no Authorization header, ever.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // paddedJWT imitates a NextAuth token: base64 with "=" padding, which is the

@@ -7,9 +7,9 @@ package mysql
 import (
 	"context"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	tomysql "github.com/AreteAcademy/brevis/sdk/to/mysql"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	tomysql "brevis.sh/brevis/sdk/to/mysql"
 )
 
 // Sink is what the YAML calls this driver.

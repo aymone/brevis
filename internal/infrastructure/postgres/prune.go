@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
+	dom "brevis.sh/brevis/internal/domain/run"
 )
 
 // Retention has TWO levels, because the cost and the meaning are not in the

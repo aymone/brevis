@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func mf(path string, v any) catalog.ManifestField { return catalog.ManifestField{Path: path, Value: v} }

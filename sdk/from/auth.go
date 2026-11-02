@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Credential is how an HTTP source authenticates, and what the SDK does to

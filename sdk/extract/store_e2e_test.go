@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // TestTheSecondRunUsesWhatCameFromTheVolume e a prova do §7.13 da spec: rodar

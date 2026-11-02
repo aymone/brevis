@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // THE DRY RUN AGAINST REAL BIGQUERY, because the whole cost ceiling rests on

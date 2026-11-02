@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	sch "github.com/AreteAcademy/brevis/internal/domain/schedule"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/queue"
+	dom "brevis.sh/brevis/internal/domain/run"
+	sch "brevis.sh/brevis/internal/domain/schedule"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/queue"
 )
 
 // Scheduler materialises slots into Runs and enqueues them.

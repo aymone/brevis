@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
+	"brevis.sh/brevis/internal/agent"
 )
 
 // What `ps` reports is whole seconds -- and on Linux it is the boot time plus

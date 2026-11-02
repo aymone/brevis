@@ -12,7 +12,7 @@ import (
 
 	gomysql "github.com/go-sql-driver/mysql" // also registers the "mysql" driver
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Table loads records into a MySQL table.

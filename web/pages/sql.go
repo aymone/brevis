@@ -6,11 +6,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/sqlserve"
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // SQLView is the workbench.

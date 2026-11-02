@@ -1,6 +1,6 @@
 package sdk
 
-import "github.com/AreteAcademy/brevis/sdk/internal/core"
+import "brevis.sh/brevis/sdk/internal/core"
 
 // checkRowForTest runs the check every driver runs, over one row.
 //

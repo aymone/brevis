@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func csvPontoEVirgula() []byte {

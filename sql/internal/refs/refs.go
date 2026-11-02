@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/sqltok"
+	"brevis.sh/brevis/sql/internal/sqltok"
 )
 
 // Of lists the relations a query reads, in the order they appear.

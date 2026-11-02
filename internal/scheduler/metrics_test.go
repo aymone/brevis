@@ -10,11 +10,11 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/internal/observability/metrics"
-	"github.com/AreteAcademy/brevis/internal/queue"
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/observability/metrics"
+	"brevis.sh/brevis/internal/queue"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 func scrapeOf(t *testing.T, m *metrics.Metrics) string {

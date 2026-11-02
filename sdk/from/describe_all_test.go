@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/from/mysql"
-	"github.com/AreteAcademy/brevis/sdk/from/postgres"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from/mysql"
+	"brevis.sh/brevis/sdk/from/postgres"
 )
 
 // A credential planted everywhere a source carries one: in the URL's user and

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // API is what the executor needs from the server. An interface in the consumer:

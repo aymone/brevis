@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	evkind "github.com/AreteAcademy/brevis/internal/domain/events"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	evkind "brevis.sh/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // FeedShown is how many events the Overview's log draws: the last hours of a

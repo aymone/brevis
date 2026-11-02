@@ -25,9 +25,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"gopkg.in/yaml.v3"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/bigquery"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/bigquery"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // Connection is one declared warehouse.

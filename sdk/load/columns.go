@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // checkDeclaredAgainstTable confirms the declaration describes the table that

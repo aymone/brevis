@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/catalog"
 )
 
 // Landing is one destination a step wrote, as the step declared it:

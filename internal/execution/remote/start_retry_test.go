@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // fast keeps the retry tests in milliseconds; the shape is what is tested.

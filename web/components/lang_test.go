@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 	"github.com/a-h/templ"
 )
 

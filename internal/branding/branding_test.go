@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/branding"
+	"brevis.sh/brevis/internal/branding"
 )
 
 func writeFile(t *testing.T, conteudo string) string {

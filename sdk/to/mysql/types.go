@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // toColumn converts the record's value into what the driver accepts.

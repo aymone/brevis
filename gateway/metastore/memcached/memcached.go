@@ -20,7 +20,7 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // Name is what the YAML calls this backend.

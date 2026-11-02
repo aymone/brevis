@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/sqltok"
+	"brevis.sh/brevis/sql/internal/sqltok"
 )
 
 // ReadOnly refuses any statement that is not a single query.

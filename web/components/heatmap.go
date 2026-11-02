@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // The calendar's geometry (screen-workflows T7): a 12px square and a 3px gap,

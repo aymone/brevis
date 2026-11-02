@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
+	sdk "brevis.sh/brevis/sdk"
 )
 
 // takes is the destination of a resend: it records what it was sent and under

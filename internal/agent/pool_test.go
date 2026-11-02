@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // A pool of agents behind one address, which is what "one Deployment with an

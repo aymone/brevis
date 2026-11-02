@@ -3,8 +3,8 @@ package bigquery
 import (
 	"context"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	"brevis.sh/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/load"
 )
 
 // CheckDestination satisfies core.DestinationChecker.

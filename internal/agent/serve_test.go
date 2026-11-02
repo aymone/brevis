@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
+	"brevis.sh/brevis/internal/agent"
 )
 
 // served is an agent on a real listener, run by Serve the way main runs it.

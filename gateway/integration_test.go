@@ -16,8 +16,8 @@ import (
 	// major the SDK driver imports (sdk/go.mod pins v1.30.0). A test that
 	// published with one client and read with another would be exercising a
 	// combination that never ships. It moves when the driver moves.
+	"brevis.sh/brevis/gateway"
 	"cloud.google.com/go/pubsub" //nolint:staticcheck
-	"github.com/AreteAcademy/brevis/gateway"
 )
 
 // The whole path, against a real emulator: POST → hook → identity → batch →

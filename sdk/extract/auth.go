@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // defaultWarnAfter is when an unconfigured WarnAfter starts warning. A week is

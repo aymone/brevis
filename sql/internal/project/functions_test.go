@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/project"
+	"brevis.sh/brevis/sql/internal/project"
 )
 
 // A FUNCTION IS NOT A MODEL. `functions/<schema>/<name>.sql` holds a

@@ -3,7 +3,7 @@ package api_test
 import (
 	"os"
 
-	"github.com/AreteAcademy/brevis/internal/api"
+	"brevis.sh/brevis/internal/api"
 	"regexp"
 	"strings"
 	"testing"

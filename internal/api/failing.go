@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // CachedFailing keeps r's answer for ttl. The badge is drawn on every page,

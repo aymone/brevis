@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/to"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/to"
 )
 
 // Sink is what the YAML calls this driver.

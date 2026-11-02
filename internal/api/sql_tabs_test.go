@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
+	"brevis.sh/brevis/internal/api"
 )
 
 // TABS ARE AN ENHANCEMENT, SO THEY ARRIVE HIDDEN.

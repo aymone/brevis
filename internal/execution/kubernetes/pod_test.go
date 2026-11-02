@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
-	k8s "github.com/AreteAcademy/brevis/internal/execution/kubernetes"
+	"brevis.sh/brevis/internal/execution"
+	k8s "brevis.sh/brevis/internal/execution/kubernetes"
 )
 
 func task() execution.TaskExec {

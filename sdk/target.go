@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Target says where records land, and what every destination honours.

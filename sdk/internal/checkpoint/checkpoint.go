@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // The names below are the ON-DISK FORMAT, and they stay in Portuguese on

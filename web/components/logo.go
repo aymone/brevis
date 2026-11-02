@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/AreteAcademy/brevis/web/i18n"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // The marks of the things Brevis connects to and the languages a step runs

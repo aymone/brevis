@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // #130: Start checked the id under the lock, let the lock go, set the step up

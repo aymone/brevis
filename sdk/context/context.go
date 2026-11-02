@@ -1,6 +1,6 @@
 // Package context is what one step tells the next.
 //
-//	import bctx "github.com/AreteAcademy/brevis/sdk/context"
+//	import bctx "brevis.sh/brevis/sdk/context"
 //
 //	bucket, err := bctx.String("extract.bucket")
 //	err = bctx.Set("rows", 48213)

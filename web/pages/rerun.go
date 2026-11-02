@@ -1,14 +1,14 @@
 package pages
 
 import (
-	"github.com/AreteAcademy/brevis/internal/domain/diagnosis"
+	"brevis.sh/brevis/internal/domain/diagnosis"
 	"slices"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/alerts"
+	"brevis.sh/brevis/internal/domain/run"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // RunPage is what the run page and its live refresh are drawn from. One

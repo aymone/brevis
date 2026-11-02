@@ -1,4 +1,4 @@
-module github.com/AreteAcademy/brevis
+module brevis.sh/brevis
 
 go 1.27.0
 
@@ -42,4 +42,4 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 )
 
-replace github.com/AreteAcademy/brevis/sdk => ./sdk
+replace brevis.sh/brevis/sdk => ./sdk

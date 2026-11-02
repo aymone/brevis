@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // boolp is sdk.Bool. Duplicated because to cannot import the root.

@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // These run the BINARY, with a real signal. Everything the drain does is tested

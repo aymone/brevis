@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/AreteAcademy/brevis/sdk"
+	sdk "brevis.sh/brevis/sdk"
 )
 
 // resendRequest is `gateway deadletter resend`'s arguments.

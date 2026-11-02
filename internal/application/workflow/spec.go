@@ -14,7 +14,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	dominio "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	dominio "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // Spec mirrors the YAML, and nothing more. Loose fields here, invariants in the domain.

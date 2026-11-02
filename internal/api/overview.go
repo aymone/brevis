@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/diagnosis"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/pages"
+	"brevis.sh/brevis/internal/domain/diagnosis"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/pages"
 )
 
 // causeOf reads why a run failed from its steps' logs, as the run's own page

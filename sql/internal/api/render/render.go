@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/sqltok"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/sqltok"
 )
 
 // Value is what a name stands for in one render.

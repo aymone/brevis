@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	evkind "github.com/AreteAcademy/brevis/internal/domain/events"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	evkind "brevis.sh/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // EVERY KIND THE FEED KNOWS IS A SENTENCE, in every language, with a place

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // --- the preview wired into a real extract ---

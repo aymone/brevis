@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/model"
-	"github.com/AreteAcademy/brevis/sql/internal/project"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/model"
+	"brevis.sh/brevis/sql/internal/project"
 )
 
 // Built is one model, after.

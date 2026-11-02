@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	frompg "github.com/AreteAcademy/brevis/sdk/from/postgres"
-	topg "github.com/AreteAcademy/brevis/sdk/to/postgres"
+	"brevis.sh/brevis/sdk"
+	frompg "brevis.sh/brevis/sdk/from/postgres"
+	topg "brevis.sh/brevis/sdk/to/postgres"
 
 	"github.com/jackc/pgx/v5"
 )

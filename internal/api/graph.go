@@ -11,13 +11,13 @@ import (
 
 	"github.com/google/uuid"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/domain/runcontext"
-	"github.com/AreteAcademy/brevis/internal/domain/runtimes"
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/graph"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/pages"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/domain/runcontext"
+	"brevis.sh/brevis/internal/domain/runtimes"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/graph"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/pages"
 )
 
 // This file implements the graph's flow:

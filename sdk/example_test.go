@@ -18,11 +18,11 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/pycompat"
-	"github.com/AreteAcademy/brevis/sdk/to"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/pycompat"
+	"brevis.sh/brevis/sdk/to"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 // A whole fetcher in two calls: where it comes from, and where it goes.

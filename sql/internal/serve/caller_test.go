@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 func withCallers(t *testing.T, audit *bytes.Buffer, callers ...Caller) *Service {

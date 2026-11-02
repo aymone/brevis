@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // ARGUMENTS TRAVEL NAMED AND TYPED, and the type is the half that is easy to

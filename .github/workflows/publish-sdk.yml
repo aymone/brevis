@@ -171,7 +171,7 @@ jobs:
         env:
           VERSION: ${{ needs.create-release.outputs.version }}
         run: |
-          MODULE="github.com/AreteAcademy/brevis/sdk"
+          MODULE="brevis.sh/brevis/sdk"
           echo "🔔 Asking the Go proxy to fetch $MODULE@$VERSION"
           # go list drives the proxy through the module path's case encoding
           # (AreteAcademy -> !arete!academy); hand-built curl URLs 404 silently.

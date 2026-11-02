@@ -3,7 +3,7 @@ package graph
 import (
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
 func TestLevelsInAChain(t *testing.T) {

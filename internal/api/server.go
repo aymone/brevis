@@ -7,7 +7,7 @@
 package api
 
 import (
-	"github.com/AreteAcademy/brevis/internal/auth"
+	"brevis.sh/brevis/internal/auth"
 	"log/slog"
 	"net/http"
 	"net/url"

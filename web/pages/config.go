@@ -1,15 +1,15 @@
 package pages
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
 	"fmt"
-	"github.com/AreteAcademy/brevis/web/i18n"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // ConfigView is one writer's configuration, laid out for a page: the

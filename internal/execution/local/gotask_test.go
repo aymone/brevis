@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/local"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/local"
 )
 
 func collectEvents(ev <-chan execution.Event) []execution.Event {

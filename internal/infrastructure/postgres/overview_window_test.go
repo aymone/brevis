@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // A RETRY IS COUNTED IN ITS WINDOW (screen-overview-v2 OV1): a run on its

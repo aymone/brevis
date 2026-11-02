@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // The stream half: a bounded ring of lines that outlives any one connection.

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	"github.com/AreteAcademy/brevis/internal/updates"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/branding"
+	"brevis.sh/brevis/internal/updates"
 )
 
 type releaseFake struct {
@@ -27,12 +27,12 @@ func versionUI(src api.UpdateSource) *api.UI {
 // button and a notice for the script to toast once.
 func TestTheAccountMenuShowsTheVersionAndANewerRelease(t *testing.T) {
 	notes := `<h3>Added</h3><p>x <script>alert(1)</script></p>`
-	ui := versionUI(releaseFake{r: updates.Release{Tag: "v0.41.0", URL: "https://github.com/AreteAcademy/brevis/releases/tag/v0.41.0", Notes: updates.Sanitize(notes)}, newer: true})
+	ui := versionUI(releaseFake{r: updates.Release{Tag: "v0.41.0", URL: "https://github.com/brevis-sh/brevis/releases/tag/v0.41.0", Notes: updates.Sanitize(notes)}, newer: true})
 	_, body := get(t, ui, "/ingest/loads")
 	for _, want := range []string{
 		`data-dialogo="version"`, ">v0.40.0<", "v0.41.0 available", "data-update-icon", "data-update-notice",
 		`data-version="v0.41.0"`, `id="version"`, "<h3>Added</h3>", "You are running v0.40.0",
-		`href="https://github.com/AreteAcademy/brevis/releases/tag/v0.41.0"`, ">Download<",
+		`href="https://github.com/brevis-sh/brevis/releases/tag/v0.41.0"`, ">Download<",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("the page lacks %s", want)

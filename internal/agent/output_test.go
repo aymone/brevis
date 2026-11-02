@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // The documented way to publish context has to work on a host.

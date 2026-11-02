@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	dominio "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	dominio "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // roundTrip publishes the YAML a workflow is shown as, and says whether it

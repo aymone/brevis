@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/migrations"
+	"brevis.sh/brevis/migrations"
 )
 
 // Migration 00013 recovers, from task_runs.etapas, the loads that happened

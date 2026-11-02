@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func scheduled(t *testing.T, pool *postgres.Pool, slug string) {

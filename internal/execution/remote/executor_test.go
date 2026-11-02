@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // fakeAgent is the host, and it exists BEFORE the real one on purpose.

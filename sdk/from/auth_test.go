@@ -3,7 +3,7 @@ package from_test
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/from"
 )
 
 // TestCampoJSONStillReadsWhatJSONTokenReads guards the deprecated alias.

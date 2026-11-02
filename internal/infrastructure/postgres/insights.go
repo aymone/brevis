@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/notify"
+	"brevis.sh/brevis/internal/notify"
 )
 
 // Insights aggregates a window for the periodic report.

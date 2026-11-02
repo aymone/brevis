@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/auth"
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/endpointcall"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/auth"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/endpointcall"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 type endpointsFake struct{ all []postgres.PublishedEndpoint }

@@ -1,13 +1,13 @@
 package pages
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
-	"github.com/AreteAcademy/brevis/web/i18n"
 	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/AreteAcademy/brevis/web/components"
+	"brevis.sh/brevis/web/components"
 )
 
 // LoadTabs is a step's configuration as a load's page shows it, in tabs

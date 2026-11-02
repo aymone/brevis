@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	core "brevis.sh/brevis/sdk/internal/core"
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/storage"
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
 	"google.golang.org/api/iterator"
 )
 

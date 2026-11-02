@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	sch "github.com/AreteAcademy/brevis/internal/domain/schedule"
+	sch "brevis.sh/brevis/internal/domain/schedule"
 )
 
 // landingOverlap is how far back of its own cursor each cycle re-reads.

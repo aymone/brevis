@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
-	"github.com/AreteAcademy/brevis/sql/internal/dialect/postgres"
+	"brevis.sh/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
 // WHAT pgx HANDS OVER IS NOT WHAT A GRID CAN DRAW, and this is the list.

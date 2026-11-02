@@ -3,8 +3,8 @@ package pages
 import (
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func sourceConfig(fields ...catalog.ManifestField) *postgres.WriterConfig {

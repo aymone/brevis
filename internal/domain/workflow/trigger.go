@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/catalog"
 )
 
 // Trigger is why a workflow starts, other than the clock.

@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // RunContext is what the Brevis engine knows about this execution. See

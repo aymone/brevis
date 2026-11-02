@@ -27,7 +27,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // Table loads records into a Redshift table, via COPY from S3.

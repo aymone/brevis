@@ -38,7 +38,7 @@ set -uo pipefail
 export GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 
 TREE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../sdk" && pwd)"
-MODULO="github.com/AreteAcademy/brevis/sdk"
+MODULO="brevis.sh/brevis/sdk"
 
 # Every case runs, and the exit status is the OR of them.
 #

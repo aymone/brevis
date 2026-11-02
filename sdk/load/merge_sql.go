@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // reconcile decides which columns the MERGE inserts, and refuses the cases

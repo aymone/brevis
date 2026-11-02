@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // An event too large is archived WHOLE and a reduced one continues, carrying a

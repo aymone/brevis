@@ -9,20 +9,20 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
+	"brevis.sh/brevis/web/assets"
 	"context"
 	"fmt"
-	"github.com/AreteAcademy/brevis/web/assets"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/alerts"
-	"github.com/AreteAcademy/brevis/internal/domain/diagnosis"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/components"
-	"github.com/AreteAcademy/brevis/web/i18n"
-	"github.com/AreteAcademy/brevis/web/layouts"
+	"brevis.sh/brevis/internal/alerts"
+	"brevis.sh/brevis/internal/domain/diagnosis"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
+	"brevis.sh/brevis/web/layouts"
 )
 
 // ---------------------------------------------------------------------------

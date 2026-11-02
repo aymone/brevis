@@ -11,11 +11,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/internal/api"
-	"github.com/AreteAcademy/brevis/internal/auth"
-	"github.com/AreteAcademy/brevis/internal/branding"
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/api"
+	"brevis.sh/brevis/internal/auth"
+	"brevis.sh/brevis/internal/branding"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 var logRun = uuid.MustParse("3f2a9c1e-7b44-4d0e-9a51-0c6d2e8f1a77")

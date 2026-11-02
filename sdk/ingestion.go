@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // The two columns these transformers write. Exported so a fetcher can name

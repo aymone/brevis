@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
+	"brevis.sh/brevis/internal/agent"
 )
 
 // An agent with no token runs ANY command for ANY caller.

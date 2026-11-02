@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/scheduler"
+	"brevis.sh/brevis/internal/scheduler"
 )
 
 // FOUR SITUATIONS, FOUR SENTENCES.

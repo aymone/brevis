@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // The gateway's own config shape, which no SDK test had.

@@ -8,11 +8,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/domain/diagnosis"
-	evkind "github.com/AreteAcademy/brevis/internal/domain/events"
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/diagnosis"
+	evkind "brevis.sh/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // THE OVERVIEW SPEAKS THE READER'S LANGUAGE, ALL OF IT (screen-overview T7):

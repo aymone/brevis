@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	dominio "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	dominio "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // SpecOf is a published workflow written back as the file: the inverse of

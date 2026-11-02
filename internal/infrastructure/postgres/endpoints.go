@@ -8,8 +8,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/AreteAcademy/brevis/internal/domain/catalog"
-	"github.com/AreteAcademy/brevis/internal/domain/events"
+	"brevis.sh/brevis/internal/domain/catalog"
+	"brevis.sh/brevis/internal/domain/events"
 )
 
 // EndpointRepo stores what brevis-sql-api files were published with.

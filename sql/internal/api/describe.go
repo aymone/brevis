@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/AreteAcademy/brevis/sql/internal/connections"
+	"brevis.sh/brevis/sql/internal/connections"
 )
 
 // ManifestVersion is the shape `describe` prints. An engine that reads

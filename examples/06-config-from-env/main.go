@@ -9,8 +9,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/load"
 )
 
 func env(key, fallback string) string {

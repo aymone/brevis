@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/execution"
+	"brevis.sh/brevis/internal/execution"
 )
 
 // TestALocalSecretComesFromTheEnginesEnvironment: em Kubernetes a coordenada aponta um

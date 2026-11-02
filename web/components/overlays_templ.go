@@ -8,7 +8,7 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/AreteAcademy/brevis/web/i18n"
+import "brevis.sh/brevis/web/i18n"
 
 // Drawer is a panel that slides in from the right over the page: a form, a
 // detail, an explanation that does not deserve a page of its own.

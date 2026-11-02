@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // THE WORKFLOWS LIST SPEAKS THE READER'S LANGUAGE (screen-workflows T1):

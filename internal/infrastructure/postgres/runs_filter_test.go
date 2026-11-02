@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	dom "github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	dom "brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 func slugsOf(rs []postgres.RunSummary) []string {

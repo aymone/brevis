@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // EVERY PUBLISHED DEFINITION, IN ONE READ, AND ONLY THE CURRENT ONE: a page

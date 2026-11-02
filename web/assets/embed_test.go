@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	assets "github.com/AreteAcademy/brevis/web/assets"
+	assets "brevis.sh/brevis/web/assets"
 )
 
 // The served response has to carry a validator. Without one there is no way for

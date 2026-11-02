@@ -4,14 +4,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/gateway"
-	"github.com/AreteAcademy/brevis/gateway/sink/autotable"
-	"github.com/AreteAcademy/brevis/gateway/sink/bigquery"
-	"github.com/AreteAcademy/brevis/gateway/sink/files"
-	"github.com/AreteAcademy/brevis/gateway/sink/mysql"
-	"github.com/AreteAcademy/brevis/gateway/sink/postgres"
-	"github.com/AreteAcademy/brevis/gateway/sink/pubsub"
-	"github.com/AreteAcademy/brevis/gateway/sink/redshift"
+	"brevis.sh/brevis/gateway"
+	"brevis.sh/brevis/gateway/sink/autotable"
+	"brevis.sh/brevis/gateway/sink/bigquery"
+	"brevis.sh/brevis/gateway/sink/files"
+	"brevis.sh/brevis/gateway/sink/mysql"
+	"brevis.sh/brevis/gateway/sink/postgres"
+	"brevis.sh/brevis/gateway/sink/pubsub"
+	"brevis.sh/brevis/gateway/sink/redshift"
 )
 
 func locators() *gateway.Sinks {

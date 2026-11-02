@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	wf "github.com/AreteAcademy/brevis/internal/domain/workflow"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
-	"github.com/AreteAcademy/brevis/web/i18n"
+	wf "brevis.sh/brevis/internal/domain/workflow"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // THE WORKFLOW PAGE'S HEAD, NUMBERS AND TABS SPEAK THE READER'S LANGUAGE

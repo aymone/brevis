@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	rt "github.com/AreteAcademy/brevis/internal/domain/runtimes"
+	rt "brevis.sh/brevis/internal/domain/runtimes"
 )
 
 // The case table IS the specification.

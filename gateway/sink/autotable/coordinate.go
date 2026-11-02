@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AreteAcademy/brevis/gateway"
+	"brevis.sh/brevis/gateway"
 )
 
 // How long a claim on one table's shape lasts.

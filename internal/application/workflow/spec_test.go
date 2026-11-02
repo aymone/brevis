@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	dominio "github.com/AreteAcademy/brevis/internal/domain/workflow"
+	dominio "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // The example the author asked for has to pass exactly as written.

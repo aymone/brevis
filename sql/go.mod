@@ -36,13 +36,13 @@
 // operations -- run a statement, read one value. The REST endpoint is in
 // internal/dialect/bigquery/conn.go, with a test for each of the three ways
 // it could be quietly wrong. Both dialects together: 15 MB, 241 packages.
-module github.com/AreteAcademy/brevis/sql
+module brevis.sh/brevis/sql
 
 go 1.26.0
 
 require (
 	github.com/andybalholm/brotli v1.2.7
-	github.com/jackc/pgx/v5 v5.11.0
+	github.com/jackc/pgx/v5 v5.12.0
 	golang.org/x/oauth2 v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -50,8 +50,8 @@ require (
 require github.com/google/uuid v1.6.0 // indirect
 
 require (
-	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	github.com/AreteAcademy/brevis/sdk v0.86.1
+	brevis.sh/brevis/sdk v0.86.1
+	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -62,7 +62,7 @@ require (
 // AND NO `replace`, which the engine and the gateway both carry.
 //
 // This module is installed, not only pulled as an image: `go install
-// github.com/AreteAcademy/brevis/sql/cmd/brevis-sql@v0.3.0` is the documented
+// brevis.sh/brevis/sql/cmd/brevis-sql@v0.3.0` is the documented
 // way to get the binary, and that command REFUSES a module whose go.mod has a
 // replace directive. One was added here the day `sdk/from/postgres` became a
 // dependency, mechanically, and the release gate is what noticed.
@@ -71,3 +71,10 @@ require (
 // consumer compiles against rather than against the sibling directory. The
 // price is real: a change in `sdk/` is not exercised here until the sdk is
 // released. That is the same deal everybody outside this repository gets.
+
+// TEMPORARY (the move to brevis.sh, 2026-11-02): no published SDK declares
+// brevis.sh/brevis/sdk yet -- every version up to v0.87.0 declares the old
+// github.com/AreteAcademy path -- so this builds against the SDK in the
+// repository until sdk/v0.88.0 is tagged. The next change requires that
+// version and drops this line. Do not tag this module while it is here.
+replace brevis.sh/brevis/sdk => ../sdk

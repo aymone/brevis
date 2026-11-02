@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/domain/run"
-	"github.com/AreteAcademy/brevis/internal/infrastructure/postgres"
+	"brevis.sh/brevis/internal/domain/run"
+	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
 // The run in the report: discover publishes three partitions, load maps over

@@ -15,7 +15,7 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
 
-	core "github.com/AreteAcademy/brevis/sdk/internal/core"
+	core "brevis.sh/brevis/sdk/internal/core"
 )
 
 // Store reads and writes objects in GCS.

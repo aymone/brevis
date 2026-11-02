@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/internal/infrastructure/endpointcall"
+	"brevis.sh/brevis/internal/infrastructure/endpointcall"
 )
 
 // tryView is the fresh endpoint's page on a console that can run it, with

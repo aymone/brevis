@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/internal/agent"
-	"github.com/AreteAcademy/brevis/internal/execution/remote"
+	"brevis.sh/brevis/internal/agent"
+	"brevis.sh/brevis/internal/execution/remote"
 )
 
 // post sends one JSON request to the agent and returns the response.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AreteAcademy/brevis/sql/internal/dialect"
+	"brevis.sh/brevis/sql/internal/dialect"
 )
 
 // MakeThrowawaySchema creates a schema a TEST will build in, and -- where the

@@ -81,7 +81,7 @@ type Metrics struct {
 func New() *Metrics {
 	reader := sdk.NewManualReader()
 	provider := sdk.NewMeterProvider(sdk.WithReader(reader))
-	meter := provider.Meter("github.com/AreteAcademy/brevis")
+	meter := provider.Meter("brevis.sh/brevis")
 
 	m := &Metrics{reader: reader, meter: meter}
 

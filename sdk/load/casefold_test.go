@@ -6,7 +6,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
-	"github.com/AreteAcademy/brevis/sdk/internal/core"
+	"brevis.sh/brevis/sdk/internal/core"
 )
 
 // The table as the consumer's own scratch case has it: BigQuery kept the
