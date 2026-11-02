@@ -1,6 +1,7 @@
 # Changelog — brevis-sql
 
-`areteacademy/brevis-sql`, published from a `sql/v*` tag.
+`brevissh/brevis-sql` and `brevissh/brevis-sql-api`, published from a `sql/v*`
+tag (`areteacademy/*` up to 0.6.0).
 
 Its own version, on purpose, and for the reason the gateway's changelog
 gives: this is a separate Go module with a separate maturity, and numbering
@@ -16,7 +17,7 @@ and the versions follow [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.7.0] — 2026-11-02
 
 ### Changed: the module is `brevis.sh/brevis/sql`
 
@@ -27,7 +28,7 @@ and the versions follow [SemVer](https://semver.org/).
 
 ### Changed: the images are `brevissh/brevis-sql` and `brevissh/brevis-sql-api`
 
-- The next release publishes to `docker.io/brevissh/*`, not
+- This release publishes to `docker.io/brevissh/*`, not
   `areteacademy/*`, which keeps the versions already there. The current ones
   were copied over with the same digests.
 
