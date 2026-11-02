@@ -133,14 +133,14 @@
       <h1>Go SDK</h1>
       <p class="doc-desc">fetcher를 작성하는 방법으로, 소스에서 추출하고 변환한 뒤 목적지에 적재합니다.</p>
       <p>step의 역할이 <strong>데이터를 가져와 어딘가에 적재하는 것</strong>이라면, Go SDK로 fetcher 전체를 몇 줄에 작성할 수 있습니다. 엔진과는 별개의 모듈이며 버전도 독립적입니다.</p>
-<div class="code-block" data-code="go get github.com/AreteAcademy/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="복사" data-done="복사됨">복사</button></div><pre><code><span class="t-k">go</span> get github.com/AreteAcademy/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
+<div class="code-block" data-code="go get brevis.sh/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="복사" data-done="복사됨">복사</button></div><pre><code><span class="t-k">go</span> get <span class="t-k">brevis</span>.sh/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
 <p>Go 1.23 이상이 필요합니다. SDK가 행을 <code>iter.Seq2</code>로 스트리밍하기 때문입니다.</p>
 <aside class="admon admon-warning"><p class="admon-t">`v0.1.0`은 사용하지 마세요</p><p>존재하지 않는 리비전을 고정한 <code>go.mod</code>가 포함된 채 배포되었고, Go 모듈 프록시는 불변입니다. <code>v0.1.1</code>부터 시작하세요.</p></aside>
 <h2 id="three-steps">세 단계<a class="anchor" href="#three-steps" aria-label="link">#</a></h2>
 <div class="code-block" data-code="import (
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/to/bigquery&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk/to/bigquery&quot;
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -153,9 +153,9 @@ res, err := sdk.Load(ctx, rows, sdk.Target{
 	To:      bigquery.Table{Dataset: &quot;bronze&quot;, Name: &quot;events&quot;},
 	Columns: []string{&quot;id&quot;, &quot;created_at&quot;, &quot;amount&quot;},
 })"><div class="code-head"><span class="code-lang">go</span><button class="code-copy" type="button" aria-label="복사" data-done="복사됨">복사</button></div><pre><code><span class="t-k">import</span> (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, <span class="t-k">err</span> := sdk.Extract(ctx, sdk.Source{
@@ -226,8 +226,8 @@ to.Files{Path: "gs:<span class="t-c">//bucket/landing/", Store: gcs.New(client)}
 import (
 	&quot;time&quot;
 
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
 )
 
 func main() {
@@ -252,8 +252,8 @@ func main() {
 <span class="t-k">import</span> (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 <span class="t-k">func</span> main() {
@@ -469,7 +469,7 @@ specification without a key length</code></pre></div>
 <p>Postgres는 <code>string</code>이 <code>TEXT</code>이므로 동작합니다. MySQL에서는 <code>DedupNone</code>으로 적재하고 현재 버전은 다운스트림에서 결정하거나, <code>CreateSQL</code>로 크기를 지정한 id 컬럼과 함께 테이블을 직접 만드세요.</p>
 <p><strong>id는 콘텐츠 기반 주소 지정입니다.</strong> 같은 레코드는 어느 경로에서든 같은 id를 만들고, 변경된 레코드는 새 id를 만듭니다. 그래서 재실행이 중복이 아닌 no-op이 될 수 있습니다.</p>
 <h2 id="reference">참고<a class="anchor" href="#reference" aria-label="link">#</a></h2>
-<ul><li><a href="https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — 전체 API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — 실행 가능한 예제 열두 개</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — 버전별 변경 이력</li></ul>
+<ul><li><a href="https://pkg.go.dev/brevis.sh/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — 전체 API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — 실행 가능한 예제 열두 개</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — 버전별 변경 이력</li></ul>
 
       <nav class="pagers" aria-label="페이지">
         <a class="pager pager-prev" href="/ko/docs/runtime/"><span>이전</span><strong>step 런타임</strong></a>

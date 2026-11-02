@@ -280,7 +280,7 @@ built with. **The published image has none** and refuses a file with
 
 ```go
 func main() {
-	hooks := api.NewHooks() // github.com/AreteAcademy/brevis/sql/api
+	hooks := api.NewHooks() // brevis.sh/brevis/sql/api
 	hooks.MustRegisterBefore("day_first_window", dayFirstWindow)
 	hooks.MustRegisterAfter("revenue_series", revenueSeries)
 	api.Main(hooks) // validate, serve, describe, key hash -- the same commands

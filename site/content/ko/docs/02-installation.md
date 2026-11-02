@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning 엔진에는 아직 태그된 릴리스가 없습니다
 저장소의 모든 태그는 SDK(`sdk/v*`)의 것이며, 루트 모듈에는 태그가 없습니다.
-`go install github.com/AreteAcademy/brevis/cmd/brevis@latest`는 브랜치의 최신
+`go install brevis.sh/brevis/cmd/brevis@latest`는 브랜치의 최신
 커밋으로 해석되어, 커밋도 날짜도 없이 `brevis dev`라고 자신을 소개하는 바이너리를
 만듭니다. `-ldflags`는 `make build`와 `docker build`를 통해서만 적용되기
 때문입니다. 추적 가능한 버전이 필요하면 이미지나 `make build`를 사용하세요.

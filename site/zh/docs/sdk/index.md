@@ -9,7 +9,7 @@
 当 step 的任务是**抓取数据并加载到某处**时，Go SDK 只用几行代码就能给你一个完整的抓取器。它是一个独立的模块，版本与引擎各自独立。
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 需要 Go 1.23 或更新版本：SDK 以 `iter.Seq2` 流式传输行。
@@ -22,9 +22,9 @@ go get github.com/AreteAcademy/brevis/sdk@latest
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -132,8 +132,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -455,6 +455,6 @@ Postgres 可以工作，因为它的 `string` 是 `TEXT`。在 MySQL 上，请�
 
 ## 参考
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk)：完整的 API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk)：完整的 API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples)：十二个可运行的示例
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md)：逐版本的历史

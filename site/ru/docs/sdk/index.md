@@ -11,7 +11,7 @@
 независимо от engine.
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Требуется Go 1.23 или новее — SDK передаёт строки потоком в виде `iter.Seq2`.
@@ -25,9 +25,9 @@ go get github.com/AreteAcademy/brevis/sdk@latest
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -165,8 +165,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -669,6 +669,6 @@ specification without a key length
 
 ## Справочник
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — полный API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — полный API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — двенадцать работающих примеров
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — история по версиям

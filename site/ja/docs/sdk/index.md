@@ -10,7 +10,7 @@
 数行で書けます。エンジンとは別のモジュールで、バージョンも独立しています。
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Go 1.23 以降が必要です。SDK は行を `iter.Seq2` としてストリーミングします。
@@ -24,9 +24,9 @@ Go 1.23 以降が必要です。SDK は行を `iter.Seq2` としてストリー�
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -156,8 +156,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -618,6 +618,6 @@ Postgres は動作します。その `string` は `TEXT` だからです。MySQL
 
 ## リファレンス
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — 完全な API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — 完全な API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — 実行可能な 12 個の例
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — バージョンごとの履歴

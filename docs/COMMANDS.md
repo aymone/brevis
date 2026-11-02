@@ -22,7 +22,7 @@ built at this commit, not written by hand.
 | **what it is** | the engine: it orchestrates, schedules, executes and serves the UI | the SDK's CLI: it extracts from HTTP and loads into BigQuery | plain `.sql` models, built and served as an ordinary step |
 | **source** | [`cmd/brevis/`](../cmd/brevis/) | [`cmd/brevis-sdk/`](../cmd/brevis-sdk/) | [`sql/cmd/brevis-sql/`](../sql/cmd/brevis-sql/) |
 | **module** | the repository's | its own (a separate `go.mod`, with the SDK pinned by version) | its own (`sql/go.mod`) |
-| **install** | `make build` → `bin/brevis` | `go install github.com/AreteAcademy/brevis/cmd/brevis-sdk@latest` | `go install github.com/AreteAcademy/brevis/sql/cmd/brevis-sql@latest` |
+| **install** | `make build` → `bin/brevis` | `go install brevis.sh/brevis/cmd/brevis-sdk@latest` | `go install brevis.sh/brevis/sql/cmd/brevis-sql@latest` |
 | **needs Postgres** | for most subcommands | never | only to BUILD into one |
 | **holds a warehouse credential** | never | to load | to build and to serve |
 
@@ -31,12 +31,12 @@ built at this commit, not written by hand.
 ```bash
 make build                    # engine → bin/brevis, with version and commit stamped in
 docker run brevissh/brevis:latest version
-go install github.com/AreteAcademy/brevis/cmd/brevis-sdk@latest
+go install brevis.sh/brevis/cmd/brevis-sdk@latest
 ```
 
 The engine is released as tags on the root module (`v0.6.0` at the time of
 writing) and as images. `go install
-github.com/AreteAcademy/brevis/cmd/brevis@latest` resolves to the latest tag,
+brevis.sh/brevis/cmd/brevis@latest` resolves to the latest tag,
 but the binary it produces reports `brevis dev`, with no commit and no date:
 the `-ldflags` only come in through `make build` and `docker build`. For a
 traceable version, use the **image** or a local `make build`.
@@ -653,7 +653,7 @@ Extracts from HTTP and loads into BigQuery without writing Go. A module of its
 own, with the SDK pinned by version.
 
 ```bash
-go install github.com/AreteAcademy/brevis/cmd/brevis-sdk@latest
+go install brevis.sh/brevis/cmd/brevis-sdk@latest
 ```
 
 | command | |
@@ -739,7 +739,7 @@ References between models are inferred from the SQL itself, so the dependency
 graph is not a second thing to maintain.
 
 ```bash
-go install github.com/AreteAcademy/brevis/sql/cmd/brevis-sql@latest
+go install brevis.sh/brevis/sql/cmd/brevis-sql@latest
 ```
 
 | command | |

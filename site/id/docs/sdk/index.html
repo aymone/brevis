@@ -133,14 +133,14 @@
       <h1>Go SDK</h1>
       <p class="doc-desc">Menulis fetcher — mengekstrak dari sumber, mentransformasi, dan memuat ke tujuan.</p>
       <p>Ketika tugas sebuah step adalah <strong>mengambil data dan memuatnya ke suatu tempat</strong>, Go SDK memberi Anda seluruh fetcher dalam beberapa baris. Ia adalah modul terpisah, diberi versi secara independen dari engine.</p>
-<div class="code-block" data-code="go get github.com/AreteAcademy/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="Salin" data-done="Tersalin">Salin</button></div><pre><code><span class="t-k">go</span> get github.com/AreteAcademy/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
+<div class="code-block" data-code="go get brevis.sh/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="Salin" data-done="Tersalin">Salin</button></div><pre><code><span class="t-k">go</span> get <span class="t-k">brevis</span>.sh/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
 <p>Membutuhkan Go 1.23 atau lebih baru — SDK men-stream baris sebagai <code>iter.Seq2</code>.</p>
 <aside class="admon admon-warning"><p class="admon-t">Jangan gunakan `v0.1.0`</p><p>Versi itu dikirim dengan <code>go.mod</code> yang menyematkan revisi yang tidak ada, dan proxy modul Go bersifat immutable. Mulailah dari <code>v0.1.1</code>.</p></aside>
 <h2 id="three-steps">Tiga langkah<a class="anchor" href="#three-steps" aria-label="link">#</a></h2>
 <div class="code-block" data-code="import (
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/to/bigquery&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk/to/bigquery&quot;
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -153,9 +153,9 @@ res, err := sdk.Load(ctx, rows, sdk.Target{
 	To:      bigquery.Table{Dataset: &quot;bronze&quot;, Name: &quot;events&quot;},
 	Columns: []string{&quot;id&quot;, &quot;created_at&quot;, &quot;amount&quot;},
 })"><div class="code-head"><span class="code-lang">go</span><button class="code-copy" type="button" aria-label="Salin" data-done="Tersalin">Salin</button></div><pre><code><span class="t-k">import</span> (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, <span class="t-k">err</span> := sdk.Extract(ctx, sdk.Source{
@@ -226,8 +226,8 @@ to.Files{Path: "gs:<span class="t-c">//bucket/landing/", Store: gcs.New(client)}
 import (
 	&quot;time&quot;
 
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
 )
 
 func main() {
@@ -252,8 +252,8 @@ func main() {
 <span class="t-k">import</span> (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 <span class="t-k">func</span> main() {
@@ -469,7 +469,7 @@ specification without a key length</code></pre></div>
 <p>Postgres berfungsi, karena <code>string</code>-nya adalah <code>TEXT</code>. Di MySQL, mendaratlah dengan <code>DedupNone</code> dan selesaikan versi terkini di hilir, atau buat tabel itu sendiri dengan <code>CreateSQL</code> dan kolom id yang berukuran.</p>
 <p><strong>Id bersifat content-addressed.</strong> Record yang sama menghasilkan id yang sama dari kedua jalur, dan record yang berubah menghasilkan yang baru — itulah yang membuat run ulang menjadi no-op alih-alih duplikat.</p>
 <h2 id="reference">Referensi<a class="anchor" href="#reference" aria-label="link">#</a></h2>
-<ul><li><a href="https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — API lengkap</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — dua belas contoh yang dapat dijalankan</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — riwayat versi demi versi</li></ul>
+<ul><li><a href="https://pkg.go.dev/brevis.sh/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — API lengkap</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — dua belas contoh yang dapat dijalankan</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — riwayat versi demi versi</li></ul>
 
       <nav class="pagers" aria-label="Halaman">
         <a class="pager pager-prev" href="/id/docs/runtime/"><span>Sebelumnya</span><strong>Runtime step</strong></a>

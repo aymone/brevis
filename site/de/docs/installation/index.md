@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning Die Engine hat noch kein getaggtes Release
 Jeder Tag im Repository gehört zum SDK (`sdk/v*`); das Root-Modul hat keinen. Ein
-`go install github.com/AreteAcademy/brevis/cmd/brevis@latest` löst auf den
+`go install brevis.sh/brevis/cmd/brevis@latest` löst auf den
 neuesten Commit des Branches auf und erzeugt ein Binary, das sich als
 `brevis dev` ausweist, ohne Commit und ohne Datum – die `-ldflags` kommen nur
 über `make build` und `docker build` hinein. Für eine nachvollziehbare Version

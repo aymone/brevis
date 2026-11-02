@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/AreteAcademy/brevis/discussions
     about: Questions about how to use the SDK or the CLI
   - name: SDK documentation
-    url: https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk
+    url: https://pkg.go.dev/brevis.sh/brevis/sdk
     about: API reference on pkg.go.dev

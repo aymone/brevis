@@ -107,8 +107,8 @@ A pipeline's own numbers go somewhere else, and by a different route.
 
 ```go
 import (
-    "github.com/AreteAcademy/brevis/sdk"
-    "github.com/AreteAcademy/brevis/sdk/metrics/otelmeter"
+    "brevis.sh/brevis/sdk"
+    "brevis.sh/brevis/sdk/metrics/otelmeter"
 )
 
 m, err := otelmeter.New(ctx, otelmeter.Options{Insecure: true})

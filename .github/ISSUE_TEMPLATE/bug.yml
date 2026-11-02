@@ -12,7 +12,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: "`go list -m github.com/AreteAcademy/brevis/sdk`, or `brevis version` for the CLI"
+      description: "`go list -m brevis.sh/brevis/sdk`, or `brevis version` for the CLI"
       placeholder: v0.2.1
     validations:
       required: true

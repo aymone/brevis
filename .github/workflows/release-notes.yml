@@ -53,9 +53,9 @@ jobs:
             ```
 
             ## Documentation
-            - [SDK Reference](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk@${{ steps.version.outputs.version }})
-            - [Extract Package](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk/extract@${{ steps.version.outputs.version }})
-            - [Load Package](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk/load@${{ steps.version.outputs.version }})
+            - [SDK Reference](https://pkg.go.dev/brevis.sh/brevis/sdk@${{ steps.version.outputs.version }})
+            - [Extract Package](https://pkg.go.dev/brevis.sh/brevis/sdk/extract@${{ steps.version.outputs.version }})
+            - [Load Package](https://pkg.go.dev/brevis.sh/brevis/sdk/load@${{ steps.version.outputs.version }})
             - [Examples](https://github.com/AreteAcademy/brevis/tree/main/examples)
 
             ## Recent Changes

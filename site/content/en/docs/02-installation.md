@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning The engine has no tagged release yet
 Every tag in the repository belongs to the SDK (`sdk/v*`); the root module has
-none. A `go install github.com/AreteAcademy/brevis/cmd/brevis@latest` resolves
+none. A `go install brevis.sh/brevis/cmd/brevis@latest` resolves
 to the latest commit on the branch and produces a binary that identifies itself
 as `brevis dev`, with no commit and no date — the `-ldflags` only come in
 through `make build` and `docker build`. For a traceable version, use the image

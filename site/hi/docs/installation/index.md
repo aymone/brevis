@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning engine का अभी कोई tagged release नहीं है
 रिपॉज़िटरी का हर tag SDK का है (`sdk/v*`); root module का कोई नहीं है।
-`go install github.com/AreteAcademy/brevis/cmd/brevis@latest` branch के सबसे नए commit
+`go install brevis.sh/brevis/cmd/brevis@latest` branch के सबसे नए commit
 पर resolve होता है और ऐसी बाइनरी बनाता है जो खुद को `brevis dev` बताती है, बिना commit
 और बिना तारीख़ के — `-ldflags` सिर्फ़ `make build` और `docker build` से आते हैं।
 ट्रेस करने लायक संस्करण के लिए image या `make build` इस्तेमाल करें।

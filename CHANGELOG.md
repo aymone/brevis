@@ -21,6 +21,12 @@ and stay as written: a changelog records what was decided on a date.
 
 ## [Unreleased]
 
+### Changed: `otelmeter` and `brevis-sdk` follow the SDK to `brevis.sh`
+
+- `sdk/metrics/otelmeter` is `brevis.sh/brevis/sdk/metrics/otelmeter`, and
+  `cmd/brevis-sdk` is `brevis.sh/brevis/cmd/brevis-sdk`; both require
+  `brevis.sh/brevis/sdk v0.88.0` and are tagged under the new path next.
+
 ## [0.88.0] — 2026-11-02
 
 ### Changed: the module is `brevis.sh/brevis/sdk`

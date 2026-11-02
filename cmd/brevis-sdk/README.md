@@ -9,7 +9,7 @@ Command-line interface for Brevis SDK. Extract and load data without writing Go 
 ## Installation
 
 ```bash
-go install github.com/AreteAcademy/brevis/cmd/brevis-sdk@latest
+go install brevis.sh/brevis/cmd/brevis-sdk@latest
 ```
 
 Or from source:

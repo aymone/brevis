@@ -133,14 +133,14 @@
       <h1>Go SDK</h1>
       <p class="doc-desc">Fetcher लिखना — स्रोत से डेटा निकालना, बदलना, और गंतव्य में लोड करना।</p>
       <p>जब किसी step का काम <strong>डेटा लाकर कहीं लोड करना</strong> हो, तो Go SDK आपको पूरा fetcher कुछ पंक्तियों में दे देता है। यह अलग module है, जिसका संस्करण engine से स्वतंत्र है।</p>
-<div class="code-block" data-code="go get github.com/AreteAcademy/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="कॉपी" data-done="कॉपी हो गया">कॉपी</button></div><pre><code><span class="t-k">go</span> get github.com/AreteAcademy/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
+<div class="code-block" data-code="go get brevis.sh/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="कॉपी" data-done="कॉपी हो गया">कॉपी</button></div><pre><code><span class="t-k">go</span> get <span class="t-k">brevis</span>.sh/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
 <p>Go 1.23 या नया चाहिए — SDK पंक्तियाँ <code>iter.Seq2</code> के रूप में स्ट्रीम करता है।</p>
 <aside class="admon admon-warning"><p class="admon-t">`v0.1.0` इस्तेमाल न करें</p><p>इसके साथ ऐसा <code>go.mod</code> गया जो ऐसे revision को pin करता है जो मौजूद नहीं है, और Go module proxy अपरिवर्तनीय है। <code>v0.1.1</code> से शुरू करें।</p></aside>
 <h2 id="three-steps">तीन चरण<a class="anchor" href="#three-steps" aria-label="link">#</a></h2>
 <div class="code-block" data-code="import (
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/to/bigquery&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk/to/bigquery&quot;
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -153,9 +153,9 @@ res, err := sdk.Load(ctx, rows, sdk.Target{
 	To:      bigquery.Table{Dataset: &quot;bronze&quot;, Name: &quot;events&quot;},
 	Columns: []string{&quot;id&quot;, &quot;created_at&quot;, &quot;amount&quot;},
 })"><div class="code-head"><span class="code-lang">go</span><button class="code-copy" type="button" aria-label="कॉपी" data-done="कॉपी हो गया">कॉपी</button></div><pre><code><span class="t-k">import</span> (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, <span class="t-k">err</span> := sdk.Extract(ctx, sdk.Source{
@@ -226,8 +226,8 @@ to.Files{Path: "gs:<span class="t-c">//bucket/landing/", Store: gcs.New(client)}
 import (
 	&quot;time&quot;
 
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
 )
 
 func main() {
@@ -252,8 +252,8 @@ func main() {
 <span class="t-k">import</span> (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 <span class="t-k">func</span> main() {
@@ -469,7 +469,7 @@ specification without a key length</code></pre></div>
 <p>Postgres चलता है, क्योंकि उसका <code>string</code> <code>TEXT</code> है। MySQL पर <code>DedupNone</code> के साथ उतारें और मौजूदा संस्करण आगे की ओर resolve करें, या तालिका खुद <code>CreateSQL</code> और नाप वाले id कॉलम के साथ बनाएँ।</p>
 <p><strong>Id सामग्री-पता वाली है।</strong> एक ही रिकॉर्ड किसी भी रास्ते से वही id बनाता है, और बदला हुआ रिकॉर्ड नई — जिससे दोबारा चलाना डुप्लिकेट के बजाय no-op बनता है।</p>
 <h2 id="reference">संदर्भ<a class="anchor" href="#reference" aria-label="link">#</a></h2>
-<ul><li><a href="https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — पूरी API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — बारह चलाने योग्य उदाहरण</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — संस्करण-दर-संस्करण इतिहास</li></ul>
+<ul><li><a href="https://pkg.go.dev/brevis.sh/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — पूरी API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — बारह चलाने योग्य उदाहरण</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — संस्करण-दर-संस्करण इतिहास</li></ul>
 
       <nav class="pagers" aria-label="पेज">
         <a class="pager pager-prev" href="/hi/docs/runtime/"><span>पिछला</span><strong>Step runtime</strong></a>

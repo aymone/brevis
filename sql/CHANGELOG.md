@@ -18,6 +18,13 @@ and the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed: the module is `brevis.sh/brevis/sql`
+
+- `go install brevis.sh/brevis/sql/cmd/brevis-sql@latest` (and
+  `brevis-sql-api`) from this release on; versions up to 0.6.0 stay under
+  `github.com/AreteAcademy/brevis/sql`. It requires the SDK as
+  `brevis.sh/brevis/sdk v0.88.0`.
+
 ### Changed: the images are `brevissh/brevis-sql` and `brevissh/brevis-sql-api`
 
 - The next release publishes to `docker.io/brevissh/*`, not

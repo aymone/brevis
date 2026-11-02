@@ -19,7 +19,7 @@ Each carries a `Valid for` stamp naming the version it was checked against.
 When the stamp is behind the current tag, the document is a claim nobody has
 re-verified — read it that way.
 
-The API reference is the [godoc](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk)
+The API reference is the [godoc](https://pkg.go.dev/brevis.sh/brevis/sdk)
 and [`sdk/README.md`](../sdk/README.md); the version-by-version history is
 [`CHANGELOG.md`](../CHANGELOG.md).
 

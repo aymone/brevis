@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning У engine пока нет тегированного релиза
 Все теги в репозитории принадлежат SDK (`sdk/v*`); у корневого модуля их нет.
-Команда `go install github.com/AreteAcademy/brevis/cmd/brevis@latest`
+Команда `go install brevis.sh/brevis/cmd/brevis@latest`
 разрешается в последний коммит ветки и даёт бинарный файл, который
 представляется как `brevis dev`, без коммита и даты: `-ldflags` попадают в
 сборку только через `make build` и `docker build`. Для прослеживаемой версии

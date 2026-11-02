@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning Engine belum punya rilis bertag
 Setiap tag di repositori milik SDK (`sdk/v*`); modul root tidak punya satu pun.
-`go install github.com/AreteAcademy/brevis/cmd/brevis@latest` akan menyelesaikan
+`go install brevis.sh/brevis/cmd/brevis@latest` akan menyelesaikan
 ke commit terbaru di branch dan menghasilkan binary yang mengidentifikasi dirinya
 sebagai `brevis dev`, tanpa commit dan tanpa tanggal — `-ldflags` hanya masuk
 lewat `make build` dan `docker build`. Untuk versi yang dapat dilacak, gunakan

@@ -133,14 +133,14 @@
       <h1>SDK Go</h1>
       <p class="doc-desc">Écrire un fetcher — extraire depuis une source, transformer et charger vers une destination.</p>
       <p>Quand le travail d'un step consiste à <strong>récupérer des données et à les charger quelque part</strong>, le SDK Go vous donne le fetcher complet en quelques lignes. C'est un module séparé, versionné indépendamment du moteur.</p>
-<div class="code-block" data-code="go get github.com/AreteAcademy/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="Copier" data-done="Copié">Copier</button></div><pre><code><span class="t-k">go</span> get github.com/AreteAcademy/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
+<div class="code-block" data-code="go get brevis.sh/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="Copier" data-done="Copié">Copier</button></div><pre><code><span class="t-k">go</span> get <span class="t-k">brevis</span>.sh/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
 <p>Nécessite Go 1.23 ou plus récent — le SDK diffuse les lignes sous forme d'<code>iter.Seq2</code>.</p>
 <aside class="admon admon-warning"><p class="admon-t">N&#x27;utilisez pas `v0.1.0`</p><p>Elle a été publiée avec un <code>go.mod</code> qui épingle une révision inexistante, et le proxy de modules Go est immuable. Commencez à <code>v0.1.1</code>.</p></aside>
 <h2 id="three-steps">Trois étapes<a class="anchor" href="#three-steps" aria-label="link">#</a></h2>
 <div class="code-block" data-code="import (
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/to/bigquery&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk/to/bigquery&quot;
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -153,9 +153,9 @@ res, err := sdk.Load(ctx, rows, sdk.Target{
 	To:      bigquery.Table{Dataset: &quot;bronze&quot;, Name: &quot;events&quot;},
 	Columns: []string{&quot;id&quot;, &quot;created_at&quot;, &quot;amount&quot;},
 })"><div class="code-head"><span class="code-lang">go</span><button class="code-copy" type="button" aria-label="Copier" data-done="Copié">Copier</button></div><pre><code><span class="t-k">import</span> (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, <span class="t-k">err</span> := sdk.Extract(ctx, sdk.Source{
@@ -226,8 +226,8 @@ to.Files{Path: "gs:<span class="t-c">//bucket/landing/", Store: gcs.New(client)}
 import (
 	&quot;time&quot;
 
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
 )
 
 func main() {
@@ -252,8 +252,8 @@ func main() {
 <span class="t-k">import</span> (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 <span class="t-k">func</span> main() {
@@ -469,7 +469,7 @@ specification without a key length</code></pre></div>
 <p>Postgres fonctionne, parce que son <code>string</code> est <code>TEXT</code>. Sur MySQL, atterrissez avec <code>DedupNone</code> et résolvez la version courante en aval, ou créez vous-même la table avec <code>CreateSQL</code> et une colonne d'id dimensionnée.</p>
 <p><strong>L'id est adressé par le contenu.</strong> Le même enregistrement produit le même id par l'un ou l'autre chemin, et un enregistrement modifié en produit un nouveau — ce qui permet à une relance d'être un no-op au lieu d'un doublon.</p>
 <h2 id="reference">Référence<a class="anchor" href="#reference" aria-label="link">#</a></h2>
-<ul><li><a href="https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — l'API complète</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — douze exemples exécutables</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — l'historique version par version</li></ul>
+<ul><li><a href="https://pkg.go.dev/brevis.sh/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a> — l'API complète</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a> — douze exemples exécutables</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a> — l'historique version par version</li></ul>
 
       <nav class="pagers" aria-label="Pages">
         <a class="pager pager-prev" href="/fr/docs/runtime/"><span>Précédent</span><strong>Runtime d&#x27;un step</strong></a>

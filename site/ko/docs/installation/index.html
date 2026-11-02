@@ -152,7 +152,7 @@ cd <span class="t-k">brevis</span>
   commit  bb832ff
   build   2026-09-05T12:00:00Z
   go      go1.25.7 darwin/arm64</code></pre></div>
-<aside class="admon admon-warning"><p class="admon-t">엔진에는 아직 태그된 릴리스가 없습니다</p><p>저장소의 모든 태그는 SDK(<code>sdk/v*</code>)의 것이며, 루트 모듈에는 태그가 없습니다. <code>go install github.com/AreteAcademy/brevis/cmd/brevis@latest</code>는 브랜치의 최신 커밋으로 해석되어, 커밋도 날짜도 없이 <code>brevis dev</code>라고 자신을 소개하는 바이너리를 만듭니다. <code>-ldflags</code>는 <code>make build</code>와 <code>docker build</code>를 통해서만 적용되기 때문입니다. 추적 가능한 버전이 필요하면 이미지나 <code>make build</code>를 사용하세요.</p></aside>
+<aside class="admon admon-warning"><p class="admon-t">엔진에는 아직 태그된 릴리스가 없습니다</p><p>저장소의 모든 태그는 SDK(<code>sdk/v*</code>)의 것이며, 루트 모듈에는 태그가 없습니다. <code>go install brevis.sh/brevis/cmd/brevis@latest</code>는 브랜치의 최신 커밋으로 해석되어, 커밋도 날짜도 없이 <code>brevis dev</code>라고 자신을 소개하는 바이너리를 만듭니다. <code>-ldflags</code>는 <code>make build</code>와 <code>docker build</code>를 통해서만 적용되기 때문입니다. 추적 가능한 버전이 필요하면 이미지나 <code>make build</code>를 사용하세요.</p></aside>
 <h2 id="docker">Docker<a class="anchor" href="#docker" aria-label="link">#</a></h2>
 <p>같은 바이너리로 이미지를 두 가지 제공하는데, 두 역할의 요구가 정반대이기 때문입니다.</p>
 <div class="table-wrap"><table><thead><tr><th>태그</th><th>베이스</th><th>이유</th></tr></thead><tbody><tr><td><code>:0.11.2</code></td><td>distroless</td><td>API는 HTTP를 제공할 뿐 아무것도 실행하지 않으므로 셸이 없고 공격 표면이 최소입니다</td></tr><tr><td><code>:0.11.2-worker</code></td><td>alpine + tini</td><td><code>run:</code> step에는 셸이 필요합니다</td></tr></tbody></table></div>

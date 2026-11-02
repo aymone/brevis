@@ -427,7 +427,7 @@ def preencher(tpl, valores):
 
 # ---------------------------------------------------------------- go-import ---
 # Os módulos Go moram em brevis.sh/brevis/... desde 2026-11-02, e não mais em
-# github.com/AreteAcademy/brevis: o caminho não depende do nome de uma
+# brevis.sh/brevis: o caminho não depende do nome de uma
 # organização no GitHub. O `go get` pede https://<caminho do pacote>?go-get=1 e
 # lê a meta go-import, então cada pacote importável ganha uma página aqui.
 #
@@ -912,7 +912,7 @@ or BigQuery — `brevis-sql compile`, `graph`, `build` and `test`. No templating
 ## Optional
 
 - [Repository](%s): source and issues
-- [Go SDK reference](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk): the generated API docs
+- [Go SDK reference](https://pkg.go.dev/brevis.sh/brevis/sdk): the generated API docs
 - [Aretê Academy](https://areteacademy.com.br/): the group the project belongs to
 """ % (BASE_URL, traducao, "\n\n".join(secoes), REPO)
 

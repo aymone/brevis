@@ -133,14 +133,14 @@
       <h1>Go SDK</h1>
       <p class="doc-desc">编写抓取器：从源中抽取、转换，并加载到目的地。</p>
       <p>当 step 的任务是<strong>抓取数据并加载到某处</strong>时，Go SDK 只用几行代码就能给你一个完整的抓取器。它是一个独立的模块，版本与引擎各自独立。</p>
-<div class="code-block" data-code="go get github.com/AreteAcademy/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="复制" data-done="已复制">复制</button></div><pre><code><span class="t-k">go</span> get github.com/AreteAcademy/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
+<div class="code-block" data-code="go get brevis.sh/brevis/sdk@latest"><div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button" aria-label="复制" data-done="已复制">复制</button></div><pre><code><span class="t-k">go</span> get <span class="t-k">brevis</span>.sh/<span class="t-k">brevis</span>/sdk@latest</code></pre></div>
 <p>需要 Go 1.23 或更新版本：SDK 以 <code>iter.Seq2</code> 流式传输行。</p>
 <aside class="admon admon-warning"><p class="admon-t">不要使用 `v0.1.0`</p><p>它发布时的 <code>go.mod</code> 固定了一个不存在的 revision，而 Go 模块代理是不可变的。请从 <code>v0.1.1</code> 开始。</p></aside>
 <h2 id="three-steps">三个步骤<a class="anchor" href="#three-steps" aria-label="link">#</a></h2>
 <div class="code-block" data-code="import (
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/to/bigquery&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk/to/bigquery&quot;
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -153,9 +153,9 @@ res, err := sdk.Load(ctx, rows, sdk.Target{
 	To:      bigquery.Table{Dataset: &quot;bronze&quot;, Name: &quot;events&quot;},
 	Columns: []string{&quot;id&quot;, &quot;created_at&quot;, &quot;amount&quot;},
 })"><div class="code-head"><span class="code-lang">go</span><button class="code-copy" type="button" aria-label="复制" data-done="已复制">复制</button></div><pre><code><span class="t-k">import</span> (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, <span class="t-k">err</span> := sdk.Extract(ctx, sdk.Source{
@@ -226,8 +226,8 @@ to.Files{Path: "gs:<span class="t-c">//bucket/landing/", Store: gcs.New(client)}
 import (
 	&quot;time&quot;
 
-	&quot;github.com/AreteAcademy/brevis/sdk&quot;
-	&quot;github.com/AreteAcademy/brevis/sdk/from&quot;
+	&quot;brevis.sh/brevis/sdk&quot;
+	&quot;brevis.sh/brevis/sdk/from&quot;
 )
 
 func main() {
@@ -252,8 +252,8 @@ func main() {
 <span class="t-k">import</span> (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 <span class="t-k">func</span> main() {
@@ -469,7 +469,7 @@ specification without a key length</code></pre></div>
 <p>Postgres 可以工作，因为它的 <code>string</code> 是 <code>TEXT</code>。在 MySQL 上，请使用 <code>DedupNone</code> 落地，并在下游解析当前版本，或者用 <code>CreateSQL</code> 和指定长度的 id 列自己创建表。</p>
 <p><strong>id 是内容寻址的。</strong> 同一条记录经由任一路径都产生同一个 id，而变化后的记录产生新的 id，这正是重新运行成为无操作而不是产生重复的原因。</p>
 <h2 id="reference">参考<a class="anchor" href="#reference" aria-label="link">#</a></h2>
-<ul><li><a href="https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a>：完整的 API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a>：十二个可运行的示例</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a>：逐版本的历史</li></ul>
+<ul><li><a href="https://pkg.go.dev/brevis.sh/brevis/sdk" target="_blank" rel="noopener">pkg.go.dev</a>：完整的 API</li><li><a href="https://github.com/AreteAcademy/brevis/tree/master/examples" target="_blank" rel="noopener"><code>examples/</code></a>：十二个可运行的示例</li><li><a href="https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md" target="_blank" rel="noopener"><code>CHANGELOG.md</code></a>：逐版本的历史</li></ul>
 
       <nav class="pagers" aria-label="页面">
         <a class="pager pager-prev" href="/zh/docs/runtime/"><span>上一页</span><strong>step 运行时</strong></a>

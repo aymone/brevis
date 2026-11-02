@@ -10,7 +10,7 @@ step의 역할이 **데이터를 가져와 어딘가에 적재하는 것**이라
 몇 줄에 작성할 수 있습니다. 엔진과는 별개의 모듈이며 버전도 독립적입니다.
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Go 1.23 이상이 필요합니다. SDK가 행을 `iter.Seq2`로 스트리밍하기 때문입니다.
@@ -24,9 +24,9 @@ Go 1.23 이상이 필요합니다. SDK가 행을 `iter.Seq2`로 스트리밍하�
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -157,8 +157,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -635,6 +635,6 @@ Postgres는 `string`이 `TEXT`이므로 동작합니다. MySQL에서는 `DedupNo
 
 ## 참고
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — 전체 API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — 전체 API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — 실행 가능한 예제 열두 개
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — 버전별 변경 이력

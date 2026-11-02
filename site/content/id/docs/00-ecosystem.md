@@ -13,7 +13,7 @@ Core menjadwalkan, mengantrekan, dan memantau — dan tidak pernah menyentuh dat
 | bagian | fungsi | cara mendapatkannya | panduan |
 |---|---|---|---|
 | **Core** | Menjadwalkan, mengantrekan, dan memulai satu pod per step. Tidak pernah menyentuh data. | `brevissh/brevis` | [Core](/docs/core/) |
-| **SDK** | Pustaka Go yang mengekstrak, membentuk, dan memuat data di dalam step Anda. | `go get github.com/AreteAcademy/brevis/sdk` | [Go SDK](/docs/sdk/) |
+| **SDK** | Pustaka Go yang mengekstrak, membentuk, dan memuat data di dalam step Anda. | `go get brevis.sh/brevis/sdk` | [Go SDK](/docs/sdk/) |
 | **Gateway** | Menerima HTTP POST, menjawab 202, dan menulis secara batch. Tanpa database sendiri. | `brevissh/brevis-gateway` | [Ingestion](/docs/ingestion/) |
 | **SQL** | File .sql biasa menjadi tabel dan view, berurutan sesuai dependensi. | `brevissh/brevis-sql` | [SQL](/docs/sql/) |
 

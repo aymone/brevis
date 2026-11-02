@@ -39,6 +39,6 @@ open http://localhost:8080
 - **[brevis.sh](https://brevis.sh)** — the website
 - **[Documentation](https://brevis.sh/docs/)** · [Quickstart](https://brevis.sh/docs/quickstart/) · [Kubernetes](https://brevis.sh/docs/kubernetes/)
 - **[GitHub](https://github.com/AreteAcademy/brevis)** — source, issues, discussions
-- **[Go SDK](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk)** — for writing the steps
+- **[Go SDK](https://pkg.go.dev/brevis.sh/brevis/sdk)** — for writing the steps
 
 MIT licensed.

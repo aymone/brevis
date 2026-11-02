@@ -7,7 +7,7 @@ Extract HTTP data with retry, timeout, and format handling. Load to BigQuery wit
 ## Installation
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 go mod tidy
 ```
 
@@ -21,9 +21,9 @@ Requires Go 1.23 or newer (the SDK streams rows as `iter.Seq2`).
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 dados, err := sdk.Extract(ctx, sdk.Source{
@@ -288,8 +288,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/extract"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/extract"
 )
 
 func main() {
@@ -320,8 +320,8 @@ package main
 import (
 	"context"
 	"log"
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/load"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/load"
 )
 
 func main() {
@@ -402,8 +402,8 @@ lines, _ := extract.CSV(ctx, sdk.Source{URL: url, NoHeader: true})
 
 ```go
 import (
-    frompg "github.com/AreteAcademy/brevis/sdk/from/postgres"
-    topg   "github.com/AreteAcademy/brevis/sdk/to/postgres"
+    frompg "brevis.sh/brevis/sdk/from/postgres"
+    topg   "brevis.sh/brevis/sdk/to/postgres"
 )
 
 sdk.Run(sdk.Pipeline{
@@ -455,8 +455,8 @@ The same shape as Postgres, one line changed:
 
 ```go
 import (
-    frommy "github.com/AreteAcademy/brevis/sdk/from/mysql"
-    tomy   "github.com/AreteAcademy/brevis/sdk/to/mysql"
+    frommy "brevis.sh/brevis/sdk/from/mysql"
+    tomy   "brevis.sh/brevis/sdk/to/mysql"
 )
 
 From: frommy.Query{DSN: dsn, SQL: "SELECT * FROM pedidos WHERE id > ? ORDER BY id LIMIT ?", Args: args}
@@ -498,8 +498,8 @@ This one is not, and the reason is that no such server can be started.
 
 ```go
 import (
-    "github.com/AreteAcademy/brevis/sdk/store/s3"
-    "github.com/AreteAcademy/brevis/sdk/to/redshift"
+    "brevis.sh/brevis/sdk/store/s3"
+    "brevis.sh/brevis/sdk/to/redshift"
 )
 
 To: redshift.Table{
@@ -930,7 +930,7 @@ port from Ruby or Scala uses the same door. `sdk/pycompat` is the one the SDK
 ships:
 
 ```go
-import "github.com/AreteAcademy/brevis/sdk/pycompat"
+import "brevis.sh/brevis/sdk/pycompat"
 
 From: from.HTTP{URL: url, PreserveNumbers: true},
 
@@ -1315,7 +1315,7 @@ Without a store, the renewed value lives for this run only — and somebody
 re-pastes the credential once per expiry window, forever.
 
 ```go
-import "github.com/AreteAcademy/brevis/sdk/store/gcs"
+import "brevis.sh/brevis/sdk/store/gcs"
 
 Refresh: &from.Refresh{
     URL:       "https://api.example.com/auth/session",

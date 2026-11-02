@@ -5,9 +5,9 @@ go 1.26.0
 replace brevis.sh/brevis/sdk => ../sdk
 
 require (
+	brevis.sh/brevis/sdk v0.88.0
 	cloud.google.com/go/pubsub v1.51.1
 	cloud.google.com/go/storage v1.70.0
-	brevis.sh/brevis/sdk v0.86.1
 	github.com/aws/aws-sdk-go-v2 v1.47.5
 	github.com/aws/aws-sdk-go-v2/config v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.6

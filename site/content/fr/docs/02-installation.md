@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning Le moteur n'a pas encore de release taguée
 Tous les tags du dépôt appartiennent au SDK (`sdk/v*`) ; le module racine n'en a
-aucun. Un `go install github.com/AreteAcademy/brevis/cmd/brevis@latest` se
+aucun. Un `go install brevis.sh/brevis/cmd/brevis@latest` se
 résout vers le dernier commit de la branche et produit un binaire qui
 s'identifie comme `brevis dev`, sans commit ni date — les `-ldflags` ne sont
 transmis que par `make build` et `docker build`. Pour une version traçable,

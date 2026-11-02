@@ -21,7 +21,7 @@ The Core schedules, queues and watches — and never touches the data. What touc
 | piece | what it does | how you get it | guide |
 |---|---|---|---|
 | **Core** | Schedules, queues and starts one pod per step. Never touches the data. | `brevissh/brevis` | [Core](/docs/core/index.md) |
-| **SDK** | A Go library that extracts, shapes and loads, inside your step. | `go get github.com/AreteAcademy/brevis/sdk` | [Go SDK](/docs/sdk/index.md) |
+| **SDK** | A Go library that extracts, shapes and loads, inside your step. | `go get brevis.sh/brevis/sdk` | [Go SDK](/docs/sdk/index.md) |
 | **Gateway** | Takes HTTP POST, answers 202 and writes in batches. No database of its own. | `brevissh/brevis-gateway` | [Ingestion](/docs/ingestion/index.md) |
 | **SQL** | Plain .sql files become tables and views, in dependency order. | `brevissh/brevis-sql` | [SQL](/docs/sql/index.md) |
 
@@ -346,7 +346,7 @@ brevis 0.11.2
 
 :::warning The engine has no tagged release yet
 Every tag in the repository belongs to the SDK (`sdk/v*`); the root module has
-none. A `go install github.com/AreteAcademy/brevis/cmd/brevis@latest` resolves
+none. A `go install brevis.sh/brevis/cmd/brevis@latest` resolves
 to the latest commit on the branch and produces a binary that identifies itself
 as `brevis dev`, with no commit and no date — the `-ldflags` only come in
 through `make build` and `docker build`. For a traceable version, use the image
@@ -2674,7 +2674,7 @@ you the whole fetcher in a few lines. It is a separate module, versioned
 independently from the engine.
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Requires Go 1.23 or newer — the SDK streams rows as `iter.Seq2`.
@@ -2688,9 +2688,9 @@ proxy is immutable. Start at `v0.1.1`.
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -2828,8 +2828,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -3333,7 +3333,7 @@ re-run be a no-op instead of a duplicate.
 
 ## Reference
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — the complete API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — the complete API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — twelve runnable examples
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — version-by-version history
 

@@ -15,6 +15,12 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed: the module is `brevis.sh/brevis/gateway`
+
+- The gateway's module path moves to `brevis.sh/brevis/gateway`, and it
+  requires `brevis.sh/brevis/sdk v0.88.0`; versions up to 0.32.0 stay under
+  `github.com/AreteAcademy/brevis/gateway`.
+
 ### Changed: the image is `brevissh/brevis-gateway`
 
 - The next release publishes to `docker.io/brevissh/brevis-gateway` (and its

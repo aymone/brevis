@@ -13,7 +13,7 @@ Core 负责调度、排队和监控，从不接触数据。真正接触数据的
 | 组成部分 | 作用 | 获取方式 | 指南 |
 |---|---|---|---|
 | **Core** | 调度、排队，并为每个 step 启动一个 pod。从不接触数据。 | `brevissh/brevis` | [Core](/zh/docs/core/index.md) |
-| **SDK** | 一个 Go 库，在你的 step 内部完成抽取、整形和加载。 | `go get github.com/AreteAcademy/brevis/sdk` | [Go SDK](/zh/docs/sdk/index.md) |
+| **SDK** | 一个 Go 库，在你的 step 内部完成抽取、整形和加载。 | `go get brevis.sh/brevis/sdk` | [Go SDK](/zh/docs/sdk/index.md) |
 | **Gateway** | 接收 HTTP POST，返回 202，并分批写入。自身没有数据库。 | `brevissh/brevis-gateway` | [摄取](/zh/docs/ingestion/index.md) |
 | **SQL** | 普通的 .sql 文件按依赖顺序变成表和视图。 | `brevissh/brevis-sql` | [SQL](/zh/docs/sql/index.md) |
 

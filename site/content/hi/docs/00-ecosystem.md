@@ -13,7 +13,7 @@ Core शेड्यूल करता है, कतार में रखत
 | हिस्सा | क्या करता है | कैसे मिलता है | गाइड |
 |---|---|---|---|
 | **Core** | शेड्यूल करता है, कतार में रखता है और हर step के लिए एक pod शुरू करता है। डेटा को कभी नहीं छूता। | `brevissh/brevis` | [Core](/docs/core/) |
-| **SDK** | एक Go लाइब्रेरी जो आपके step के भीतर डेटा निकालती है, उसे ढालती है और लोड करती है। | `go get github.com/AreteAcademy/brevis/sdk` | [Go SDK](/docs/sdk/) |
+| **SDK** | एक Go लाइब्रेरी जो आपके step के भीतर डेटा निकालती है, उसे ढालती है और लोड करती है। | `go get brevis.sh/brevis/sdk` | [Go SDK](/docs/sdk/) |
 | **Gateway** | HTTP POST लेता है, 202 लौटाता है और बैच में लिखता है। इसका अपना कोई डेटाबेस नहीं। | `brevissh/brevis-gateway` | [Ingestion](/docs/ingestion/) |
 | **SQL** | सादी .sql फ़ाइलें निर्भरता के क्रम में तालिकाएँ और view बन जाती हैं। | `brevissh/brevis-sql` | [SQL](/docs/sql/) |
 

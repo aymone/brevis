@@ -16,6 +16,17 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+### Changed: the Go modules are `brevis.sh/brevis/...`
+
+- The engine's module path moves from `github.com/AreteAcademy/brevis` to
+  **`brevis.sh/brevis`**, like every other module in the repository: a path
+  on the project's own domain, which `brevis.sh` serves with `go-import`
+  pages pointing at `github.com/brevis-sh/brevis`. `go install
+  brevis.sh/brevis/cmd/brevis@latest` installs the CLI from this release on;
+  versions up to 0.40.0 stay under the old path.
+- The update check reads `api.github.com/repos/brevis-sh/brevis/releases`
+  (the old address redirected).
+
 ### Changed: the images are published as `brevissh/*` on Docker Hub
 
 - The engine's images (`brevis`, with `-worker` and `-agent`) and the

@@ -11,7 +11,7 @@ you the whole fetcher in a few lines. It is a separate module, versioned
 independently from the engine.
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Requires Go 1.23 or newer — the SDK streams rows as `iter.Seq2`.
@@ -25,9 +25,9 @@ proxy is immutable. Start at `v0.1.1`.
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -165,8 +165,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -670,6 +670,6 @@ re-run be a no-op instead of a duplicate.
 
 ## Reference
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — the complete API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — the complete API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — twelve runnable examples
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — version-by-version history

@@ -37,7 +37,7 @@ brevis 0.11.2
 ```
 
 :::warning 引擎还没有带标签的正式版本
-仓库里的每一个标签都属于 SDK（`sdk/v*`），根模块没有任何标签。执行 `go install github.com/AreteAcademy/brevis/cmd/brevis@latest` 会解析到该分支上最新的 commit，生成的二进制文件会自称 `brevis dev`，没有 commit 也没有日期：`-ldflags` 只会通过 `make build` 和 `docker build` 传入。若要得到可追溯的版本，请使用镜像或 `make build`。
+仓库里的每一个标签都属于 SDK（`sdk/v*`），根模块没有任何标签。执行 `go install brevis.sh/brevis/cmd/brevis@latest` 会解析到该分支上最新的 commit，生成的二进制文件会自称 `brevis dev`，没有 commit 也没有日期：`-ldflags` 只会通过 `make build` 和 `docker build` 传入。若要得到可追溯的版本，请使用镜像或 `make build`。
 :::
 
 ## Docker

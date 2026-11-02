@@ -9,7 +9,7 @@
 जब किसी step का काम **डेटा लाकर कहीं लोड करना** हो, तो Go SDK आपको पूरा fetcher कुछ पंक्तियों में दे देता है। यह अलग module है, जिसका संस्करण engine से स्वतंत्र है।
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Go 1.23 या नया चाहिए — SDK पंक्तियाँ `iter.Seq2` के रूप में स्ट्रीम करता है।
@@ -22,9 +22,9 @@ Go 1.23 या नया चाहिए — SDK पंक्तियाँ `it
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -132,8 +132,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -455,6 +455,6 @@ Postgres चलता है, क्योंकि उसका `string` `TEXT`
 
 ## संदर्भ
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — पूरी API
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — पूरी API
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — बारह चलाने योग्य उदाहरण
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — संस्करण-दर-संस्करण इतिहास

@@ -10,9 +10,9 @@ Declarative transformation, workflow orchestration, a persistent queue, a
 scheduler and an operational interface — in one binary. Every step runs as its
 own Kubernetes pod, with its own image.
 
-[**Website**](https://brevis.sh) · [**Documentation**](https://brevis.sh/docs/) · [Quickstart](https://brevis.sh/docs/quickstart/) · [SDK](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) · [Discussions](https://github.com/AreteAcademy/brevis/discussions)
+[**Website**](https://brevis.sh) · [**Documentation**](https://brevis.sh/docs/) · [Quickstart](https://brevis.sh/docs/quickstart/) · [SDK](https://pkg.go.dev/brevis.sh/brevis/sdk) · [Discussions](https://github.com/AreteAcademy/brevis/discussions)
 
-[![Test & Lint](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml) [![Code Quality](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/AreteAcademy/brevis/sdk.svg)](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk)
+[![Test & Lint](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/test.yml) [![Code Quality](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/AreteAcademy/brevis/actions/workflows/quality.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/AreteAcademy/brevis/sdk.svg)](https://pkg.go.dev/brevis.sh/brevis/sdk)
 
 [![engine](https://img.shields.io/github/v/tag/AreteAcademy/brevis?filter=v*&label=engine&color=c7d66d)](https://github.com/AreteAcademy/brevis/releases) [![sdk](https://img.shields.io/github/v/tag/AreteAcademy/brevis?filter=sdk/*&label=sdk&color=c7d66d)](https://github.com/AreteAcademy/brevis/releases) [![PyPI](https://img.shields.io/pypi/v/brevis?label=pypi&color=c7d66d)](https://pypi.org/project/brevis/) [![License: MIT](https://img.shields.io/badge/license-MIT-c7d66d.svg)](LICENSE)
 
@@ -69,13 +69,13 @@ install and keep alive:
 ## SDK
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 HTTP extraction with retry, timeout, guard and pagination; batched loading into
 BigQuery, Postgres, MySQL, Redshift and files. Requires Go 1.23+.
 
-- API reference: [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk)
+- API reference: [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk)
 - Guide and design decisions: [`sdk/README.md`](sdk/README.md)
 - Runnable examples: [`examples/`](examples/) — start with
   [`examples/quickstart/`](examples/quickstart/), a full stack from a public API
@@ -85,7 +85,7 @@ BigQuery, Postgres, MySQL, Redshift and files. Requires Go 1.23+.
 > **Do not use `v0.1.0`.** It was published with a broken `go.mod`, and the Go
 > proxy is immutable, so there is no fixing it. Start at `v0.1.1`.
 
-SDK CLI: [`cmd/brevis-sdk/`](cmd/brevis-sdk/) — `go install github.com/AreteAcademy/brevis/cmd/brevis-sdk@latest`
+SDK CLI: [`cmd/brevis-sdk/`](cmd/brevis-sdk/) — `go install brevis.sh/brevis/cmd/brevis-sdk@latest`
 
 The Brevis binary itself (`serve`, `scheduler`, `migrate`, `publish`) is
 [`cmd/brevis/`](cmd/brevis/), built with `make build`.

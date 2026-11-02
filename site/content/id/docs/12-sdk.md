@@ -11,7 +11,7 @@ Go SDK memberi Anda seluruh fetcher dalam beberapa baris. Ia adalah modul
 terpisah, diberi versi secara independen dari engine.
 
 ```bash
-go get github.com/AreteAcademy/brevis/sdk@latest
+go get brevis.sh/brevis/sdk@latest
 ```
 
 Membutuhkan Go 1.23 atau lebih baru — SDK men-stream baris sebagai `iter.Seq2`.
@@ -25,9 +25,9 @@ proxy modul Go bersifat immutable. Mulailah dari `v0.1.1`.
 
 ```go
 import (
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
-	"github.com/AreteAcademy/brevis/sdk/to/bigquery"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
+	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
 rows, err := sdk.Extract(ctx, sdk.Source{
@@ -168,8 +168,8 @@ package main
 import (
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
-	"github.com/AreteAcademy/brevis/sdk/from"
+	"brevis.sh/brevis/sdk"
+	"brevis.sh/brevis/sdk/from"
 )
 
 func main() {
@@ -683,6 +683,6 @@ membuat run ulang menjadi no-op alih-alih duplikat.
 
 ## Referensi
 
-- [pkg.go.dev](https://pkg.go.dev/github.com/AreteAcademy/brevis/sdk) — API lengkap
+- [pkg.go.dev](https://pkg.go.dev/brevis.sh/brevis/sdk) — API lengkap
 - [`examples/`](https://github.com/AreteAcademy/brevis/tree/master/examples) — dua belas contoh yang dapat dijalankan
 - [`CHANGELOG.md`](https://github.com/AreteAcademy/brevis/blob/master/CHANGELOG.md) — riwayat versi demi versi

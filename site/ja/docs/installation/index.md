@@ -40,7 +40,7 @@ brevis 0.11.2
 
 :::warning エンジンにはまだタグ付きのリリースがありません
 リポジトリのタグはすべて SDK(`sdk/v*`)のもので、ルートモジュールにはありません。
-`go install github.com/AreteAcademy/brevis/cmd/brevis@latest` はブランチの最新コミットに
+`go install brevis.sh/brevis/cmd/brevis@latest` はブランチの最新コミットに
 解決され、`brevis dev` と名乗るバイナリを生成します。コミットも日付もありません。`-ldflags` は
 `make build` と `docker build` のときにだけ渡されるためです。追跡可能なバージョンが必要なら、
 イメージか `make build` を使ってください。
