@@ -48,7 +48,7 @@ Untuk menjalankannya secara lokal, tanpa antrean dan tanpa klaster:
 
 ```bash
 docker run --rm -v ./hello.yaml:/w/hello.yaml -w /w \
-  brevissh/brevis:0.40.0-worker run hello.yaml
+  brevissh/brevis:0.41.0-worker run hello.yaml
 ```
 
 Outputnya:

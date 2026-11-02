@@ -110,7 +110,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: migrate
-          image: brevissh/brevis:0.40.0
+          image: brevissh/brevis:0.41.0
           args: ["migrate", "up"]
           envFrom:
             - secretRef: {name: brevis-db}
@@ -134,7 +134,7 @@ spec:
       serviceAccountName: brevis
       containers:
         - name: api
-          image: brevissh/brevis:0.40.0
+          image: brevissh/brevis:0.41.0
           args: ["serve"]
           ports: [{containerPort: 8080}]
           envFrom:
@@ -179,7 +179,7 @@ spec:
       serviceAccountName: brevis
       containers:
         - name: scheduler
-          image: brevissh/brevis:0.40.0-worker
+          image: brevissh/brevis:0.41.0-worker
           args: ["scheduler", "--interval", "10s", "--concurrency", "5", "--max-pods", "10"]
           envFrom:
             - secretRef: {name: brevis-db}
