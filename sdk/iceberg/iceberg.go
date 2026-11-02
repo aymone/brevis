@@ -61,6 +61,13 @@ type Table struct {
 	// of a step creates, and so does the create_table parameter -- and an
 	// explicit value wins over both.
 	CreateTable *bool
+
+	// CommitRetries is how many times a commit that conflicts with another
+	// writer is attempted before the Write fails; zero means ten.
+	// CommitWithin is the time ceiling on those attempts; zero means thirty
+	// seconds. See commit.go for why the driver retries at all.
+	CommitRetries int
+	CommitWithin  time.Duration
 }
 
 var (
@@ -97,7 +104,23 @@ func (t Table) Configuration() []sdk.Setting {
 		sdk.Setting{Key: "table", Value: t.Name},
 		sdk.Setting{Key: "partition_by", Value: t.PartitionBy},
 		sdk.Setting{Key: "create_table", Value: create},
+		sdk.Setting{Key: "commit_retries", Value: positive(t.CommitRetries)},
+		sdk.Setting{Key: "commit_within", Value: positiveDuration(t.CommitWithin)},
 	)
+}
+
+func positive(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	return strconv.Itoa(n)
+}
+
+func positiveDuration(d time.Duration) string {
+	if d <= 0 {
+		return ""
+	}
+	return d.String()
 }
 
 // Write refuses first, then loads the table -- creating it when asked and
@@ -107,7 +130,7 @@ func (t Table) Configuration() []sdk.Setting {
 //
 // Loaded on every Write, not cached: the table's current metadata is what
 // the commit is conditioned on, and another writer may have moved it since
-// the last one. See criterion 6 of the spec and commit.go.
+// the last one. The append, the batch key and the retry are commit.go's.
 func (t Table) Write(ctx context.Context, records []sdk.Envelope, opt sdk.WriteOptions) (*sdk.LoadResult, error) {
 	start := time.Now()
 	res := &sdk.LoadResult{Strategy: "append", Format: "parquet", Dedup: sdk.DedupNone}
@@ -147,22 +170,7 @@ func (t Table) Write(ctx context.Context, records []sdk.Envelope, opt sdk.WriteO
 	if len(records) == 0 {
 		return done(nil)
 	}
-
-	schema, err := Reconcile(tbl.Schema(), records, opt)
-	if err != nil {
-		return done(err)
-	}
-	rdr, err := newReader(schema, records)
-	if err != nil {
-		return done(err)
-	}
-	defer rdr.Release()
-	written, err := tbl.Append(ctx, rdr, nil)
-	if err != nil {
-		return done(fmt.Errorf("iceberg: appending to %s: %w", t.Describe(), err))
-	}
-	t.report(ctx, written, res, int64(len(records)))
-	return done(nil)
+	return done(t.commit(ctx, cat, tbl, records, opt, res))
 }
 
 // identifier is the catalog's name for the table: the namespace's levels,

@@ -17,6 +17,27 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: the commit, with the batch key and a retry
+
+- Every snapshot this destination writes carries `brevis.batch-key`, the
+  `WriteOptions.BatchKey`, and `brevis.sdk`, the writer, in its summary. A
+  `Write` whose key already names a snapshot writes nothing and reports
+  `Strategy: "already-committed"` with the rows that snapshot added and no
+  `Objects`: a replay lands once, which is what the gateway's dead letter
+  needs since `Dedup` is refused. The key is checked on every attempt, so
+  a commit that landed and then failed to report is recognised by the
+  retry instead of written twice.
+- A conflicting commit is retried: the table is reloaded and the append
+  redone, with backoff from 50 ms doubling to 2 s and jitter, up to
+  `Table.CommitRetries` attempts (ten by default) within
+  `Table.CommitWithin` (thirty seconds by default), both listed by
+  `Configuration()` when set. Both forms the spike S3 measured count as a
+  conflict -- iceberg-go's `ErrCommitFailed` and the raw
+  `requirement failed` the catalogs raise before the compare-and-swap --
+  and nothing else does: a refusal from the catalog is reported as it
+  came, once. Two writers on one table in goroutines land every batch,
+  under the race detector.
+
 ### Added: `iceberg.Table`, the destination
 
 - `Table{Catalog, Namespace, Name, PartitionBy, CreateTable}` satisfies the
