@@ -13,6 +13,14 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: `iceberg://` targets
+
+- `check_target` and `landed` accept
+  `iceberg://{catalog}/{namespace}/{table}`: three segments, a dotted
+  namespace one segment, the same rules as every other table scheme. A
+  Python step that writes an Iceberg table, with PyIceberg for instance, can
+  report the landing and see it on `/data`.
+
 ### Removed: Python 3.9
 
 - **`requires-python` is now `>=3.10`.** Python 3.9 reached its end of life in

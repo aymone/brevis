@@ -16,6 +16,23 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+### Added: an Iceberg table is a landing the engine accepts and the console shows
+
+- `iceberg://{catalog}/{namespace}/{table}` is a target: three segments, like
+  a BigQuery or Postgres table, and a dotted namespace stays one segment. A
+  step that lands in an Iceberg table can say so on its `landed` line, and
+  the engine keeps it instead of counting a refusal for an unknown scheme.
+  The cases live in `sdk/testdata/targets.txt`, copied to the engine's and
+  the Python library's fixtures as the drift tests require.
+- `/data` filters by `kind=iceberg`, and a gateway stream whose sink is an
+  Iceberg table reads like the other tables in its summary: "land in Iceberg
+  table lake.bronze.events". No query link yet: the workbench behind it is
+  brevis-sql, which speaks Postgres and BigQuery, and a link that opens a
+  page unable to answer is worse than none.
+- Nothing writes an Iceberg table yet. The destination is a module of its
+  own, `sdk/iceberg`, and arrives separately; the engine had to accept the
+  name first.
+
 ### Fixed: the images name the repository they were built from
 
 - Every image's `org.opencontainers.image.source` label -- the link Docker

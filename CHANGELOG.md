@@ -20,6 +20,15 @@ and stay as written: a changelog records what was decided on a date.
 
 ## [Unreleased]
 
+### Added: `iceberg://` is a target `CheckTarget` accepts
+
+- `iceberg://{catalog}/{namespace}/{table}`: three segments, and a dotted
+  namespace is one segment. The destination that will build it with
+  `Locate()` is a module of its own, `sdk/iceberg`, and arrives separately:
+  the three validators had to agree on the name before anything emitted it.
+- `sdk/testdata/targets.txt` carries the seven cases; the engine and the
+  Python library copy the file and fail a test when their copy drifts.
+
 ### Fixed: a retried or paged POST sent no body
 
 - `extract` reads `Source.Body` once and rewinds it before every attempt and
