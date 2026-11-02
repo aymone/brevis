@@ -17,6 +17,29 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: the catalog, REST and SQL on Postgres, opened once per process
+
+- `Catalog{Name, Type, URI, Credential, Token, Warehouse, DSN, IO, Conn}`
+  and `Open(ctx)`. `REST` goes through iceberg-go's client, which does the
+  `/v1/config` handshake with the warehouse and carries the token or
+  exchanges the credential; `SQL` goes through `database/sql` on pgx with
+  the `postgres` dialect, and the catalog's own tables are created on first
+  use. One catalog per `Name` per process, the way the SDK's Google clients
+  are one per process: eight goroutines opening one name produce one
+  handshake. The same `Name` with another configuration is refused naming
+  the fields that differ and never their values. A failed open is not
+  cached. `Conn` hands over an opened catalog and `Open` returns it as it is.
+- The IO properties reach the catalog verbatim -- they are iceberg-go's keys,
+  `s3.endpoint`, `s3.access-key-id`, `s3.region`, so there is no translation
+  to lag behind -- with the warehouse alongside and nothing else: a DSN, a
+  token or a credential is not a file IO property. A refusal names the
+  field: a `Type` this destination does not open, a REST catalog without
+  `URI`, a SQL catalog without `DSN`, a catalog without `Name`.
+- The module now requires `github.com/jackc/pgx/v5`, at the version the
+  published sdk already pins. The REST client brings `aws-sdk-go-v2` into
+  the graph for its SigV4 option; the pruning case in CI will say what it
+  weighs on a binary.
+
 ### Added: the asymmetric reconciliation, as a pure function
 
 - `Reconcile` takes the table's schema, the batch and the write options and
