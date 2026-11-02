@@ -36,6 +36,7 @@ var tableSegments = map[string]int{
 	"redshift": 3, // database / schema / table
 	"mysql":    2, // database / table
 	"pubsub":   2, // project / topic
+	"iceberg":  3, // catalog / namespace / table -- a dotted namespace stays one segment
 }
 
 var objectSchemes = map[string]bool{"s3": true, "gs": true, "file": true}
