@@ -1,6 +1,7 @@
 # Changelog — the gateway
 
-`areteacademy/brevis-gateway`, published from a `gateway/v*` tag.
+`brevissh/brevis-gateway`, published from a `gateway/v*` tag
+(`areteacademy/brevis-gateway` up to 0.32.0).
 
 Its own version, on purpose. The gateway is a separate Go module with a
 separate maturity, and numbering it with the engine would claim one it does not
@@ -13,7 +14,7 @@ the versions follow [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.33.0] — 2026-11-02
 
 ### Changed: the module is `brevis.sh/brevis/gateway`
 
@@ -23,7 +24,7 @@ the versions follow [SemVer](https://semver.org/).
 
 ### Changed: the image is `brevissh/brevis-gateway`
 
-- The next release publishes to `docker.io/brevissh/brevis-gateway` (and its
+- This release publishes to `docker.io/brevissh/brevis-gateway` (and its
   `-slim`), not `areteacademy/brevis-gateway`, which keeps the versions
   already there. The current one was copied over with the same digest.
 

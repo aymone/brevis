@@ -22,7 +22,7 @@ Con el `gateway.yaml` de la sección siguiente, y la clave que pide en `keys_fro
 ```bash
 docker run -p 8080:8080 -e BREVIS_INGEST_KEYS=dev-key \
   -v ./gateway.yaml:/etc/brevis/gateway.yaml:ro \
-  brevissh/brevis-gateway:0.32.0
+  brevissh/brevis-gateway:0.33.0
 ```
 
 ```text
