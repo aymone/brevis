@@ -179,6 +179,13 @@ func TestAStreamQueriesOnlyATable(t *testing.T) {
 	if !BuildStream(gws[0].Streams[1], nil).Queryable() {
 		t.Error("a Postgres sink offers no query")
 	}
+	// An Iceberg table is a table, and SQL will read it one day -- but not
+	// through this workbench yet: brevis-sql speaks Postgres and BigQuery,
+	// and a query link that opens a page unable to answer is worse than none.
+	iceberg := Stream{Gateway: "edge", Path: "/v1/events", Sink: Place{Kind: "iceberg", URI: "iceberg://lake/bronze/events"}}
+	if BuildStream(iceberg, nil).Queryable() {
+		t.Error("an Iceberg sink offers a query the workbench cannot answer yet")
+	}
 }
 
 // SEND TEST EVENT IS A DRAWER THAT SENDS NOTHING: a body in the stream's own

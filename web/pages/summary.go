@@ -66,7 +66,7 @@ func Summary(ctx context.Context, c *postgres.WriterConfig) string {
 		b.WriteString(" " + tr("summary.stream.published", "to", destination(ctx, text, "sink", true)))
 	case "files":
 		b.WriteString(" " + tr("summary.stream.written", "to", destination(ctx, text, "sink", true)))
-	case "bigquery", "postgres", "mysql", "redshift":
+	case "bigquery", "postgres", "mysql", "redshift", "iceberg":
 		b.WriteString(" " + tr("summary.stream.land", "to", destination(ctx, text, "sink", true)))
 	default:
 		b.WriteString(" " + tr("summary.stream.sink", "sink", sink))
@@ -138,6 +138,13 @@ func destination(ctx context.Context, text func(string) string, at string, withT
 			return tr("summary.dest.table", "engine", name, "table", table)
 		}
 		return name
+	case "iceberg":
+		// The catalog's name qualifies the table, the way a project qualifies
+		// a BigQuery dataset: the same bronze.events can live in two catalogs.
+		if table != "" {
+			return tr("summary.dest.table", "engine", "Iceberg", "table", joinWords(".", get("catalog"), table))
+		}
+		return "Iceberg"
 	case "pubsub":
 		return tr("summary.dest.topic", "topic", joinWords("/", get("project"), get("topic")))
 	case "files":

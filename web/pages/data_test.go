@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -162,5 +163,17 @@ func TestGatewayWritersAreContinuousAndAnUnnamedOneUnidentified(t *testing.T) {
 	// Unidentified sorts last, after everything that has a verdict.
 	if d.Rows[len(d.Rows)-1].Target != "" {
 		t.Errorf("the unnamed destination is not last: %v", targets(d.Rows))
+	}
+}
+
+// THE KIND FILTER IS AN ALLOWLIST, and an Iceberg table is on it: a lake's
+// landing is a table and is filtered like one, while a kind nobody registered
+// is ignored rather than turned into an empty page.
+func TestAnIcebergTableIsAKindTheFilterKnows(t *testing.T) {
+	if got := ParseDataFilter(url.Values{"kind": {"iceberg"}}).Kind; got != "iceberg" {
+		t.Errorf("kind=iceberg parsed as %q", got)
+	}
+	if got := ParseDataFilter(url.Values{"kind": {"kafka"}}).Kind; got != "" {
+		t.Errorf("kind=kafka should be ignored, parsed as %q", got)
 	}
 }

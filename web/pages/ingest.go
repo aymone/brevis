@@ -705,9 +705,14 @@ func BuildStream(s Stream, detail *postgres.TargetDetail) StreamView {
 }
 
 // Queryable says the sink is something SQL can read: not a topic, not files.
+//
+// Not an Iceberg table either, for now: it IS a table, but the workbench
+// behind this link is brevis-sql, which speaks Postgres and BigQuery. A link
+// that opens a page unable to answer is worse than no link. It turns true the
+// day brevis-sql reads a lake.
 func (v StreamView) Queryable() bool {
 	switch v.Sink.Kind {
-	case "", "pubsub", "file":
+	case "", "pubsub", "file", "iceberg":
 		return false
 	}
 	return true

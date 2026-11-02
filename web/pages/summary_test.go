@@ -50,6 +50,12 @@ func TestTheSummarySaysWhatTheStreamDoesInOneSentence(t *testing.T) {
 			"Newline-delimited JSON events posted to /v1/orders land in Postgres table landing.orders, " +
 				"appended so a redelivery is a second row."},
 
+		{"iceberg append", fields(
+			"path", "/v1/events", "format", "ndjson",
+			"sink.type", "iceberg", "sink.catalog", "lake", "sink.table", "bronze.events", "sink.write", "append"),
+			"Newline-delimited JSON events posted to /v1/events land in Iceberg table lake.bronze.events, " +
+				"appended so a redelivery is a second row."},
+
 		{"bigquery with a table", fields(
 			"path", "/v1/telemetry", "format", "array",
 			"sink.type", "bigquery", "sink.project", "acme-prod", "sink.dataset", "landing",

@@ -169,7 +169,7 @@ var (
 	filterStatuses = map[string]bool{"attention": true, "on_time": true, "late": true,
 		"stale": true, "paused": true, "unscheduled": true, "continuous": true, "unidentified": true}
 	filterKinds = map[string]bool{"bigquery": true, "postgres": true, "redshift": true,
-		"mysql": true, "s3": true, "gs": true, "file": true, "pubsub": true}
+		"mysql": true, "s3": true, "gs": true, "file": true, "pubsub": true, "iceberg": true}
 	filterSources = map[string]bool{"http": true, "file": true, "database": true, "other": true, "none": true}
 )
 
