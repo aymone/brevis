@@ -17,6 +17,41 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: `iceberg.Table`, the destination
+
+- `Table{Catalog, Namespace, Name, PartitionBy, CreateTable}` satisfies the
+  SDK's `Writer`, `Locator` and `Configured`. `Write` refuses first, loads
+  the table on every call, creates it when asked and missing, reconciles
+  the batch against it, converts it in batches and appends them as one
+  snapshot. The result carries the rows and the Parquet bytes from the
+  snapshot's summary, the data files it added, `Strategy: "append"`,
+  `Format: "parquet"` and whether the table is new. A `Write` with no rows
+  creates the table if asked and appends nothing.
+- A created table is format v2, `write.parquet.compression-codec = zstd`,
+  `commit.retry.num-retries = 4`, partitioned by `day(PartitionBy)` when
+  there is one, in a namespace created if missing. `CreateTable` is
+  tri-state like BigQuery's: explicit first, then the engine's first run or
+  its `create_table` parameter. Without `Schema`, creation is refused
+  listing the batch's columns. On an existing table, `PartitionBy` has to
+  be the table's own `day(column)` or it is refused saying what the table
+  has; no `PartitionBy` makes no claim.
+- Refusals, before a catalog opens: `Dedup` set to anything but none, a
+  `Default` or a `Unique` on a declared column -- an Iceberg table has
+  nothing that applies either -- and a `PartitionBy` set both on the Table
+  and on the Target to different columns. `Evolve` is not an option here:
+  the destination has no such field, and a divergence is `Reconcile`'s
+  error, never an ALTER.
+- `Locate()` is `iceberg://{catalog}/{namespace}/{table}`, a dotted
+  namespace one segment, without opening anything. `Describe()` is
+  `catalog.namespace.table`. `Configuration()` lists the catalog, its type,
+  the server without userinfo, the warehouse, the table and the options,
+  and never a DSN, a token, a credential or an IO key.
+- The matrix row lives in the module's `capabilities_test.go`, since the
+  SDK's cannot import a module that depends on it: Dedup refused naming
+  `Dedup` and `BatchKey`, `CreateTable` from `Schema`, no `Evolve` field.
+- Tested end to end without a service, through iceberg-go's filesystem
+  catalog on a temporary directory handed over as `Conn`.
+
 ### Added: the catalog, REST and SQL on Postgres, opened once per process
 
 - `Catalog{Name, Type, URI, Credential, Token, Warehouse, DSN, IO, Conn}`
