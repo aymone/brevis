@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 	"github.com/apache/arrow-go/v18/arrow"
 	"github.com/apache/arrow-go/v18/arrow/array"
 )

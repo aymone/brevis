@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // THE MATRIX ROW, AS A TEST. sdk/capabilities_test.go holds every

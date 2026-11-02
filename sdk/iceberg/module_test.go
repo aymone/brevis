@@ -23,8 +23,17 @@ func TestTheModuleIsItsOwnAndPinsNothingLocally(t *testing.T) {
 	}
 	gomod := string(raw)
 
-	if !strings.Contains(gomod, "\nmodule github.com/AreteAcademy/brevis/sdk/iceberg\n") {
-		t.Error("the module path is not .../sdk/iceberg")
+	// brevis.sh/brevis/... since 2026-11-02 (#234): the site serves the
+	// go-import pages, and the old GitHub path must not come back through a
+	// copy-paste.
+	if !strings.Contains(gomod, "\nmodule brevis.sh/brevis/sdk/iceberg\n") {
+		t.Error("the module path is not brevis.sh/brevis/sdk/iceberg")
+	}
+	if !strings.Contains(gomod, "\tbrevis.sh/brevis/sdk v") {
+		t.Error("the module does not require the published brevis.sh/brevis/sdk")
+	}
+	if strings.Contains(gomod, "github.com/AreteAcademy/brevis") {
+		t.Error("the old module path is still in go.mod")
 	}
 	if !strings.Contains(gomod, "\ngo 1.26.0\n") {
 		t.Error("the go directive is not 1.26.0, which is what sdk, gateway and sql declare")

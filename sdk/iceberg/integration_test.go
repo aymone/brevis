@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 	ice "github.com/apache/iceberg-go"
 	"github.com/apache/iceberg-go/catalog"
 	sqlcat "github.com/apache/iceberg-go/catalog/sql"

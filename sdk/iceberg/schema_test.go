@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 	"github.com/apache/arrow-go/v18/arrow"
 )
 

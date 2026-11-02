@@ -3,7 +3,7 @@ package iceberg
 import (
 	"fmt"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 )
 
 // check refuses a Table that cannot name itself, before anything else: the

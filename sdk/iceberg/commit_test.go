@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 	ice "github.com/apache/iceberg-go"
 	"github.com/apache/iceberg-go/catalog"
 	iceio "github.com/apache/iceberg-go/io"

@@ -526,7 +526,7 @@ with the columns swapped because nobody had seen the generated SQL.
 
 ## Iceberg
 
-**This destination is a Go module of its own**, `github.com/AreteAcademy/brevis/sdk/iceberg`,
+**This destination is a Go module of its own**, `brevis.sh/brevis/sdk/iceberg`,
 versioned apart from the SDK. It is built on iceberg-go, which brings Apache
 Arrow and the Parquet writer -- about 460 packages a fetcher that writes a CSV
 has no use for -- and a module-level requirement is not pruned by what a
@@ -535,8 +535,8 @@ everyone. `go get` it only where you write to a lake:
 
 ```go
 import (
-    "github.com/AreteAcademy/brevis/sdk"
-    "github.com/AreteAcademy/brevis/sdk/iceberg"
+    "brevis.sh/brevis/sdk"
+    "brevis.sh/brevis/sdk/iceberg"
 
     _ "github.com/apache/iceberg-go/io/gocloud/s3"   // the S3 backend; a warehouse on disk needs no import
 )

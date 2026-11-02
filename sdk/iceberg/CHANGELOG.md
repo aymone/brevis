@@ -1,6 +1,6 @@
 # Changelog — the Iceberg destination
 
-`github.com/AreteAcademy/brevis/sdk/iceberg`, published from an
+`brevis.sh/brevis/sdk/iceberg`, published from an
 `sdk/iceberg/v*` tag.
 
 Its own version, on purpose. The destination is a separate Go module because
@@ -16,6 +16,14 @@ the versions follow [SemVer](https://semver.org/).
 ---
 
 ## [Unreleased]
+
+### Changed: the module path is `brevis.sh/brevis/sdk/iceberg`
+
+- The module follows the repository to brevis.sh (#234, 2026-11-02): its path
+  is `brevis.sh/brevis/sdk/iceberg`, and it requires the published
+  `brevis.sh/brevis/sdk v0.88.0`, the first SDK release under the new path.
+  Nothing else changes; a `go get` of the old path never resolved to a
+  release of this module, since it had none.
 
 ### Added: the pruning case, and the destination in the SDK's documents
 
@@ -179,7 +187,7 @@ the versions follow [SemVer](https://semver.org/).
   refused before it becomes a table with none.
 - The module now requires `github.com/apache/iceberg-go v0.7.0`,
   `github.com/apache/arrow-go/v18 v18.8.0` and the published
-  `github.com/AreteAcademy/brevis/sdk v0.87.0`.
+  `github.com/AreteAcademy/brevis/sdk v0.87.0` (since moved; see the entry on the path).
 
 ### Added: the module
 

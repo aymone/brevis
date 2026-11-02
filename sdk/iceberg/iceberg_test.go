@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AreteAcademy/brevis/sdk"
+	"brevis.sh/brevis/sdk"
 	ice "github.com/apache/iceberg-go"
 	"github.com/apache/iceberg-go/catalog"
 	"github.com/apache/iceberg-go/catalog/hadoop"

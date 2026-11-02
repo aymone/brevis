@@ -254,7 +254,7 @@ is that a real cluster accepts that SQL.
 
 ### `iceberg.Table`, point by point
 
-A module of its own, `github.com/AreteAcademy/brevis/sdk/iceberg`, versioned
+A module of its own, `brevis.sh/brevis/sdk/iceberg`, versioned
 apart from the SDK; see `sdk/iceberg/CHANGELOG.md`.
 
 | | |
