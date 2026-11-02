@@ -11,7 +11,7 @@ the versions follow [SemVer](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.9.0] — 2026-11-02
 
 ### Removed: Python 3.9
 
@@ -22,10 +22,17 @@ the versions follow [SemVer](https://semver.org/).
   new floor, and on 3.13.
 - A step image on Python 3.9 keeps installing `0.8.0`: `pip` reads
   `requires-python` and picks the newest release that allows it. Nothing in
-  the library changed for 3.10; the next release is `0.9.0`, since it no
+  the library changed for 3.10; this is `0.9.0` and not `0.8.1`, since it no
   longer installs where `0.8.0` did.
 - `_moment` still translates the `Z` of an RFC 3339 timestamp itself:
   `datetime.fromisoformat` accepts one only from 3.11.
+
+### Changed: the project lives at `github.com/brevis-sh/brevis`
+
+- The package's Homepage and Source links name the repository's new home;
+  the old `AreteAcademy/brevis` address redirects there. The first release
+  published from `brevis-sh/brevis`. The package name and the import are
+  unchanged: `pip install brevis`, `import brevis`.
 
 ## [0.8.0] — 2026-10-07
 
