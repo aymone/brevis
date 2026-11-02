@@ -99,6 +99,7 @@ result you log.
 |---|---|
 | `bigquery.Table` | a table: GCS staging, `MERGE`, typed creation, partitioning, clustering |
 | `to.Files` | files on disk, S3 or GCS: NDJSON or CSV, partitioned, compressed |
+| `iceberg.Table` | an Apache Iceberg table through a REST or SQL catalog: Parquet, one snapshot per batch, `day()` partitioning; a module of its own, `sdk/iceberg` |
 
 ### Files, and the three backends
 
@@ -522,6 +523,72 @@ statement lands in the cluster's query log, which many people can read.
 it, then `MERGE … WHEN NOT MATCHED THEN INSERT` with the column list **named**.
 Named always: the BigQuery `INSERT ROW` matches by position, and v0.12.0 shipped
 with the columns swapped because nobody had seen the generated SQL.
+
+## Iceberg
+
+**This destination is a Go module of its own**, `brevis.sh/brevis/sdk/iceberg`,
+versioned apart from the SDK. It is built on iceberg-go, which brings Apache
+Arrow and the Parquet writer -- about 460 packages a fetcher that writes a CSV
+has no use for -- and a module-level requirement is not pruned by what a
+consumer imports, so putting it in `sdk/go.mod` would hand that weight to
+everyone. `go get` it only where you write to a lake:
+
+```go
+import (
+    "brevis.sh/brevis/sdk"
+    "brevis.sh/brevis/sdk/iceberg"
+
+    _ "github.com/apache/iceberg-go/io/gocloud/s3"   // the S3 backend; a warehouse on disk needs no import
+)
+
+lake := iceberg.Catalog{
+    Name:      "lake",                               // the first segment of iceberg://lake/bronze/events
+    Type:      iceberg.SQL,                          // or iceberg.REST, with URI and Credential or Token
+    DSN:       os.Getenv("LAKE_DSN"),                // the Postgres that holds the metadata pointer
+    Warehouse: "s3://lake/warehouse",
+    IO: map[string]string{                           // iceberg-go's own keys, passed through
+        "s3.endpoint": "http://seaweedfs:8333", "s3.region": "us-east-1",
+        "s3.access-key-id": os.Getenv("LAKE_KEY"), "s3.secret-access-key": os.Getenv("LAKE_SECRET"),
+        "s3.force-virtual-addressing": "false",
+    },
+}
+
+res, err := sdk.Load(ctx, rows, sdk.Target{
+    To: iceberg.Table{
+        Catalog:     lake,                           // opened once per process, shared by every Table naming it
+        Namespace:   "bronze",
+        Name:        "events",
+        PartitionBy: "occurred_at",                  // day(occurred_at) when the table is created
+        CreateTable: &yes,
+    },
+    Columns: []string{"event_id", "occurred_at", "amount", "ingestion_id", "ingestion_loaded_at"},
+    Schema:  schema,                                 // required to create: a table's types are never inferred from a batch
+})
+```
+
+A `Write` is one snapshot: the batch becomes Parquet files, zstd, in a table
+created as format v2 and partitioned by `day(PartitionBy)`. `res.RowsLoaded`,
+`res.BytesStaged` and `res.Objects` say what landed, and `Locate()` is
+`iceberg://lake/bronze/events`, which the engine's `/data` page shows as a
+landing.
+
+**A retried batch lands once, without `Dedup`.** The `BatchKey` of the write
+goes into the snapshot's summary as `brevis.batch-key`, and a `Write` whose
+key already names a snapshot writes nothing and reports
+`Strategy: "already-committed"`. Two writers on one table are retried through
+the catalog's conflict, with backoff, up to `CommitRetries` within
+`CommitWithin`; the defaults are ten attempts in thirty seconds.
+
+`iceberg.Table` refuses what an append-only lake cannot do, naming the option:
+`Dedup` (no key to match on at append time -- rely on `BatchKey`), a `Default`
+or a `Unique` in the `Schema` (nothing applies them), a `PartitionBy` that is
+not the existing table's `day(column)`, and creating a table without a
+`Schema`, listing the batch's columns so you can write one. There is no
+`Evolve`: a divergence between the batch and the table is an error, never an
+ALTER.
+
+What it writes is read by DuckDB, Spark and Trino by the table's metadata; CI
+has DuckDB read every table the tests write and check the count and a sum.
 
 ## Knowing what a load wrote
 

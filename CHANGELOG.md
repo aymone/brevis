@@ -13,12 +13,31 @@ separate precisely so that weight never reaches anybody who does not ask for it
 — see 0.54.0 below. So does the SDK's CLI, `cmd/brevis-sdk`
 (`cmd/brevis-sdk/v0.1.0`). Their entries are here, under their own names.
 
+`sdk/iceberg` is a module of its own too (`sdk/iceberg/v0.1.0`), with its own
+[`CHANGELOG.md`](sdk/iceberg/CHANGELOG.md): it carries iceberg-go and Arrow, and
+it is separate so that weight never reaches anybody who does not write to a lake.
+
 The engine has its own: [`CHANGELOG-motor.md`](CHANGELOG-motor.md).
 
 Entries from `0.40.0` on are in English. Older ones were written in Portuguese
 and stay as written: a changelog records what was decided on a date.
 
 ---
+
+## [Unreleased]
+
+### Added: `iceberg://` is a target `CheckTarget` accepts
+
+- `iceberg://{catalog}/{namespace}/{table}`: three segments, and a dotted
+  namespace is one segment. The destination that will build it with
+  `Locate()` is a module of its own, `sdk/iceberg`, and arrives separately:
+  the three validators had to agree on the name before anything emitted it.
+- `sdk/testdata/targets.txt` carries the seven cases; the engine and the
+  Python library copy the file and fail a test when their copy drifts.
+
+### Documented
+
+- `iceberg.Table`, the Apache Iceberg destination in its own module `sdk/iceberg`: in `sdk/README.md`, in `docs/SDK_MATRIX.md` (its row, column and refusals) and in `docs/SDK_ARCHITECTURE.md`; `pruning-check.sh` gains the `iceberg` case and proves `to.Files` never compiles Arrow.
 
 ## [otelmeter 0.2.0, brevis-sdk 0.1.0] — 2026-11-02
 
@@ -53,15 +72,6 @@ and stay as written: a changelog records what was decided on a date.
 - Every version up to 0.87.0 stays where it is, under the old path, and keeps
   working; there will be no new one there.
 - The extractor's `User-Agent` names `https://github.com/brevis-sh/brevis`.
-
-### Added: `iceberg://` is a target `CheckTarget` accepts
-
-- `iceberg://{catalog}/{namespace}/{table}`: three segments, and a dotted
-  namespace is one segment. The destination that will build it with
-  `Locate()` is a module of its own, `sdk/iceberg`, and arrives separately:
-  the three validators had to agree on the name before anything emitted it.
-- `sdk/testdata/targets.txt` carries the seven cases; the engine and the
-  Python library copy the file and fail a test when their copy drifts.
 
 ### Fixed: a retried or paged POST sent no body
 

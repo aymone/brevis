@@ -49,20 +49,34 @@ overall=0
 run() { "$@" || overall=1; }
 
 check() {
-  local name="$1" imports="$2" body="$3" forbidden="$4" ceiling="${5:-}"
+  local name="$1" imports="$2" body="$3" forbidden="$4" ceiling="${5:-}" nested="${6:-}"
   # Cleaned up explicitly rather than through `trap ... RETURN`: with `set -e`
   # gone the trap fires after the locals are popped, and "$dir: unbound
   # variable" is a confusing way to report a passing check.
   local dir; dir="$(mktemp -d)"
   cd "$dir"
+  # A NESTED module -- sdk/iceberg -- is a module of its own with a go.mod
+  # that requires the PUBLISHED sdk and carries no replace, so the consumer
+  # here replaces both: the sdk, and the nested module, each with its tree.
+  # The go line follows the nested module's, which is newer than the sdk's.
+  local gover="1.23" nested_lines=""
+  if [ -n "$nested" ]; then
+    gover="1.26.0"
+    nested_lines="require $MODULO/$nested v0.0.0
+
+replace $MODULO/$nested => $TREE/$nested
+"
+  fi
   cat > go.mod <<EOF
 module pruning/$name
 
-go 1.23
+go $gover
 
 require $MODULO v0.0.0
 
 replace $MODULO => $TREE
+
+$nested_lines
 EOF
   { echo "package main"; echo; echo "import ("; echo "$imports"; echo ")"; echo;
     echo "func main() { $body }"; } > main.go
@@ -164,11 +178,14 @@ deps_of() {
   return $status
 }
 
+# `files` is also the CONTROL for the Iceberg module below: a fetcher that
+# writes a CSV must never compile Arrow or iceberg-go, and this is where that
+# is asserted, by name and at any size.
 run check "files" \
   "	\"$MODULO/from\"
 	\"$MODULO/to\"" \
   "_ = from.Files{}; _ = to.Files{}" \
-  "jackc/pgx cloud.google.com aws-sdk-go" \
+  "jackc/pgx cloud.google.com aws-sdk-go apache/arrow-go apache/iceberg-go" \
   240
 
 run check "postgres" \
@@ -263,5 +280,26 @@ run check "pubsub" \
 # What was bought: a gRPC with those two advisories fixed, and protobuf and the
 # AWS event stream with theirs. What it did NOT buy is permission to creep: the
 # new ceilings carry the same ~four percent headroom, not the old twelve.
+
+# The Iceberg destination is a MODULE of its own, sdk/iceberg, and this case
+# is the reason: iceberg-go brings Arrow, the Parquet writer and, through the
+# REST catalog's SigV4 option, the AWS SDK. Measured 2026-11-02 on go1.27,
+# linux/amd64, cgo off: 662 packages for a consumer that declares an
+# iceberg.Table -- against 201 for `files` above, which stays clean because
+# the module boundary keeps this weight out of sdk/go.mod. The ceiling has
+# the same ~four percent headroom as the two above.
+#
+# The forbidden list is the module's own policy: no Google client (the SDK's
+# BigQuery and Pub/Sub drivers are not its business), and NO S3 BACKEND.
+# iceberg-go writes to disk always and to S3 only through a blank import of
+# io/gocloud/s3 that the CONSUMER makes, so a step writing to a local
+# warehouse does not compile the S3 blob driver. If s3blob shows up here, the
+# module started importing it for everyone.
+run check "iceberg" \
+  "	\"$MODULO/iceberg\"" \
+  "_ = iceberg.Table{}" \
+  "cloud.google.com/go/bigquery cloud.google.com/go/pubsub gocloud.dev/blob/s3blob" \
+  690 \
+  "iceberg"
 
 exit $overall

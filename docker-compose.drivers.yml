@@ -96,6 +96,33 @@ services:
     # by the workflow, which is also the only place that can tell "the port
     # is published" from "the process is listening".
 
+  # The Iceberg REST catalog, for the Iceberg destination's integration tests
+  # (sdk/iceberg) and for a lake on a laptop. apache/iceberg-rest-fixture is
+  # the reference server from the Iceberg project itself, pinned to a
+  # release; inside it keeps the catalog in SQLite, and the tables' files go
+  # to the S3 above through the host -- host.docker.internal:9000 is the
+  # s3mock here, or whatever S3 answers there -- so that a client on the
+  # host and the server in the container see one warehouse. The CATALOG_*
+  # variables are the fixture's convention: the prefix is stripped, `_` is
+  # `.` and `__` is `-`, so CATALOG_S3_PATH__STYLE__ACCESS is
+  # s3.path-style-access.
+  iceberg-rest:
+    profiles: [lake, all]
+    image: apache/iceberg-rest-fixture:1.10.1
+    environment:
+      CATALOG_WAREHOUSE: ${BREVIS_LAKE_WAREHOUSE:-s3://lake/warehouse}
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: ${BREVIS_LAKE_S3_ENDPOINT:-http://host.docker.internal:9000}
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+      AWS_ACCESS_KEY_ID: ${BREVIS_LAKE_S3_KEY:-brevis}
+      AWS_SECRET_ACCESS_KEY: ${BREVIS_LAKE_S3_SECRET:-brevis-secret}
+      AWS_REGION: us-east-1
+      LOG_LEVEL: WARN
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8181:8181"
+
   # For phases 2 and 3. They come up together because one compose is one less
   # thing to remember.
   postgres:
