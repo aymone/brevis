@@ -77,8 +77,17 @@ sdk/
 ├── store/                the object-storage backends: s3, gcs
 ├── extract/              the HTTP implementation: retry, pagination, decoders,
 │                         preview
-└── load/                 the BigQuery implementation: staging, MERGE, typed
-                          table creation
+├── load/                 the BigQuery implementation: staging, MERGE, typed
+│                         table creation
+├── metrics/otelmeter/    sdk.Meter on OpenTelemetry -- A MODULE OF ITS OWN
+│                         (its own go.mod), so a fetcher that does not import
+│                         it never compiles OpenTelemetry
+└── iceberg/              the Apache Iceberg destination -- a module of its own
+                          for the same reason otelmeter is: iceberg-go brings
+                          Arrow and the Parquet writer, and a nested module keeps
+                          that weight out of every consumer who does not import
+                          it, since a module-level requirement is not pruned by
+                          what a consumer imports
 ```
 
 **The root imports neither `from`, nor `to`, nor `extract`, nor `load`.** That is
@@ -91,6 +100,7 @@ the rule everything else rests on, and it is measured — see §6.
 | `to/*` → `internal/core`, `load` | |
 | `store/*` → nothing from the SDK | only the cloud's client |
 | `extract`, `load` → `internal/core` | |
+| `iceberg`, `metrics/otelmeter` → `sdk` | the PUBLISHED one, through their own `go.mod`, with no `replace`: a nested module compiles against what its `require` says, and a consumer gets exactly that |
 
 No arrow points back at `sdk`. A driver cannot import the facade, and that is
 why `RunContext` and configuration resolution live in `core`.
@@ -297,6 +307,8 @@ failing the run.
 | `CheckColumns` | `sdk/internal/core/metadata.go` |
 | the stage telemetry | `sdk/telemetry.go` |
 | the cloud backends | `sdk/store/s3`, `sdk/store/gcs` |
+| the Iceberg destination | `sdk/iceberg/`, a module of its own: `iceberg.go` (the Table), `catalog.go`, `schema.go`, `record.go`, `reconcile.go`, `commit.go` |
+| the Iceberg type map and the batch conversion | `sdk/iceberg/schema.go`, `sdk/iceberg/record.go` |
 | the tests against a real BigQuery | `sdk/load/integration_test.go` |
 | the tests against MinIO and GCS | `sdk/from/integration_test.go` |
 | the consumer proofs | `examples/consumer/` |

@@ -17,6 +17,22 @@ the versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added: the pruning case, and the destination in the SDK's documents
+
+- `pruning-check.sh` builds a consumer that declares an `iceberg.Table` and
+  measures it: 662 packages on go1.27, linux/amd64, cgo off, under a
+  ceiling of 690, with no Google client and **no S3 backend** -- iceberg-go
+  writes to S3 only through the consumer's blank import, and the case fails
+  if the module ever imports it for everyone. The `files` control now also
+  forbids Arrow and iceberg-go by name, at any size: 201 packages, clean.
+- `docs/SDK_MATRIX.md` has the `iceberg.Table` row -- `Dedup` refused naming
+  `Dedup` and `BatchKey`, `CreateTable` from `Schema`, `Preview` yes -- its
+  column in the destinations table, its refusals and a point-by-point
+  section. `docs/SDK_ARCHITECTURE.md` has the module in the package map,
+  with the one sentence on why it is a module, next to otelmeter.
+  `sdk/README.md` has an Iceberg section with the import, a `Catalog`, a
+  `Table` and what it refuses.
+
 ### Added: integration against Postgres, S3 and a REST catalog, and DuckDB as the oracle
 
 - `integration_test.go` runs the destination against the catalogs it will

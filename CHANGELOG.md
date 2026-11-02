@@ -62,6 +62,9 @@ and stay as written: a changelog records what was decided on a date.
   the three validators had to agree on the name before anything emitted it.
 - `sdk/testdata/targets.txt` carries the seven cases; the engine and the
   Python library copy the file and fail a test when their copy drifts.
+### Documented
+
+- `iceberg.Table`, the Apache Iceberg destination in its own module `sdk/iceberg`: in `sdk/README.md`, in `docs/SDK_MATRIX.md` (its row, column and refusals) and in `docs/SDK_ARCHITECTURE.md`; `pruning-check.sh` gains the `iceberg` case and proves `to.Files` never compiles Arrow.
 
 ### Fixed: a retried or paged POST sent no body
 

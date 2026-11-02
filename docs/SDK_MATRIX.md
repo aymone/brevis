@@ -1,6 +1,8 @@
 # SDK — what each driver supports
 
-**Valid for** `sdk/v0.58.0` · **Updated on** 2026-09-10
+**Valid for** `sdk/v0.58.0` · **Updated on** 2026-09-10 · the `iceberg.Table` row
+is **valid for** `sdk/v0.87.0` and `sdk/iceberg` as of 2026-11-02, checked by the
+module's own `capabilities_test.go`; the other rows were last re-read at v0.58.0
 
 What works with what, and what happens when it does not. A driver that
 **ignores** an option does not appear here: in this SDK it refuses, naming the
@@ -91,6 +93,7 @@ itself.
 | `redshift.Table` | `MERGE … WHEN NOT MATCHED` | **does not exist** | yes | transformers |
 | `to.Files` | **refused**, naming `Dedup` | **does not exist** | yes | transformers |
 | `pubsub.Topic` | **refused**, naming `Dedup` | **does not exist** — the topic exists already | yes | **none by default** |
+| `iceberg.Table` | **refused**, naming `Dedup` and `BatchKey` | **yes**, from `Schema`: v2, zstd, `day(PartitionBy)` | yes | transformers |
 
 **`pubsub.Topic` refuses three, which is more than any other destination.** It
 is the first one here that is neither a table nor a directory, and half of what
@@ -143,6 +146,15 @@ the DDL comes out of one reading.
 **A directory has no unique key and no schema**, so `to.Files` refuses `Dedup`
 rather than offering a flag that does nothing.
 
+**`iceberg.Table` creates from a declaration and refuses the rest.** It lives in
+a module of its own, `sdk/iceberg`, because iceberg-go brings Arrow, and its row
+is checked by that module's `capabilities_test.go` rather than by
+`sdk/capabilities_test.go`, which cannot import a module that depends on it.
+`Dedup` is refused and not imitated: an Iceberg table has no key to match on at
+append time, and a retried batch lands once through `BatchKey`, which goes into
+the snapshot's summary. There is **no `Evolve` field**: a divergence between the
+batch and the table is an error, never an `ALTER`.
+
 ## Measured throughput
 
 Numbers from `-bench Load…`, against the containers in
@@ -168,17 +180,17 @@ inverse — pgx's path types every value, and `database/sql`'s passes `any` alon
 
 ## 3. Destinations
 
-| | `bigquery.Table` | `to.Files` | `postgres.Table` | `mysql.Table` | `redshift.Table` |
-|---|---|---|---|---|---|
-| `Columns` (the declaration) | yes | yes | yes | yes | yes |
-| the two ingestion columns | from `Transform`; `NOT NULL` when declared | from `Transform` | from `Transform` | from `Transform` | from `Transform` |
-| `Dedup: DedupMerge` | yes, through `MERGE` | **refused** | `ON CONFLICT` | `INSERT ... ON DUPLICATE KEY UPDATE` | `MERGE` |
-| creating the destination | `CreateTable`, `CreateSQL` | creates the directory | **no** | **no** | **no** |
-| partitioning | by day on `ingestion_loaded_at` | `PartitionBy` becomes `field=value/` | not applicable | not applicable | not applicable |
-| clustering | `ClusterBy` | not applicable | not applicable | not applicable | not applicable |
-| compression | from the staged format | `Compress` (gzip) | not applicable | not applicable | not applicable |
-| atomic write | a BigQuery job | temp+rename, or one PUT | one transaction | one transaction | `COPY` + `MERGE` |
-| written formats | NDJSON | NDJSON, CSV | rows | rows | NDJSON via S3 |
+| | `bigquery.Table` | `to.Files` | `postgres.Table` | `mysql.Table` | `redshift.Table` | `iceberg.Table` |
+|---|---|---|---|---|---|---|
+| `Columns` (the declaration) | yes | yes | yes | yes | yes | yes |
+| the two ingestion columns | from `Transform`; `NOT NULL` when declared | from `Transform` | from `Transform` | from `Transform` | from `Transform` | from `Transform`; required when declared |
+| `Dedup: DedupMerge` | yes, through `MERGE` | **refused** | `ON CONFLICT` | `INSERT ... ON DUPLICATE KEY UPDATE` | `MERGE` | **refused** — `BatchKey` makes a replay land once |
+| creating the destination | `CreateTable`, `CreateSQL` | creates the directory | **no** | **no** | **no** | `CreateTable` from `Schema`, and the namespace |
+| partitioning | by day on `ingestion_loaded_at` | `PartitionBy` becomes `field=value/` | not applicable | not applicable | not applicable | `day(PartitionBy)`; an existing table has to match |
+| clustering | `ClusterBy` | not applicable | not applicable | not applicable | not applicable | not applicable |
+| compression | from the staged format | `Compress` (gzip) | not applicable | not applicable | not applicable | zstd Parquet |
+| atomic write | a BigQuery job | temp+rename, or one PUT | one transaction | one transaction | `COPY` + `MERGE` | one snapshot commit, retried on conflict |
+| written formats | NDJSON | NDJSON, CSV | rows | rows | NDJSON via S3 | Parquet |
 
 ### The refused combinations, and why
 
@@ -193,6 +205,11 @@ inverse — pgx's path types every value, and `database/sql`'s passes `any` alon
 | a cloud `Path` with no `Store`, or a `Store` for another scheme | **error** naming both sides |
 | `DedupMerge` with no unique index on Postgres/MySQL | **error** — `ON CONFLICT`/`INSERT ... ON DUPLICATE KEY UPDATE` would have nothing to match, and every run would insert duplicates |
 | an access key instead of `IAMRole` on Redshift | **error** — the key would end up in the cluster's query log |
+| `Dedup` on `iceberg.Table` | **error** — no key to match on at append time; `BatchKey` is what makes a retried batch land once |
+| a `Default` or a `Unique` in the `Schema` of `iceberg.Table` | **error** naming the column — an Iceberg table has nothing that applies either |
+| `PartitionBy` on an existing Iceberg table that is not `day(column)` | **error** saying what the table has — the table does not change |
+| `CreateTable` on `iceberg.Table` with no `Schema` | **error** listing the batch's columns — a table's types are never inferred |
+| a `Catalog` with no `Name`, a REST one with no `URI`, a SQL one with no `DSN` | **error** naming the field, before any network |
 
 ### `bigquery.Table`, point by point
 
@@ -234,6 +251,27 @@ migration.
 Redshift image. What is tested without a cluster is the SQL generation as a pure
 function, the staging write and the order of the commands; what is **not** tested
 is that a real cluster accepts that SQL.
+
+### `iceberg.Table`, point by point
+
+A module of its own, `github.com/AreteAcademy/brevis/sdk/iceberg`, versioned
+apart from the SDK; see `sdk/iceberg/CHANGELOG.md`.
+
+| | |
+|---|---|
+| `Catalog{Name, Type, URI, Credential, Token, Warehouse, DSN, IO, Conn}` | REST or SQL on Postgres; opened once per process per `Name`; in SQL the `Name` is also the `catalog_name` in Postgres |
+| `Namespace`, `Name` | `bronze` and `events` in `iceberg://lake/bronze/events`; a dotted namespace stays one segment |
+| `PartitionBy` | `day(column)` on a created table; an existing table has to have exactly that |
+| `CreateTable` | three-state like BigQuery's: `nil` lets the engine decide; needs `Schema` |
+| `CommitRetries`, `CommitWithin` | a conflicting commit is retried with backoff; ten attempts in thirty seconds by default |
+| `BatchKey` (in `WriteOptions`) | goes into the snapshot summary as `brevis.batch-key`; the same key twice is one snapshot and `Strategy: "already-committed"` |
+| the type map | `string`, `long`, `double`, `decimal(38, 9)`, `boolean`, `timestamptz`, `date`, `string` for `json`, `binary`; declared, never inferred |
+| `Locate()` | `iceberg://{catalog}/{namespace}/{table}`, without opening anything |
+| `Configuration()` | catalog, type, server without userinfo, warehouse, table, options; never a DSN, token, credential or key |
+
+Tested without a service through iceberg-go's filesystem catalog, and against
+Postgres, S3 and a REST catalog in CI, where DuckDB reads every table the
+tests write and checks the count and a sum.
 
 ---
 
