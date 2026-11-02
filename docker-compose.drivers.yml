@@ -155,7 +155,7 @@ services:
   # service's, and only the real-dataset job can say anything about them.
   floci:
     profiles: [gcp, all]
-    image: floci/floci-gcp:nightly-10252026
+    image: floci/floci-gcp:nightly-10262026
     ports:
       - "4588:4588"
     volumes:
