@@ -242,8 +242,8 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
     monospace;
 
-  /* The corners. brevis.sh puts it plainly -- "cantos quase retos: a superficie
-     e operacional, nao um widget" -- and this is the same surface.
+  /* The corners. Softened from 3px to 6px (8px on panels) on 2026-11-02: still
+     an operational surface, not a widget, but no longer razor-edged.
 
      The whole SCALE is overridden, not the call sites. There are sixty
      `rounded-*` in the templates and editing each one would be sixty chances to
@@ -256,17 +256,17 @@
      squaring those would be reading the instruction instead of following it.
      The pills that used it for a capsule SHAPE were changed at the call site,
      which is where that decision actually lives. */
-  --radius-xs: 2px;
-  --radius-sm: 3px;
-  --radius-md: 3px;
-  --radius-lg: 3px;
-  --radius-xl: 3px;
-  --radius-2xl: 4px;
-  --radius-3xl: 4px;
-  --radius-4xl: 4px;
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
 
-  --radius-card: 3px;
-  --radius-panel: 4px;
+  --radius-card: 6px;
+  --radius-panel: 8px;
 
   /* One curve for everything that moves: fast out, soft landing. A panel
      that eases in linearly reads as lag rather than motion. Durations stay
@@ -344,6 +344,18 @@ body {
 /* One card lifted off the background, by a ring rather than by a glow.
    `oklch(from ...)` derives it from the theme's own colour, so an installation
    that changes the accent takes the ring along with no second variable. */
+/* The label on the accent, derived from the accent itself: near-white on a
+   dark brand colour, near-black on a light one (flip at oklch L 0.65). The
+   `--color-on-accent` token stays the dark theme's own pairing (the contrast
+   test reads it as a hex); every label that sits on `accent-strong` -- the
+   primary buttons, the open sidebar item -- uses this instead, so a client's
+   accent never leaves them black on purple. */
+:root {
+  --on-accent-auto: oklch(from var(--color-accent-strong) clamp(0.15, (0.65 - l) * 1000, 0.98) 0 0);
+}
+.text-on-accent {
+  color: var(--on-accent-auto);
+}
 .glow-accent {
   box-shadow: 0 0 0 1px oklch(from var(--color-accent) l c h / 45%);
 }
@@ -1525,14 +1537,26 @@ tr[data-paused] > td[data-fade] {
 .nav-badge-fail {
   padding: 0 6px;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-state-failed) 16%, transparent);
+  /* Opaque: a wash over the accent ground (the open item) or over an icon
+     turns to mud, so the tint is mixed into the sidebar's own ground. */
+  background: color-mix(in srgb, var(--color-state-failed) 22%, var(--color-canvas-subtle));
   color: var(--color-state-failed);
 }
 .nav-badge-run {
   padding: 0 6px;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-state-running) 16%, transparent);
+  background: color-mix(in srgb, var(--color-state-running) 22%, var(--color-canvas-subtle));
   color: var(--color-state-running);
+}
+/* Runs' two numbers read as one pill, "failing | running", with no gap. */
+[data-nav-runs] {
+  gap: 0;
+}
+[data-nav-runs] > span[aria-hidden]:not(:last-child) .nav-badge {
+  border-radius: 9999px 0 0 9999px;
+}
+[data-nav-runs] > span[aria-hidden] ~ span[aria-hidden] .nav-badge {
+  border-radius: 0 9999px 9999px 0;
 }
 .nav-badge-live {
   color: var(--color-state-success);
@@ -1888,16 +1912,30 @@ tr[data-paused] > td[data-fade] {
   html[data-nav-mode="short"] .app-sidebar a.sb-item[aria-current="page"] {
     border-color: transparent;
     background: var(--color-accent-strong);
-    color: var(--color-on-accent);
+    /* Near-white on a dark brand accent, near-black on a light one (flip at
+       oklch L 0.65): the token above is the dark theme's lime, not a brand's. */
+    color: var(--on-accent-auto);
     box-shadow: none;
   }
   html[data-nav-mode="short"] .app-sidebar [data-sb-badge] {
     position: absolute;
-    top: 1px;
-    right: 3px;
+    top: -4px;
+    right: -4px;
     margin: 0;
     transform: scale(0.8);
     transform-origin: top right;
+  }
+  /* Folded, the item is a 32px square that may not clip its pin; Runs shows
+     only what is in flight (the failing half hides) and pins it to the corner
+     of the square, clear of the icon. */
+  html[data-nav-mode="short"] .app-sidebar nav a.sb-item {
+    overflow: visible;
+  }
+  html[data-nav-mode="short"] .app-sidebar [data-nav-runs] > span[aria-hidden]:has(.nav-badge-fail) {
+    display: none;
+  }
+  html[data-nav-mode="short"] .app-sidebar [data-nav-runs] > span[aria-hidden] .nav-badge-run {
+    border-radius: 9999px;
   }
   /* Folded, the fold button takes the logo's place while the pointer is on
      the header (or the keyboard is on the button). */
@@ -1911,15 +1949,42 @@ tr[data-paused] > td[data-fade] {
     transition: opacity 140ms ease;
   }
   html[data-nav-mode="short"] .app-sidebar .sb-head:hover .sb-fold,
-  html[data-nav-mode="short"] .app-sidebar .sb-head:focus-within .sb-fold {
+  html[data-nav-mode="short"] .app-sidebar .sb-head:has(:focus-visible) .sb-fold {
     opacity: 1;
   }
   html[data-nav-mode="short"] .app-sidebar .sb-head .sb-logo {
     transition: opacity 140ms ease;
   }
   html[data-nav-mode="short"] .app-sidebar .sb-head:hover .sb-logo,
-  html[data-nav-mode="short"] .app-sidebar .sb-head:focus-within .sb-logo {
+  html[data-nav-mode="short"] .app-sidebar .sb-head:has(:focus-visible) .sb-logo {
     opacity: 0;
+  }
+  /* The mark fills the same 32px square as every icon below it and sits in
+     the rail's middle (12 + 16 = 28 of 56); at 24px a custom logo with its own
+     padding read as a speck off to one side. */
+  .app-sidebar .sb-logo > :first-child {
+    transition:
+      width 360ms var(--ease-cine),
+      height 360ms var(--ease-cine);
+  }
+  html[data-nav-mode="short"] .app-sidebar .sb-head {
+    padding-right: 0;
+  }
+  html[data-nav-mode="short"] .app-sidebar .sb-logo {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+  /* The title is already invisible; it must also stop taking room, or it
+     pushes the mark off the rail's middle and squeezes it. */
+  html[data-nav-mode="short"] .app-sidebar .sb-logo [data-collapse] {
+    max-width: 0;
+    overflow: hidden;
+  }
+  html[data-nav-mode="short"] .app-sidebar .sb-logo > :first-child {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
   }
   html[data-nav-mode="short"] .sb-when-full {
     display: none;
