@@ -373,6 +373,74 @@ func TestPruningWithNoDifferenceRemovesNothing(t *testing.T) {
 	}
 }
 
+// A schedule has no project: it is keyed by the slug alone. Moving a workflow
+// to another project -- published there first, then pruned from the old one --
+// must not take its cron, its pause or its last slot with it. Pruning deleted
+// the schedule by slug, so a paused flow came back active (and with no last
+// slot) the next time the new project published it.
+func TestPruningKeepsTheScheduleOfASlugAnotherProjectStillPublishes(t *testing.T) {
+	pool := testDB(t)
+	ctx := context.Background()
+	repo := postgres.NewWorkflowRepo(pool)
+
+	project := func(slug string) uuid.UUID {
+		t.Helper()
+		var id uuid.UUID
+		if err := pool.QueryRow(ctx,
+			`INSERT INTO projects (id, slug, name) VALUES ($1,$2,$2) RETURNING id`,
+			uuid.New(), slug).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}
+	old, moved := project("old"), project("moved")
+
+	w := wf.Workflow{Slug: "billing", Name: "billing", Schedule: "30 4 * * *",
+		Nodes: []wf.Node{{ID: "run", Run: "dbt build"}}}
+	for _, p := range []uuid.UUID{old, moved} {
+		if err := repo.Publicar(ctx, w, p, "test"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := pool.Exec(ctx,
+		`UPDATE schedules SET ativo = false, ultimo_slot = $2 WHERE workflow_slug = $1`,
+		w.Slug, inUTC("2026-01-01T04:30:00Z")); err != nil {
+		t.Fatal(err)
+	}
+
+	removed, err := repo.Podar(ctx, old, []string{}, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(removed) != 1 || removed[0] != w.Slug {
+		t.Fatalf("removed = %v, want only %s", removed, w.Slug)
+	}
+
+	var ativo bool
+	var last *time.Time
+	if err := pool.QueryRow(ctx,
+		`SELECT ativo, ultimo_slot FROM schedules WHERE workflow_slug = $1`, w.Slug,
+	).Scan(&ativo, &last); err != nil {
+		t.Fatalf("the schedule went with the pruned copy: %v", err)
+	}
+	if ativo || last == nil {
+		t.Errorf("schedule = ativo %v, last slot %v; want the pause and the slot kept", ativo, last)
+	}
+
+	// Pruned from the last project that publishes it, the schedule goes.
+	if _, err := repo.Podar(ctx, moved, []string{}, "test"); err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*) FROM schedules WHERE workflow_slug = $1`, w.Slug).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Errorf("an orphaned schedule survived the last prune (%d)", n)
+	}
+}
+
 // A newly published schedule (`ultimo_slot` NULL) has to start firing.
 //
 // This is the test that was missing, and the gap had a shape: EVERY case above
