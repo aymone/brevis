@@ -16,6 +16,34 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ---
 
+## [0.42.0] — 2026-11-02
+
+### Added: an Iceberg table is a landing target
+
+- `iceberg://{catalog}/{namespace}/{table}` is accepted by the engine's
+  validators (three segments, a dotted namespace stays one), and the console
+  shows an Iceberg landing as a table on `/data` and in a stream's summary, with
+  `iceberg` in the kind filter. The destination itself ships as the SDK module
+  `sdk/iceberg`.
+
+### Changed: the console follows the brand's accent
+
+- The label on the accent is derived from the accent itself: near-white on a
+  dark brand color, near-black on a light one. The open sidebar item and the
+  primary buttons no longer render black on a dark accent.
+- The folded sidebar shows the mark as a centered 32px square, and the expand
+  button only on hover. Runs shows just the in-flight badge there, pinned to
+  the icon's corner; expanded, the failing and in-flight counts read as one
+  joined, opaque pill.
+- The corner radius scale is softer: 6px on cards and controls, 8px on panels.
+
+### Fixed
+
+- `make warehouse` no longer collides with a dev server on `localhost:9000`
+  (the S3 mock moved to 59000, `BREVIS_S3_PORT`).
+
+---
+
 ## [0.41.0] — 2026-11-02
 
 ### Changed: the Go modules are `brevis.sh/brevis/...`
