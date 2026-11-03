@@ -224,9 +224,14 @@ func (r *WorkflowRepo) Podar(ctx context.Context, projeto uuid.UUID, manter []st
 
 	// The schedule lives in a separate table, linked by slug as text — the
 	// CASCADE does not reach it, and an orphaned schedule would go on creating
-	// runs.
-	if _, err := r.pool.Exec(ctx,
-		`DELETE FROM schedules WHERE workflow_slug = ANY($1)`, removed); err != nil {
+	// runs. It has no project, so one is orphaned only when no project still
+	// publishes the slug: a workflow moved to another project keeps its cron,
+	// its pause and its last slot.
+	if _, err := r.pool.Exec(ctx, `
+		DELETE FROM schedules s
+		WHERE s.workflow_slug = ANY($1)
+		  AND NOT EXISTS (SELECT 1 FROM workflows w WHERE w.slug = s.workflow_slug)`,
+		removed); err != nil {
 		return removed, err
 	}
 	return removed, nil
