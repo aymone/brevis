@@ -80,6 +80,30 @@ func TestTheFailingCountIsKeptForItsTTL(t *testing.T) {
 	}
 }
 
+// THE OVERVIEW'S LIST IS SHORTER-LIVED THAN THE BADGE'S: a workflow that just
+// passed leaves it within freshTTL (3s), not within the badge's fifteen, and
+// the tabs open at once share a read instead of making one each.
+func TestTheFreshListIsKeptForAFewSecondsOnly(t *testing.T) {
+	reads, now := 0, time.Date(2026, 10, 28, 3, 0, 0, 0, time.UTC)
+	cached := api.CachedFailing(countingFailing{reads: &reads}, 15*time.Second, func() time.Time { return now })
+	fresh := cached.(interface {
+		Fresh(context.Context) ([]postgres.FailingWorkflow, error)
+	})
+	ctx := context.Background()
+
+	_, _ = fresh.Fresh(ctx)
+	now = now.Add(2 * time.Second)
+	_, _ = fresh.Fresh(ctx)
+	if reads != 1 {
+		t.Errorf("within 3s: %d reads; want 1, the tabs share it", reads)
+	}
+	now = now.Add(2 * time.Second)
+	_, _ = fresh.Fresh(ctx)
+	if reads != 2 {
+		t.Errorf("after 3s: %d reads; want a second one, well before the badge's 15s", reads)
+	}
+}
+
 // THE IN-FLIGHT COUNT IS READ AT MOST ONCE PER TTL, errors not kept: every
 // page and every open tab's poll draws it.
 func TestTheInFlightCountIsKeptForItsTTL(t *testing.T) {
