@@ -8,7 +8,7 @@ import (
 const describedLine = `@brevis:{"type":"pipeline","v":1,"fields":[` +
 	`{"path":"source.driver","value":"from.HTTP"},` +
 	`{"path":"source.host","value":"api.example.com"},` +
-	`{"path":"transform.1.map","value":["main.normalise"]},` +
+	`{"path":"transform.1.map","value":["main.normalize"]},` +
 	`{"path":"target.driver","value":"bigquery.Table"},` +
 	`{"path":"target.dedup","value":"merge"}]}`
 

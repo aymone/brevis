@@ -13,7 +13,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: brevis-report
-  namespace: dados
+  namespace: data
 spec:
   # Monday at 08:00, in the cluster's timezone. The window below is what
   # actually decides what is counted, so the two have to agree: a schedule

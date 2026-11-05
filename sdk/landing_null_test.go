@@ -18,7 +18,7 @@ import (
 //	  Array specified for non-repeated field: vehicle_fuel.
 //
 // The table has 0 rows. Every batch holding one such record goes to the dead
-// letter and takes its neighbours with it. Over 90 days `vehicle_fuel` was
+// letter and takes its neighbors with it. Over 90 days `vehicle_fuel` was
 // null 786 times and an array 62 times, so it would keep happening — and
 // there is no STRING → JSON migration to undo it with.
 //
@@ -85,7 +85,7 @@ func TestTheColumnTakesItsTypeFromTheFirstRecordThatHasAValue(t *testing.T) {
 	}
 
 	later, err := LandingSchemaOf(map[string]any{
-		"id": "A-2", "vehicle_fuel": []any{"gasolina", "etanol"},
+		"id": "A-2", "vehicle_fuel": []any{"gasoline", "ethanol"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +227,7 @@ func TestTheDeclarationAndTheDiscoveryAgreeAboutNulls(t *testing.T) {
 	batch := []map[string]any{
 		{"id": "A-1", "vehicle_fuel": nil, "note": nil, "meta": map[string]any{"uf": "SP"}},
 		{"id": "A-2", "vehicle_fuel": nil, "note": nil},
-		{"id": "A-3", "vehicle_fuel": []any{"gasolina", "etanol"}, "note": nil, "price": "11"},
+		{"id": "A-3", "vehicle_fuel": []any{"gasoline", "ethanol"}, "note": nil, "price": "11"},
 		{"id": "A-4", "vehicle_fuel": nil, "note": nil},
 	}
 

@@ -14,10 +14,10 @@ type CalendarSummary struct {
 	LastFailure, Since          *time.Time
 }
 
-// SummariseCalendar counts the days that ran and failed, and how long since the last
+// SummarizeCalendar counts the days that ran and failed, and how long since the last
 // failure -- or since the first run, when there was none. The squares, months and
 // weekday names are the app's: it draws the calendar and says its words.
-func SummariseCalendar(days []postgres.Day, now time.Time) CalendarSummary {
+func SummarizeCalendar(days []postgres.Day, now time.Time) CalendarSummary {
 	today := now.UTC().Truncate(24 * time.Hour)
 	var s CalendarSummary
 	for _, d := range days {

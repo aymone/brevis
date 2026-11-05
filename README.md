@@ -51,7 +51,7 @@ install and keep alive:
 
 <p align="center">
   <a href="https://brevis.sh/#console"><img src=".github/assets/console.svg" width="49%" alt="The overview screen: a 94.2 per cent success rate over 344 runs, a bar chart of runs per hour with average duration, a distribution ring, what is in progress, and the next scheduled runs."></a>
-  <a href="https://brevis.sh/#console"><img src=".github/assets/console-workflow.svg" width="49%" alt="One workflow: its cron and tags, a form to run it with parameters, its success rate, the DAG with each step's state, and a calendar of a year of runs where each square is a day coloured by that day's worst outcome."></a>
+  <a href="https://brevis.sh/#console"><img src=".github/assets/console-workflow.svg" width="49%" alt="One workflow: its cron and tags, a form to run it with parameters, its success rate, the DAG with each step's state, and a calendar of a year of runs where each square is a day colored by that day's worst outcome."></a>
 </p>
 
 <p align="center"><sub>The overview, and one workflow. Four more screens at <a href="https://brevis.sh/#console">brevis.sh</a> — the run list, a single run with its auto params, and projects.</sub></p>
@@ -101,7 +101,7 @@ Fonts and bundles are served from the binary itself — the UI works with no rou
 to the internet.
 
 **White label**: title, subtitle, phrase and palette come from a YAML
-(`brand.example.yaml` → `brand.yaml`, or `BREVIS_BRAND_FILE`). The colours
+(`brand.example.yaml` → `brand.yaml`, or `BREVIS_BRAND_FILE`). The colors
 override the CSS variables at runtime, so changing the theme recompiles nothing.
 The console is dark by default and has a light theme each visitor can switch
 to; `theme:` paints the dark one and the optional `theme_light:` the light one.
@@ -111,7 +111,7 @@ the code.
 ```bash
 brevis publish examples/hello.yaml   # writes the workflow and its schedule to the database
 brevis scheduler --concurrency 5     # materializes slots and runs them
-brevis backfill diario --from 2026-01-01 --to 2026-01-31
+brevis backfill daily-report --from 2026-01-01 --to 2026-01-31
 ```
 
 The scheduler **creates** runs; the queue **executes** them. The two loops are
@@ -133,7 +133,7 @@ helm install brevis ./deployments/helm/brevis --namespace data --create-namespac
 
 Migrations run first as a hook, and the chart refuses to render a configuration
 that Kubernetes would accept and that would be wrong at runtime — starting with
-a second scheduler replica, which would materialise duplicate runs in silence.
+a second scheduler replica, which would materialize duplicate runs in silence.
 [`deployments/helm/brevis`](deployments/helm/brevis) ·
 [`docs/KUBERNETES.md`](docs/KUBERNETES.md)
 
@@ -160,7 +160,7 @@ steps:
 
 ```bash
 brevis run wf.yaml --param load_full=true
-brevis backfill diario --from 2026-01-01 --to 2026-01-31 --param load_full=true
+brevis backfill daily-report --from 2026-01-01 --to 2026-01-31 --param load_full=true
 ```
 
 In the UI, a workflow with params gets a form instead of the plain button.

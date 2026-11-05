@@ -415,25 +415,25 @@ func TestIntegrationAutoTableEvolvesWhenAFieldAppears(t *testing.T) {
 	post(fmt.Sprintf(`[{"table_name":%q,"data":{"id":"A-1","total":150}}]`, table), "id,total")
 
 	// The field appears, and the table grows a column.
-	post(fmt.Sprintf(`[{"table_name":%q,"data":{"id":"A-2","total":150,"novo_campo":"Novo valor 1"}}]`, table),
-		"id,novo_campo,total")
+	post(fmt.Sprintf(`[{"table_name":%q,"data":{"id":"A-2","total":150,"new_field":"New value 1"}}]`, table),
+		"id,new_field,total")
 
 	// And again, with a different value: nothing left to evolve, and it lands.
-	post(fmt.Sprintf(`[{"table_name":%q,"data":{"id":"A-3","total":150,"novo_campo":"Novo valor 2"}}]`, table),
-		"id,novo_campo,total")
+	post(fmt.Sprintf(`[{"table_name":%q,"data":{"id":"A-3","total":150,"new_field":"New value 2"}}]`, table),
+		"id,new_field,total")
 	if err := srv.Close(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
-	rows := query(t, dsn, `SELECT id||'|'||coalesce(novo_campo,'(null)') FROM `+table+` ORDER BY id`)
-	want := "A-1|(null),A-2|Novo valor 1,A-3|Novo valor 2"
+	rows := query(t, dsn, `SELECT id||'|'||coalesce(new_field,'(null)') FROM `+table+` ORDER BY id`)
+	want := "A-1|(null),A-2|New value 1,A-3|New value 2"
 	if got := strings.Join(rows, ","); got != want {
 		t.Errorf("the rows are %q, want %q", got, want)
 	}
 
 	// The first event's row keeps NULL there, which is what an added column
 	// does and why only additive is allowed: nothing already written moves.
-	if got := query(t, dsn, `SELECT count(*)::text FROM `+table+` WHERE novo_campo IS NULL`); got[0] != "1" {
+	if got := query(t, dsn, `SELECT count(*)::text FROM `+table+` WHERE new_field IS NULL`); got[0] != "1" {
 		t.Errorf("%s rows are null, want 1", got[0])
 	}
 }

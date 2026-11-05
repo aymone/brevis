@@ -55,7 +55,7 @@ const (
 	defaultCommitWithin  = 30 * time.Second
 )
 
-// commit appends the batch as one snapshot, or recognises it as already
+// commit appends the batch as one snapshot, or recognizes it as already
 // there, retrying a conflicting commit as the file's comment says.
 func (t Table) commit(ctx context.Context, cat catalog.Catalog, tbl *table.Table, records []sdk.Envelope, opt sdk.WriteOptions, res *sdk.LoadResult) error {
 	retries, within := t.CommitRetries, t.CommitWithin
@@ -159,7 +159,7 @@ func isConflict(err error) bool {
 // wait sleeps before the next attempt: 50 ms doubling to a 2 s cap, with
 // jitter between half and one and a half of that so two writers that
 // collided do not collide again on the same beat, and never past the
-// deadline. A cancelled context ends the wait and the Write.
+// deadline. A canceled context ends the wait and the Write.
 func wait(ctx context.Context, attempt int, deadline time.Time) error {
 	shift := min(attempt-1, 6)
 	d := min(50*time.Millisecond<<shift, 2*time.Second)

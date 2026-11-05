@@ -18,7 +18,7 @@ func batch(n int) []core.Envelope {
 		out[i] = core.Envelope{
 			Provider: "acme", Entity: "widgets",
 			SourceKey: string(rune('a' + i)), RecordTS: "2026-01-01T00:00:00Z",
-			Payload: map[string]any{"sku": string(rune('A' + i)), "quantidade": i},
+			Payload: map[string]any{"sku": string(rune('A' + i)), "quantity": i},
 		}
 	}
 	return out
@@ -126,11 +126,11 @@ func TestFilesRefusesAFormatItDoesNotWrite(t *testing.T) {
 // The declaration holds on every destination, not only on BigQuery.
 func TestFilesChecksColumns(t *testing.T) {
 	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), batch(1),
-		core.WriteOptions{Columns: []string{"sku", "quantidade", "faltando"}})
+		core.WriteOptions{Columns: []string{"sku", "quantity", "missing"}})
 	if err == nil {
 		t.Fatal("a declared column that is not delivered has to be an error here too")
 	}
-	if !strings.Contains(err.Error(), "faltando") {
+	if !strings.Contains(err.Error(), "missing") {
 		t.Errorf("the error must name the column: %v", err)
 	}
 }
@@ -215,7 +215,7 @@ func TestFilesRefusesDedup(t *testing.T) {
 
 // The partitioning reads the column the chain composed, not one the
 // destination
-// acrescenta.
+// adds.
 func TestFilesPartitionsByTheRowsColumn(t *testing.T) {
 	dir := t.TempDir()
 	records := []core.Envelope{{Payload: map[string]any{

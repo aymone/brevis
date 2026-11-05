@@ -62,7 +62,7 @@ func TestEveryUnknownFieldIsReportedAndNotJustTheFirst(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("got %d warnings, wanted 2: %v", len(got), got)
 	}
-	// Fixing one and re-running to find the next is the behaviour of a check
+	// Fixing one and re-running to find the next is the behavior of a check
 	// nobody finishes using.
 	if !strings.Contains(got[0], "hosts") || !strings.Contains(got[1], "depends-on") {
 		t.Errorf("not both, in file order: %v", got)

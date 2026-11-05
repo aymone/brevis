@@ -72,7 +72,7 @@ func TestAManualRunThatCrashedBeforeTheEnqueueIsFinishedByTheClickAgain(t *testi
 	ctx := context.Background()
 	now := inUTC("2026-01-02T03:00:00Z")
 
-	first, err := s.Trigger(ctx, "diario", now, nil, nil)
+	first, err := s.Trigger(ctx, "daily", now, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestAManualRunThatCrashedBeforeTheEnqueueIsFinishedByTheClickAgain(t *testi
 	if _, err := pool.Exec(ctx, `UPDATE runs SET status = 'created'`); err != nil {
 		t.Fatal(err)
 	}
-	again, err := s.Trigger(ctx, "diario", now, nil, nil)
+	again, err := s.Trigger(ctx, "daily", now, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func TestAManualRunThatCrashedBeforeTheEnqueueIsFinishedByTheClickAgain(t *testi
 	assertOneRunOneItem(t, pool, ctx)
 
 	// A plain repeated click in the same second still creates nothing.
-	if _, err := s.Trigger(ctx, "diario", now, nil, nil); err != nil {
+	if _, err := s.Trigger(ctx, "daily", now, nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	assertOneRunOneItem(t, pool, ctx)

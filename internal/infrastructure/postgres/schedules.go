@@ -41,7 +41,7 @@ func (r *WorkflowRepo) Publish(ctx context.Context, w wf.Workflow, project uuid.
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck // no-op depois do commit
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after the commit
 
 	// What is published now, read under the row's lock so a concurrent
 	// publish of the same workflow compares against this one's result.
@@ -104,7 +104,7 @@ func (r *WorkflowRepo) Publish(ctx context.Context, w wf.Workflow, project uuid.
 	return tx.Commit(ctx)
 }
 
-// Definition le o grafo publicado.
+// Definition reads the published graph.
 func (r *WorkflowRepo) Definition(ctx context.Context, slug string) (wf.Workflow, error) {
 	var raw []byte
 	if err := r.pool.QueryRow(ctx,
@@ -176,7 +176,7 @@ func (r *WorkflowRepo) PublishedGroupMembers(ctx context.Context, project uuid.U
 
 // Prune removes from the project the workflows that are NOT in the list, along
 // with their
-// agendas. Devolve os slugs removidos.
+// schedules. It returns the slugs it removed.
 //
 // It exists because publishing only ever added: taking a file out of the folder
 // took nothing out of the database, and the scheduler went on materializing runs
@@ -237,7 +237,7 @@ func (r *WorkflowRepo) Prune(ctx context.Context, project uuid.UUID, manter []st
 	return removed, nil
 }
 
-// ScheduleRepo le e atualiza agendas.
+// ScheduleRepo reads and updates schedules.
 type ScheduleRepo struct{ pool *Pool }
 
 func NewScheduleRepo(p *Pool) *ScheduleRepo { return &ScheduleRepo{pool: p} }

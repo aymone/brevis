@@ -1,4 +1,4 @@
-/* The Streams list. Colours are the server's tokens; every rule is prefixed stl-. */
+/* The Streams list. Colors are the server's tokens; every rule is prefixed stl-. */
 
 /* The row is one link: the path's anchor is stretched over the row (one tab stop, Enter opens,
    ctrl-click works) and the row, not the anchor, draws the focus ring. */

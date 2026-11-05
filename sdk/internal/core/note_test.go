@@ -43,15 +43,15 @@ func TestADiscoveredColumnCarriesItsOrigin(t *testing.T) {
 func TestTheRefusalSaysAColumnCameFromABatch(t *testing.T) {
 	declared := Schema{
 		{Name: "id", Type: TypeString},
-		{Name: "valor", Type: TypeJSON, Note: "brevis: added from a batch on 2026-09-28"},
+		{Name: "value", Type: TypeJSON, Note: "brevis: added from a batch on 2026-09-28"},
 	}
 	_, err := declared.Plan(
-		map[string]ColumnType{"id": TypeString, "valor": TypeString},
+		map[string]ColumnType{"id": TypeString, "value": TypeString},
 		EvolveAdditiveFromPayload, "bronze.bacen")
 	if err == nil {
 		t.Fatal("a change of kind was accepted")
 	}
-	if !strings.Contains(err.Error(), "valor") {
+	if !strings.Contains(err.Error(), "value") {
 		t.Errorf("the refusal does not name the column: %v", err)
 	}
 	if !strings.Contains(err.Error(), "batch") {
@@ -61,8 +61,8 @@ func TestTheRefusalSaysAColumnCameFromABatch(t *testing.T) {
 	}
 
 	// A column the consumer DID declare keeps the message it always had.
-	_, err = Schema{{Name: "valor", Type: TypeJSON}}.Plan(
-		map[string]ColumnType{"valor": TypeString}, EvolveAdditive, "t")
+	_, err = Schema{{Name: "value", Type: TypeJSON}}.Plan(
+		map[string]ColumnType{"value": TypeString}, EvolveAdditive, "t")
 	if err == nil {
 		t.Fatal("a change of kind was accepted")
 	}

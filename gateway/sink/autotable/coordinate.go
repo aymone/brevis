@@ -14,7 +14,7 @@ import (
 // One second, and the number is bounded from both sides:
 //
 //	long enough   to cover ONE ALTER. That is all it has to cover: once the
-//	              winner's column is in the catalogue, a loser proceeding finds
+//	              winner's column is in the catalog, a loser proceeding finds
 //	              nothing to plan and issues no DDL at all. The window protects
 //	              the in-flight moment, not the whole quota period.
 //	short enough  that a loser gets through on its own retries. The pipe makes
@@ -33,7 +33,7 @@ const ClaimWindow = time.Second
 // Returned rather than waited on: waiting would hold a worker for the window,
 // and there are four of them. The pipe retries the batch, which releases the
 // worker and puts the batch back in the queue -- and by the second attempt the
-// winner's column is in the catalogue and this batch needs no DDL at all.
+// winner's column is in the catalog and this batch needs no DDL at all.
 var ErrClaimed = errors.New("another replica is altering this table for this shape; retrying")
 
 // coordinator is the metastore, used for the three things this package needs.
@@ -49,7 +49,7 @@ type coordinator struct {
 
 // knows reports whether the table is believed to exist.
 //
-// The rule that keeps this safe: it is an OPTIMISATION and never the
+// The rule that keeps this safe: it is an OPTIMIZATION and never the
 // authority. If it says the table is there and the write fails, the write is
 // right -- the entry is dropped and the next batch re-reads. Without that, a
 // table recreated outside the gateway leaves every replica lying until the TTL.
@@ -88,7 +88,7 @@ func (c *coordinator) forget(ctx context.Context, table string) {
 //
 // It is a DEBOUNCE, not a lock: whoever gets it runs the DDL, whoever does not
 // simply lets the write proceed and be retried, because by then the winner's
-// column is probably in the catalogue. There is nothing to release and no
+// column is probably in the catalog. There is nothing to release and no
 // lease to renew, so a replica that dies holding one stalls nobody.
 //
 // With `memory` every replica gets its own answer and this debounces nothing,

@@ -37,7 +37,7 @@ func connect(t *testing.T) *pgx.Conn {
 	t.Helper()
 	conn, err := pgx.Connect(context.Background(), dsn(t))
 	if err != nil {
-		t.Fatalf("conectando: %v", err)
+		t.Fatalf("connecting: %v", err)
 	}
 	t.Cleanup(func() { _ = conn.Close(context.Background()) })
 	return conn
@@ -64,7 +64,7 @@ const defaultColumns = `
 	ingestion_loaded_at TIMESTAMPTZ NOT NULL,
 	provider TEXT,
 	source_key TEXT,
-	valor NUMERIC(18,2)`
+	value NUMERIC(18,2)`
 
 func testBatch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
@@ -73,9 +73,9 @@ func testBatch(n int) []sdk.Envelope {
 		out[i] = env(map[string]any{
 			"ingestion_id":        fmt.Sprintf("id-%04d", i),
 			"ingestion_loaded_at": now,
-			"provider":            "teste",
+			"provider":            "test",
 			"source_key":          fmt.Sprintf("k%d", i),
-			"valor":               "10.50",
+			"value":               "10.50",
 		})
 	}
 	return out
@@ -112,7 +112,7 @@ func TestIntegrationTheTablesOrderIsWhatCounts(t *testing.T) {
 	// The table's order is deliberately different from the order the record is
 	// usually written in.
 	name := table(t, conn, `
-		valor NUMERIC(18,2),
+		value NUMERIC(18,2),
 		provider TEXT,
 		ingestion_loaded_at TIMESTAMPTZ NOT NULL,
 		ingestion_id TEXT NOT NULL`)
@@ -121,7 +121,7 @@ func TestIntegrationTheTablesOrderIsWhatCounts(t *testing.T) {
 		"ingestion_id":        "abc",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
 		"provider":            "acme",
-		"valor":               "99.90",
+		"value":               "99.90",
 	})}
 	if _, err := (topg.Table{DSN: dsn(t), Name: name}).Write(
 		context.Background(), batch, sdk.WriteOptions{}); err != nil {
@@ -130,7 +130,7 @@ func TestIntegrationTheTablesOrderIsWhatCounts(t *testing.T) {
 
 	var id, prov, value string
 	err := conn.QueryRow(context.Background(),
-		"SELECT ingestion_id, provider, valor::text FROM "+name).Scan(&id, &prov, &value)
+		"SELECT ingestion_id, provider, value::text FROM "+name).Scan(&id, &prov, &value)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,14 +208,14 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 	batch := []sdk.Envelope{env(map[string]any{
 		"ingestion_id":        "x",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
-		"coluna_inexistente":  1,
+		"nonexistent_column":  1,
 	})}
 	_, err := topg.Table{DSN: dsn(t), Name: name}.Write(context.Background(), batch, sdk.WriteOptions{})
 	if err == nil {
 		t.Fatal("a field without a column got through")
 	}
 	for _, required := range []string{
-		"coluna_inexistente",
+		"nonexistent_column",
 		"add the column to the table, or remove the field in Transform",
 	} {
 		if !strings.Contains(err.Error(), required) {
@@ -229,7 +229,7 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 // infers no types, so the error has to give what is missing for the DDL to come
 // out of one reading.
 func TestIntegrationAMissingTableSaysHowToCreateIt(t *testing.T) {
-	_, err := topg.Table{DSN: dsn(t), Name: "nao_existe_mesmo"}.Write(
+	_, err := topg.Table{DSN: dsn(t), Name: "does_not_exist_really"}.Write(
 		context.Background(), testBatch(1), sdk.WriteOptions{})
 	if err == nil {
 		t.Fatal("a missing table got through")
@@ -249,13 +249,13 @@ func TestIntegrationAMissingTableSaysHowToCreateIt(t *testing.T) {
 // it.
 func TestIntegrationTheReadIsStreamed(t *testing.T) {
 	conn := connect(t)
-	name := table(t, conn, "i INT, texto TEXT")
+	name := table(t, conn, "i INT, text TEXT")
 	if _, err := conn.Exec(context.Background(), fmt.Sprintf(
 		`INSERT INTO %s SELECT g, repeat('x', 500) FROM generate_series(1, 50000) g`, name)); err != nil {
 		t.Fatal(err)
 	}
 
-	source := frompg.Query{DSN: dsn(t), SQL: "SELECT i, texto FROM " + name + " ORDER BY i"}
+	source := frompg.Query{DSN: dsn(t), SQL: "SELECT i, text FROM " + name + " ORDER BY i"}
 	seq, err := source.Read(context.Background(), sdk.ReadOptions{})
 	if err != nil {
 		t.Fatalf("Read: %v", err)
@@ -277,7 +277,7 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 	// The first row has to arrive without waiting for the 50 thousand. The limit
 	// is generous on purpose: what it catches is the difference between a stream
 	// and a buffer, not the
-	// velocidade do servidor.
+	// server's speed.
 	if d := time.Since(start); d > 2*time.Second {
 		t.Errorf("the first row took %s; the driver seems to buffer", d)
 	}
@@ -288,14 +288,14 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 	source := frompg.Query{DSN: dsn(t), SQL: `
 		SELECT
-			123456789012345678.99::numeric   AS numerico,
+			123456789012345678.99::numeric   AS numeric,
 			'2026-09-05'::date               AS data,
-			'2026-09-05 12:30:00+00'::timestamptz AS instante,
+			'2026-09-05 12:30:00+00'::timestamptz AS instant,
 			'\xdeadbeef'::bytea              AS bytes,
-			'{"a":[1,2]}'::jsonb             AS documento,
-			'178d0b49-dece-5738-b8eb-f5cae2221aea'::uuid AS identificador,
-			NULL::text                       AS vazio,
-			ARRAY[1,2,3]                     AS numeros`}
+			'{"a":[1,2]}'::jsonb             AS document,
+			'178d0b49-dece-5738-b8eb-f5cae2221aea'::uuid AS identifier,
+			NULL::text                       AS empty,
+			ARRAY[1,2,3]                     AS numbers`}
 
 	seq, err := source.Read(context.Background(), sdk.ReadOptions{})
 	if err != nil {
@@ -314,19 +314,19 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 	}
 
 	expected := map[string]any{
-		"numerico":      "123456789012345678.99",
-		"data":          "2026-09-05",
-		"instante":      "2026-09-05T12:30:00Z",
-		"identificador": "178d0b49-dece-5738-b8eb-f5cae2221aea",
-		"vazio":         nil,
+		"numeric":    "123456789012345678.99",
+		"data":       "2026-09-05",
+		"instant":    "2026-09-05T12:30:00Z",
+		"identifier": "178d0b49-dece-5738-b8eb-f5cae2221aea",
+		"empty":      nil,
 	}
 	for field, want := range expected {
 		if got := line[field]; got != want {
 			t.Errorf("%s = %#v, want %#v", field, got, want)
 		}
 	}
-	if _, ok := line["documento"].(map[string]any); !ok {
-		t.Errorf("document = %#v; JSONB should arrive nested", line["documento"])
+	if _, ok := line["document"].(map[string]any); !ok {
+		t.Errorf("document = %#v; JSONB should arrive nested", line["document"])
 	}
 	if b, ok := line["bytes"].([]byte); !ok || len(b) != 4 {
 		t.Errorf("bytes = %#v; BYTEA should arrive as []byte", line["bytes"])
@@ -338,9 +338,9 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 func TestIntegrationPostgresToPostgres(t *testing.T) {
 	conn := connect(t)
 
-	src := table(t, conn, "id INT, nome TEXT, valor NUMERIC(18,2), atualizado_em TIMESTAMPTZ")
+	src := table(t, conn, "id INT, name TEXT, value NUMERIC(18,2), updated_at TIMESTAMPTZ")
 	if _, err := conn.Exec(context.Background(), fmt.Sprintf(
-		`INSERT INTO %s SELECT g, 'registro ' || g, (g * 1.5)::numeric, now() FROM generate_series(1, 100) g`,
+		`INSERT INTO %s SELECT g, 'record ' || g, (g * 1.5)::numeric, now() FROM generate_series(1, 100) g`,
 		src)); err != nil {
 		t.Fatal(err)
 	}
@@ -352,8 +352,8 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 		entity TEXT NOT NULL,
 		source_key TEXT NOT NULL,
 		record_ts TEXT NOT NULL,
-		nome TEXT,
-		valor NUMERIC(18,2)`)
+		name TEXT,
+		value NUMERIC(18,2)`)
 	if _, err := conn.Exec(context.Background(),
 		fmt.Sprintf("CREATE UNIQUE INDEX ON %s (ingestion_id)", target)); err != nil {
 		t.Fatal(err)
@@ -364,7 +364,7 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 		data, err := sdk.Extract(context.Background(), sdk.Source{
 			From: frompg.Query{
 				DSN: dsn(t),
-				SQL: "SELECT id, nome, valor, atualizado_em FROM " + src + " ORDER BY id",
+				SQL: "SELECT id, name, value, updated_at FROM " + src + " ORDER BY id",
 			},
 		})
 		if err != nil {
@@ -378,9 +378,9 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 				return fmt.Sprint(r["id"]), nil
 			}),
 			sdk.Without("id"),
-			sdk.Rename(map[string]string{"atualizado_em": "record_ts"}),
+			sdk.Rename(map[string]string{"updated_at": "record_ts"}),
 			sdk.Compute("provider", func(map[string]any) (any, error) { return "pg", nil }),
-			sdk.Compute("entity", func(map[string]any) (any, error) { return "registros", nil }),
+			sdk.Compute("entity", func(map[string]any) (any, error) { return "records", nil }),
 			sdk.IngestionID(),
 			sdk.IngestionLoadedAt(),
 		)
@@ -388,7 +388,7 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 			To: topg.Table{DSN: dsn(t), Name: target},
 			Columns: []string{
 				"ingestion_id", "ingestion_loaded_at", "provider", "entity",
-				"source_key", "record_ts", "nome", "valor",
+				"source_key", "record_ts", "name", "value",
 			},
 			Dedup: sdk.DedupMerge,
 		})
@@ -421,7 +421,7 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 	// string in the record, NUMERIC back again.
 	var value string
 	if err := conn.QueryRow(context.Background(),
-		"SELECT valor::text FROM "+target+" WHERE source_key = '2'").Scan(&value); err != nil {
+		"SELECT value::text FROM "+target+" WHERE source_key = '2'").Scan(&value); err != nil {
 		t.Fatal(err)
 	}
 	if value != "3.00" {
@@ -845,19 +845,19 @@ func TestTheBatchTeachesTheTableAColumn(t *testing.T) {
 	name := table(t, conn, `
 		brevis_ingestion_id TEXT NOT NULL,
 		source_key TEXT,
-		valor TEXT`)
+		value TEXT`)
 
 	declared := sdk.Schema{
 		{Name: "brevis_ingestion_id", Type: sdk.TypeString, Required: true},
 		{Name: "source_key", Type: sdk.TypeString},
-		{Name: "valor", Type: sdk.TypeString},
+		{Name: "value", Type: sdk.TypeString},
 	}
 	to := topg.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditiveFromPayload}
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	// Run one: nothing new. The table must not grow a column.
 	if _, err := to.Write(ctx, []sdk.Envelope{env(map[string]any{
-		"brevis_ingestion_id": "id-1", "source_key": "21129|01/12/2025", "valor": "8.89",
+		"brevis_ingestion_id": "id-1", "source_key": "21129|01/12/2025", "value": "8.89",
 	})}, opt); err != nil {
 		t.Fatalf("run one: %v", err)
 	}
@@ -867,9 +867,9 @@ func TestTheBatchTeachesTheTableAColumn(t *testing.T) {
 
 	// Run two: two fields nobody declared, one of them an object.
 	if _, err := to.Write(ctx, []sdk.Envelope{env(map[string]any{
-		"brevis_ingestion_id": "id-2", "source_key": "21129|02/12/2025", "valor": "8.90",
+		"brevis_ingestion_id": "id-2", "source_key": "21129|02/12/2025", "value": "8.90",
 		"series": "21129",
-		"meta":   map[string]any{"uf": "SP", "fonte": "bacen"},
+		"meta":   map[string]any{"uf": "SP", "source": "bacen"},
 	})}, opt); err != nil {
 		t.Fatalf("run two: %v", err)
 	}
@@ -968,13 +968,13 @@ func TestTheBatchTeachesNothingWithoutTheMode(t *testing.T) {
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	_, err := to.Write(context.Background(), []sdk.Envelope{env(map[string]any{
-		"brevis_ingestion_id": "id-1", "nao_declarada": "x",
+		"brevis_ingestion_id": "id-1", "not_declared": "x",
 	})}, opt)
 	if err == nil {
 		t.Fatal("EvolveAdditive accepted a field nothing declared: the mode " +
 			"that reads the payload is a different one, and it is opt-in")
 	}
-	if !strings.Contains(err.Error(), "nao_declarada") {
+	if !strings.Contains(err.Error(), "not_declared") {
 		t.Errorf("the refusal does not name the field: %v", err)
 	}
 }
@@ -1026,25 +1026,25 @@ func columnNames(t *testing.T, conn *pgx.Conn, name string) []string {
 // produce. That is still a bug, and this mode has nothing to say about it.
 func TestTheModeCompletesTheDeclarationRatherThanSilencingIt(t *testing.T) {
 	conn := connect(t)
-	name := table(t, conn, `brevis_ingestion_id TEXT NOT NULL, prometida TEXT`)
+	name := table(t, conn, `brevis_ingestion_id TEXT NOT NULL, promised TEXT`)
 
 	to := topg.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditiveFromPayload}
 	declared := sdk.Schema{
 		{Name: "brevis_ingestion_id", Type: sdk.TypeString, Required: true},
 		// Declared by the consumer and never produced by the chain.
-		{Name: "prometida", Type: sdk.TypeString},
+		{Name: "promised", Type: sdk.TypeString},
 	}
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	_, err := to.Write(context.Background(), []sdk.Envelope{env(map[string]any{
-		"brevis_ingestion_id": "id-1", "achada": "x",
+		"brevis_ingestion_id": "id-1", "found": "x",
 	})}, opt)
 	if err == nil {
 		t.Fatal("a declared column the chain does not produce was accepted: " +
 			"the row check was skipped instead of extended, and the half this " +
 			"mode has nothing to do with went with it")
 	}
-	if !strings.Contains(err.Error(), "prometida") {
+	if !strings.Contains(err.Error(), "promised") {
 		t.Errorf("the refusal does not name the declared column: %v", err)
 	}
 	// And the OTHER half is not what fired. The message lists the row's
@@ -1071,7 +1071,7 @@ func TestALandingPipelineDeclaresWhatAGatewayWould(t *testing.T) {
 
 	record := map[string]any{
 		"source_key": "21129|01/12/2025",
-		"valor":      "8.89",
+		"value":      "8.89",
 		"meta":       map[string]any{"uf": "SP"},
 		"tags":       []any{"a", "b"},
 	}
@@ -1091,7 +1091,7 @@ func TestALandingPipelineDeclaresWhatAGatewayWould(t *testing.T) {
 	types := columnTypes(t, conn, name)
 	for _, c := range []struct{ name, want string }{
 		{"meta", "jsonb"}, {"tags", "jsonb"},
-		{"valor", "text"}, {"source_key", "text"},
+		{"value", "text"}, {"source_key", "text"},
 	} {
 		if types[c.name] != c.want {
 			t.Errorf("%s is %q, want %q -- a gateway declares it %q for the "+
@@ -1197,8 +1197,8 @@ func TestTheDocumentColumnIsQueryableJSON(t *testing.T) {
 //
 // BigQuery refuses one, because there the row is marshalled whole and the
 // string becomes a JSON string literal. Postgres parses it, and has always
-// done so. This pins that difference: a refusal generalised to every
-// destination would break loads that are correct today, and the generalising
+// done so. This pins that difference: a refusal generalized to every
+// destination would break loads that are correct today, and the generalizing
 // is the tempting move.
 func TestAStringIntoAJSONColumnIsFineHere(t *testing.T) {
 	conn := connect(t)
@@ -1407,7 +1407,7 @@ func TestEvolutionAddsFlattenedColumns(t *testing.T) {
 // `asset_asset` was created from a record with `"vehicle_fuel": null`. The
 // column became STRING and the next batch carried an array, so the load job
 // refused it and every batch holding one went to the dead letter with its
-// neighbours. The table had 0 rows. Over 90 days the field was null 786 times
+// neighbors. The table had 0 rows. Over 90 days the field was null 786 times
 // and an array 62 times.
 func TestANullDoesNotTypeAColumnTheArrayCannotFit(t *testing.T) {
 	conn := connect(t)
@@ -1437,14 +1437,14 @@ func TestANullDoesNotTypeAColumnTheArrayCannotFit(t *testing.T) {
 
 	// And the batch that used to be refused -- as it was 62 times.
 	row, err = land(map[string]any{
-		"id": "A-2", "vehicle_fuel": []any{"gasolina", "etanol"}, "price": "11",
+		"id": "A-2", "vehicle_fuel": []any{"gasoline", "ethanol"}, "price": "11",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := to.Write(ctx, []sdk.Envelope{{Payload: row}}, opt); err != nil {
 		t.Fatalf("the batch with the array -- this is the one that went to the "+
-			"dead letter with its neighbours: %v", err)
+			"dead letter with its neighbors: %v", err)
 	}
 
 	if got := columnTypes(t, conn, name)["vehicle_fuel"]; got != "jsonb" {
@@ -1494,7 +1494,7 @@ func TestANullAndAValueForTheSameFieldInOneBatch(t *testing.T) {
 	var batch []sdk.Envelope
 	for _, record := range []map[string]any{
 		{"id": "A-1", "vehicle_fuel": nil, "price": "10"},
-		{"id": "A-2", "vehicle_fuel": []any{"gasolina"}, "price": "11"},
+		{"id": "A-2", "vehicle_fuel": []any{"gasoline"}, "price": "11"},
 		{"id": "A-3", "vehicle_fuel": nil, "price": "12"},
 	} {
 		row, err := land(record)
@@ -1535,7 +1535,7 @@ func TestANullAndAValueForTheSameFieldInOneBatch(t *testing.T) {
 	}
 	want := map[string][2]any{
 		"A-1": {nil, "10"},
-		"A-2": {`["gasolina"]`, "11"},
+		"A-2": {`["gasoline"]`, "11"},
 		"A-3": {nil, "12"},
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -1561,13 +1561,13 @@ func TestADeclaredColumnThatArrivesNullStillLoads(t *testing.T) {
 	declared := append(
 		sdk.LandingControlColumns(sdk.LandingOptions{UniqueID: true, Keyed: true}),
 		sdk.Column{Name: "source_key", Type: sdk.TypeString},
-		sdk.Column{Name: "Area_Drenagem", Type: sdk.TypeString},
+		sdk.Column{Name: "Area_Drainage", Type: sdk.TypeString},
 	)
 	to := topg.Table{DSN: dsn(t), Name: name, CreateTable: true,
 		Evolve: sdk.EvolveAdditiveFromPayload}
 	land := sdk.Landing(name, sdk.LandingKey("source_key"), sdk.LandingColumns())
 
-	row, err := land(map[string]any{"source_key": "k-1", "Area_Drenagem": nil})
+	row, err := land(map[string]any{"source_key": "k-1", "Area_Drainage": nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1579,14 +1579,14 @@ func TestADeclaredColumnThatArrivesNullStillLoads(t *testing.T) {
 	// And it landed as NULL, which is what the producer said.
 	var area *string
 	if err := conn.QueryRow(ctx,
-		`SELECT "Area_Drenagem" FROM `+name+" WHERE source_key = 'k-1'").Scan(&area); err != nil {
+		`SELECT "Area_Drainage" FROM `+name+" WHERE source_key = 'k-1'").Scan(&area); err != nil {
 		t.Fatal(err)
 	}
 	if area != nil {
-		t.Errorf("Area_Drenagem is %q, want NULL", *area)
+		t.Errorf("Area_Drainage is %q, want NULL", *area)
 	}
-	if got := columnTypes(t, conn, name)["Area_Drenagem"]; got != "text" {
-		t.Errorf("Area_Drenagem is %q, want text: a DECLARED column takes its "+
+	if got := columnTypes(t, conn, name)["Area_Drainage"]; got != "text" {
+		t.Errorf("Area_Drainage is %q, want text: a DECLARED column takes its "+
 			"type from the declaration, and a null there was never a typing "+
 			"problem", got)
 	}
@@ -1664,7 +1664,7 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 	declared := append(
 		sdk.LandingControlColumns(sdk.LandingOptions{UniqueID: true, Keyed: true}),
 		sdk.Column{Name: "source_key", Type: sdk.TypeString},
-		sdk.Column{Name: "Area_Drenagem", Type: sdk.TypeString},
+		sdk.Column{Name: "Area_Drainage", Type: sdk.TypeString},
 	)
 	// Ours, not the driver's, because the DEFAULT is the measurement.
 	if _, err := conn.Exec(ctx, `CREATE TABLE `+name+` (
@@ -1677,14 +1677,14 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 		brevis_gateway text,
 		brevis_received_bytes bigint,
 		source_key text,
-		"Area_Drenagem" text DEFAULT 'the default, not the null'
+		"Area_Drainage" text DEFAULT 'the default, not the null'
 	)`); err != nil {
 		t.Fatal(err)
 	}
 
 	to := topg.Table{DSN: dsn(t), Name: name}
 	land := sdk.Landing(name, sdk.LandingKey("source_key"), sdk.LandingColumns())
-	row, err := land(map[string]any{"source_key": "k-1", "Area_Drenagem": nil})
+	row, err := land(map[string]any{"source_key": "k-1", "Area_Drainage": nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1695,11 +1695,11 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 
 	var area *string
 	if err := conn.QueryRow(ctx,
-		`SELECT "Area_Drenagem" FROM `+name).Scan(&area); err != nil {
+		`SELECT "Area_Drainage" FROM `+name).Scan(&area); err != nil {
 		t.Fatal(err)
 	}
 	if area != nil {
-		t.Errorf("Area_Drenagem is %q: the column was left out of the "+
+		t.Errorf("Area_Drainage is %q: the column was left out of the "+
 			"statement and the DEFAULT filled it, so the producer's null was "+
 			"discarded. A declared column that arrives empty has to be "+
 			"WRITTEN empty", *area)

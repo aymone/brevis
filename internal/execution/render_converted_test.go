@@ -18,14 +18,14 @@ func TestConvertedCommandsRender(t *testing.T) {
 		lacks    string
 	}{
 		{
-			name:     "lawsuit: dry_run=false NAO passa a flag",
+			name:     "lawsuit: dry_run=false does NOT pass the flag",
 			command:  `main.py {{ if .limit }} --limit {{ .limit }}{{ end }} {{ if eq .dry_run "true" }} --dry-run{{ end }} --rpm {{ .rpm }}`,
 			params:   map[string]string{"limit": "1000", "dry_run": "false", "rpm": "60"},
 			contains: "--limit 1000",
 			lacks:    "--dry-run",
 		},
 		{
-			name:     "lawsuit: dry_run=true passa a flag",
+			name:     "lawsuit: dry_run=true passes the flag",
 			command:  `main.py {{ if eq .dry_run "true" }} --dry-run{{ end }}`,
 			params:   map[string]string{"dry_run": "true"},
 			contains: "--dry-run",

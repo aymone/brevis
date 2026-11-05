@@ -21,7 +21,7 @@ const evolveHome = "internal/core/evolve.go"
 // This test is the whole reason the predicates exist, and it is worth saying
 // why plainly: with two values in the enum, `e.MayAdd()` and
 // `e == EvolveAdditive` are the same expression. Replacing one with the other
-// changes no behaviour, so a green suite proves NOTHING about that refactor.
+// changes no behavior, so a green suite proves NOTHING about that refactor.
 // This is the only thing that can fail.
 //
 // What it protects against is the day a third value is added. `== EvolveAdditive`

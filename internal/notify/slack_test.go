@@ -52,7 +52,7 @@ func TestTheMessageCarriesTheFailuresContext(t *testing.T) {
 
 	// `text` outside the blocks is what shows in the phone's notification; without
 	// it
-	// o Slack mostra "This content can't be displayed" no preview.
+	// Slack shows "This content can't be displayed" no preview.
 	text, _ := payload["text"].(string)
 	if !strings.Contains(text, "id_verification") {
 		t.Errorf("preview text = %q", text)
@@ -95,7 +95,7 @@ func TestALongErrorIsTruncated(t *testing.T) {
 
 // The environment in the header: a staging alert at three in the morning must not
 // be
-// indistinguivel de um de producao.
+// indistinguishable from a production one.
 func TestTheEnvironmentShowsInTheHeader(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b, _ := io.ReadAll(r.Body)

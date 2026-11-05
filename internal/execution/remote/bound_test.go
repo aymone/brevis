@@ -21,8 +21,8 @@ import (
 // comparison away from nothing.
 //
 // What separates a replica from a stranger is CONTAINMENT. A pool is
-// configured with its SERVICE -- `brevis-agent.dados.svc` -- and each replica
-// advertises its POD -- `brevis-agent-2.brevis-agent.dados.svc`, the Service's
+// configured with its SERVICE -- `brevis-agent.data.svc` -- and each replica
+// advertises its POD -- `brevis-agent-2.brevis-agent.data.svc`, the Service's
 // name with a label in FRONT. So the advertised host has to be the configured
 // one or a name inside it.
 //
@@ -33,7 +33,7 @@ import (
 // works. It passed every test here and would have failed in a cluster, which
 // is what a question about running the real thing is worth.
 //
-// It is also tighter. Comparing domains let `redis.dados.svc` through when the
+// It is also tighter. Comparing domains let `redis.data.svc` through when the
 // Service was configured -- a sibling, not a name inside it.
 //
 // The PORT is deliberately not part of it, which was the second correction.
@@ -41,7 +41,7 @@ import (
 // address carries the Service's port and the advertisement carries the pod's,
 // so a port equality refuses a pool that is correctly deployed.
 func TestAnAdvertisementIsBoundedByTheConfiguredAddress(t *testing.T) {
-	const configured = "http://brevis-agent-0.brevis-agent.dados.svc:9443"
+	const configured = "http://brevis-agent-0.brevis-agent.data.svc:9443"
 
 	for _, tc := range []struct {
 		name      string
@@ -53,7 +53,7 @@ func TestAnAdvertisementIsBoundedByTheConfiguredAddress(t *testing.T) {
 			// Configured with a POD, which is one agent and not a pool: a
 			// sibling pod is a different machine and is not inside this name.
 			name:      "a sibling pod when a pod was configured",
-			advertise: "http://brevis-agent-2.brevis-agent.dados.svc:9443",
+			advertise: "http://brevis-agent-2.brevis-agent.data.svc:9443",
 			want:      configured,
 			why:       "configuring one pod points at one agent, not at a pool",
 		},
@@ -65,19 +65,19 @@ func TestAnAdvertisementIsBoundedByTheConfiguredAddress(t *testing.T) {
 		},
 		{
 			// THE CASE THE CODE'S OWN COMMENT NAMES, and which no test covered
-			// until a mutation lived. `notbrevis-agent.dados.svc` ENDS WITH
-			// `brevis-agent.dados.svc`, so a strings.HasSuffix passes it --
+			// until a mutation lived. `notbrevis-agent.data.svc` ENDS WITH
+			// `brevis-agent.data.svc`, so a strings.HasSuffix passes it --
 			// and it is a different Service that anything able to create one
 			// in this namespace could stand up. Labels are compared, not
 			// characters.
 			name:      "a domain that merely ends with the right characters",
-			advertise: "http://pod.notbrevis-agent.dados.svc:9443",
+			advertise: "http://pod.notbrevis-agent.data.svc:9443",
 			want:      configured,
 			why:       "a suffix on the string accepts a different Service",
 		},
 		{
 			name:      "a stranger one label deeper",
-			advertise: "http://x.brevis-agent.dados.svc.attacker.com:9443",
+			advertise: "http://x.brevis-agent.data.svc.attacker.com:9443",
 			want:      configured,
 			why:       "a suffix match on the string would have allowed this",
 		},
@@ -86,13 +86,13 @@ func TestAnAdvertisementIsBoundedByTheConfiguredAddress(t *testing.T) {
 			// pod configured there is no pool to allow. The port's own case
 			// lives in TestThePoolTopologyIsAllowed, where it matters.
 			name:      "a sibling pod on another port",
-			advertise: "http://brevis-agent-2.brevis-agent.dados.svc:9999",
+			advertise: "http://brevis-agent-2.brevis-agent.data.svc:9999",
 			want:      configured,
 			why:       "a sibling is refused whatever port it names",
 		},
 		{
 			name:      "a different scheme",
-			advertise: "https://brevis-agent-2.brevis-agent.dados.svc:9443",
+			advertise: "https://brevis-agent-2.brevis-agent.data.svc:9443",
 			want:      configured,
 		},
 		{
@@ -143,11 +143,11 @@ func TestAnAddressWithNoDomainAllowsOnlyItself(t *testing.T) {
 // The rule before this compared domains and refused exactly this. Every test
 // passed; a cluster would not have.
 func TestThePoolTopologyIsAllowed(t *testing.T) {
-	a := remote.HTTPAgent{BaseURL: "http://brevis-agent.dados.svc:9443"}
+	a := remote.HTTPAgent{BaseURL: "http://brevis-agent.data.svc:9443"}
 
 	for _, pod := range []string{
-		"http://brevis-agent-0.brevis-agent.dados.svc:9443",
-		"http://brevis-agent-2.brevis-agent.dados.svc:9443",
+		"http://brevis-agent-0.brevis-agent.data.svc:9443",
+		"http://brevis-agent-2.brevis-agent.data.svc:9443",
 	} {
 		if got := a.At(pod); got != pod {
 			t.Errorf("At(%q) = %q: the engine cannot come back to the replica "+
@@ -158,15 +158,15 @@ func TestThePoolTopologyIsAllowed(t *testing.T) {
 	// A pod on a DIFFERENT port is still a name inside the Service, which is
 	// the `Service port 80 -> targetPort 9443` case the port was left out of
 	// the rule for.
-	if pod := "http://brevis-agent-1.brevis-agent.dados.svc:9443"; a.At(pod) != pod {
+	if pod := "http://brevis-agent-1.brevis-agent.data.svc:9443"; a.At(pod) != pod {
 		t.Error("a pod of this Service was refused over its port")
 	}
 
 	// And a sibling of the SERVICE is not a name inside it.
 	for _, stranger := range []string{
-		"http://redis.dados.svc:9443",
-		"http://pod.notbrevis-agent.dados.svc:9443",
-		"http://brevis-agent.dados.svc.attacker.com:9443",
+		"http://redis.data.svc:9443",
+		"http://pod.notbrevis-agent.data.svc:9443",
+		"http://brevis-agent.data.svc.attacker.com:9443",
 	} {
 		if got := a.At(stranger); got == stranger {
 			t.Errorf("At(%q) followed it", stranger)

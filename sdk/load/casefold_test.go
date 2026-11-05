@@ -33,11 +33,11 @@ func TestADeclarationInAnotherCaseIsNotAbsentFromTheTable(t *testing.T) {
 // And the other half, which is what makes the check worth keeping: a column
 // that genuinely is not there is still named.
 func TestAColumnTheTableReallyLacksIsStillRefused(t *testing.T) {
-	err := checkDeclaredAgainstTable([]string{"id", "nacionalidade"}, theirTable(), "ds.t")
+	err := checkDeclaredAgainstTable([]string{"id", "nationality"}, theirTable(), "ds.t")
 	if err == nil {
 		t.Fatal("a column no spelling of which is in the table was accepted")
 	}
-	if !strings.Contains(err.Error(), "nacionalidade") {
+	if !strings.Contains(err.Error(), "nationality") {
 		t.Errorf("the refusal does not name it: %v", err)
 	}
 }
@@ -58,11 +58,11 @@ func TestEvolvePlansNoAlterForAColumnTheTableHasInAnotherCase(t *testing.T) {
 func TestEvolveStillAddsAColumnTheTableDoesNotHave(t *testing.T) {
 	declared := bigquery.Schema{
 		{Name: "createdat", Type: bigquery.TimestampFieldType},
-		{Name: "nacionalidade", Type: bigquery.StringFieldType},
+		{Name: "nationality", Type: bigquery.StringFieldType},
 	}
 	got := missingFrom(theirTable(), declared)
-	if len(got) != 1 || got[0].Name != "nacionalidade" {
-		t.Errorf("planned %s, wanted exactly nacionalidade", namesOf(got))
+	if len(got) != 1 || got[0].Name != "nationality" {
+		t.Errorf("planned %s, wanted exactly nationality", namesOf(got))
 	}
 }
 
@@ -102,9 +102,9 @@ func TestTheMergeStillRefusesAnIncompatibleTypeAcrossSpellings(t *testing.T) {
 // S3 — CheckDestination's own filter, the one that lets EvolveAdditive reach
 // its only case. Before the fold it kept `createdat` out of `declared` for
 // the wrong reason and the check below then never saw it either, so the two
-// bugs cancelled. A mutation of one alone would have survived.
+// bugs canceled. A mutation of one alone would have survived.
 func TestCheckDestinationCountsAFoldedColumnAsPresent(t *testing.T) {
-	kept := declaredThatTheTableHas([]string{"id", "createdat", "nacionalidade"}, theirTable())
+	kept := declaredThatTheTableHas([]string{"id", "createdat", "nationality"}, theirTable())
 	if strings.Join(kept, ",") != "id,createdat" {
 		t.Errorf("kept %v, wanted the two the table has under some spelling", kept)
 	}

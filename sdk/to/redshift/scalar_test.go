@@ -38,15 +38,15 @@ func TestScalarAgreesWithTheEncoder(t *testing.T) {
 		semanticOnly bool
 	}{
 		{nil, false}, {true, false}, {false, false},
-		{"", false}, {"simples", false}, {"com espaço", false},
-		{`aspas "no meio"`, false},
-		{`contrabarra \ e \\ dupla`, false},
-		{"quebra\nde\rlinha\te tab", false},
-		{"controle \x00\x01\x1f no meio", false},
-		{"acentuação e emoji 🎉", false},
-		{"barra / e menor < maior > e comercial &", false},
+		{"", false}, {"plain", false}, {"with space", false},
+		{`quotes "in the middle"`, false},
+		{`backslash \ and \\ double`, false},
+		{"break\nof\rline\tand tab", false},
+		{"control \x00\x01\x1f in the middle", false},
+		{"café and emoji 🎉", false},
+		{"slash / and less < greater > and ampersand &", false},
 		{string([]byte{0xff, 0xfe}), true},
-		{"válido " + string([]byte{0xff}) + " misturado", true},
+		{"café " + string([]byte{0xff}) + " mixed", true},
 		{int(0), false}, {int(-1), false}, {int(42), false},
 		{int32(-2147483648), false}, {int64(9007199254740993), false},
 		{uint64(18446744073709551615), false},
@@ -115,7 +115,7 @@ func TestScalarRefusesWhatItDoesNotKnow(t *testing.T) {
 // document, and it is the test that stops the fast path from changing the rest
 // of the output.
 func TestCompositeStillComesOutTheSame(t *testing.T) {
-	got, err := EncodeNDJSON(testEnvelopes(), []string{"texto", "documento", "lista", "numero"})
+	got, err := EncodeNDJSON(testEnvelopes(), []string{"text", "document", "list", "number"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,14 +125,14 @@ func TestCompositeStillComesOutTheSame(t *testing.T) {
 	if err := json.Unmarshal([]byte(line), &doc); err != nil {
 		t.Fatalf("the output is not valid JSON: %q\n%v", line, err)
 	}
-	if doc["texto"] != `com "aspas"` {
-		t.Errorf("text = %#v", doc["texto"])
+	if doc["text"] != `with "quotes"` {
+		t.Errorf("text = %#v", doc["text"])
 	}
-	if m, ok := doc["documento"].(map[string]any); !ok || m["a"] != float64(1) {
-		t.Errorf("document = %#v", doc["documento"])
+	if m, ok := doc["document"].(map[string]any); !ok || m["a"] != float64(1) {
+		t.Errorf("document = %#v", doc["document"])
 	}
-	if l, ok := doc["lista"].([]any); !ok || len(l) != 2 {
-		t.Errorf("list = %#v", doc["lista"])
+	if l, ok := doc["list"].([]any); !ok || len(l) != 2 {
+		t.Errorf("list = %#v", doc["list"])
 	}
 }
 
@@ -173,9 +173,9 @@ func jsonOrType(v any) string {
 
 func testEnvelopes() []core.Envelope {
 	return []core.Envelope{{Payload: map[string]any{
-		"texto":     `com "aspas"`,
-		"documento": map[string]any{"a": 1},
-		"lista":     []any{1, "dois"},
-		"numero":    42,
+		"text":     `with "quotes"`,
+		"document": map[string]any{"a": 1},
+		"list":     []any{1, "two"},
+		"number":   42,
 	}}}
 }

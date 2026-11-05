@@ -44,7 +44,7 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 
 	dir := t.TempDir()
 	binary := buildFetcher(t, dir)
-	input := filepath.Join(dir, "entrada.ndjson")
+	input := filepath.Join(dir, "input.ndjson")
 	if err := os.WriteFile(input, []byte(
 		`{"id":1,"ts":"2026-09-05T00:00:00Z"}`+"\n"+
 			`{"id":2,"ts":"2026-09-05T01:00:00Z"}`+"\n"), 0o600); err != nil {
@@ -67,7 +67,7 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 		Nodes: []wf.Node{{ID: "collectOutput", Run: binary + " 2>&1"}},
 	}
 	// The step's WorkDir is the test's directory, because the fetcher reads
-	// "entrada.ndjson" relative to it. The cwd is RESTORED at the end: leaving it
+	// "input.ndjson" relative to it. The cwd is RESTORED at the end: leaving it
 	// in a temporary directory would break any later test in this package that
 	// uses a relative path -- and this very test does, to compile the fetcher.
 	previous, err := os.Getwd()
@@ -84,7 +84,7 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 
 	states, err := repo.NodeStates(ctx, runID)
 	if err != nil {
-		t.Fatalf("estado: %v", err)
+		t.Fatalf("state: %v", err)
 	}
 	e, ok := states["collectOutput"]
 	if !ok {

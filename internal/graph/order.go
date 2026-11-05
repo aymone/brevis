@@ -34,10 +34,10 @@ func Levels(w wf.Workflow) ([][]string, error) {
 	}
 
 	var levels [][]string
-	vistos := 0
+	seen := 0
 	for len(current) > 0 {
 		levels = append(levels, current)
-		vistos += len(current)
+		seen += len(current)
 
 		var next []string
 		for _, n := range w.Nodes { // iterate the nodes, not the map: determinism
@@ -56,8 +56,8 @@ func Levels(w wf.Workflow) ([][]string, error) {
 
 	// Workflow.Validate already refuses cycles; this guard protects against a
 	// graph assembled in code without going through the validation.
-	if vistos != len(w.Nodes) {
-		return nil, fmt.Errorf("the graph has a cycle or an unreachable node (%d of %d nodes ordered)", vistos, len(w.Nodes))
+	if seen != len(w.Nodes) {
+		return nil, fmt.Errorf("the graph has a cycle or an unreachable node (%d of %d nodes ordered)", seen, len(w.Nodes))
 	}
 	return levels, nil
 }

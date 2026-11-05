@@ -221,7 +221,7 @@ func TestConcurrentMissesAreOneQuery(t *testing.T) {
 	}
 }
 
-func TestACacheThatCannotBeHonouredIsRefused(t *testing.T) {
+func TestACacheThatCannotBeHonoredIsRefused(t *testing.T) {
 	for name, c := range map[string]struct{ cache, says string }{
 		"a ttl of zero":    {"cache: {type: redis, addr_from: X, ttl: 0s}", "ttl"},
 		"no ttl":           {"cache: {type: redis, addr_from: X}", "ttl"},

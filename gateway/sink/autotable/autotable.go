@@ -249,7 +249,7 @@ func (r *router) Admit(e map[string]any) error {
 // is the same rule the `brevis_` prefix enforces inside `data`, applied to the
 // one control field the pipe writes from outside.
 //
-// The returned table is what the volume metrics are labelled by -- see
+// The returned table is what the volume metrics are labeled by -- see
 // gateway.Measurer for why the name travels back instead of the metrics
 // travelling in. An envelope this cannot read returns empty, and that event is
 // simply not attributed: refusing here would be a refusal at the wrong seam,
@@ -318,7 +318,7 @@ func (r *router) Write(ctx context.Context, batch []gateway.Envelope) (int64, er
 		// On the CALLER's context, not the share. What sinkFor does is build a
 		// sink and then CACHE it -- `r.made[key] = s` -- and a built sink
 		// keeps what it was constructed with, down to the object-store client
-		// `Stores.Open` hands it. A context cancelled at the end of this batch
+		// `Stores.Open` hands it. A context canceled at the end of this batch
 		// must never reach something that outlives the batch.
 		//
 		// It is also not the cost that was measured: construction is charged
@@ -363,7 +363,7 @@ func (r *router) Write(ctx context.Context, batch []gateway.Envelope) (int64, er
 		//
 		// NOT invalidated either: a timeout is not the destination disagreeing
 		// with us, it is us not waiting long enough. Throwing the belief away
-		// buys a catalogue read and no correctness.
+		// buys a catalog read and no correctness.
 		if errors.Is(err, context.DeadlineExceeded) {
 			starved = append(starved, table)
 			failed[table] = tableFailure{sink: sink, err: err}
@@ -374,8 +374,8 @@ func (r *router) Write(ctx context.Context, batch []gateway.Envelope) (int64, er
 		}
 
 		// The destination disagreed with what we believed, so what we
-		// believed goes. The cache is an optimisation and never the
-		// authority: the next batch re-reads the catalogue rather than
+		// believed goes. The cache is an optimization and never the
+		// authority: the next batch re-reads the catalog rather than
 		// trusting an entry the server just contradicted.
 		//
 		// And it STOPS. A disagreement is about us, not about this table, so
@@ -405,7 +405,7 @@ func (r *router) Write(ctx context.Context, batch []gateway.Envelope) (int64, er
 		// matches on the key, and a replay writes those tables' rows a second
 		// time. Issue #85.
 		//
-		// The alternative was the old behaviour: none of them landed at all.
+		// The alternative was the old behavior: none of them landed at all.
 		return wrote, &batchError{
 			err: fmt.Errorf("table(s) %s ran out of their share of the "+
 				"write window; the other tables in this batch were written: %w",

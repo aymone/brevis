@@ -9,7 +9,7 @@ import (
 
 // TestUUIDv5AgreesWithThePackage is the net that allows reimplementing the
 // formula
-// congelada.
+// frozen.
 //
 // A one-bit divergence here would change every ingestion_id already written -- a
 // previous load would stop matching a new one, and nobody would notice until the
@@ -73,15 +73,15 @@ func TestFormatUUIDAgreesWithString(t *testing.T) {
 func TestAKeyLargerThanTheStackBuffer(t *testing.T) {
 	long := ""
 	for len(long) < 300 {
-		long += "provedor-com-nome-comprido-"
+		long += "provider-with-a-long-name-"
 	}
 
-	got, err := ComputeIngestionID(long, "entidade", "chave", "2026-09-05T12:00:00Z")
+	got, err := ComputeIngestionID(long, "entity", "key", "2026-09-05T12:00:00Z")
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := uuid.NewSHA1(DefaultNamespace,
-		[]byte(long+"|entidade|chave|2026-09-05T12:00:00Z")).String()
+		[]byte(long+"|entity|key|2026-09-05T12:00:00Z")).String()
 	if got != want {
 		t.Errorf("long key diverged:\n  mine %s\n  uuid %s", got, want)
 	}

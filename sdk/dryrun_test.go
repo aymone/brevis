@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// capturarSaida runs f with stdout redirected, and returns what it printed.
+// captureOutput runs f with stdout redirected, and returns what it printed.
 func captureOutput(t *testing.T, f func() error) (string, error) {
 	t.Helper()
 	r, w, err := os.Pipe()
@@ -155,7 +155,7 @@ func TestDryRunRefusesWhatTheRunWouldRefuse(t *testing.T) {
 	}
 }
 
-// registrosImpressos reads back the records the preview printed.
+// printedRecords reads back the records the preview printed.
 func printedRecords(t *testing.T, output string) []any {
 	t.Helper()
 	var out []any

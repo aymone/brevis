@@ -9,7 +9,7 @@
 > the binaries and fails if either document has stopped mentioning one.
 >
 > It checks NAMES, not prose. Two documents describing the same command
-> differently is a judgement call; one document silently missing a command that
+> differently is a judgment call; one document silently missing a command that
 > exists is not.
 
 The command-line reference. The outputs below were captured from the binary
@@ -364,11 +364,11 @@ run in parallel at the same level:
 
 ```
 workflow hello (dag, 4 steps) in examples
-  ▶ preparar
-    preparar | preparando
-  ✓ preparar
-  ▶ validar
-  ▶ extrair
+  ▶ prepare
+    prepare | preparing
+  ✓ prepare
+  ▶ validate
+  ▶ extract
 ```
 
 ---
@@ -562,7 +562,7 @@ still believes it owns.
 ### The space is reusable, not returned
 
 Postgres marks the space free for the table to reuse; it does not hand it back
-to the filesystem. For a prune that runs regularly that is the right behaviour —
+to the filesystem. For a prune that runs regularly that is the right behavior —
 the table stops growing. To actually shrink the files, `VACUUM FULL task_runs`,
 which takes an exclusive lock and wants a maintenance window.
 
@@ -597,7 +597,7 @@ the installation on the default identity with nothing said; the field names also
 became English in that version, and a file still using `titulo:` fails naming
 it.
 
-One behavioural difference from boot: **a missing file is an error**. In `serve`,
+One behavioral difference from boot: **a missing file is an error**. In `serve`,
 absence means "use the default identity"; whoever asked to validate a path
 expects to be told it does not exist.
 
@@ -642,7 +642,7 @@ brevis 0.6.0
 The version, the commit and the date are stamped at build time by `-ldflags`.
 Built straight with `go build`, it prints `brevis dev` with no commit and no
 date — and telling that apart from a release artifact matters when somebody
-reports odd behaviour. `make image` appends `-dirty` to the commit when there is
+reports odd behavior. `make image` appends `-dirty` to the commit when there is
 an uncommitted change.
 
 ---

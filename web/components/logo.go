@@ -4,16 +4,16 @@ import (
 	"unicode"
 )
 
-// logoPaint is how a mark is coloured.
+// logoPaint is how a mark is colored.
 type logoPaint int
 
 const (
-	paintMono    logoPaint = iota // one colour, the brand's, written in the file
-	paintMulti                    // the mark's own colours
+	paintMono    logoPaint = iota // one color, the brand's, written in the file
+	paintMulti                    // the mark's own colors
 	paintDark                     // a brand too dark for a dark ground: drawn in ink
 	paintLight                    // a brand too light for a light ground: darkened there
 	paintBrand                    // Brevis's own mark, in the accent
-	paintOnWhite                  // its own colours, too dark for any dark tile: on white in both themes
+	paintOnWhite                  // its own colors, too dark for any dark tile: on white in both themes
 )
 
 // logo is one registered key: whose mark it is, how it is painted, and, for
@@ -64,7 +64,7 @@ var logos = map[string]logo{
 
 // lookLogo is a key's entry; one nobody registered is its own monogram, the
 // first two letters of its name, so an unknown connector is still told apart
-// from its neighbours and never drawn as somebody else's mark.
+// from its neighbors and never drawn as somebody else's mark.
 func lookLogo(key string) logo {
 	if l, ok := logos[key]; ok {
 		return l

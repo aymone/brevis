@@ -57,7 +57,7 @@ type (
 	// backend from a path has to do.
 	Store = core.Store
 
-	// ReadOptions and WriteOptions are what every driver honours, whatever it
+	// ReadOptions and WriteOptions are what every driver honors, whatever it
 	// reads from or writes to. A fetcher does not build these -- Source and
 	// Target do.
 	ReadOptions  = core.ReadOptions

@@ -26,7 +26,7 @@ So the shape is deliberate:
   `SUM(quantity * unit_price)` genuinely differ, which is what makes a
   reconciliation query worth writing.
 - **Four statuses, unevenly**: about half `paid`, a quarter `shipped`, and the
-  rest `refunded` or `cancelled`. Revenue means `paid + shipped`, so any example
+  rest `refunded` or `canceled`. Revenue means `paid + shipped`, so any example
   that forgets the filter is visibly wrong rather than plausibly wrong.
 
 Generated with a fixed seed, so the files are identical on every machine and a

@@ -324,7 +324,7 @@ func TestIntegrationBigQueryEvolvesAdditively(t *testing.T) {
 		// REQUIRED in the declaration, and it must land NULLABLE: BigQuery
 		// refuses a required column added to a table that already has rows,
 		// and the rows already there have no value for it.
-		{Name: "cupom", Type: core.TypeString, Required: true},
+		{Name: "coupon", Type: core.TypeString, Required: true},
 	}
 	if err := l.evolveTable(ctx, table); err != nil {
 		t.Fatalf("evolving: %v", err)
@@ -338,14 +338,14 @@ func TestIntegrationBigQueryEvolvesAdditively(t *testing.T) {
 	for _, f := range md.Schema {
 		got[f.Name] = f
 	}
-	for _, name := range []string{"ts", "id", "brevis_received_bytes", "cupom"} {
+	for _, name := range []string{"ts", "id", "brevis_received_bytes", "coupon"} {
 		if got[name] == nil {
 			t.Fatalf("%s is missing after the evolution; the load would fail at "+
 				"the row with `No such field: %s`", name, name)
 		}
 	}
-	if got["cupom"].Required {
-		t.Error("cupom was added REQUIRED; BigQuery refuses that on a table with " +
+	if got["coupon"].Required {
+		t.Error("coupon was added REQUIRED; BigQuery refuses that on a table with " +
 			"rows, and the rows already there have no value for it")
 	}
 	if got["ts"] == nil || !got["ts"].Required {
@@ -368,7 +368,7 @@ func TestIntegrationBigQueryEvolvesAdditively(t *testing.T) {
 }
 
 // And it stays OFF unless asked. EvolveNone is the zero value, so a caller who
-// never heard of this keeps the old behaviour: the table is left alone and the
+// never heard of this keeps the old behavior: the table is left alone and the
 // declaration is checked against it.
 func TestIntegrationBigQueryDoesNotEvolveUnlessAsked(t *testing.T) {
 	cfg := &core.LoadConfig{
@@ -386,7 +386,7 @@ func TestIntegrationBigQueryDoesNotEvolveUnlessAsked(t *testing.T) {
 	if err := l.createFromSchema(ctx, table, provenance{}); err != nil {
 		t.Fatalf("creating: %v", err)
 	}
-	l.cfg.Schema = append(l.cfg.Schema, core.Column{Name: "novo", Type: core.TypeString})
+	l.cfg.Schema = append(l.cfg.Schema, core.Column{Name: "new", Type: core.TypeString})
 	if err := l.evolveTable(ctx, table); err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +395,7 @@ func TestIntegrationBigQueryDoesNotEvolveUnlessAsked(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, f := range md.Schema {
-		if f.Name == "novo" {
+		if f.Name == "new" {
 			t.Error("a load with EvolveNone altered the table")
 		}
 	}
@@ -485,7 +485,7 @@ func TestIntegrationBigQueryTheEarlyCheckDefersToEvolve(t *testing.T) {
 	}
 
 	// A declaration with one column the table does not have.
-	declared := []string{"ts", "id", "cupom"}
+	declared := []string{"ts", "id", "coupon"}
 
 	// With nothing asked for, the early refusal stands. This is the property
 	// the fix had to keep: one metadata query against a whole source quota
@@ -496,7 +496,7 @@ func TestIntegrationBigQueryTheEarlyCheckDefersToEvolve(t *testing.T) {
 		t.Fatal("the early check accepted a column the table lacks with no " +
 			"evolution asked for: it stopped checking")
 	}
-	if !strings.Contains(err.Error(), "cupom") {
+	if !strings.Contains(err.Error(), "coupon") {
 		t.Errorf("the refusal does not name the column: %v", err)
 	}
 
@@ -617,7 +617,7 @@ func TestIntegrationBigQueryTheBatchDoesNotKeepTheConfig(t *testing.T) {
 	_, _ = l.Load(ctx, core.Envelope{
 		Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t",
 		Payload: map[string]any{
-			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "efemera": "x",
+			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "ephemeral": "x",
 		},
 	})
 
@@ -626,8 +626,8 @@ func TestIntegrationBigQueryTheBatchDoesNotKeepTheConfig(t *testing.T) {
 			"extension outlived the batch, and the next one is about to be "+
 			"refused for a column it never carried", before, len(l.cfg.Columns))
 	}
-	if l.cfg.Schema.Has("efemera") {
-		t.Error("the Loader's Schema kept `efemera`")
+	if l.cfg.Schema.Has("ephemeral") {
+		t.Error("the Loader's Schema kept `ephemeral`")
 	}
 
 	// And the proof that it matters: a second batch WITHOUT the field.
@@ -635,7 +635,7 @@ func TestIntegrationBigQueryTheBatchDoesNotKeepTheConfig(t *testing.T) {
 		Provider: "p", Entity: "e", SourceKey: "k2", RecordTS: "t2",
 		Payload: map[string]any{"ts": "2026-09-26T11:00:00Z", "id": "A-2"},
 	})
-	if err != nil && strings.Contains(err.Error(), "efemera") {
+	if err != nil && strings.Contains(err.Error(), "ephemeral") {
 		t.Errorf("the batch after the one that taught the table was refused "+
 			"for its column: %v", err)
 	}
@@ -666,16 +666,16 @@ func TestIntegrationBigQueryTheBatchTeachesNothingWithoutTheMode(t *testing.T) {
 	_, err := l.Load(ctx, core.Envelope{
 		Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t",
 		Payload: map[string]any{
-			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "nao_declarada": "x",
+			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "not_declared": "x",
 		},
 	})
 	if err == nil {
 		t.Fatal("EvolveAdditive accepted a field nothing declared")
 	}
-	if !strings.Contains(err.Error(), "nao_declarada") {
+	if !strings.Contains(err.Error(), "not_declared") {
 		t.Errorf("the refusal does not name the field: %v", err)
 	}
-	if _, ok := fieldsOfTable(t, table)["nao_declarada"]; ok {
+	if _, ok := fieldsOfTable(t, table)["not_declared"]; ok {
 		t.Error("the table grew a column under EvolveAdditive")
 	}
 }
@@ -697,7 +697,7 @@ func TestIntegrationBigQueryTheModeCompletesTheDeclaration(t *testing.T) {
 			{Name: "ts", Type: core.TypeTimestamp, Required: true},
 			{Name: "id", Type: core.TypeString},
 			// Declared by the consumer and never produced by the chain.
-			{Name: "prometida", Type: core.TypeString},
+			{Name: "promised", Type: core.TypeString},
 		},
 	}
 	cfg.Columns = cfg.Schema.Names()
@@ -713,7 +713,7 @@ func TestIntegrationBigQueryTheModeCompletesTheDeclaration(t *testing.T) {
 	_, err := l.Load(ctx, core.Envelope{
 		Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t",
 		Payload: map[string]any{
-			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "achada": "x",
+			"ts": "2026-09-26T10:00:00Z", "id": "A-1", "found": "x",
 		},
 	})
 	if err == nil {
@@ -721,7 +721,7 @@ func TestIntegrationBigQueryTheModeCompletesTheDeclaration(t *testing.T) {
 			"the row check was skipped instead of extended, and the half this " +
 			"mode has nothing to do with went with it")
 	}
-	if !strings.Contains(err.Error(), "prometida") {
+	if !strings.Contains(err.Error(), "promised") {
 		t.Errorf("the refusal does not name the declared column: %v", err)
 	}
 	if strings.Contains(err.Error(), "which Columns does not declare") {
@@ -767,7 +767,7 @@ func TestIntegrationBigQueryALandingPipelineDeclaresWhatAGatewayWould(t *testing
 		"brevis_operation":    "INSERT",
 		"brevis_received_at":  "2026-09-29T10:00:00Z",
 		"brevis_record_key":   "k-1",
-		"valor":               "8.89",
+		"value":               "8.89",
 		"meta":                core.JSONText(`{"uf":"SP"}`),
 		"tags":                core.JSONText(`["a","b"]`),
 	}
@@ -782,7 +782,7 @@ func TestIntegrationBigQueryALandingPipelineDeclaresWhatAGatewayWould(t *testing
 	}{
 		{"meta", bigquery.JSONFieldType},
 		{"tags", bigquery.JSONFieldType},
-		{"valor", bigquery.StringFieldType},
+		{"value", bigquery.StringFieldType},
 	} {
 		f, ok := fields[c.name]
 		if !ok {
@@ -994,7 +994,7 @@ func TestIntegrationBigQueryANullDoesNotTypeTheColumn(t *testing.T) {
 	}
 	_, _ = l.Load(ctx,
 		env("A-1", nil), env("A-2", nil),
-		env("A-3", []any{"gasolina", "etanol"}), env("A-4", nil))
+		env("A-3", []any{"gasoline", "ethanol"}), env("A-4", nil))
 
 	fuel, ok := fieldsOfTable(t, table)["vehicle_fuel"]
 	if !ok {
@@ -1040,7 +1040,7 @@ func TestIntegrationBigQueryADeclaredNullDoesNotRefuseTheLoad(t *testing.T) {
 			{Name: "brevis_operation", Type: core.TypeString, Required: true},
 			{Name: "brevis_received_at", Type: core.TypeTimestamp, Required: true},
 			{Name: "source_key", Type: core.TypeString},
-			{Name: "Area_Drenagem", Type: core.TypeString},
+			{Name: "Area_Drainage", Type: core.TypeString},
 		},
 	}
 	cfg.Columns = cfg.Schema.Names()
@@ -1060,7 +1060,7 @@ func TestIntegrationBigQueryADeclaredNullDoesNotRefuseTheLoad(t *testing.T) {
 			"brevis_operation":    "INSERT",
 			"brevis_received_at":  "2026-10-01T10:00:00Z",
 			"source_key":          "k-1",
-			"Area_Drenagem":       nil,
+			"Area_Drainage":       nil,
 			// Nothing declares this one, and no record gives it a value.
 			"vehicle_fuel": nil,
 		},
@@ -1082,10 +1082,10 @@ func TestIntegrationBigQueryADeclaredNullDoesNotRefuseTheLoad(t *testing.T) {
 	// The DECLARED column keeps the type the declaration gave it. A declared
 	// column's type never came from the value, so a null there was never a
 	// typing problem -- which is why the row was the wrong thing to drop.
-	if f, ok := fields["Area_Drenagem"]; !ok {
+	if f, ok := fields["Area_Drainage"]; !ok {
 		t.Error("the declared column is not in the table")
 	} else if f.Type != bigquery.StringFieldType {
-		t.Errorf("Area_Drenagem is %v, want STRING", f.Type)
+		t.Errorf("Area_Drainage is %v, want STRING", f.Type)
 	}
 
 	// The UNDECLARED one creates nothing. That is #42: a null has no shape,
@@ -1109,7 +1109,7 @@ func TestIntegrationBigQueryADeclaredNullDoesNotRefuseTheLoad(t *testing.T) {
 // What is true: for a Schema caller with evolve ON this check is redundant,
 // and with evolve OFF it would be a NEW refusal -- possibly an improvement,
 // since the alternative is BigQuery answering `no such field` after the whole
-// extract, and definitely a behaviour change that deserves its own slice.
+// extract, and definitely a behavior change that deserves its own slice.
 //
 // So: an existing table, a Schema that declares a column it does not have,
 // evolve OFF. Today the check does not run. The day somebody switches the
@@ -1135,7 +1135,7 @@ func TestIntegrationBigQueryTheDeclaredCheckStaysOnColumns(t *testing.T) {
 	// Now a batch whose Schema declares a column the table does not have, and
 	// no evolve to add it. Columns stays empty, which is the gateway's shape.
 	l.cfg.Schema = append(l.cfg.Schema,
-		core.Column{Name: "nao_esta_na_tabela", Type: core.TypeString})
+		core.Column{Name: "not_in_the_table", Type: core.TypeString})
 
 	_, err := l.Load(ctx, core.Envelope{
 		Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t",

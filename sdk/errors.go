@@ -51,7 +51,7 @@ func (e *SourceError) Is(target error) bool {
 // decode failure, a guard rejection, or an expansion that did not fit.
 // There is deliberately no Format field. One was declared here, interpolated
 // into the message, and never filled at any of the four sites that build this
-// error -- so every format error read "formato  from ..." with a hole where the
+// error -- so every format error read "format  from ..." with a hole where the
 // format should be, while the same run logged format=json on success. The wire
 // format is in the extract complete line; three of the four sites are not about
 // it anyway.

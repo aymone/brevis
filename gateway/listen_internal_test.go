@@ -114,7 +114,7 @@ func get(t *testing.T, c *http.Client, url string) bool {
 	// `Close` is what net/http sets when the response carried
 	// `Connection: close`, read off the wire rather than off our own header
 	// map -- which is the difference between asserting the server's
-	// behaviour and asserting our own.
+	// behavior and asserting our own.
 	return resp.Close || strings.EqualFold(resp.Header.Get("Connection"), "close")
 }
 

@@ -15,8 +15,8 @@ import (
 	"brevis.sh/brevis/sdk/from"
 )
 
-func csvPontoEVirgula() []byte {
-	return []byte("municipio;populacao\nSão Paulo;11451999\nRio;6211423\n")
+func csvSemicolon() []byte {
+	return []byte("city;population\nSão Paulo;11451999\nRio;6211423\n")
 }
 
 func readAll(t *testing.T, r core.Reader) []map[string]any {
@@ -28,7 +28,7 @@ func readAll(t *testing.T, r core.Reader) []map[string]any {
 	var out []map[string]any
 	for env, err := range lines {
 		if err != nil {
-			t.Fatalf("linha: %v", err)
+			t.Fatalf("line: %v", err)
 		}
 		out = append(out, asMap(t, env.Payload))
 	}
@@ -41,7 +41,7 @@ func readAll(t *testing.T, r core.Reader) []map[string]any {
 func TestHTTPWithASemicolonDelimiter(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/csv")
-		_, _ = w.Write(csvPontoEVirgula())
+		_, _ = w.Write(csvSemicolon())
 	}))
 	defer srv.Close()
 
@@ -49,7 +49,7 @@ func TestHTTPWithASemicolonDelimiter(t *testing.T) {
 	if len(lines) != 2 {
 		t.Fatalf("finished with %d rows: %v", len(lines), lines)
 	}
-	if lines[0]["municipio"] != "São Paulo" || lines[0]["populacao"] != "11451999" {
+	if lines[0]["city"] != "São Paulo" || lines[0]["population"] != "11451999" {
 		t.Errorf("first row: %v", lines[0])
 	}
 }
@@ -58,7 +58,7 @@ func TestHTTPWithASemicolonDelimiter(t *testing.T) {
 // whole header -- the defect the field exists to prevent.
 func TestWithoutADelimiterASemicolonCSVBecomesOneColumn(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = w.Write(csvPontoEVirgula())
+		_, _ = w.Write(csvSemicolon())
 	}))
 	defer srv.Close()
 
@@ -74,15 +74,15 @@ func TestWithoutADelimiterASemicolonCSVBecomesOneColumn(t *testing.T) {
 func TestHTTPDecompressesGzip(t *testing.T) {
 	var compressed bytes.Buffer
 	gz := gzip.NewWriter(&compressed)
-	_, _ = gz.Write(csvPontoEVirgula())
+	_, _ = gz.Write(csvSemicolon())
 	_ = gz.Close()
 
 	for _, testCase := range []struct {
 		name, contentType, path string
 	}{
-		{"por content-type", "application/gzip", "/dados"},
-		{"por extensão", "application/octet-stream", "/dados.csv.gz"},
-		{"por content-encoding", "", "/dados"},
+		{"by content-type", "application/gzip", "/data"},
+		{"by extension", "application/octet-stream", "/data.csv.gz"},
+		{"by content-encoding", "", "/data"},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -98,7 +98,7 @@ func TestHTTPDecompressesGzip(t *testing.T) {
 			lines := readAll(t, from.HTTP{
 				URL: srv.URL + testCase.path, Format: core.FormatCSV, Delimiter: ';',
 			})
-			if len(lines) != 2 || lines[1]["municipio"] != "Rio" {
+			if len(lines) != 2 || lines[1]["city"] != "Rio" {
 				t.Errorf("did not decompress: %v", lines)
 			}
 		})
@@ -110,7 +110,7 @@ func TestHTTPDecompressesGzip(t *testing.T) {
 func TestALyingGzipFailsSayingWhatItIs(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/gzip")
-		_, _ = w.Write([]byte("isto nao e gzip"))
+		_, _ = w.Write([]byte("this is not gzip"))
 	}))
 	defer srv.Close()
 
@@ -128,18 +128,18 @@ func TestALyingGzipFailsSayingWhatItIs(t *testing.T) {
 // once downloaded.
 func TestFilesWithADelimiter(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "dados.csv")
-	if err := os.WriteFile(path, csvPontoEVirgula(), 0o600); err != nil {
+	path := filepath.Join(dir, "data.csv")
+	if err := os.WriteFile(path, csvSemicolon(), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	lines := readAll(t, from.Files{Path: path, Format: core.FormatCSV, Delimiter: ';'})
-	if len(lines) != 2 || lines[0]["municipio"] != "São Paulo" {
-		t.Errorf("linhas: %v", lines)
+	if len(lines) != 2 || lines[0]["city"] != "São Paulo" {
+		t.Errorf("lines: %v", lines)
 	}
 }
 
 // comoMapa narrows the payload. Every source yields the same record model, so
-// there is nothing to normalise -- this only fails loudly if that stops being
+// there is nothing to normalize -- this only fails loudly if that stops being
 // true.
 func asMap(t *testing.T, p any) map[string]any {
 	t.Helper()
@@ -150,8 +150,8 @@ func asMap(t *testing.T, p any) map[string]any {
 	return m
 }
 
-func containsAll(s string, partes ...string) bool {
-	for _, p := range partes {
+func containsAll(s string, parts ...string) bool {
+	for _, p := range parts {
 		if !bytes.Contains([]byte(s), []byte(p)) {
 			return false
 		}

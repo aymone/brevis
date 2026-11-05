@@ -268,7 +268,7 @@ func NewMetrics() *Metrics {
 // EnvIngestionMetrics turns the per-table volume series on.
 //
 // OFF by default, and that default is the point. Every other instrument in
-// this file is labelled by things the OPERATOR wrote in a YAML file -- stream,
+// this file is labeled by things the OPERATOR wrote in a YAML file -- stream,
 // sink, format, reason -- so the series count is known before the process
 // starts. `table` is chosen by the PRODUCER: with auto_table one route becomes
 // as many tables as they name, and `naming` bounds that rather than making it

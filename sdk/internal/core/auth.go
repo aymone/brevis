@@ -151,7 +151,7 @@ type Refresh struct {
 	ExpiresAt func(body []byte) (time.Time, error)
 
 	// Store keeps the rotated credential between runs. Nil keeps today's
-	// behaviour: the renewed value lives for this run only.
+	// behavior: the renewed value lives for this run only.
 	//
 	// It exists because the alternative is a person re-pasting the credential
 	// once per expiry window, forever. With it, the environment variable stops

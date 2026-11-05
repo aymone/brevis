@@ -11,7 +11,7 @@ import (
 var pg = postgres.Dialect{}
 
 func orders() model.Model {
-	return model.Model{Schema: "marts", Name: "orders", Materialised: model.Table}
+	return model.Model{Schema: "marts", Name: "orders", Materialized: model.Table}
 }
 
 func only(t *testing.T, test model.Test) Check {
@@ -89,7 +89,7 @@ func TestAcceptedValuesQuotesThroughTheDialect(t *testing.T) {
 	// A NULL IS NOT AN UNEXPECTED VALUE. `col NOT IN (…)` is already
 	// unknown for a NULL and returns no row, so the explicit IS NOT NULL
 	// changes nothing today -- it is there because the day somebody adds a
-	// NOT clause around this, the silent behaviour would change with it.
+	// NOT clause around this, the silent behavior would change with it.
 	if !strings.Contains(c.Count, "IS NOT NULL") {
 		t.Errorf("a null is not_null's business, and this does not say so:\n%s", c.Count)
 	}

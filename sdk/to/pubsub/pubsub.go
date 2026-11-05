@@ -211,7 +211,7 @@ func (t Topic) Write(ctx context.Context, records []core.Envelope, opt core.Writ
 	defer client.Stop()
 
 	// Every message is queued BEFORE any is waited on. Waiting per message
-	// would serialise the whole batch on the round trip and turn a
+	// would serialize the whole batch on the round trip and turn a
 	// forty-thousand-record load into forty thousand sequential calls.
 	handles := make([]Handle, 0, len(records))
 	var bytes int64
@@ -315,7 +315,7 @@ func (t Topic) message(e *core.Envelope) (Message, error) {
 	return msg, nil
 }
 
-// refuseUnsupported rejects what a topic cannot honour.
+// refuseUnsupported rejects what a topic cannot honor.
 //
 // Refused and not ignored, which is the rule this repository already follows.
 // An ignored option is worse than an error: the author believes it is being
@@ -345,7 +345,7 @@ func (t Topic) refuseUnsupported(opt core.WriteOptions) error {
 
 // topic is the real Publisher, wrapping the Google client.
 //
-// Thin on purpose: everything that decides behaviour is above and is tested
+// Thin on purpose: everything that decides behavior is above and is tested
 // against a fake, because the case that matters -- a publish that fails part of
 // the way through -- cannot be produced on demand against a real topic.
 type topic struct {

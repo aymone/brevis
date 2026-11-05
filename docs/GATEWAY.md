@@ -117,7 +117,7 @@ the destination's page on `/data`:
   ```
 
   Opt-in, because a comment is free text: a secret ends up in one in ways no
-  pattern recognises — a commented-out setting, a password on the line after
+  pattern recognizes — a commented-out setting, a password on the line after
   "the password is". An ordinary `#` comment stays in the file.
 
 The **settings** carry no secret by construction: a credential in this file is
@@ -231,7 +231,7 @@ attached to every record:
   "host": "x.y",
   "ingestion_id": "84aaee4b-66af-5cc0-b97b-6856dec95b25",
   "_dead_letter_reason": "… rpc error: code = NotFound desc = Topic not found",
-  "_dead_letter_sink": "pubsub:brevis-local/nao-existe",
+  "_dead_letter_sink": "pubsub:brevis-local/does-not-exist",
   "_dead_letter_at": "2026-09-24T22:02:32Z",
   "_dead_letter_batch": "e7ff3a12136fb913514e0efd57eaa9c6",
   "_dead_letter_stream": "clicks"
@@ -550,7 +550,7 @@ inside `data`.
   "table_name": "app_orders",
   "unique_key": "id",
   "operation":  "INSERT",
-  "description": "Pedidos do app",
+  "description": "App orders",
   "data": {
     "id": "A-3",
     "total": 150,
@@ -704,7 +704,7 @@ there.
 
 A batch that loses the race to `ALTER` fails, and the pipe's **ordinary retry**
 resolves it: four attempts over roughly seven seconds, and by the second the
-winner's column is in the catalogue. That is the buffer — there is no second
+winner's column is in the catalog. That is the buffer — there is no second
 one, because a batch waiting for DDL and a batch waiting for a worker are the
 same thing.
 
@@ -714,7 +714,7 @@ seconds. That needs a shared debounce, which needs a shared metastore, which is
 the next piece.
 
 A field that arrives scalar and later arrives as an object is **refused to the
-dead letter**: that is not a new column and not a widening, and serialising the
+dead letter**: that is not a new column and not a widening, and serializing the
 object into the `TEXT` column would leave it holding two types.
 
 ### The name is the attack surface
@@ -784,7 +784,7 @@ Losing it returns an error and the pipe retries the batch. Waiting would hold
 a worker for the window, and there are four of them.
 
 This is what the market does: Delta Lake and Iceberg commit optimistically and
-retry on conflict, Kafka Connect gets serialisation free from partition
+retry on conflict, Kafka Connect gets serialization free from partition
 ordering, Fivetran has one writer per table. Nobody takes a lock.
 
 #### The cache is never the authority
@@ -975,7 +975,7 @@ and a table's columns notice.
 ## Configuration
 
 See [`gateway/example/gateway.yaml`](../gateway/example/gateway.yaml). Every
-field is refused when it cannot be honoured, and two refusals are worth knowing:
+field is refused when it cannot be honored, and two refusals are worth knowing:
 
 **`buffer.durability` accepts only `memory` today**, and refuses `disk` **by
 name** rather than accepting the word. Somebody writing `disk` believes their

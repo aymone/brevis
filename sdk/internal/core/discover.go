@@ -298,7 +298,7 @@ func Discovered(opt WriteOptions, records []Envelope) (Schema, error) {
 			}
 			// THE SPELLING IS DECIDED SEPARATELY FROM THE VALUE, and by
 			// sorted order rather than arrival. [#43] Map iteration is
-			// randomised, so letting the first record seen win would give
+			// randomized, so letting the first record seen win would give
 			// one batch a different column on a different run -- and a
 			// column name is DDL. It is the rule FlattenOneLevel already
 			// uses, for the reason it gives there.
@@ -393,7 +393,7 @@ func WithDiscovered(opt WriteOptions, found Schema) WriteOptions {
 //
 // The winner is the first in SORTED order, which is the rule Discovered uses
 // and for the reason it gives: a column name is DDL, and map iteration is
-// randomised. The surviving column keeps its own type and note -- the two
+// randomized. The surviving column keeps its own type and note -- the two
 // spellings are one field under two names, not two fields.
 //
 // Order is otherwise preserved: a declaration is written in DDL order and

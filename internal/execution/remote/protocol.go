@@ -51,7 +51,7 @@ import (
 )
 
 // Protocol is the wire version. It goes in every request, and an agent that
-// does not recognise it must refuse rather than guess: a silent mismatch
+// does not recognize it must refuse rather than guess: a silent mismatch
 // between two programs on different release cycles is the failure this number
 // exists to make loud.
 const Protocol = 1
@@ -100,7 +100,7 @@ type StartRequest struct {
 	ExecutionID string `json:"execution_id"`
 	NodeID      string `json:"node_id"`
 
-	// Identifying, not behavioural: they let an operator on the host see which
+	// Identifying, not behavioral: they let an operator on the host see which
 	// run a process belongs to, which is the whole reason the pod carries them
 	// as labels.
 	Workflow string `json:"workflow"`

@@ -54,7 +54,7 @@ func TestALabelValueCannotBreakTheExposition(t *testing.T) {
 	}
 	// Every line has to still be one line.
 	//
-	// The check is on LABELLED series, because not every line has labels:
+	// The check is on LABELED series, because not every line has labels:
 	// `process_start_time_seconds` is a bare gauge with a well-known name and
 	// no labels at all, so requiring a `}` here would fail on a line that
 	// cannot carry a label value and therefore cannot leak one.
@@ -63,7 +63,7 @@ func TestALabelValueCannotBreakTheExposition(t *testing.T) {
 			continue
 		}
 		if !strings.Contains(line, "{") {
-			continue // an unlabelled series; nothing to escape
+			continue // an unlabeled series; nothing to escape
 		}
 		if !strings.Contains(line, "} ") {
 			t.Errorf("a line lost its shape, so the escaping leaked: %q", line)

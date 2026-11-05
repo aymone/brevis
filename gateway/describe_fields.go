@@ -78,7 +78,7 @@ func walkFields(v reflect.Value, prefix string, written map[string]bool, haveFil
 }
 
 // leafValue is a setting as JSON carries it, and as somebody reading the
-// file would recognise it.
+// file would recognize it.
 func leafValue(v reflect.Value) any {
 	switch v.Type() {
 	case durationType, ownDurationType:
@@ -200,7 +200,7 @@ func collectNotes(n *yaml.Node, prefix string, out map[string]string) {
 //
 // OPT-IN, and that is the whole guarantee. A comment is free text that no
 // `_from` convention reaches, and a secret ends up in one in ways no pattern
-// can recognise -- a commented-out setting, a password on the line after
+// can recognize -- a commented-out setting, a password on the line after
 // "the password is". An ordinary `#` comment therefore never leaves the
 // gateway; only the lines its author marked do. The engine still checks what
 // they say (catalog.FindSecretInText), as the second wall.

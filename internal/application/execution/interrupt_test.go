@@ -22,7 +22,7 @@ import (
 
 // mute is an executor that ends a step WITHOUT a verdict: no EventSucceeded,
 // no EventFailed, the channel simply closes. It is what the remote executor
-// does when its context is cancelled (#122), and what any executor with a bug
+// does when its context is canceled (#122), and what any executor with a bug
 // would look like. waitForCancel holds the step until the context ends first.
 type mute struct {
 	waitForCancel bool
@@ -247,7 +247,7 @@ func (h *holdingAgent) Cancel(_ context.Context, instance, execID string) error 
 }
 
 // #122's second point, through the whole path a shutdown takes: the runner,
-// the real remote executor, an agent. Cancelling the run's context stops the
+// the real remote executor, an agent. Canceling the run's context stops the
 // process on the agent -- once, at the instance that took it -- records the
 // step as canceled, and the run answers that it was interrupted. On 0.35.0 the
 // agent's `sleep 600` was still there after the scheduler came back.

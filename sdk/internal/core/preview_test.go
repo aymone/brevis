@@ -46,7 +46,7 @@ func TestPreviewColumnsAreStableAcrossRuns(t *testing.T) {
 
 // The budget is the whole point of the feature: a preview must not become the
 // thing that floods the log.
-func TestPreviewHonoursTheByteBudget(t *testing.T) {
+func TestPreviewHonorsTheByteBudget(t *testing.T) {
 	out := RenderPreview(rows(), 120, PreviewStats{Rows: 3, Pages: 1, Bytes: 512})
 
 	if len(out) > 220 { // the block plus its footer, which is never dropped
@@ -112,8 +112,8 @@ func TestPreviewSaysSoWhenThereAreNoRows(t *testing.T) {
 
 // A record that is not an object still has a shape worth seeing.
 func TestPreviewRendersScalarRecords(t *testing.T) {
-	out := RenderPreview([]any{"alfa", "beta"}, 4096, PreviewStats{Rows: 2, Pages: 1})
-	if !strings.Contains(out, "value") || !strings.Contains(out, "alfa") {
+	out := RenderPreview([]any{"alpha", "beta"}, 4096, PreviewStats{Rows: 2, Pages: 1})
+	if !strings.Contains(out, "value") || !strings.Contains(out, "alpha") {
 		t.Errorf("scalar records did not render:\n%s", out)
 	}
 }
@@ -153,7 +153,7 @@ func TestPreviewElidesColumnsPastTheLineWidthAndSaysHowMany(t *testing.T) {
 
 // A newline inside a value would break the table into rows that are not rows.
 func TestPreviewEscapesNewlinesInsideAValue(t *testing.T) {
-	out := RenderPreview([]any{map[string]any{"note": "linha um\nlinha dois"}}, 4096, PreviewStats{Rows: 1, Pages: 1})
+	out := RenderPreview([]any{map[string]any{"note": "line one\nline two"}}, 4096, PreviewStats{Rows: 1, Pages: 1})
 
 	body := strings.SplitN(out, "\n\n", 2)[0]
 	if n := len(strings.Split(body, "\n")); n != 2 {

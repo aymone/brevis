@@ -11,7 +11,7 @@
 //	{At}/{run_id}/{pipeline}/part-00001.ndjson
 //	{At}/{run_id}/{pipeline}/_complete
 //
-// `_complete` is written LAST, and it is what authorises a resume. Without it
+// `_complete` is written LAST, and it is what authorizes a resume. Without it
 // the depot is an interrupted extract, and resuming from an interrupted extract
 // would load half the data in silence -- the worst way to fail.
 package checkpoint
@@ -78,7 +78,9 @@ const (
 //
 // The json tags are the on-disk format; UnmarshalJSON also reads the spelling
 // the format had before it went English (versao, registros, partes, numeros,
-// gravado_em).
+// gravado_em): a checkpoint written by an older release carries the
+// Portuguese keys and must still resume. The old spelling can go once no such
+// checkpoint can exist.
 type Manifest struct {
 	Version   int      `json:"version"`
 	Records   int64    `json:"records"`
@@ -319,7 +321,7 @@ func (d *Depot) Writer() *Write {
 }
 
 // Add puts a record in the buffer. It only fails when the payload does not
-// serialise, and then the record did NOT go in -- the distinction matters to
+// serialize, and then the record did NOT go in -- the distinction matters to
 // whoever degrades, who needs to know whether this record still has to be
 // yielded.
 func (e *Write) Add(env core.Envelope) error {

@@ -57,10 +57,10 @@ func landingsDB(t *testing.T) *postgres.Pool {
 func TestRecordLandingsKeepsOneRowPerTargetAndAbsentStaysNull(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 	at := time.Date(2026, 10, 7, 5, 41, 12, 0, time.UTC)
 
-	err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "bigquery://acme-prod/silver/orders", Rows: n(15), Bytes: n(900), At: at},
 		{Target: "bigquery://acme-prod/silver/items", Rows: n(0), At: at},
 		{Target: "s3://acme-archive/orders/", At: at},
@@ -73,7 +73,7 @@ func TestRecordLandingsKeepsOneRowPerTargetAndAbsentStaysNull(t *testing.T) {
 	if len(got) != 3 {
 		t.Fatalf("rows = %d, want 3: %+v", len(got), got)
 	}
-	if o := got["bigquery://acme-prod/silver/orders"]; *o.rows != 15 || *o.bytes != 900 || !o.at.Equal(at) || o.slug != "vendas" {
+	if o := got["bigquery://acme-prod/silver/orders"]; *o.rows != 15 || *o.bytes != 900 || !o.at.Equal(at) || o.slug != "sales" {
 		t.Errorf("orders = %+v", o)
 	}
 	if i := got["bigquery://acme-prod/silver/items"]; i.rows == nil || *i.rows != 0 {
@@ -90,17 +90,17 @@ func TestARetryReplacesItsOwnNumbersAndKeepsWhatOnlyTheFirstAttemptLanded(t *tes
 	pool := landingsDB(t)
 	ctx := context.Background()
 	repo := postgres.NewRunRepo(pool)
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 	first := time.Date(2026, 10, 7, 5, 0, 0, 0, time.UTC)
 	second := first.Add(10 * time.Minute)
 
-	if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "postgres://analytics/public/orders", Rows: n(40000), At: first},
 		{Target: "postgres://analytics/public/staging_orders", Rows: n(40000), At: first},
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "postgres://analytics/public/orders", Rows: n(48000), At: second},
 	}); err != nil {
 		t.Fatal(err)
@@ -124,9 +124,9 @@ func TestPurgingARunKeepsItsLandings(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
 	repo := postgres.NewRunRepo(pool)
-	runID := aged(t, pool, "vendas", 730*24*time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", 730*24*time.Hour, dom.StatusSuccess)
 
-	if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "postgres://analytics/public/orders", Rows: n(10), At: time.Now()},
 	}); err != nil {
 		t.Fatal(err)
@@ -155,8 +155,8 @@ func TestALandingKeepsTheConfigurationItWasWrittenWith(t *testing.T) {
 	cfg := &app.WriterConfig{Hash: "sha256:abc", Body: []byte(`[{"path":"target.dedup","value":"merge","default":false}]`)}
 
 	for range 2 {
-		runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
-		if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+		runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
+		if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 			{Target: "bigquery://acme/silver/orders", Rows: n(1), At: time.Now(), Config: cfg},
 			{Target: "bigquery://acme/silver/items", Rows: n(2), At: time.Now(), Config: cfg},
 		}); err != nil {
@@ -179,8 +179,8 @@ func TestALandingKeepsTheConfigurationItWasWrittenWith(t *testing.T) {
 func TestALandingWithoutAConfigurationPointsAtNothing(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
-	if err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
+	if err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "bigquery://acme/silver/orders", Rows: n(1), At: time.Now()},
 	}); err != nil {
 		t.Fatal(err)
@@ -209,8 +209,8 @@ func TestAStepsConfigurationHistoryGainsALineOnlyWhenItChanges(t *testing.T) {
 	at := time.Date(2026, 10, 11, 12, 0, 0, 0, time.UTC)
 
 	for i, cfg := range []*app.WriterConfig{a, a, a, b, b, a} {
-		runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
-		if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+		runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
+		if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 			{Target: "bigquery://acme/silver/orders", Rows: n(1), At: at.Add(time.Duration(i) * time.Hour), Config: cfg},
 		}); err != nil {
 			t.Fatal(err)
@@ -247,7 +247,7 @@ func TestParallelInstancesRecordAChangeOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := postgres.NewRunRepo(pool)
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 	const instances, rounds = 8, 5
 
 	for round := range rounds {
@@ -267,7 +267,7 @@ func TestParallelInstancesRecordAChangeOnce(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				<-start
-				err := repo.RecordLandings(ctx, runID, dom.StepKey{Node: "carga", MapIndex: i}, "vendas", []app.Landing{
+				err := repo.RecordLandings(ctx, runID, dom.StepKey{Node: "load", MapIndex: i}, "sales", []app.Landing{
 					{Target: "bigquery://acme/silver/orders", Rows: n(1), At: time.Now(), Config: cfg},
 				})
 				if err != nil {

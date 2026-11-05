@@ -35,7 +35,7 @@ func tablesConfig() *postgres.WriterConfig {
 }
 
 // Sections follow the file: the stream's own settings, then each block in the
-// order it first appears. A row is labelled by its path inside its section.
+// order it first appears. A row is labeled by its path inside its section.
 func TestTheConfigurationIsLaidOutInTheFilesOrder(t *testing.T) {
 	v := BuildConfig(tablesConfig())
 

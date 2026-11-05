@@ -7,7 +7,7 @@ const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typ
  * What the test-event drawer says about a body (ui.js testEvent): one object
  * for json, a list for array, one per line for ndjson; for an auto_table the
  * table each event names against the accepted prefixes; then where it lands.
- * `kind` picks the colour. The words come from the caller's t().
+ * `kind` picks the color. The words come from the caller's t().
  */
 export function checkEvent(raw: string, r: TestEventRules, say: Say): { text: string; kind: "failed" | "queued" | "success" } {
   const body = raw.replace(/\s+$/, "");

@@ -365,7 +365,7 @@ function HowItWorks() {
 export default function EndpointsRoute() {
   const { t } = useT();
   const filter = useFilter(FIELDS, "/data/endpoints");
-  const { show } = useDrawer("publicar");
+  const { show } = useDrawer("publish");
   return (
     <Page>
       <PageHead
@@ -381,7 +381,7 @@ export default function EndpointsRoute() {
       <Endpoints filter={filter} />
       <HowItWorks />
       <HowDrawer
-        id="publicar"
+        id="publish"
         title={t("endpoints.publish")}
         lead={t("endpoints.publish.lead")}
         blocks={[

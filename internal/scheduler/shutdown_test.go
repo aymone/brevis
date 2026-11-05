@@ -27,7 +27,7 @@ var oneAttempt = scheduler.Config{
 	Visibility: time.Minute, RecoveryInterval: time.Hour,
 }
 
-// shutDownMidRun starts the dispatcher, waits for executar to begin, then
+// shutDownMidRun starts the dispatcher, waits for execute to begin, then
 // shuts the dispatcher down the way a SIGTERM does and waits for it to finish
 // -- Run waits for the bookkeeping, so it has all been written on return.
 func shutDownMidRun(t *testing.T, d *scheduler.Dispatcher, started <-chan struct{}) {
@@ -159,7 +159,7 @@ func TestACanceledErrorWithoutAShutdownIsAFailure(t *testing.T) {
 	}, noLog())
 
 	// The dispatcher stays up until the run has its outcome: stopping it as
-	// soon as executar returned would BE a shutdown, and test the other case.
+	// soon as execute returned would BE a shutdown, and test the other case.
 	ctx, stop := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() { defer close(done); _ = d.Run(ctx) }()

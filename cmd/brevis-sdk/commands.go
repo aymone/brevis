@@ -258,7 +258,7 @@ Examples:
 //   - `run` hardcoded CSV with no flag at all, so a JSON URL was parsed as CSV.
 //     The CSV reader accepts anything -- it returns one column of nonsense --
 //     so the output was garbage with NO error.
-//   - `extract` mapped an unrecognised `--format` to CSV in silence, so
+//   - `extract` mapped an unrecognized `--format` to CSV in silence, so
 //     `--format=yaml` produced the same garbage instead of saying the word is
 //     not a format.
 //   - `extract`'s help promised auto-detection, which the SDK does not do. An

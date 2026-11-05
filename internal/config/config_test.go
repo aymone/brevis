@@ -51,7 +51,7 @@ func TestLoadRejectsAnInvalidTimeout(t *testing.T) {
 func TestTheTasksEnvironmentPassesOnWhatWasDeclared(t *testing.T) {
 	t.Setenv("GOOGLE_PROJECT_ID", "acme-dev")
 	t.Setenv("STAGE", "local")
-	t.Setenv("BREVIS_DATABASE_URL", "postgres://brevis:senha@db/brevis")
+	t.Setenv("BREVIS_DATABASE_URL", "postgres://brevis:password@db/brevis")
 
 	env := TasksEnvironment([]string{"GOOGLE_PROJECT_ID", "STAGE"})
 
@@ -70,7 +70,7 @@ func TestTheTasksEnvironmentPassesOnWhatWasDeclared(t *testing.T) {
 // every pipeline -- a workflow is an arbitrary command written by somebody
 // else.
 func TestWithNoDeclarationOnlyPathAndHome(t *testing.T) {
-	t.Setenv("SEGREDO_QUALQUER", "nao-deve-vazar")
+	t.Setenv("ANY_SECRET", "must-not-leak")
 	env := TasksEnvironment(nil)
 	if len(env) != 2 {
 		t.Errorf("environment = %v, want only PATH and HOME", env)
@@ -78,15 +78,15 @@ func TestWithNoDeclarationOnlyPathAndHome(t *testing.T) {
 }
 
 func TestALiteralValueAndAMissingVariable(t *testing.T) {
-	_ = os.Unsetenv("NAO_EXISTE")
-	env := TasksEnvironment([]string{"STAGE=prod", "NAO_EXISTE"})
+	_ = os.Unsetenv("DOES_NOT_EXIST")
+	env := TasksEnvironment([]string{"STAGE=prod", "DOES_NOT_EXIST"})
 
 	if env["STAGE"] != "prod" {
 		t.Errorf("the literal was not applied: %v", env)
 	}
 	// Absent does not become an empty string: `GOOGLE_PROJECT_ID=""` would make
 	// dbt fail later, with a worse message than the missing-variable one.
-	if _, exists := env["NAO_EXISTE"]; exists {
+	if _, exists := env["DOES_NOT_EXIST"]; exists {
 		t.Error("a missing variable became an empty string")
 	}
 }
@@ -94,13 +94,13 @@ func TestALiteralValueAndAMissingVariable(t *testing.T) {
 // The wildcard exists for whoever needs it; the exception exists because the
 // orchestrator's configuration is never the task's business.
 func TestTheWildcardDoesNotCarryBrevisOwnVariables(t *testing.T) {
-	t.Setenv("MINHA_VAR", "valor")
-	t.Setenv("BREVIS_DATABASE_URL", "postgres://brevis:senha@db/brevis")
+	t.Setenv("MY_VAR", "value")
+	t.Setenv("BREVIS_DATABASE_URL", "postgres://brevis:password@db/brevis")
 	t.Setenv("BREVIS_BRAND_FILE", "/etc/brevis/brand.yaml")
 
 	env := TasksEnvironment([]string{"*"})
 
-	if env["MINHA_VAR"] != "valor" {
+	if env["MY_VAR"] != "value" {
 		t.Error("the wildcard should pass the common variables through")
 	}
 	for k := range env {
@@ -148,7 +148,7 @@ func TestLoadReadsTheEnvironmentForEveryField(t *testing.T) {
 // pipelines that write into the data warehouse; open on the internet it is a
 // remote control for the warehouse. A warning in the log would not do -- nobody
 // reads the log of a process that
-// funciona.
+// works.
 func TestOutsideLocalACredentialIsRequired(t *testing.T) {
 	t.Setenv("BREVIS_DATABASE_URL", "postgres://x/y")
 	t.Setenv("BREVIS_ENV", "prod")
@@ -161,7 +161,7 @@ func TestOutsideLocalACredentialIsRequired(t *testing.T) {
 		t.Fatal("BREVIS_ENV=prod started with no credential")
 	}
 
-	h, err := auth.GenerateHash("senha-de-teste-longa")
+	h, err := auth.GenerateHash("long-test-password")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestUnsetEnvIsProductionAndRefusesWithoutCredential(t *testing.T) {
 // In local the interface may stay open: there the server listens on the
 // developer's own machine, and asking for a password on every `make up` would
 // push the team into switching
-// a autenticacao de vez.
+// authentication off for good.
 func TestLocalStartsWithNoCredential(t *testing.T) {
 	t.Setenv("BREVIS_DATABASE_URL", "postgres://x/y")
 	t.Setenv("BREVIS_ENV", "local")

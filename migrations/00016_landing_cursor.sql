@@ -8,7 +8,7 @@
 --
 -- IT IS PLANTED AT now() ON THE FIRST CYCLE and never at the epoch, which is
 -- the rule `schedules.ultimo_slot` learned the hard way: a marker left NULL
--- makes the first cycle materialise from the beginning of time, and the fix
+-- makes the first cycle materialize from the beginning of time, and the fix
 -- there is written up in scheduler.go after eighteen workflows went without an
 -- automatic run. A trigger that fired once for every landing in the table's
 -- history would be the same mistake with a louder blast radius.

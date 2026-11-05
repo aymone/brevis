@@ -19,16 +19,16 @@ import (
 // BigQuery destination never builds it.
 type Reader interface {
 	// Read opens the source and yields its records, lazily. The sequence must
-	// stay lazy: a driver that materialises the whole source before returning
+	// stay lazy: a driver that materializes the whole source before returning
 	// puts a 5 GB export in memory.
 	Read(ctx context.Context, opt ReadOptions) (iter.Seq2[Envelope, error], error)
 
 	// Describe names the origin for logs and errors, with any secret
-	// redacted. "http://api.example.com/v1/events", "postgres://host/db#pedidos".
+	// redacted. "http://api.example.com/v1/events", "postgres://host/db#orders".
 	Describe() string
 }
 
-// ReadOptions is what every source honours, whatever it reads from.
+// ReadOptions is what every source honors, whatever it reads from.
 type ReadOptions struct {
 	// Preview prints the first N records once the read finishes. See the
 	// Preview fields on Source.
@@ -58,7 +58,7 @@ type Writer interface {
 	Describe() string
 }
 
-// WriteOptions is what every destination honours, whatever it writes to.
+// WriteOptions is what every destination honors, whatever it writes to.
 type WriteOptions struct {
 	// Columns declares the destination's columns, in DDL order, including the
 	// two the ingestion transformers write. Nil declares nothing. See
@@ -103,7 +103,7 @@ type WriteOptions struct {
 	// and the SQL drivers, and the fold has to reach one without reaching the
 	// others. Only the destination sets it.
 	//
-	// It does NOT normalise anything. `BREVIS_NORMALIZE_DATA` lower-cases
+	// It does NOT normalize anything. `BREVIS_NORMALIZE_DATA` lower-cases
 	// every column and flattens nested objects, which is a one-way door on a
 	// live table; this only decides whether two names are one column.
 	FoldsCase bool

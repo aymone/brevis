@@ -29,7 +29,7 @@ func writesTo(t *testing.T, c dialect.Conn, audit *bytes.Buffer, on ...string) *
 // A WRITE RUNS WHERE SOMEBODY NAMED THE CONNECTION, and nowhere else.
 //
 // The statement here is refused by every layer this service has: the
-// tokeniser reads `CREATE TABLE` and stops, and the warehouse calls it
+// tokenizer reads `CREATE TABLE` and stops, and the warehouse calls it
 // CREATE_TABLE. Both have to stand down together, which is why this asserts
 // one 200 rather than three internals -- a feature that unlocked two of three
 // layers would answer 400 and look like it worked from the outside.
@@ -171,7 +171,7 @@ func TestWritesCannotBeUnlockedWithoutAToken(t *testing.T) {
 // went through and the audit called them queries. Measured against the real
 // service: three statements, three lines, `wrote` false on all of them.
 //
-// The tokeniser is what labels where the warehouse says nothing. It is the
+// The tokenizer is what labels where the warehouse says nothing. It is the
 // same classifier that would have REFUSED the statement had the connection
 // been locked, used here only to describe it -- and it carries its own known
 // hole: `SELECT nextval('s')` is a write it reads as a query, so on a

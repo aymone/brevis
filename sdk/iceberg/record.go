@@ -138,7 +138,7 @@ func object(payload any) (map[string]any, error) {
 //	bool       a bool
 //	timestamp  RFC 3339 text, or a time.Time; stored in UTC at microseconds
 //	date       YYYY-MM-DD text, or a time.Time's calendar day
-//	json       a map or a slice, serialised; text or bytes that already are a document
+//	json       a map or a slice, serialized; text or bytes that already are a document
 //	bytes      []byte, or standard base64 text, which is how encoding/json writes bytes
 //
 // Everything else is refused naming what arrived. A number into a timestamp
@@ -397,7 +397,7 @@ func toDate(v any) (time.Time, error) {
 	return time.Time{}, cannot(v, "is not a date; a date column takes YYYY-MM-DD text or a time.Time")
 }
 
-// toDocument gives the serialised document. Text or bytes that already are
+// toDocument gives the serialized document. Text or bytes that already are
 // one go as they came; a producer with plain text to keep declares `string`.
 func toDocument(v any) (string, error) {
 	var raw []byte

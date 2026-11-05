@@ -82,8 +82,8 @@ func (e *checkpointState) apply(r *Result) {
 //	{At}/{run_id}/{name}-{hash}/
 //
 // The run identifies the execution and the name identifies the step. The hash
-// is there because the name becomes a path segment and has to be sanitised:
-// without it, two pipelines whose names sanitise to the same thing would share
+// is there because the name becomes a path segment and has to be sanitized:
+// without it, two pipelines whose names sanitize to the same thing would share
 // a depot, and one would resume from the other's extract -- wrong data loaded
 // in silence, which is the worst way to fail.
 func (p *Pipeline) checkpointPath() string {
@@ -204,7 +204,7 @@ func resume(ctx context.Context, p *Pipeline, dep *checkpoint.Depot,
 	}, true
 }
 
-// materialise drains the source into the depot and yields what was written.
+// materialize drains the source into the depot and yields what was written.
 //
 // Reading it back is not waste: it makes the RESUME path run on every
 // successful execution. A recovery path that only runs in an emergency is a

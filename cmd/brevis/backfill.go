@@ -12,7 +12,7 @@ import (
 // backfillReport says which of four things happened.
 //
 // `N backfill run(s) queued` was correct and unreadable. N is right -- a slot
-// that already has a run is not created twice, which is the right behaviour
+// that already has a run is not created twice, which is the right behavior
 // and the reason the number can be small. What it never said is how small out
 // of WHAT, and zero is the answer to four different questions:
 //

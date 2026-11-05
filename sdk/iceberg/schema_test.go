@@ -30,7 +30,7 @@ func TestEachSDKTypeHasOneIcebergTypeAndOneArrowType(t *testing.T) {
 		// zone, and Iceberg v2 keeps microseconds.
 		{sdk.TypeTimestamp, "timestamptz", &arrow.TimestampType{Unit: arrow.Microsecond, TimeZone: "UTC"}},
 		{sdk.TypeDate, "date", arrow.FixedWidthTypes.Date32},
-		// json is a string: the serialised document. Iceberg v3 has a
+		// json is a string: the serialized document. Iceberg v3 has a
 		// variant type, and DuckDB does not read it yet; a string every
 		// reader parses beats a type half of them refuse.
 		{sdk.TypeJSON, "string", arrow.BinaryTypes.String},

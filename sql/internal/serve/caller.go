@@ -49,7 +49,7 @@ func validName(s string) bool {
 	return true
 }
 
-// callers normalises Options into the one list the service authenticates
+// callers normalizes Options into the one list the service authenticates
 // against, and refuses at boot what cannot be made coherent.
 //
 // THE UNNAMED TOKEN IS A CALLER WITH NO NAME, folded in here so there is a

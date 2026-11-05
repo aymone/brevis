@@ -51,6 +51,10 @@ needs the new names.
   `instances_ok`; node types `phase` and `group`). It is the console's own
   payload and ships in the same binary, so nothing in this repository still
   reads the old keys; a script that scraped it must follow.
+- The session cookie is `brevis_session` (it was `brevis_sessao`). A session
+  signed in under the old name stays valid until it expires and signing out
+  clears both, so upgrading signs nobody out; the old name is only read, and
+  goes one session lifetime after this release.
 - `brevis marca` is still accepted as a deprecated alias of `brevis brand`; it
   goes in v1.
 - Internal Go identifiers (methods, fields, helpers) are English; they are not

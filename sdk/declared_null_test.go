@@ -28,19 +28,19 @@ import (
 // not read a null; the row was never the problem.
 func TestADeclaredNullStaysInTheRow(t *testing.T) {
 	row, err := LandingSpread(map[string]any{
-		"source_key": "k-1", "Area_Drenagem": nil,
+		"source_key": "k-1", "Area_Drainage": nil,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	v, present := row["Area_Drenagem"]
+	v, present := row["Area_Drainage"]
 	if !present {
-		t.Fatalf("the row dropped Area_Drenagem: a declared column absent from "+
+		t.Fatalf("the row dropped Area_Drainage: a declared column absent from "+
 			"the row is refused by CheckRow in five drivers, which is the "+
 			"v0.77.0 regression. The row has: %v", row)
 	}
 	if v != nil {
-		t.Errorf("Area_Drenagem is %#v, want nil: null and \"\" are different "+
+		t.Errorf("Area_Drainage is %#v, want nil: null and \"\" are different "+
 			"facts and the column cannot tell them apart afterwards", v)
 	}
 }
@@ -51,13 +51,13 @@ func TestADeclaredNullStaysInTheRow(t *testing.T) {
 // ROW carries what the record carried, and the SCHEMA carries only what has a
 // shape. Fixing one by breaking the other is what v0.77.0 did.
 func TestANullIsInTheRowAndNotInTheSchema(t *testing.T) {
-	record := map[string]any{"source_key": "k-1", "Area_Drenagem": nil}
+	record := map[string]any{"source_key": "k-1", "Area_Drainage": nil}
 
 	row, err := LandingSpread(record)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, present := row["Area_Drenagem"]; !present {
+	if _, present := row["Area_Drainage"]; !present {
 		t.Error("the row does not carry the null")
 	}
 
@@ -66,8 +66,8 @@ func TestANullIsInTheRowAndNotInTheSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range schema {
-		if c.Name == "Area_Drenagem" {
-			t.Fatalf("the schema declares Area_Drenagem as %s from a null: a "+
+		if c.Name == "Area_Drainage" {
+			t.Fatalf("the schema declares Area_Drainage as %s from a null: a "+
 				"null has no shape, so the type would be a guess and the "+
 				"first real value could not correct it -- #42", c.Type)
 		}
@@ -85,8 +85,8 @@ func TestANullIsInTheRowAndNotInTheSchema(t *testing.T) {
 func TestTheReportersDeclarationAcceptsItsOwnRow(t *testing.T) {
 	fields := Schema{
 		{Name: "source_key", Type: TypeString},
-		{Name: "Area_Drenagem", Type: TypeString},
-		{Name: "Codigo_Adicional", Type: TypeString},
+		{Name: "Area_Drainage", Type: TypeString},
+		{Name: "Code_Additional", Type: TypeString},
 	}
 	declared := append(
 		LandingControlColumns(LandingOptions{UniqueID: true, Keyed: true}),
@@ -94,7 +94,7 @@ func TestTheReportersDeclarationAcceptsItsOwnRow(t *testing.T) {
 
 	land := Landing("ana_station", LandingKey("source_key"), LandingColumns())
 	out, err := land(map[string]any{
-		"source_key": "k-1", "Area_Drenagem": nil, "Codigo_Adicional": nil,
+		"source_key": "k-1", "Area_Drainage": nil, "Code_Additional": nil,
 	})
 	if err != nil {
 		t.Fatal(err)

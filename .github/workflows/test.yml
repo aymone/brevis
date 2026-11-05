@@ -118,7 +118,7 @@ jobs:
     if: needs.changes.outputs.engine == 'true'
     runs-on: ubuntu-latest
 
-    # O modulo RAIZ -- runner, executores, API, notify, scheduler.
+    # The ROOT module -- runner, executors, API, notify, scheduler.
     #
     # It had no CI at all: every job in this file and in quality.yml does
     # `cd sdk`, and the only `go test ./...` at the root lived in the release
@@ -145,9 +145,9 @@ jobs:
 
       - name: gofmt
         run: |
-          arquivos=$(gofmt -l . | grep -v '^sdk/' || true)
-          if [ -n "$arquivos" ]; then
-            echo "::error::gofmt: $arquivos"
+          unformatted=$(gofmt -l . | grep -v '^sdk/' || true)
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt: $unformatted"
             exit 1
           fi
 
@@ -166,7 +166,7 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code go.mod go.sum \
-            || { echo "::error::rode 'go mod tidy' e commite"; exit 1; }
+            || { echo "::error::run 'go mod tidy' and commit"; exit 1; }
 
       # web/'s generated artifacts are versioned, because the image has neither
       # Node. Checking here catches stale CSS at push time, and not
@@ -413,7 +413,7 @@ jobs:
       - name: The interface is in English
         run: ./.github/scripts/ui-language-check.sh
 
-      - name: Comments and messages are in English
+      - name: Comments, messages, names, SQL and file names are in English
         run: ./.github/scripts/repo-language-check.sh
 
       - name: The Helm chart renders and refuses what it should

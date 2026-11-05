@@ -26,7 +26,7 @@ import (
 //
 // A pid alone cannot identify a process across this agent restarting: the OS
 // reuses them. The start time is what makes a recycled pid detectable, and
-// refusing to signal one is the difference between cancelling a step and
+// refusing to signal one is the difference between canceling a step and
 // killing somebody's database. See cancel.go.
 func processStart(pid int) (time.Time, error) {
 	if pid <= 0 {

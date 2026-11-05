@@ -53,7 +53,7 @@ bucket = context.get("extract.bucket")
 print("python read:", bucket)
 
 context.set(name="Daniel")
-context.set(label="Nome")
+context.set(label="Name")
 context.set(rows=48213)
 `), 0o600); err != nil {
 		t.Fatal(err)
@@ -138,7 +138,7 @@ context.set(rows=48213)
 	// the two separate set() calls, which is the merge the request asked about.
 	seen := readJSON(t, filepath.Join(dir, "seen"))
 	got := seen["transform"]
-	if got["name"] != "Daniel" || got["label"] != "Nome" {
+	if got["name"] != "Daniel" || got["label"] != "Name" {
 		t.Errorf("the two set() calls did not both survive: %v", got)
 	}
 	if got["rows"] != float64(48213) {
@@ -358,7 +358,7 @@ with open(os.environ["READINGS"], "w") as f:
 // Every piece of this is tested on its own -- the library's line, the
 // collector's parse, the registry's instrument, the exposition's format -- and
 // none of those would catch the two joins that actually break: a marker the
-// engine does not recognise, and a metric recorded against the wrong step.
+// engine does not recognize, and a metric recorded against the wrong step.
 func TestIntegrationAPythonStepsMetricReachesTheExposition(t *testing.T) {
 	python, err := exec.LookPath("python3")
 	if err != nil {

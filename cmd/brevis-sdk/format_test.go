@@ -19,7 +19,7 @@ func TestResolveFormat(t *testing.T) {
 		{name: "an explicit flag wins", flag: "ndjson", url: "https://x/a.csv", want: sdk.FormatNDJSON},
 		{name: "case and spaces do not matter", flag: " CSV ", url: "https://x/a", want: sdk.FormatCSV},
 
-		// The defect: an unrecognised value used to become CSV in silence, and
+		// The defect: an unrecognized value used to become CSV in silence, and
 		// the CSV reader accepts anything, so the output was garbage with no
 		// error anywhere.
 		{name: "an unknown format is refused", flag: "yaml", url: "https://x/a", errors: true},

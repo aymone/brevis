@@ -60,7 +60,7 @@ type flowEdge struct {
 	Animated bool   `json:"animated"`
 
 	// Label is what the dependency means, and it is omitted when there is
-	// none -- which is most of them. An unlabelled edge's payload stays byte
+	// none -- which is most of them. An unlabeled edge's payload stays byte
 	// for byte what it was.
 	Label string `json:"label,omitempty"`
 }
@@ -286,7 +286,7 @@ func (u *UI) runGraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// A missing state is not an error: a freshly queued run has no step started
-	// yet, and the screen should show the whole graph in grey.
+	// yet, and the screen should show the whole graph in gray.
 	states, err := u.execs.NodeStates(ctx, id)
 	if err != nil {
 		u.log.Warn("node state unavailable", "run", id, "error", err)
@@ -693,14 +693,14 @@ func layout(levels [][]string, built map[string]map[string]any,
 	if total > 0 {
 		total -= laneGap
 	}
-	// Centred on zero, so a graph with one lane looks exactly as it did.
+	// Centered on zero, so a graph with one lane looks exactly as it did.
 	for i := range laneTop {
 		laneTop[i] -= total / 2
 	}
 	out := map[string]spot{}
 	for level, ids := range levels {
 		// Where the next card goes in each lane of this column. A lane's stack
-		// is centred inside it, so a group with one member in this column does
+		// is centered inside it, so a group with one member in this column does
 		// not hug its box's top edge.
 		next := map[int]int{}
 		stacks := map[int]int{}

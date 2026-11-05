@@ -23,7 +23,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: brevis-goapp
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -40,7 +40,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: brevis-goapp
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:

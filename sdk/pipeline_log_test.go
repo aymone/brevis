@@ -20,7 +20,7 @@ type fakeTarget struct {
 	rows    []string
 }
 
-func (fakeTarget) Describe() string { return "destino.teste" }
+func (fakeTarget) Describe() string { return "target.test" }
 
 func (d fakeTarget) Write(context.Context, []Envelope, WriteOptions) (*LoadResult, error) {
 	res := &LoadResult{RowsLoaded: 2, ErrorRows: d.rows}
@@ -59,7 +59,7 @@ func runCapturingLog(t *testing.T, target Writer) string {
 // apart. And a "loaded" at INFO during a failure never reaches whoever watches
 // ERROR.
 func TestTheLogDoesNotSayLoadedWhenItDidNot(t *testing.T) {
-	output := runCapturingLog(t, fakeTarget{failure: true, rows: []string{"linha 0 recusada"}})
+	output := runCapturingLog(t, fakeTarget{failure: true, rows: []string{"line 0 refused"}})
 
 	if strings.Contains(output, "msg=loaded") {
 		t.Errorf("a load that failed logged \"loaded\":\n%s", output)

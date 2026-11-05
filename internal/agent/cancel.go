@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Cancelling across a restart, and the one thing that must never go wrong.
+// Canceling across a restart, and the one thing that must never go wrong.
 //
 // The engine can ask this agent to stop a step it started before it was
 // restarted. All that survives a restart is a file, and a file holding a pid is
@@ -94,7 +94,7 @@ func (a *Agent) cancelFromState(execID string) error {
 	if !same {
 		// The refusal that justifies the whole file. Nothing is signalled, the
 		// stale record is cleared, and the message says what happened -- an
-		// operator reading "cancelled" about a pid that is now a database would
+		// operator reading "canceled" about a pid that is now a database would
 		// have no way to know.
 		_ = os.Remove(path)
 		return fmt.Errorf("pid %d no longer belongs to execution %q -- the OS gave it to "+

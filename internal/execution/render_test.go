@@ -36,20 +36,20 @@ func TestAParamMissingFromTheTemplateFails(t *testing.T) {
 func TestTheConvertersConditional(t *testing.T) {
 	cmd := `dbt build{{ if eq .full_refresh "true" }} --full-refresh{{ end }} --select x+`
 
-	com, err := execution.Render(cmd, map[string]string{"full_refresh": "true"})
+	with, err := execution.Render(cmd, map[string]string{"full_refresh": "true"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(com, "--full-refresh") {
-		t.Errorf("the flag did not go in: %s", com)
+	if !strings.Contains(with, "--full-refresh") {
+		t.Errorf("the flag did not go in: %s", with)
 	}
 
-	sem, err := execution.Render(cmd, map[string]string{"full_refresh": "false"})
+	without, err := execution.Render(cmd, map[string]string{"full_refresh": "false"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(sem, "--full-refresh") {
-		t.Errorf("the flag went in with false: %s", sem)
+	if strings.Contains(without, "--full-refresh") {
+		t.Errorf("the flag went in with false: %s", without)
 	}
 }
 
@@ -69,7 +69,7 @@ func TestACommandWithNoTemplatePassesThrough(t *testing.T) {
 // A multi-line script has to come out whole: collapsing it into one line would
 // make the first `#` comment out everything after it.
 func TestAMultiLineScriptSurvives(t *testing.T) {
-	cmd := "set -e\n# comentario\npython3 -m x --date {{ .data }}\necho fim"
+	cmd := "set -e\n# comment\npython3 -m x --date {{ .data }}\necho end"
 	out, err := execution.Render(cmd, map[string]string{"data": "2026-09-01"})
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +77,7 @@ func TestAMultiLineScriptSurvives(t *testing.T) {
 	if strings.Count(out, "\n") != 3 {
 		t.Errorf("it lost line breaks:\n%s", out)
 	}
-	if !strings.HasSuffix(out, "echo fim") {
+	if !strings.HasSuffix(out, "echo end") {
 		t.Errorf("the end of the script is missing:\n%s", out)
 	}
 }

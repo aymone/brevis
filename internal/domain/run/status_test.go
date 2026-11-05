@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// O caminho feliz da secao 7: created -> queued -> running -> success.
+// The happy path of section 7: created -> queued -> running -> success.
 func TestTheHappyPath(t *testing.T) {
 	r := &Run{Status: StatusCreated}
 	now := time.Now()
@@ -21,7 +21,7 @@ func TestTheHappyPath(t *testing.T) {
 	}
 }
 
-// O ciclo de retry: failed -> retrying -> queued, e de volta a running.
+// The retry cycle: failed -> retrying -> queued, and back to running.
 func TestTheRetryCycle(t *testing.T) {
 	r := &Run{Status: StatusRunning}
 	now := time.Now()
@@ -85,9 +85,9 @@ func TestFailedIsNotTerminal(t *testing.T) {
 	}
 }
 
-// Cancelling has to be possible from any active state -- and only from active
+// Canceling has to be possible from any active state -- and only from active
 // ones.
-func TestCancelling(t *testing.T) {
+func TestCanceling(t *testing.T) {
 	for _, from := range []Status{StatusCreated, StatusQueued, StatusRunning, StatusRetrying} {
 		if err := Validate(from, StatusCanceled); err != nil {
 			t.Errorf("it should be possible to cancel from %s: %v", from, err)
@@ -99,7 +99,7 @@ func TestCancelling(t *testing.T) {
 }
 
 func TestAnUnknownState(t *testing.T) {
-	if err := Validate(Status("inventado"), StatusQueued); err == nil {
+	if err := Validate(Status("made-up"), StatusQueued); err == nil {
 		t.Error("expected an error for an unknown state")
 	}
 }

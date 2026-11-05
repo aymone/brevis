@@ -158,7 +158,7 @@ func transformerName(fn Transformer) string {
 var closureSuffix = regexp.MustCompile(`(\.func\d+)+(\.\d+)*$`)
 
 // funcName names a function the way somebody reading the pipeline would:
-// `sdk.SkipWithout`, `main.normalise`.
+// `sdk.SkipWithout`, `main.normalize`.
 //
 // A closure is named by the function that made it, because that is usually a
 // factory -- SkipWithout("id") returns one, and "sdk.SkipWithout" is the

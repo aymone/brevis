@@ -7,12 +7,12 @@ func TestParseLocation(t *testing.T) {
 		in                              string
 		scheme, bucket, prefix, pattern string
 	}{
-		{"./entrada/*.csv", "", "", "./entrada/", "*.csv"},
-		{"/var/dados/", "", "", "/var/dados/", ""},
-		{"dados.ndjson", "", "", "", "dados.ndjson"},
-		{"s3://b/dia=1/*.ndjson.gz", "s3", "b", "dia=1/", "*.ndjson.gz"},
+		{"./input/*.csv", "", "", "./input/", "*.csv"},
+		{"/var/data/", "", "", "/var/data/", ""},
+		{"data.ndjson", "", "", "", "data.ndjson"},
+		{"s3://b/day=1/*.ndjson.gz", "s3", "b", "day=1/", "*.ndjson.gz"},
 		{"gs://b/landing/", "gs", "b", "landing/", ""},
-		{"gs://b/landing/parte-0001.ndjson", "gs", "b", "landing/", "parte-0001.ndjson"},
+		{"gs://b/landing/part-0001.ndjson", "gs", "b", "landing/", "part-0001.ndjson"},
 		{"file:///tmp/x/*.json", "", "", "/tmp/x/", "*.json"},
 	}
 	for _, c := range cases {
@@ -38,16 +38,16 @@ func TestParseLocationRefusesWhatItCannotRead(t *testing.T) {
 }
 
 func TestLocationMatches(t *testing.T) {
-	loc, _ := ParseLocation("s3://b/dia=1/*.ndjson")
-	if !loc.Matches("dia=1/parte-0001.ndjson") {
+	loc, _ := ParseLocation("s3://b/day=1/*.ndjson")
+	if !loc.Matches("day=1/part-0001.ndjson") {
 		t.Error("the glob should match")
 	}
-	if loc.Matches("dia=1/parte-0001.csv") {
+	if loc.Matches("day=1/part-0001.csv") {
 		t.Error("the glob should not match another extension")
 	}
 
 	dir, _ := ParseLocation("gs://b/landing/")
-	if !dir.Matches("landing/qualquer-coisa") {
+	if !dir.Matches("landing/anything") {
 		t.Error("a directory matches everything under it")
 	}
 }

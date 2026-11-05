@@ -31,7 +31,7 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 		b := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(b)
 		body = string(b)
-		header = r.Header.Get("X-Cliente")
+		header = r.Header.Get("X-Customer")
 		path = r.URL.Path
 		_, _ = w.Write([]byte(`[{"id":1}]`))
 	}))
@@ -41,10 +41,10 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	var preview strings.Builder
 
 	seq, err := HTTP{
-		URL:          srv.URL + "/v1/eventos",
+		URL:          srv.URL + "/v1/events",
 		Method:       http.MethodPost,
 		Body:         strings.NewReader(`{"q":1}`),
-		Header:       map[string][]string{"X-Cliente": {"brevis"}},
+		Header:       map[string][]string{"X-Customer": {"brevis"}},
 		Timeout:      5 * time.Second,
 		TotalTimeout: time.Minute,
 		Format:       core.FormatJSON,
@@ -59,7 +59,7 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	n := 0
 	for _, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		n++
 	}
@@ -74,7 +74,7 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	if header != "brevis" {
 		t.Errorf("Header did not arrive: %q", header)
 	}
-	if path != "/v1/eventos" {
+	if path != "/v1/events" {
 		t.Errorf("URL did not arrive whole: %q", path)
 	}
 
@@ -119,7 +119,7 @@ func TestHTTPForwardsEachFormat(t *testing.T) {
 			n := 0
 			for env, err := range seq {
 				if err != nil {
-					t.Fatalf("iterando: %v", err)
+					t.Fatalf("iterating: %v", err)
 				}
 				if _, err := core.AsObject(env.Payload); err != nil {
 					t.Errorf("the record is not an object: %v", env.Payload)
@@ -146,12 +146,12 @@ func TestHTTPRefusesAnUnknownFormat(t *testing.T) {
 // Describe is what appears in the log and in the error message, so it must not
 // carry the secret the URL carries.
 func TestHTTPDescribeLeaksNoSecret(t *testing.T) {
-	got := HTTP{URL: "https://api.exemplo.com/v1?api_key=SEGREDO&lat=-23.5"}.Describe()
+	got := HTTP{URL: "https://api.example.com/v1?api_key=SECRET&lat=-23.5"}.Describe()
 
-	if strings.Contains(got, "SEGREDO") {
+	if strings.Contains(got, "SECRET") {
 		t.Errorf("Describe leaked the key: %s", got)
 	}
-	if !strings.Contains(got, "api.exemplo.com") || !strings.Contains(got, "lat=-23.5") {
+	if !strings.Contains(got, "api.example.com") || !strings.Contains(got, "lat=-23.5") {
 		t.Errorf("Describe erased what is useful for debugging: %s", got)
 	}
 }

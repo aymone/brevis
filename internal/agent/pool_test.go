@@ -225,7 +225,7 @@ func itoa(i int) string { return strconv.Itoa(i) }
 // engine reports the step stopped and the process keeps running.
 //
 // The marker is what tells the two apart. Killing the shell alone leaves the
-// child to write it; cancelling the wrong replica leaves BOTH alive.
+// child to write it; canceling the wrong replica leaves BOTH alive.
 func TestCancelOnAPoolReachesTheInstanceThatIsRunning(t *testing.T) {
 	e, _ := poolOf(t, 2, 0)
 

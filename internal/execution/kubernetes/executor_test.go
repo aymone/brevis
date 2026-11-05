@@ -16,11 +16,11 @@ import (
 // fakeAPI stands in for the API server: a sequence of phases, the log and a
 // record of what was asked. Testing the whole cycle with no cluster is what makes
 // this
-// caminho verificavel na CI.
+// path verifiable in CI.
 type fakeAPI struct {
 	mu sync.Mutex
 
-	phases    []k8s.Pod // devolvidas em ordem, a ultima repete
+	phases    []k8s.Pod // returned in order, the last one repeats
 	read      int
 	log       string
 	logErr    error
@@ -89,7 +89,7 @@ func withOutput(f string, code int) k8s.Pod {
 
 func runStep(t *testing.T, api *fakeAPI, tk execution.TaskExec) []execution.Event {
 	t.Helper()
-	e := k8s.NewExecutor(api, k8s.Options{Namespace: "dados"})
+	e := k8s.NewExecutor(api, k8s.Options{Namespace: "data"})
 	e.Interval = time.Millisecond
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -252,8 +252,7 @@ func TestAFailedPodMayBeKeptForInspection(t *testing.T) {
 // `Pending` is not an error to Kubernetes: a pod that fits on no node stays there
 // forever. Without a cutoff the stage waits along with it -- no failure and no
 // retry -- which is how a CPU request larger than the pool's free capacity hung a
-// run
-// inteira em dev.
+// whole run in dev.
 func TestAPodThatDoesNotStartFailsWithTheSchedulersReason(t *testing.T) {
 	stuck := phase("Pending")
 	stuck.Status.Conditions = []k8s.Condition{{
@@ -297,10 +296,10 @@ func TestTheNameChangesWithTheRunsAttempt(t *testing.T) {
 }
 
 // KeepFailedPod keeps a pod that FINISHED failing, for somebody to read. A pod
-// whose run was cancelled has not finished -- it is still running its step --
+// whose run was canceled has not finished -- it is still running its step --
 // and keeping it keeps that step running beside the run's next attempt, which
 // is the duplicate execution #121 exists to end. It is deleted.
-func TestACancelledPodIsDeletedEvenWhenFailedOnesAreKept(t *testing.T) {
+func TestACanceledPodIsDeletedEvenWhenFailedOnesAreKept(t *testing.T) {
 	api := &fakeAPI{phases: []k8s.Pod{phase("Running")}}
 	e := k8s.NewExecutor(api, k8s.Options{KeepFailedPod: true})
 	e.Interval = time.Millisecond

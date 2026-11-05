@@ -31,7 +31,7 @@ type Workflow struct {
 	Slug     string
 	Name     string
 	Kind     Kind
-	Schedule string // cron; vazio = so disparo manual
+	Schedule string // cron; empty = manual trigger only
 
 	// Description is what this workflow is FOR, in the author's own words.
 	//
@@ -350,7 +350,7 @@ func (w Workflow) EnvOf(n Node) map[string]string { return overlay(w.Env, n.Env)
 // SecretsOf resolves a step's effective secrets, by the same rule.
 func (w Workflow) SecretsOf(n Node) map[string]string { return overlay(w.Secrets, n.Secrets) }
 
-// sobrepor returns base with cima on top, mutating neither: the maps come from
+// overlay returns base with up on top, mutating neither: the maps come from
 // the published workflow and are read by every step at the same time.
 func overlay(base, up map[string]string) map[string]string {
 	if len(base) == 0 && len(up) == 0 {
@@ -492,7 +492,7 @@ func (n Node) WhenOf() string {
 }
 
 // validateWhen refuses an unknown rule at publish, naming what is valid. A rule
-// nobody recognises would otherwise mean "the default" -- a step declaring
+// nobody recognizes would otherwise mean "the default" -- a step declaring
 // `when: on_failure` would run on SUCCESS, which is the opposite of what it
 // says, discovered the night it mattered.
 func validateWhen(slug string, n Node) error {
@@ -603,15 +603,15 @@ func (w Workflow) Validate() error {
 		return err
 	}
 
-	vistos := make(map[string]struct{}, len(w.Nodes))
+	seen := make(map[string]struct{}, len(w.Nodes))
 	for _, n := range w.Nodes {
 		if n.ID == "" {
 			return fmt.Errorf("workflow %q has a step with no id", w.Slug)
 		}
-		if _, dup := vistos[n.ID]; dup {
+		if _, dup := seen[n.ID]; dup {
 			return fmt.Errorf("workflow %q: duplicate step id: %q", w.Slug, n.ID)
 		}
-		vistos[n.ID] = struct{}{}
+		seen[n.ID] = struct{}{}
 
 		hasRun, hasAction := n.Run != "", n.Action != ""
 		switch {
@@ -687,10 +687,10 @@ func (w Workflow) Validate() error {
 	}
 
 	for _, e := range w.Edges {
-		if _, ok := vistos[e.From]; !ok {
+		if _, ok := seen[e.From]; !ok {
 			return fmt.Errorf("workflow %q: dependency %q does not exist", w.Slug, e.From)
 		}
-		if _, ok := vistos[e.To]; !ok {
+		if _, ok := seen[e.To]; !ok {
 			return fmt.Errorf("workflow %q: dependency %q does not exist", w.Slug, e.To)
 		}
 		if e.From == e.To {
@@ -808,7 +808,7 @@ func validateVarName(name string) error {
 	return nil
 }
 
-// findCycle devolve o caminho do ciclo, ou vazio se o grafo for aciclico.
+// findCycle returns the path of the cycle, or empty if the graph is acyclic.
 //
 // It returns the PATH, not just a boolean: whoever wrote the DAG needs to know
 // which steps close the loop in order to fix it.
@@ -819,7 +819,7 @@ func (w Workflow) findCycle() string {
 	}
 
 	const (
-		fresh = iota // without iota, inUse and pronto would repeat novo's value
+		fresh = iota // without iota, inUse and ready would repeat fresh's value
 		inUse
 		ready
 	)
@@ -877,7 +877,7 @@ func formatCycle(ids []string) string {
 // in two files and greps for, so nothing a shell or a URL would mangle.
 var groupName = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,62}$`)
 
-// quantidade is Kubernetes's format: an integer or a decimal with an optional
+// quantity is Kubernetes's format: an integer or a decimal with an optional
 // suffix (m for CPU; Ki/Mi/Gi/K/M/G for memory).
 var quantity = regexp.MustCompile(`^[0-9]+(\.[0-9]+)?(m|[KMGTPE]i?)?$`)
 

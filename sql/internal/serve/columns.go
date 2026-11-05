@@ -24,7 +24,7 @@ type columnsRequest struct {
 
 // column is one field on the WIRE. Its own type with explicit tags, which is
 // the rule every response here follows -- see objects.go for the day a
-// domain type was marshalled directly and shipped capitalised keys.
+// domain type was marshalled directly and shipped capitalized keys.
 type column struct {
 	Name string `json:"name"`
 	Type string `json:"type"`

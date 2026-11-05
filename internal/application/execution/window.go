@@ -18,7 +18,7 @@ const LogCeiling = 128 << 10
 // half the diagnosis.
 const startSlice = LogCeiling / 4
 
-// janela accumulates a step's output within the ceiling, keeping the start and
+// window accumulates a step's output within the ceiling, keeping the start and
 // the end and saying how much it discarded in the middle.
 //
 // The alternative — cutting when it overflows and keeping only the start — loses

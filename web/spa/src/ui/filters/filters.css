@@ -1,5 +1,5 @@
 /* The filter kit's rules: only what the server's compiled sheet lacks (container
-   queries, masks, the portaled popover). Every colour, radius and font is the
+   queries, masks, the portaled popover). Every color, radius and font is the
    console's own token; the `flt-` prefix keeps the rest of the app untouched.
    See FilterBar.tsx for why each choice was made. */
 
@@ -97,7 +97,7 @@
   background: var(--flt-raised); border-color: var(--color-line-strong); box-shadow: var(--flt-lift);
   color: var(--color-ink); font-weight: 600;
 }
-/* The bold twin keeps the width: choosing a segment never nudges its neighbours. */
+/* The bold twin keeps the width: choosing a segment never nudges its neighbors. */
 .flt-seg-label { display: inline-flex; flex-direction: column; align-items: center; }
 .flt-seg-label::after { content: attr(data-text); height: 0; overflow: hidden; visibility: hidden; font-weight: 600; user-select: none; }
 .flt-n { min-width: 2ch; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
@@ -186,7 +186,7 @@
 .flt-count b { color: var(--color-ink); font-weight: 600; }
 .flt-meta .flt-chips { flex: 1 1 auto; }
 
-/* ---- responsive behaviour, from the BAR's own width ---- */
+/* ---- responsive behavior, from the BAR's own width ---- */
 .flt-wide { display: contents; }
 .flt-wide > * { flex: none; }
 .flt-narrow, .flt-clear-meta { display: none; }

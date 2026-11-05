@@ -24,7 +24,7 @@ const ManifestVersion = 1
 // beside its other consumers. NO VALUE OF ANY VARIABLE: a `*_from` is
 // published as the name it holds. AND ONLY THE COMMENTS THEIR AUTHOR MARKED
 // with `#:`, the gateway's rule: a comment is free text, and a secret ends
-// up in one in ways no pattern recognises.
+// up in one in ways no pattern recognizes.
 type Manifest struct {
 	Version    int                `json:"version"`
 	Kind       string             `json:"kind"`

@@ -13,7 +13,7 @@ import (
 // buy would be gone. Instead the backend is passed in, so a fetcher compiles
 // the one it names:
 //
-//	from.Files{Path: "./entrada/*.csv"}                          // nothing extra
+//	from.Files{Path: "./input/*.csv"}                          // nothing extra
 //	from.Files{Path: "s3://bucket/dia=2026-09-04/*.ndjson",
 //	           Store: s3.New(cfg)}                               // only the AWS SDK
 //

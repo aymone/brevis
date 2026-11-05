@@ -16,8 +16,8 @@ open http://localhost:8080
 Within about twenty seconds:
 
 ```
-out/<run-id>/raw/parte-….csv      216 hourly readings
-out/<run-id>/daily/parte-….csv      9 daily summaries
+out/<run-id>/raw/part-….csv      216 hourly readings
+out/<run-id>/daily/part-….csv      9 daily summaries
 ```
 
 Tear it down with `docker compose down -v`.
@@ -52,7 +52,7 @@ bottleneck in the wrong place.
 the body, pairs the hourly arrays by index, stamps provenance and identity, and
 writes CSV.
 
-**`summarise-weather`** reads that CSV and folds it into one row per day. Its
+**`summarize-weather`** reads that CSV and folds it into one row per day. Its
 `Stages` are the point:
 
 ```go

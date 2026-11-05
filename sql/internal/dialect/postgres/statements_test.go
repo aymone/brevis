@@ -11,14 +11,14 @@ import (
 
 func viewModel() model.Model {
 	return model.Model{
-		Schema: "staging", Name: "stg_orders", Materialised: model.View,
+		Schema: "staging", Name: "stg_orders", Materialized: model.View,
 		SQL: "/* brevis\ntests:\n  - not_null: [id]\n*/\nselect 1 as id",
 	}
 }
 
 func tableModel() model.Model {
 	return model.Model{
-		Schema: "marts", Name: "orders", Materialised: model.Table,
+		Schema: "marts", Name: "orders", Materialized: model.Table,
 		SQL: "select 1 as id",
 	}
 }
@@ -111,10 +111,10 @@ func TestATableOverAViewDropsTheViewInTheSwap(t *testing.T) {
 // plain lower-case identifier is refused, naming the file.
 func TestAModelNameThatWouldNeedQuotingIsRefused(t *testing.T) {
 	for _, bad := range []model.Model{
-		{Schema: "staging", Name: "Stg_Orders", Materialised: model.View, SQL: "select 1"},
-		{Schema: "Staging", Name: "stg_orders", Materialised: model.View, SQL: "select 1"},
-		{Schema: "staging", Name: "stg-orders", Materialised: model.View, SQL: "select 1"},
-		{Schema: "staging", Name: "stg orders", Materialised: model.View, SQL: "select 1"},
+		{Schema: "staging", Name: "Stg_Orders", Materialized: model.View, SQL: "select 1"},
+		{Schema: "Staging", Name: "stg_orders", Materialized: model.View, SQL: "select 1"},
+		{Schema: "staging", Name: "stg-orders", Materialized: model.View, SQL: "select 1"},
+		{Schema: "staging", Name: "stg orders", Materialized: model.View, SQL: "select 1"},
 	} {
 		_, err := Dialect{}.Build(bad, dialect.State{Current: dialect.Absent})
 		if err == nil {
@@ -154,7 +154,7 @@ func TestKindOfAsksForTheRelationsKind(t *testing.T) {
 
 func TestTheIncrementalFilterTakesALookback(t *testing.T) {
 	m := model.Model{Schema: "s", Name: "t", Watermark: "w", UniqueKey: []string{"k"},
-		Materialised: model.Incremental, SQL: "select 1", Lookback: 2 * time.Hour}
+		Materialized: model.Incremental, SQL: "select 1", Lookback: 2 * time.Hour}
 	if got := mergeInto(m, dialect.State{Columns: []string{"k", "w"}}, "s.t"); !strings.Contains(got, "w >= (SELECT MAX(w) FROM s.t) - INTERVAL '7200 seconds'") {
 		t.Errorf("no lookback bound in:\n%s", got)
 	}

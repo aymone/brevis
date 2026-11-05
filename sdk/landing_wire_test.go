@@ -29,10 +29,10 @@ import (
 func TestAJSONColumnReceivesJSONAndNotAStringOfIt(t *testing.T) {
 	const table = "bronze.repro"
 	record := map[string]any{
-		"id":    "1",
-		"obj":   map[string]any{"a": float64(1)},
-		"arr":   []any{float64(1), float64(2)},
-		"texto": `{"nao":"sou json"}`,
+		"id":   "1",
+		"obj":  map[string]any{"a": float64(1)},
+		"arr":  []any{float64(1), float64(2)},
+		"text": `{"not":"i am json"}`,
 	}
 
 	for _, c := range []struct {

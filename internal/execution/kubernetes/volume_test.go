@@ -32,7 +32,7 @@ func TestTheCredentialVolumeMountsAndInjectsTheDirectory(t *testing.T) {
 	}
 	v := pod.Spec.Volumes[0]
 	if v.PVC == nil || v.PVC.ClaimName != "brevis-credentials" {
-		t.Errorf("PVC errado: %+v", v)
+		t.Errorf("wrong PVC: %+v", v)
 	}
 
 	c := pod.Spec.Containers[0]
@@ -57,7 +57,7 @@ func TestTheCredentialVolumeMountsAndInjectsTheDirectory(t *testing.T) {
 // TestTheVolumesPathIsConfigurable.
 func TestTheVolumesPathIsConfigurable(t *testing.T) {
 	pod, err := BuildPod(simpleTask(), Options{
-		CredentialPVC:  "meu-pvc",
+		CredentialPVC:  "my-pvc",
 		CredentialPath: "/mnt/cred",
 	}.withDefaults())
 	if err != nil {
@@ -98,22 +98,22 @@ func TestWithNoPVCNothingChanges(t *testing.T) {
 // duplicate the variable -- two values for one name and the server picking one.
 func TestTheStepsEnvBeatsTheDefaultDirectory(t *testing.T) {
 	task := simpleTask()
-	task.Env = map[string]string{"BREVIS_CREDENTIAL_DIR": "/outro/lugar"}
+	task.Env = map[string]string{"BREVIS_CREDENTIAL_DIR": "/other/place"}
 
 	pod, err := BuildPod(task, Options{CredentialPVC: "pvc"}.withDefaults())
 	if err != nil {
 		t.Fatalf("BuildPod: %v", err)
 	}
-	var vistos []string
+	var seen []string
 	for _, e := range pod.Spec.Containers[0].Env {
 		if e.Name == "BREVIS_CREDENTIAL_DIR" {
-			vistos = append(vistos, e.Value)
+			seen = append(seen, e.Value)
 		}
 	}
-	if len(vistos) != 1 {
-		t.Fatalf("BREVIS_CREDENTIAL_DIR appears %d times: %v", len(vistos), vistos)
+	if len(seen) != 1 {
+		t.Fatalf("BREVIS_CREDENTIAL_DIR appears %d times: %v", len(seen), seen)
 	}
-	if vistos[0] != "/outro/lugar" {
-		t.Errorf("the injection overwrote what the step declared: %q", vistos[0])
+	if seen[0] != "/other/place" {
+		t.Errorf("the injection overwrote what the step declared: %q", seen[0])
 	}
 }

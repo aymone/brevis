@@ -103,7 +103,7 @@ func TestTheCapExistsBecauseMaxAttemptsBecameAFlag(t *testing.T) {
 //
 // `base << (attempt-1)` overflows int64 and comes back NEGATIVE around attempt
 // 35, and ZERO from 63 -- and a zero delay is an instant requeue, a hot loop
-// against whatever was already failing. That is the worst possible behaviour
+// against whatever was already failing. That is the worst possible behavior
 // for the code path whose whole job is to be gentle.
 //
 // The assertion is the exact value and not merely "positive": a wrapped

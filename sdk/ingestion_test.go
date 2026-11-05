@@ -105,7 +105,7 @@ func TestIngestionIDRefusesAnEmptySourceKey(t *testing.T) {
 func TestIngestionIDRefusesToOverwrite(t *testing.T) {
 	_, err := IngestionID()(map[string]any{
 		"provider": "p", "entity": "e", "source_key": "k", "record_ts": "t",
-		"ingestion_id": "meu-proprio",
+		"ingestion_id": "my-own",
 	})
 	if err == nil {
 		t.Fatal("overwriting an id the row already has would be invisible")
@@ -145,7 +145,7 @@ func TestIngestionLoadedAtWritesNowInUTC(t *testing.T) {
 }
 
 func TestIngestionLoadedAtRefusesToOverwrite(t *testing.T) {
-	_, err := IngestionLoadedAt()(map[string]any{"ingestion_loaded_at": "ontem"})
+	_, err := IngestionLoadedAt()(map[string]any{"ingestion_loaded_at": "yesterday"})
 	if err == nil {
 		t.Fatal("overwriting the load instant would be invisible")
 	}
@@ -188,7 +188,7 @@ func TestTransformDoesNotMutateWhatExtractDelivered(t *testing.T) {
 
 	output, skipped, err := applyAll([]Transformer{IngestionID(), IngestionLoadedAt()}, original)
 	if err != nil || skipped {
-		t.Fatalf("applyAll: %v, pulou=%v", err, skipped)
+		t.Fatalf("applyAll: %v, skipped=%v", err, skipped)
 	}
 
 	if len(original) != 4 {
@@ -210,7 +210,7 @@ func TestTheChainMakesOneCopyOnly(t *testing.T) {
 	}
 
 	allocations := testing.AllocsPerRun(200, func() {
-		line := map[string]any{"provider": "p", "entity": "e", "source_key": "k", "record_ts": "t", "lixo": 1}
+		line := map[string]any{"provider": "p", "entity": "e", "source_key": "k", "record_ts": "t", "junk": 1}
 		if _, _, err := applyAll(fns, line); err != nil {
 			t.Fatal(err)
 		}

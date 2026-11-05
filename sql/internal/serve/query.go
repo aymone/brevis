@@ -84,7 +84,7 @@ func (s *Service) query(w http.ResponseWriter, r *http.Request) {
 	// after connecting is a refusal that spent a connection, and a warehouse
 	// that saw a statement this service had already decided against.
 	//
-	// UNLESS SOMEBODY NAMED THIS CONNECTION. The tokeniser is the first of
+	// UNLESS SOMEBODY NAMED THIS CONNECTION. The tokenizer is the first of
 	// three layers and they stand down together: leaving this one up would
 	// refuse `CREATE TABLE` on a connection whose whole point is that it may
 	// create one, and the refusal would read as a bug rather than a rule.
@@ -382,13 +382,13 @@ func (s *Service) read(ctx context.Context, conn dialect.Conn, table Table, stat
 				s.saying("the warehouse would not run this", err)}
 		}
 		// THE WAREHOUSE OVERRULES THE CLASSIFIER, and this is the only place
-		// it can: the tokeniser upstream already passed this statement, and
+		// it can: the tokenizer upstream already passed this statement, and
 		// its own comment says what it cannot see inside a function call.
 		if !p.Reads && !s.mayWrite(table.Connection) {
 			return dialect.Result{}, notAQuery(p.Kind)
 		}
 		// THE WAREHOUSE'S ANSWER, IN BOTH DIRECTIONS, and it OVERWRITES the
-		// tokeniser's guess upstream rather than only adding to it. The
+		// tokenizer's guess upstream rather than only adding to it. The
 		// handler labels from the text because some warehouses say nothing;
 		// where one does speak, it is the one that knows.
 		line.Wrote = !p.Reads

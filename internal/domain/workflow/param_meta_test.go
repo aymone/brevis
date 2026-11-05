@@ -63,7 +63,7 @@ func TestThePresentationKeysAreCheckedForShape(t *testing.T) {
 		p    wf.Param
 		want string // "" when it is accepted
 	}{
-		{"all of them", wf.Param{Title: "Carga completa", Group: "Carga", Warn: "reprocessa tudo; custa caro", Uses: "big-query2"}, ""},
+		{"all of them", wf.Param{Title: "Full load", Group: "Load", Warn: "reprocesses everything; costs a lot", Uses: "big-query2"}, ""},
 		{"60 accented characters", wf.Param{Title: strings.Repeat("é", 60)}, ""},
 		{"a title of two lines", wf.Param{Title: "Full\nload"}, "title"},
 		{"a group of two lines", wf.Param{Group: "Load\r"}, "group"},

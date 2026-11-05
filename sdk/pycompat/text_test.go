@@ -27,7 +27,7 @@ var howPythonRenders = []struct {
 	{true, "True", "True"},
 	{false, "False", "False"},
 	{"", "", "''"},
-	{"ola", "ola", "'ola'"},
+	{"hello", "hello", "'hello'"},
 	// The floats go in as json.Number, which is the real path: a bare float64
 	// is refused, because by then the literal is already lost. See
 	// TestTextRefusesFloat64.
@@ -246,21 +246,21 @@ func TestTextSpecials(t *testing.T) {
 // right half the time, and the wrong half is a duplicate.
 func TestPreserveNumbersRecoversTheDistinctionTheFloatLoses(t *testing.T) {
 	var withoutPreserving map[string]any
-	if err := json.Unmarshal([]byte(`{"inteiro":19,"decimal":19.0}`), &withoutPreserving); err != nil {
+	if err := json.Unmarshal([]byte(`{"integer":19,"decimal":19.0}`), &withoutPreserving); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Text(withoutPreserving["inteiro"]); err == nil {
+	if _, err := Text(withoutPreserving["integer"]); err == nil {
 		t.Error("without preserving, Text guessed instead of refusing")
 	}
 
 	// Preserving: the literal decides, exactly as Python's json decides.
-	dec := json.NewDecoder(strings.NewReader(`{"inteiro":19,"decimal":19.0}`))
+	dec := json.NewDecoder(strings.NewReader(`{"integer":19,"decimal":19.0}`))
 	dec.UseNumber()
 	var withPreserving map[string]any
 	if err := dec.Decode(&withPreserving); err != nil {
 		t.Fatal(err)
 	}
-	integer, err := Text(withPreserving["inteiro"])
+	integer, err := Text(withPreserving["integer"])
 	if err != nil {
 		t.Fatal(err)
 	}

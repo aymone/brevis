@@ -9,7 +9,7 @@ import (
 )
 
 // The names of the two columns sdk.IngestionID and sdk.IngestionLoadedAt
-// write. They live here because the destination needs to recognise them: a
+// write. They live here because the destination needs to recognize them: a
 // declaration that names ingestion_loaded_at is what tells BigQuery to
 // partition on it.
 const (
@@ -186,7 +186,7 @@ func truncate(b []byte, max int) string {
 // dedupKeyName is what a column name has to look like to reach a statement.
 //
 // The value comes from a config file and ends up inside `ON CONFLICT (…)` and
-// a catalogue query, so it is validated rather than quoted-and-hoped: quoting
+// a catalog query, so it is validated rather than quoted-and-hoped: quoting
 // makes `"; DROP TABLE x; --` a legal identifier, which is not the failure
 // anybody wants to find out about.
 var dedupKeyName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]{0,127}$`)

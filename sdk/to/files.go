@@ -18,8 +18,8 @@ import (
 
 // Files writes records to files, on disk or in object storage.
 //
-//	to.Files{Path: "./saida/"}
-//	to.Files{Path: "gs://bucket/landing/pedidos/", PartitionBy: "ingestion_loaded_at",
+//	to.Files{Path: "./out/"}
+//	to.Files{Path: "gs://bucket/landing/orders/", PartitionBy: "ingestion_loaded_at",
 //	         Compress: true, Store: gcs.New(client)}
 //
 // The scheme in Path says which backend, and the Store is passed in rather
@@ -195,6 +195,7 @@ func (f Files) name(loc core.Location, records []core.Envelope, format core.Form
 	if seg := f.partition(records); seg != "" {
 		parts = append(parts, seg)
 	}
+	// "parte-" is the object-name prefix landing zones already hold; consumers glob it, so it stays.
 	parts = append(parts, fmt.Sprintf("parte-%d%s", time.Now().UTC().UnixNano(), ext))
 
 	var kept []string

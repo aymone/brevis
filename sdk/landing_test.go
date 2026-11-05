@@ -9,7 +9,7 @@ import (
 
 // The landing id is FROZEN, and this is the only thing that says so.
 //
-// It is a characterisation test on purpose: the values below were read from
+// It is a characterization test on purpose: the values below were read from
 // the implementation, and that is the point. Every part of the formula --
 // the "auto_table" namespace, the field order, the "|" separator, the
 // canonical fingerprint -- is already written into rows that exist. The test
@@ -59,7 +59,7 @@ func TestTheLandingIDIsFrozen(t *testing.T) {
 	}
 }
 
-// Map iteration is randomised, so a fingerprint that is not canonical gives a
+// Map iteration is randomized, so a fingerprint that is not canonical gives a
 // different id on every call for the same record. That is the one thing it
 // exists to prevent.
 func TestTheLandingIDDoesNotMoveBetweenCalls(t *testing.T) {
@@ -453,11 +453,11 @@ func TestLandingSpread(t *testing.T) {
 	}
 	// And a producer's ordinary string stays an ordinary string: the marker
 	// says "somebody decided this was JSON", never "this looks like JSON".
-	looks, err := LandingSpread(map[string]any{"texto": `[1,2]`})
+	looks, err := LandingSpread(map[string]any{"text": `[1,2]`})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, marked := looks["texto"].(JSONText); marked {
+	if _, marked := looks["text"].(JSONText); marked {
 		t.Error("a producer's literal text `[1,2]` was marked as JSON: the " +
 			"marker is a decision carried forward, not a guess about content")
 	}
@@ -528,14 +528,14 @@ func TestLandingColumnsGivesEachFieldAColumn(t *testing.T) {
 		"data":       "01/12/2025",
 		"series":     "21129",
 		"source_key": "21129|01/12/2025",
-		"valor":      "8.89",
+		"value":      "8.89",
 	}, "bronze.bacen", LandingKey("source_key"), LandingColumns())
 
 	for k, want := range map[string]any{
 		"data":       "01/12/2025",
 		"series":     "21129",
 		"source_key": "21129|01/12/2025",
-		"valor":      "8.89",
+		"value":      "8.89",
 	} {
 		if row[k] != want {
 			t.Errorf("%s = %v, want %v", k, row[k], want)
@@ -543,7 +543,7 @@ func TestLandingColumnsGivesEachFieldAColumn(t *testing.T) {
 	}
 	// The whole record must NOT also be sitting in a JSON column. It would
 	// double every byte and give the table two answers to the same question.
-	if row["data"] == `{"data":"01/12/2025","series":"21129","source_key":"21129|01/12/2025","valor":"8.89"}` {
+	if row["data"] == `{"data":"01/12/2025","series":"21129","source_key":"21129|01/12/2025","value":"8.89"}` {
 		t.Error("the record landed whole in `data`: LandingColumns did not " +
 			"reach the row and this is the bug the consumer reported")
 	}
@@ -579,7 +579,7 @@ func TestLandingColumnsGivesEachFieldAColumn(t *testing.T) {
 func TestLandingColumnsDoesNotMoveTheID(t *testing.T) {
 	record := map[string]any{
 		"source_key": "21129|01/12/2025",
-		"valor":      8.89,
+		"value":      8.89,
 		"nested":     map[string]any{"b": 2, "a": 1},
 	}
 	clone := func() map[string]any {
@@ -697,11 +697,11 @@ func TestLandingColumnsStillRefusesTheReservedPrefix(t *testing.T) {
 // Six lines of rule and no inference anywhere: the SHAPE decides, never the
 // value. That is the whole of what keeps this on the right side of I2 — a
 // type read off `21129` would be INT64 today and STRING the day the series
-// publishes "21129 (revisado)", and the column would change with nobody
+// publishes "21129 (revised)", and the column would change with nobody
 // writing anything.
 func TestLandingSchemaOf(t *testing.T) {
 	got, err := LandingSchemaOf(map[string]any{
-		"valor":    8.89,
+		"value":    8.89,
 		"series":   float64(21129),
 		"ok":       true,
 		"note":     nil,
@@ -723,7 +723,7 @@ func TestLandingSchemaOf(t *testing.T) {
 		{"ok", TypeString},
 		{"series", TypeString},
 		{"tags", TypeJSON},
-		{"valor", TypeString},
+		{"value", TypeString},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("%d columns, want %d: %v", len(got), len(want), got.Names())
@@ -794,7 +794,7 @@ func TestLandingSchemaOfNeverReadsTheValue(t *testing.T) {
 func TestLandingSchemaOfAgreesWithLandingSpread(t *testing.T) {
 	record := map[string]any{
 		"data": "01/12/2025", "series": float64(21129),
-		"source_key": "21129|01/12/2025", "valor": 8.89,
+		"source_key": "21129|01/12/2025", "value": 8.89,
 		"meta": map[string]any{"uf": "SP"}, "tags": []any{"a"}, "note": nil,
 	}
 

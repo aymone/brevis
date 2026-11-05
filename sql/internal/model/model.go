@@ -17,12 +17,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Materialisation is what a model becomes in the warehouse.
-type Materialisation string
+// Materialization is what a model becomes in the warehouse.
+type Materialization string
 
 const (
-	View  Materialisation = "view"
-	Table Materialisation = "table"
+	View  Materialization = "view"
+	Table Materialization = "table"
 
 	// Incremental is a TABLE that is added to rather than rebuilt.
 	//
@@ -31,7 +31,7 @@ const (
 	// whether the warehouse is asked a question before the statement is
 	// written. A boolean beside `table` would make every switch read
 	// `Table && !incremental`.
-	Incremental Materialisation = "incremental"
+	Incremental Materialization = "incremental"
 )
 
 // Model is one file, read.
@@ -42,7 +42,7 @@ type Model struct {
 	Schema string
 	Name   string
 
-	Materialised Materialisation
+	Materialized Materialization
 
 	// UniqueKey and Watermark belong to an INCREMENTAL model and to nothing
 	// else. Both are required there and both are refused elsewhere -- see
@@ -100,7 +100,7 @@ func Parse(path string, content []byte) (Model, error) {
 	if err != nil {
 		return Model{}, err
 	}
-	m := Model{Schema: schema, Name: name, Materialised: View, SQL: string(content)}
+	m := Model{Schema: schema, Name: name, Materialized: View, SQL: string(content)}
 
 	raw, firstLine, found := headerOf(string(content))
 	if !found {
@@ -114,7 +114,7 @@ func Parse(path string, content []byte) (Model, error) {
 	var h header
 	dec := yaml.NewDecoder(strings.NewReader(raw))
 	// Strict, and this format can afford it: nothing exists that was written
-	// before these fields did. `materialised:` with an s is a typo the author
+	// before these fields did. `materialized:` with an s is a typo the author
 	// finds now rather than a model that silently stays a view.
 	dec.KnownFields(true)
 	if err := dec.Decode(&h); err != nil && err.Error() != "EOF" {
@@ -125,7 +125,7 @@ func Parse(path string, content []byte) (Model, error) {
 	switch h.Materialized {
 	case "":
 	case string(View), string(Table), string(Incremental):
-		m.Materialised = Materialisation(h.Materialized)
+		m.Materialized = Materialization(h.Materialized)
 	default:
 		return Model{}, fmt.Errorf("%s: `materialized: %s` is not one this understands; "+
 			"it is `view`, `table` or `incremental`", path, h.Materialized)
@@ -166,11 +166,11 @@ func Parse(path string, content []byte) (Model, error) {
 // field it HAS and that means nothing where it was written. A `unique_key` on
 // a table is somebody expecting a merge and getting a rebuild.
 func readIncremental(path string, m *Model, h header) error {
-	if m.Materialised != Incremental {
+	if m.Materialized != Incremental {
 		if len(h.UniqueKey) > 0 || h.Watermark != "" || h.Lookback != "" {
 			return fmt.Errorf("%s: `unique_key`, `watermark` and `lookback` belong to "+
 				"`materialized: incremental`, and this model is a %s -- they would be "+
-				"read here and then ignored", path, m.Materialised)
+				"read here and then ignored", path, m.Materialized)
 		}
 		return nil
 	}

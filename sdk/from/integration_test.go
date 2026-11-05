@@ -22,7 +22,7 @@ import (
 	"brevis.sh/brevis/sdk/to"
 )
 
-// Os testes de object storage rodam contra o MinIO do
+// The object storage tests run against the MinIO in
 // docker-compose.drivers.yml:
 //
 //	docker compose -f docker-compose.drivers.yml up -d minio
@@ -94,8 +94,8 @@ func TestIntegrationS3RoundTrip(t *testing.T) {
 	store := s3.New(client)
 
 	records := []core.Envelope{
-		{Payload: map[string]any{"sku": "W-1", "quantidade": 3}},
-		{Payload: map[string]any{"sku": "W-2", "quantidade": 9}},
+		{Payload: map[string]any{"sku": "W-1", "quantity": 3}},
+		{Payload: map[string]any{"sku": "W-2", "quantity": 9}},
 	}
 
 	res, err := to.Files{Path: "s3://" + bucket + "/landing/", Store: store}.
@@ -116,7 +116,7 @@ func TestIntegrationS3RoundTrip(t *testing.T) {
 	var read []map[string]any
 	for env, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		read = append(read, env.Payload.(map[string]any))
 	}
@@ -182,7 +182,7 @@ func TestIntegrationS3Compressed(t *testing.T) {
 	n := 0
 	for _, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		n++
 	}
@@ -202,13 +202,13 @@ func TestIntegrationS3PaginatesTheListing(t *testing.T) {
 	const n = 1005
 	for i := 0; i < n; i++ {
 		body := fmt.Sprintf(`{"i":%d}`+"\n", i)
-		key := fmt.Sprintf("muitos/%05d.ndjson", i)
+		key := fmt.Sprintf("many/%05d.ndjson", i)
 		if err := store.Create(ctx, bucket, key, bytes.NewReader([]byte(body))); err != nil {
 			t.Fatalf("object %d: %v", i, err)
 		}
 	}
 
-	keys, err := store.List(ctx, bucket, "muitos/")
+	keys, err := store.List(ctx, bucket, "many/")
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}
@@ -265,7 +265,7 @@ func TestIntegrationGCSRoundTrip(t *testing.T) {
 	n := 0
 	for env, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		if env.Payload.(map[string]any)["sku"] == nil {
 			t.Errorf("record without sku: %v", env.Payload)

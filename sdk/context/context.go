@@ -369,7 +369,7 @@ func write(encoded []byte) error {
 //
 // One Write for the whole line, because stdout is shared with whatever else the
 // step prints and a marker split across two writes is a marker the engine will
-// not recognise. `\n` is part of the same call for the same reason.
+// not recognize. `\n` is part of the same call for the same reason.
 //
 // Silent outside the engine. The marker is for the engine to read, and printing
 // protocol at somebody running a fetcher by hand would be noise -- BREVIS_RUN_ID

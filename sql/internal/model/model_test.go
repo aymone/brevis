@@ -24,8 +24,8 @@ func TestAModelIsItsPathAndItsHeader(t *testing.T) {
 	if m.Ref() != "silver.order_totals" {
 		t.Errorf("Ref() = %q, wanted silver.order_totals", m.Ref())
 	}
-	if m.Materialised != Table {
-		t.Errorf("materialized = %q, wanted table", m.Materialised)
+	if m.Materialized != Table {
+		t.Errorf("materialized = %q, wanted table", m.Materialized)
 	}
 	if len(m.Tests) != 2 || m.Tests[0].Kind != "not_null" || m.Tests[1].Kind != "unique" {
 		t.Errorf("tests = %+v", m.Tests)
@@ -44,8 +44,8 @@ func TestAModelWithNoHeaderIsAView(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Materialised != View || len(m.Tests) != 0 {
-		t.Errorf("got %q with %d tests, wanted a view with none", m.Materialised, len(m.Tests))
+	if m.Materialized != View || len(m.Tests) != 0 {
+		t.Errorf("got %q with %d tests, wanted a view with none", m.Materialized, len(m.Tests))
 	}
 }
 
@@ -56,8 +56,8 @@ func TestOnlyALeadingHeaderCounts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Materialised != View {
-		t.Errorf("a comment below the query set materialized=%q", m.Materialised)
+	if m.Materialized != View {
+		t.Errorf("a comment below the query set materialized=%q", m.Materialized)
 	}
 }
 
@@ -67,13 +67,14 @@ func TestOnlyALeadingHeaderCounts(t *testing.T) {
 func TestEveryRefusalSaysWhereToLook(t *testing.T) {
 	for _, c := range []struct{ name, path, sql, want string }{
 		{
+			// The British spelling is the typo: it is deliberately an unknown key.
 			name: "a typo in a field",
 			path: "models/silver/a.sql",
 			sql:  "/* brevis\nmaterialised: table\n*/\nselect 1",
 			want: "materialised",
 		},
 		{
-			name: "a materialisation that does not exist",
+			name: "a materialization that does not exist",
 			path: "models/silver/b.sql",
 			sql:  "/* brevis\nmaterialized: ephemeral\n*/\nselect 1",
 			want: "`view`, `table` or `incremental`",
@@ -137,8 +138,8 @@ func TestAnIncrementalModelCarriesItsKeyAndItsWatermark(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Materialised != Incremental {
-		t.Errorf("materialized = %q, wanted incremental", m.Materialised)
+	if m.Materialized != Incremental {
+		t.Errorf("materialized = %q, wanted incremental", m.Materialized)
 	}
 	if len(m.UniqueKey) != 1 || m.UniqueKey[0] != "order_id" {
 		t.Errorf("unique_key = %v", m.UniqueKey)

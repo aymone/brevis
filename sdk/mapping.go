@@ -134,7 +134,7 @@ func KeyWith(render Renderer, fields ...string) KeySelector {
 //     ingestion_id, the load merges them into a single row, and the rest
 //     disappear -- with no error, because a constant key is a valid key.
 //
-// It is one function and not two because it is one behaviour: return a
+// It is one function and not two because it is one behavior: return a
 // constant. Splitting it into FixedKey and FixedLabel would be two public names
 // for the same body, and the caller would still have to know which column they
 // are writing into -- which is the thing the second bullet is actually about.

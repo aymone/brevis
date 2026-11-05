@@ -74,7 +74,7 @@ func TestFilesReadsInDeterministicOrder(t *testing.T) {
 
 func TestFilesReadsCSVWithAHeader(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "p.csv", "nome,idade\nana,30\nbeto,41\n")
+	writeFile(t, dir, "p.csv", "name,age\nana,30\nbeto,41\n")
 
 	got, err := le(t, Files{Path: filepath.Join(dir, "*.csv"), Format: core.FormatCSV})
 	if err != nil {
@@ -86,7 +86,7 @@ func TestFilesReadsCSVWithAHeader(t *testing.T) {
 	// The CSV decoder yields map[string]any -- the same record model as every
 	// other source. It used to yield map[string]string, and that meant no
 	// transformer worked on a CSV at all.
-	if got[0].Payload.(map[string]any)["nome"] != "ana" {
+	if got[0].Payload.(map[string]any)["name"] != "ana" {
 		t.Errorf("the first line did not become a record: %v", got[0].Payload)
 	}
 }
@@ -110,13 +110,13 @@ func TestFilesDecompressesGzipByExtension(t *testing.T) {
 // further down.
 func TestFilesInvalidGzipNamesTheFile(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "mentira.ndjson.gz", "isto nao e gzip")
+	writeFile(t, dir, "fake.ndjson.gz", "this is not gzip")
 
 	_, err := le(t, Files{Path: filepath.Join(dir, "*.gz")})
 	if err == nil {
 		t.Fatal("a .gz that is not gzip has to fail")
 	}
-	if !strings.Contains(err.Error(), "mentira.ndjson.gz") || !strings.Contains(err.Error(), "gzip") {
+	if !strings.Contains(err.Error(), "fake.ndjson.gz") || !strings.Contains(err.Error(), "gzip") {
 		t.Errorf("the error must name the file and the problem: %v", err)
 	}
 }
@@ -181,9 +181,9 @@ func TestFilesCountsTheBytesRead(t *testing.T) {
 
 // The preview holds for every driver, not only for HTTP -- otherwise
 // ReadOptions.Preview would be a dead field here.
-func TestFilesHonraOPreview(t *testing.T) {
+func TestFilesHonorThePreview(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, "a.ndjson", "{\"id\":1,\"n\":\"alfa\"}\n{\"id\":2,\"n\":\"beta\"}\n")
+	writeFile(t, dir, "a.ndjson", "{\"id\":1,\"n\":\"alpha\"}\n{\"id\":2,\"n\":\"beta\"}\n")
 
 	var out strings.Builder
 	seq, err := Files{Path: filepath.Join(dir, "*.ndjson")}.Read(context.Background(),
@@ -194,7 +194,7 @@ func TestFilesHonraOPreview(t *testing.T) {
 	for range seq {
 	}
 
-	if !strings.Contains(out.String(), "alfa") || !strings.Contains(out.String(), "2 rows") {
+	if !strings.Contains(out.String(), "alpha") || !strings.Contains(out.String(), "2 rows") {
 		t.Errorf("the preview did not come out:\n%s", out.String())
 	}
 }

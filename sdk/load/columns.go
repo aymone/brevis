@@ -167,7 +167,7 @@ func storedAs(schema bigquery.Schema) func(string) string {
 // Extracted from CheckDestination to be testable, and because it asks the
 // same question as checkDeclaredAgainstTable and got a different answer:
 // both compared by exact name, so `createdat` was dropped here for the wrong
-// reason and then never checked there. The two bugs cancelled, and a
+// reason and then never checked there. The two bugs canceled, and a
 // mutation of either alone survived. [#43]
 func declaredThatTheTableHas(columns []string, schema bigquery.Schema) []string {
 	has := make(map[string]bool, len(schema))

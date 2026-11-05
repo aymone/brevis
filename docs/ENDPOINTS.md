@@ -84,7 +84,7 @@ endpoints:
     sql_file: endpoints/clicks.sql # relative to this file; or `sql:` inline
 ```
 
-Every field that cannot be honoured is refused at load, naming the setting:
+Every field that cannot be honored is refused at load, naming the setting:
 an unknown key, a connection the registry does not declare, a path twice, a
 `ref` to nothing, a template using a name nobody declared, a default its own
 type cannot hold, a limit an endpoint raises, a credential named without
@@ -177,7 +177,7 @@ repeated line refuses to start, by line number, never quoted.
   template is refused by Postgres, not by a parser.
 - **BigQuery** dry-runs first, with the arguments: a statement it does not
   call `SELECT` is refused, one over `max_bytes_billed` is a `422` before
-  anything is billed. A job whose request timed out is cancelled, and every
+  anything is billed. A job whose request timed out is canceled, and every
   job carries its deadline.
 - A warehouse that can be made neither is refused.
 
@@ -250,7 +250,7 @@ would change what the warehouse plans.
 | `422` | BigQuery priced the query over `max_bytes_billed` |
 | `429` | four requests from this tenant are already waiting (`Retry-After`) |
 | `503` | the API is at `max_in_flight` (`Retry-After`) |
-| `504` | `timeout` reached; the query was cancelled, or a hook was abandoned |
+| `504` | `timeout` reached; the query was canceled, or a hook was abandoned |
 | `500` | the endpoint's SQL cannot render for this request, or one of its [hooks](#hooks-go-compiled-in) failed — its author's to fix; the reason is on the audit line |
 | `502` | the warehouse refused — never quoting the SQL or the values |
 
@@ -342,7 +342,7 @@ On `metrics.addr` only: `brevis_sql_api_requests_total{endpoint,status}`,
 `rows_total`, `bytes_billed_total`, `cache_requests_total{endpoint,result}`,
 and `request_seconds` / `warehouse_seconds` histograms — written by hand, as
 `brevis-sql serve`'s are, because the client library is over both of this
-module's ceilings. **No tenant in any label**, and unauthorised requests are
+module's ceilings. **No tenant in any label**, and unauthorized requests are
 counted under `endpoint="-"`, never by the path they guessed. Hooks add
 `hook_total{endpoint,hook,outcome}` — `ok`, `refused`, `error`, `panic`,
 `oversize`, a closed set and never an error's text — and `hook_seconds`,

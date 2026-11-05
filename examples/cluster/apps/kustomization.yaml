@@ -21,7 +21,7 @@ resources:
 
 configMapGenerator:
   - name: brevis-workflows
-    namespace: dados
+    namespace: data
     files:
       - workflows/pod-per-step.yaml
       - workflows/one-pod.yaml

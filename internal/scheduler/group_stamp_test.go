@@ -24,12 +24,12 @@ func TestEveryRunOfAGroupedWorkflowCarriesTheGroup(t *testing.T) {
 
 	project := uuid.New()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Projeto')`, project); err != nil {
+		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Project')`, project); err != nil {
 		t.Fatal(err)
 	}
 	wRepo := postgres.NewWorkflowRepo(pool)
 	if err := wRepo.Publish(ctx, wf.Workflow{
-		Slug: "diario", Name: "diario", Kind: wf.KindChain, Schedule: "0 2 * * *",
+		Slug: "daily", Name: "daily", Kind: wf.KindChain, Schedule: "0 2 * * *",
 		MaxActive: 1, Group: "jaffle_models",
 		Nodes: []wf.Node{{ID: "a", Run: "echo ok"}},
 	}, project, "test"); err != nil {
@@ -43,10 +43,10 @@ func TestEveryRunOfAGroupedWorkflowCarriesTheGroup(t *testing.T) {
 	if _, err := s.Cycle(ctx, inUTC("2026-01-02T03:00:00Z")); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Backfill(ctx, "diario", inUTC("2025-12-01T00:00:00Z"), inUTC("2025-12-01T23:59:00Z"), nil); err != nil {
+	if _, err := s.Backfill(ctx, "daily", inUTC("2025-12-01T00:00:00Z"), inUTC("2025-12-01T23:59:00Z"), nil); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Trigger(ctx, "diario", inUTC("2026-01-02T03:30:00Z"), nil, nil); err != nil {
+	if _, err := s.Trigger(ctx, "daily", inUTC("2026-01-02T03:30:00Z"), nil, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -92,7 +92,7 @@ func TestEveryRunOfAGroupedWorkflowCarriesTheGroup(t *testing.T) {
 func TestARunWithoutAGroupStoresNull(t *testing.T) {
 	s, runs, _, pool := build(t, "0 2 * * *", false)
 	ctx := context.Background()
-	id, err := s.Trigger(ctx, "diario", inUTC("2026-01-02T03:30:00Z"), nil, nil)
+	id, err := s.Trigger(ctx, "daily", inUTC("2026-01-02T03:30:00Z"), nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

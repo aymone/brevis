@@ -229,7 +229,7 @@ func (a *Answer) read(body []byte) error {
 // nothing is rounded on the way to a screen -- and an object or an array AS
 // THE JSON IT IS, compacted and in the order the API wrote it. Decoded into
 // `any` it would be a Go map, drawn as `map[clicks:3]`, which nobody who
-// called the API would recognise as what it sent.
+// called the API would recognize as what it sent.
 func cell(dec *json.Decoder) (any, error) {
 	var raw json.RawMessage
 	if err := dec.Decode(&raw); err != nil {

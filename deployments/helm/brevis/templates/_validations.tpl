@@ -4,7 +4,7 @@ What this chart refuses to render.
 Every check here is a misconfiguration that Kubernetes would ACCEPT and that
 would then be wrong at runtime — the failure mode this project treats as the
 expensive one. A rejected install costs a minute; a scheduler quietly
-materialising duplicate runs costs a day of somebody's data.
+materializing duplicate runs costs a day of somebody's data.
 
 They live in one file because a validation buried next to the resource it
 guards is a validation nobody knows exists.
@@ -40,13 +40,13 @@ guards is a validation nobody knows exists.
 {{- end -}}
 
 {{/*
-The one value the chart refuses to honour rather than merely validate.
+The one value the chart refuses to honor rather than merely validate.
 
 The schema accepts the key only so this message can exist: "Additional property
 replicas is not allowed" would say what happened and not what it costs.
 */}}
 {{- if hasKey .Values.scheduler "replicas" -}}
-{{- fail (printf "\n\nbrevis: scheduler.replicas is set to %v, and this chart runs exactly one.\n\nTwo replicas would not hand out the same queue item -- the dispatcher claims\nwith FOR UPDATE SKIP LOCKED. They WOULD both materialise the same slots, and\nwhat protects against that is an idempotency key, not a lock: the second\nreplica creates the same scheduled run again, and a `dbt build` runs twice over\nthe same window.\n\nNothing fails when that happens. It shows up as duplicated rows in a report\nlater.\n\nUntil there is leader election, one replica is what keeps the behavior\nobvious. To scale reads, raise api.replicas -- the API is stateless. To run\nmore work at once, raise scheduler.concurrency and scheduler.maxPods.\n" .Values.scheduler.replicas) -}}
+{{- fail (printf "\n\nbrevis: scheduler.replicas is set to %v, and this chart runs exactly one.\n\nTwo replicas would not hand out the same queue item -- the dispatcher claims\nwith FOR UPDATE SKIP LOCKED. They WOULD both materialize the same slots, and\nwhat protects against that is an idempotency key, not a lock: the second\nreplica creates the same scheduled run again, and a `dbt build` runs twice over\nthe same window.\n\nNothing fails when that happens. It shows up as duplicated rows in a report\nlater.\n\nUntil there is leader election, one replica is what keeps the behavior\nobvious. To scale reads, raise api.replicas -- the API is stateless. To run\nmore work at once, raise scheduler.concurrency and scheduler.maxPods.\n" .Values.scheduler.replicas) -}}
 {{- end -}}
 
 {{- if lt (int .Values.scheduler.maxPods) 1 -}}

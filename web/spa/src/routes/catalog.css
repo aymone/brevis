@@ -1,4 +1,4 @@
-/* The catalog and its drawer. Colours are the tokens of ui/status.css. */
+/* The catalog and its drawer. Colors are the tokens of ui/status.css. */
 .dc-honest { max-width: 48rem; margin: -.5rem 0 1rem; font-size: .75rem; }
 .dc-band { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; min-height: 2rem; }
 .dc-pill { display: inline-flex; align-items: center; gap: .5rem; height: 2rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .8rem; text-decoration: none; }

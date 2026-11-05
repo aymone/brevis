@@ -326,7 +326,7 @@ func loadInBatches(ctx context.Context, data *Data, target Target, run RunContex
 	return res, nil
 }
 
-// somar accumulates a batch into the result. Unlike apply, which replaces: with
+// add accumulates a batch into the result. Unlike apply, which replaces: with
 // batches the total is the sum, and a Rows counting only the last batch would
 // lie to whoever reads the pipeline's log line.
 func add(res *Result, lr *core.LoadResult) {

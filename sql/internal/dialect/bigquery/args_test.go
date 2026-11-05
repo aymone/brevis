@@ -103,11 +103,11 @@ func TestADryRunCarriesTheArgumentsAndAnswersKindAndBytes(t *testing.T) {
 	}
 }
 
-// A JOB WHOSE CALLER GAVE UP IS CANCELLED, not abandoned. Found in review:
-// cancelling the context stopped the polling and left the job running and
+// A JOB WHOSE CALLER GAVE UP IS CANCELED, not abandoned. Found in review:
+// canceling the context stopped the polling and left the job running and
 // billing, so an API answering 504 and freeing its slot let one tenant keep
 // any number of jobs going.
-func TestAJobIsCancelledWhenItsContextEnds(t *testing.T) {
+func TestAJobIsCanceledWhenItsContextEnds(t *testing.T) {
 	f := &fake{t: t, reply: ok(`{"jobComplete":false,"jobReference":{"jobId":"j-1","location":"EU"}}`)}
 	c := dial(t, f)
 	c.poll = time.Hour

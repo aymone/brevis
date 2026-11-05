@@ -3,7 +3,7 @@
 Title, subtitle, phrase and palette. The colors override CSS variables at
 runtime, so changing the theme recompiles nothing.
 
-An unrecognised key is a boot ERROR that names it -- decoding used to ignore
+An unrecognized key is a boot ERROR that names it -- decoding used to ignore
 one, which meant a typo silently reverted the whole file to the default
 identity.
 */}}

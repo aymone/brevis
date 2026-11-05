@@ -206,7 +206,7 @@ func Min(field string) Aggregator { return extreme(field, -1).named("min") }
 // Max is the largest value of the field.
 func Max(field string) Aggregator { return extreme(field, +1).named("max") }
 
-func extreme(field string, sinal int) Aggregator {
+func extreme(field string, sign int) Aggregator {
 	type state struct {
 		value any
 		saw   bool
@@ -227,7 +227,7 @@ func extreme(field string, sinal int) Aggregator {
 			if err != nil {
 				return err
 			}
-			if cmp*sinal > 0 {
+			if cmp*sign > 0 {
 				e.value = v
 			}
 			return nil
@@ -284,7 +284,7 @@ func MinBy(value, key string) Aggregator { return byExtreme(value, key, -1).name
 // MaxBy returns the `value` of the row where `key` is largest.
 func MaxBy(value, key string) Aggregator { return byExtreme(value, key, +1).named("max_by") }
 
-func byExtreme(valueField, keyField string, sinal int) Aggregator {
+func byExtreme(valueField, keyField string, sign int) Aggregator {
 	type state struct {
 		key   any
 		value any
@@ -306,7 +306,7 @@ func byExtreme(valueField, keyField string, sinal int) Aggregator {
 			if err != nil {
 				return err
 			}
-			if cmp*sinal > 0 {
+			if cmp*sign > 0 {
 				e.key, e.value = k, r[valueField]
 			}
 			return nil
@@ -329,7 +329,7 @@ func StdDev(field string) Aggregator { return welford(field, true).named("std_de
 func welford(field string, root bool) Aggregator {
 	type state struct {
 		n    float64
-		medi float64
+		mean float64
 		m2   float64
 	}
 	a := Custom(Accumulator{
@@ -341,9 +341,9 @@ func welford(field string, root bool) Aggregator {
 			}
 			e := acc.(*state)
 			e.n++
-			d := x - e.medi
-			e.medi += d / e.n
-			e.m2 += d * (x - e.medi)
+			d := x - e.mean
+			e.mean += d / e.n
+			e.m2 += d * (x - e.mean)
 			return nil
 		},
 		Value: func(acc any) (any, error) {
@@ -572,7 +572,7 @@ type accumulatedGroup struct {
 	order  int
 }
 
-// apply drena o fluxo, agrega e devolve as rows resultantes.
+// apply drains the stream, aggregates and returns the resulting rows.
 func (d *Reduce) apply(rows iter.Seq2[Envelope, error]) iter.Seq2[Envelope, error] {
 	return func(yield func(Envelope, error) bool) {
 		groups, seen, err := d.fold(rows)

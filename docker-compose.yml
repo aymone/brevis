@@ -80,7 +80,7 @@ services:
       # hash reaching the process is not the one written here -- which is the
       # second reason that sign-in could never have worked.
       #
-      # BREVIS_AUTH_USER: operador
+      # BREVIS_AUTH_USER: operator
       # BREVIS_AUTH_PASSWORD_HASH: "pbkdf2-sha256$$600000$$...$$..."
       # BREVIS_AUTH_SECRET: "a local development secret of 32 bytes"
       #

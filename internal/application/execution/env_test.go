@@ -17,26 +17,26 @@ import (
 func TestTheEnvironmentsPrecedence(t *testing.T) {
 	w := wf.Workflow{
 		Slug: "x",
-		Env:  map[string]string{"NIVEL": "workflow", "SO_DO_WORKFLOW": "1"},
+		Env:  map[string]string{"LEVEL": "workflow", "ONLY_WORKFLOW": "1"},
 		Nodes: []wf.Node{
-			{ID: "com_env", Run: "echo", Env: map[string]string{"NIVEL": "passo"}},
-			{ID: "sem_env", Run: "echo"},
+			{ID: "with_env", Run: "echo", Env: map[string]string{"LEVEL": "step"}},
+			{ID: "no_env", Run: "echo"},
 		},
 	}
-	r := Runner{Env: map[string]string{"NIVEL": "global", "SO_DO_GLOBAL": "1"}}
+	r := Runner{Env: map[string]string{"LEVEL": "global", "ONLY_GLOBAL": "1"}}
 
-	cases := map[string]string{"com_env": "passo", "sem_env": "workflow"}
+	cases := map[string]string{"with_env": "step", "no_env": "workflow"}
 	for _, n := range w.Nodes {
 		env := mergeEnv(r.Env, r.runContext(instance{key: run.Step(n.ID)}, false, 0), w.EnvOf(n))
 
-		if got := env["NIVEL"]; got != cases[n.ID] {
+		if got := env["LEVEL"]; got != cases[n.ID] {
 			t.Errorf("%s: LEVEL = %q, expected %q", n.ID, got, cases[n.ID])
 		}
 		// Inheriting must not mean losing the rest.
-		if env["SO_DO_WORKFLOW"] != "1" {
+		if env["ONLY_WORKFLOW"] != "1" {
 			t.Errorf("%s: it lost the variable only the workflow declared", n.ID)
 		}
-		if env["SO_DO_GLOBAL"] != "1" {
+		if env["ONLY_GLOBAL"] != "1" {
 			t.Errorf("%s: it lost the variable only the global declared", n.ID)
 		}
 	}
@@ -48,7 +48,7 @@ func TestTheEnvironmentsPrecedence(t *testing.T) {
 func TestSecretsDoNotEnterTheTasksEnv(t *testing.T) {
 	w := wf.Workflow{
 		Slug:    "x",
-		Secrets: map[string]string{"TOKEN": "cofre/token"},
+		Secrets: map[string]string{"TOKEN": "vault/token"},
 		Nodes:   []wf.Node{{ID: "a", Run: "echo"}},
 	}
 	n := w.Nodes[0]
@@ -57,7 +57,7 @@ func TestSecretsDoNotEnterTheTasksEnv(t *testing.T) {
 	if _, has := env["TOKEN"]; has {
 		t.Error("the secret went into the task's Env")
 	}
-	if w.SecretsOf(n)["TOKEN"] != "cofre/token" {
+	if w.SecretsOf(n)["TOKEN"] != "vault/token" {
 		t.Error("the secret did not arrive as a coordinate")
 	}
 }

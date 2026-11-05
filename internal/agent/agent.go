@@ -286,7 +286,7 @@ type execution struct {
 	finishedAt time.Time
 
 	// settled is set, under mu, once nobody is owed this execution any more:
-	// its exit was read to the end, or it was cancelled or abandoned. A drain
+	// its exit was read to the end, or it was canceled or abandoned. A drain
 	// waits for it (#136).
 	settled bool
 }
@@ -395,7 +395,7 @@ func (a *Agent) Start(ctx context.Context, req remote.StartRequest) (io.ReadClos
 	cmd := exec.CommandContext(runCtx, a.opt.Shell[0], append(a.opt.Shell[1:], req.Command)...) // #nosec G204 -- running the command the control plane sent is what an agent is for; the request is authenticated
 	cmd.Dir = dir
 	cmd.Env = env
-	// Its own process group, so cancelling kills the shell AND whatever it
+	// Its own process group, so canceling kills the shell AND whatever it
 	// spawned. Killing only the shell leaves a python that goes on writing to a
 	// pipe nobody reads.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -504,7 +504,7 @@ func (a *Agent) abandon(e *execution) {
 //
 // A MARKER AND NOT A NEW LINE KIND, which is the whole reason this is three
 // lines. The `@brevis:` protocol on stdout is how a step publishes to the
-// engine on every executor -- the runner recognises it, and recognising it
+// engine on every executor -- the runner recognizes it, and recognizing it
 // there rather than in an executor is what the stages collector's own comment
 // says gives the local executor the same for free. An agent that invented a
 // `context` line would be a second road to the same place, for both programs
@@ -585,7 +585,7 @@ func (a *Agent) Resume(execID string, after int64) (io.ReadCloser, error) {
 	return a.reading(e, after), nil
 }
 
-// killGrace is how long a cancelled group has to exit on SIGTERM before SIGKILL.
+// killGrace is how long a canceled group has to exit on SIGTERM before SIGKILL.
 const killGrace = 2 * time.Second
 
 // Cancel stops a step.
@@ -599,7 +599,7 @@ func (a *Agent) Cancel(execID string) error {
 	ended, done := a.finished[execID]
 	a.mu.Unlock()
 
-	// Cancelled is settled: whoever asked knows how it ends, and a drain does
+	// Canceled is settled: whoever asked knows how it ends, and a drain does
 	// not wait for an exit nobody is coming to read (#136).
 	if done {
 		a.settle(ended)
@@ -679,7 +679,7 @@ func (a *Agent) environment(req remote.StartRequest, output string) ([]string, e
 	//
 	// The runner picks a path meaningful on the ENGINE's filesystem and sends
 	// it with the rest of the environment. On a host the engine does not
-	// manage that path is somebody else's, and a step that honours it writes a
+	// manage that path is somebody else's, and a step that honors it writes a
 	// file nobody reads -- silently, which is the failure mode the pod
 	// executor's own override exists to prevent. It makes the same override
 	// there, to the kubelet's termination message; this is that one, for a

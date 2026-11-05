@@ -22,13 +22,13 @@ func TestASchemaIsADeclarationForTheDiscovery(t *testing.T) {
 	schema := Schema{{Name: "id", Type: TypeString}}
 
 	got, err := Discovered(WriteOptions{Schema: schema}, []Envelope{
-		{Payload: map[string]any{"id": "A-1", "novo": "x"}},
+		{Payload: map[string]any{"id": "A-1", "new": "x"}},
 	})
 	if err != nil {
 		t.Fatalf("a Schema-only declaration was refused:\n\n%v", err)
 	}
-	if len(got) != 1 || got[0].Name != "novo" {
-		t.Fatalf("discovered %v, want just `novo`", got.Names())
+	if len(got) != 1 || got[0].Name != "new" {
+		t.Fatalf("discovered %v, want just `new`", got.Names())
 	}
 	// And `id` is NOT rediscovered: the Schema already declares it, so the
 	// column is the consumer's and not the batch's. Reading Columns alone
@@ -108,11 +108,11 @@ func TestWithDiscoveredExtendsTheWholeDeclaration(t *testing.T) {
 		{Name: "brevis_ingestion_id", Type: TypeString},
 		{Name: "id", Type: TypeString},
 	}
-	found := Schema{{Name: "novo", Type: TypeString}}
+	found := Schema{{Name: "new", Type: TypeString}}
 
 	got := WithDiscovered(WriteOptions{Schema: schema}, found)
 
-	want := "brevis_ingestion_id,id,novo"
+	want := "brevis_ingestion_id,id,new"
 	if g := strings.Join(got.Columns, ","); g != want {
 		t.Errorf("Columns = %q, want %q.\n\nA Schema-only caller ends up with "+
 			"a Columns list that names only what the BATCH brought, and "+
@@ -122,7 +122,7 @@ func TestWithDiscoveredExtendsTheWholeDeclaration(t *testing.T) {
 	if g := strings.Join(got.Schema.Names(), ","); g != want {
 		t.Errorf("Schema = %q, want %q", g, want)
 	}
-	if g := strings.Join(got.Discovered, ","); g != "novo" {
+	if g := strings.Join(got.Discovered, ","); g != "new" {
 		t.Errorf("Discovered = %q, want just the batch's own", g)
 	}
 }
@@ -131,8 +131,8 @@ func TestWithDiscoveredExtendsTheWholeDeclaration(t *testing.T) {
 func TestWithDiscoveredLeavesAColumnsCallerAlone(t *testing.T) {
 	got := WithDiscovered(
 		WriteOptions{Columns: []string{"id"}},
-		Schema{{Name: "novo", Type: TypeString}})
-	if g := strings.Join(got.Columns, ","); g != "id,novo" {
-		t.Errorf("Columns = %q, want id,novo", g)
+		Schema{{Name: "new", Type: TypeString}})
+	if g := strings.Join(got.Columns, ","); g != "id,new" {
+		t.Errorf("Columns = %q, want id,new", g)
 	}
 }

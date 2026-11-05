@@ -109,7 +109,7 @@ func TestOnlyAllSuccessIsSuccess(t *testing.T) {
 }
 
 // An instance that failed and then succeeded on a retry counts as the retry
-// says: the node's count and colour are its LAST attempts, and both attempts
+// says: the node's count and color are its LAST attempts, and both attempts
 // stay on the screen.
 func TestAnInstanceIsItsLastAttempt(t *testing.T) {
 	r, logs := reportedRun(t)

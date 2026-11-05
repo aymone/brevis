@@ -152,7 +152,7 @@ func TestResultCountsEachStage(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, st := range stages {
-		data.Records = st.apply(data.Records, &counts[i], "teste")
+		data.Records = st.apply(data.Records, &counts[i], "test")
 	}
 	if _, err := loadWith(context.Background(), data, p.Target, p.Run); err != nil {
 		t.Fatal(err)

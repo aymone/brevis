@@ -113,7 +113,7 @@ func TestARequiredParameterThatIsAbsentIsA400(t *testing.T) {
 	}
 }
 
-func TestADeclarationThatCannotBeHonouredIsRefused(t *testing.T) {
+func TestADeclarationThatCannotBeHonoredIsRefused(t *testing.T) {
 	for name, c := range map[string]struct {
 		p    Param
 		says string

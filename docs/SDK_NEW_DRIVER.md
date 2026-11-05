@@ -175,7 +175,7 @@ chain, and the row that reaches `Write` already carries them. There is no
 `WriteOptions.Metadata` and no `AutoID`: a destination that stamped a column
 after the chain would be writing something the declaration check never saw.
 
-What the driver does is honour `WriteOptions.Columns`, which names them.
+What the driver does is honor `WriteOptions.Columns`, which names them.
 
 ## 4. Dedup, per dialect
 

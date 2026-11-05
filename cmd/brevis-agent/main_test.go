@@ -159,7 +159,7 @@ func TestSIGTERMDrainsTheRunningStepInsteadOfKillingIt(t *testing.T) {
 	}
 }
 
-// Past --drain-timeout the step is cancelled and the agent says so in its exit
+// Past --drain-timeout the step is canceled and the agent says so in its exit
 // code, so an operator's tooling can tell a clean drain from a cut one.
 func TestADrainTimeoutCancelsAndExitsOne(t *testing.T) {
 	p := runAgent(t, "--drain-timeout", "1s")

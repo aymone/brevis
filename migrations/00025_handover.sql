@@ -1,7 +1,7 @@
 -- +goose Up
 -- Where a step that outlived its scheduler goes on running (#125).
 --
--- A shutdown leaves a `host:` step running on its agent instead of cancelling
+-- A shutdown leaves a `host:` step running on its agent instead of canceling
 -- it, and the next scheduler follows it there: the agent instance that holds
 -- it, its execution id, the attempt it is and the last line read. The row is
 -- NOT ended -- the step is running -- so this column is the only thing that

@@ -342,7 +342,7 @@ function HowItWorks() {
 export default function StreamsRoute() {
   const { t } = useT();
   const filter = useFilter(FIELDS, "/ingest/streams");
-  const { show } = useDrawer("novo");
+  const { show } = useDrawer("new");
   return (
     <Page>
       <PageHead
@@ -358,7 +358,7 @@ export default function StreamsRoute() {
       <StreamsData filter={filter} />
       <HowItWorks />
       <HowDrawer
-        id="novo"
+        id="new"
         title={t("streams.new")}
         lead={t("streams.new.lead")}
         blocks={[

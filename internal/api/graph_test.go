@@ -202,7 +202,7 @@ func TestTheRunGraphAppliesStatePerNode(t *testing.T) {
 	if byID["c"]["error"] != "boom" || byID["c"]["exit_code"] != float64(2) {
 		t.Errorf("node c lost its error/exit code: %v", byID["c"])
 	}
-	// d never ran; it has to stay grey rather than inherit the parent's state.
+	// d never ran; it has to stay gray rather than inherit the parent's state.
 	if byID["d"]["status"] != "pending" {
 		t.Errorf("no d: %v", byID["d"])
 	}
@@ -239,17 +239,17 @@ func TestTheGraphRefusesInvalidInput(t *testing.T) {
 		path     string
 		expected int
 	}{
-		{"workflow inexistente", newUI(defsFake{err: errors.New("no rows")}, execsFake{}),
-			"/api/workflows/fantasma/graph", http.StatusNotFound},
-		{"uuid malformado", newUI(defsFake{}, execsFake{}),
-			"/api/runs/nao-e-uuid/graph", http.StatusBadRequest},
-		{"run inexistente", newUI(defsFake{}, execsFake{err: errors.New("no rows")}),
+		{"unknown workflow", newUI(defsFake{err: errors.New("no rows")}, execsFake{}),
+			"/api/workflows/ghost/graph", http.StatusNotFound},
+		{"malformed uuid", newUI(defsFake{}, execsFake{}),
+			"/api/runs/not-a-uuid/graph", http.StatusBadRequest},
+		{"unknown run", newUI(defsFake{}, execsFake{err: errors.New("no rows")}),
 			"/api/runs/" + uuid.New().String() + "/graph", http.StatusNotFound},
-		{"ciclo gravado no testDB", newUI(defsFake{w: wf.Workflow{
-			Slug:  "ciclo",
+		{"cycle stored in the testDB", newUI(defsFake{w: wf.Workflow{
+			Slug:  "cycle",
 			Nodes: []wf.Node{{ID: "a", Run: "x"}, {ID: "b", Run: "y"}},
 			Edges: []wf.Edge{{From: "a", To: "b"}, {From: "b", To: "a"}},
-		}}, execsFake{}), "/api/workflows/ciclo/graph", http.StatusUnprocessableEntity},
+		}}, execsFake{}), "/api/workflows/cycle/graph", http.StatusUnprocessableEntity},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -266,8 +266,8 @@ func fourStages() []postgres.Stage {
 	ms := int64(2400)
 	return []postgres.Stage{
 		{Name: "check", State: "done"},
-		{Name: "extract", State: "done", Ms: &ms, Numbers: map[string]any{"paginas": 300}},
-		{Name: "transform", State: "done", Numbers: map[string]any{"pulados": 13}},
+		{Name: "extract", State: "done", Ms: &ms, Numbers: map[string]any{"pages": 300}},
+		{Name: "transform", State: "done", Numbers: map[string]any{"skipped": 13}},
 		{Name: "load", State: "running"},
 	}
 }
@@ -289,7 +289,7 @@ func graphWithStages(t *testing.T, states map[string]postgres.NodeState) graph {
 
 // An SDK step becomes a GROUP, with the stages inside it. The DAG's edges stay
 // between steps, so the group takes a single column -- and "same column
-// significa runStep em paralelo" continua verdade.
+// means runStep in parallel" stays true.
 func TestAnSDKStepBecomesAGroupWithTheStagesInside(t *testing.T) {
 	g := graphWithStages(t, map[string]postgres.NodeState{
 		"b": {NodeID: "b", Status: "running", Stages: fourStages(), SdkVersion: "v0.44.1"},
@@ -337,8 +337,8 @@ func TestAnSDKStepBecomesAGroupWithTheStagesInside(t *testing.T) {
 	}
 }
 
-// The real cost of nesting: the column was centred assuming a FIXED height, and
-// an expanded group ran over its neighbour.
+// The real cost of nesting: the column was centered assuming a FIXED height, and
+// an expanded group ran over its neighbor.
 //
 // Each node's height is measured by what it DRAWS -- the last stage inside it --
 // and not by the height it declares. Checking against the declared one would
@@ -636,13 +636,13 @@ func TestAnEdgeLabelReachesTheDrawing(t *testing.T) {
 	}
 }
 
-// An unlabelled edge carries no label, so the payload of every workflow written
+// An unlabeled edge carries no label, so the payload of every workflow written
 // before this feature is what it was.
 //
 // The first version of this test grepped the whole body for `"label"` and
 // failed: nodes have carried a `label` since the graph existed. Asserting on
 // the edges is the check it meant to be.
-func TestAnUnlabelledEdgeCarriesNoLabel(t *testing.T) {
+func TestAnUnlabeledEdgeCarriesNoLabel(t *testing.T) {
 	res, g := request(t, newUI(defsFake{w: diamond()}, execsFake{}), "/api/workflows/diamond/graph")
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("status = %d", res.StatusCode)

@@ -82,7 +82,7 @@ func NewDeliverer(cfg Config, o *Outbox, channels map[string]notify.Notifier, lo
 	return &Deliverer{cfg: cfg, outbox: o, channels: channels, log: log}
 }
 
-// Run drains until the context is cancelled.
+// Run drains until the context is canceled.
 func (d *Deliverer) Run(ctx context.Context) error {
 	tick := time.NewTicker(d.cfg.Interval)
 	defer tick.Stop()
@@ -116,7 +116,7 @@ func (d *Deliverer) cycle(ctx context.Context) error {
 	for _, it := range items {
 		if ctx.Err() != nil {
 			// Shutting down. The rest stay claimed and the visibility sweep
-			// frees them; delivering half a batch against a cancelled context
+			// frees them; delivering half a batch against a canceled context
 			// would fail every one of them and burn their attempts.
 			return nil
 		}
@@ -147,7 +147,7 @@ func (d *Deliverer) deliver(ctx context.Context, it Item) {
 		return
 	}
 
-	// A context of its own, and short. The loop's may be cancelled -- a
+	// A context of its own, and short. The loop's may be canceled -- a
 	// shutdown -- and an alert half-delivered because the process was leaving
 	// is one that gets retried against a webhook that already received it.
 	send, cancel := context.WithTimeout(context.WithoutCancel(ctx), 15*time.Second)

@@ -148,7 +148,7 @@ func (p *ProcessExecutor) Execute(ctx context.Context, t execution.TaskExec) (<-
 	}
 	if err := cmd.Start(); err != nil {
 		cancel()
-		return nil, fmt.Errorf("iniciando %q: %w", t.NodeID, err)
+		return nil, fmt.Errorf("starting %q: %w", t.NodeID, err)
 	}
 
 	events := make(chan execution.Event, 64)

@@ -52,7 +52,7 @@ type Many struct {
 	// Sources are the sources. Required, or Discover.
 	Sources []core.Reader
 
-	// Discover monta as sources em runtime, dentro do pipeline.
+	// Discover builds the sources at run time, inside the pipeline.
 	//
 	//	Discover: func(ctx context.Context) ([]sdk.Reader, error) {
 	//	    // a GET that lists the partitions, and one source per partition

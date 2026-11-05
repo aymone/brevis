@@ -97,7 +97,7 @@ func (i Identity) IngestionID(fields ...string) Transformer {
 	return i.IngestionIDWith(func(v any) (string, error) { return asText(v), nil }, fields...)
 }
 
-// IngestionIDWith e sdk.IngestionIDWith no namespace escolhido.
+// IngestionIDWith is sdk.IngestionIDWith in the chosen namespace.
 func (i Identity) IngestionIDWith(render Renderer, fields ...string) Transformer {
 	return ingestionIDIn(i.ns, render, fields...)
 }

@@ -542,7 +542,7 @@ type bucket struct {
 // deadline is how long the timer should wait: the earlier of the target and
 // what the ceiling has left.
 //
-// With no `max_age`, or with nothing held, it is `every` -- today's behaviour
+// With no `max_age`, or with nothing held, it is `every` -- today's behavior
 // exactly. With a ceiling and an aging batch it shrinks, and once the ceiling
 // has passed it is zero, which fires immediately.
 //
@@ -635,7 +635,7 @@ func (p *pipe) due(b *bucket) bool {
 	if every <= 0 || !b.oldest.Add(every).After(now) {
 		return true
 	}
-	// And the ceiling, which `deadline` also honours: a wake it brought
+	// And the ceiling, which `deadline` also honors: a wake it brought
 	// forward has to find something due, or the timer rings for nothing.
 	ceiling := time.Duration(p.stream.Buffer.Flush.MaxAge)
 	return ceiling > 0 && !b.oldest.Add(ceiling).After(now)
@@ -671,7 +671,7 @@ func newPipe(st Stream, hook Hook, sink, dead Sinker, maxBody int64, m *Metrics,
 		go func() {
 			defer p.wg.Done()
 			// context.Background and not a request's: by the time a worker has
-			// this batch the caller is gone, and a delivery cancelled because
+			// this batch the caller is gone, and a delivery canceled because
 			// one client disconnected would lose the events of every other
 			// client in the same batch. send bounds itself with sendTimeout.
 			for q := range p.queue {
@@ -1184,7 +1184,7 @@ func (p *pipe) flush() {
 	// Only the buckets that have actually waited. The alarm was set by the
 	// earliest one; the others are still inside their own target and go on
 	// filling, which is the difference between a table's cadence and its
-	// neighbour's.
+	// neighbor's.
 	//
 	// Sorted, so a window that takes several produces the same sequence every
 	// time -- and so the claim asks for them in one order across replicas.
@@ -1215,7 +1215,7 @@ func (p *pipe) flush() {
 //
 // Three ways to win without asking:
 //
-//   - the claim is off, which is the default and today's behaviour;
+//   - the claim is off, which is the default and today's behavior;
 //   - there is no metastore, so there is nobody to ask;
 //   - the CEILING has closed. `max_age` is a promise and a promise that can be
 //     deferred is not one. deadline() returning zero means the oldest event has
@@ -1394,8 +1394,8 @@ const claimFanout = 32
 // would stop every request for this stream, which is a far worse outcome than
 // the duplicate load job the claim exists to avoid.
 //
-// Exported because a backend whose client takes no context cannot honour it
-// as a context and has to honour it as a socket deadline instead. Memcached
+// Exported because a backend whose client takes no context cannot honor it
+// as a context and has to honor it as a socket deadline instead. Memcached
 // is that backend: `gomemcache.Add` has no ctx parameter, so before this
 // number reached the driver the 500ms was decoration -- measured at a 2s
 // backend, a Claim with a 500ms context returned in 2s, with the pipe's mutex
@@ -1408,7 +1408,7 @@ const ClaimTimeout = 500 * time.Millisecond
 // cause when it was buried.
 //
 // The ctx is never a request's. The caller that filled a batch is gone by the
-// time it is delivered, and a batch cancelled because one client disconnected
+// time it is delivered, and a batch canceled because one client disconnected
 // would lose the events of every OTHER client in it. On shutdown it is the
 // drain's deadline, which is a window the operator set.
 func (p *pipe) send(parent context.Context, batch []sdk.Envelope) error {

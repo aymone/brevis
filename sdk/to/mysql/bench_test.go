@@ -33,7 +33,7 @@ func BenchmarkMySQLLoad(b *testing.B) {
 	name := fmt.Sprintf("bench_%d", time.Now().UnixNano())
 	if _, err := db.Exec(fmt.Sprintf(`CREATE TABLE %s (
 		ingestion_id VARCHAR(36) NOT NULL, ingestion_loaded_at DATETIME(6) NOT NULL,
-		provider VARCHAR(64), source_key VARCHAR(64), valor DECIMAL(18,2))`, name)); err != nil {
+		provider VARCHAR(64), source_key VARCHAR(64), value DECIMAL(18,2))`, name)); err != nil {
 		b.Fatal(err)
 	}
 	b.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS " + name) })
@@ -47,7 +47,7 @@ func BenchmarkMySQLLoad(b *testing.B) {
 			"ingestion_loaded_at": now,
 			"provider":            "bench",
 			"source_key":          fmt.Sprintf("k%d", i),
-			"valor":               "10.50",
+			"value":               "10.50",
 		}}
 	}
 
@@ -60,5 +60,5 @@ func BenchmarkMySQLLoad(b *testing.B) {
 		}
 	}
 	b.StopTimer()
-	b.ReportMetric(float64(lines*b.N)/b.Elapsed().Seconds(), "linhas/s")
+	b.ReportMetric(float64(lines*b.N)/b.Elapsed().Seconds(), "lines/s")
 }

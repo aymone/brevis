@@ -49,7 +49,7 @@ func NewResponse(status int, header http.Header, url string, body []byte, preser
 	}
 }
 
-// decode aplica a escolha da Source.
+// decode applies the Source's choice.
 func (r Response) decode(v any) error {
 	if !r.preserveNumbers {
 		return json.Unmarshal(r.body, v)
@@ -76,7 +76,7 @@ func (r Response) Bytes() []byte { return r.body }
 //		return nil, err
 //	}
 //
-// It honours Source.PreserveNumbers: with it on, the numbers arrive as
+// It honors Source.PreserveNumbers: with it on, the numbers arrive as
 // json.Number with their literals intact. That this applies to JSON and Object
 // rather than there being a third method is deliberate -- a new method that
 // decoded differently from the two that already exist would be a trap for
@@ -105,7 +105,7 @@ func (r Response) JSON(v any) error {
 // A body that is not a JSON object is an error saying so, rather than an
 // empty map -- an HTML error page served with 200 is exactly the case the
 // check exists for, and it must not read as "no fields set".
-// It honours Source.PreserveNumbers, like JSON.
+// It honors Source.PreserveNumbers, like JSON.
 func (r Response) Object() (map[string]any, error) {
 	var doc map[string]any
 	if err := r.decode(&doc); err != nil {

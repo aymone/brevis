@@ -17,7 +17,7 @@ type slowSource struct {
 	pause   time.Duration
 }
 
-func (slowSource) Describe() string { return "origem.lenta" }
+func (slowSource) Describe() string { return "source.slow" }
 
 func (o slowSource) Read(context.Context, ReadOptions) (iter.Seq2[Envelope, error], error) {
 	return func(yield func(Envelope, error) bool) {
@@ -60,7 +60,7 @@ func testPipeline(src Reader, box *[]Envelope) *Pipeline {
 		Source:    Source{From: src},
 		Transform: []Transformer{SkipWithout("id")},
 		Target:    Target{To: keepingTarget{received: box}},
-		Run:       RunContext{ID: "run-etapas", Attempt: 0},
+		Run:       RunContext{ID: "run-stages", Attempt: 0},
 	}
 }
 
@@ -94,13 +94,13 @@ func TestPhasesFollowThePipelineShape(t *testing.T) {
 		"load:running", "load:done",
 	}
 	if strings.Join(trail, " ") != strings.Join(wantedList, " ") {
-		t.Errorf("trilha:\n  %v\nesperada:\n  %v", trail, wantedList)
+		t.Errorf("trail:\n  %v\nexpected:\n  %v", trail, wantedList)
 	}
 }
 
 // The announcement carries the version, because a badge that only says "SDK" is
 // true and useless: the version is what answers "why does this step behave
-// differently from its neighbour" without anybody opening the Dockerfile.
+// differently from its neighbor" without anybody opening the Dockerfile.
 func TestTheAnnouncementCarriesTheVersion(t *testing.T) {
 	var box []Envelope
 	events, err := stagesOf(t, testPipeline(countedSource{
@@ -162,13 +162,13 @@ func TestAMapStageInventsNoDuration(t *testing.T) {
 
 // What only the transform knows: how many went in, how many came out, how many
 // were
-// pulados.
+// dropped.
 func TestAMapStageSaysHowManyItDropped(t *testing.T) {
 	var box []Envelope
 	events, err := stagesOf(t, testPipeline(countedSource{
 		records: []any{
 			map[string]any{"id": 1},
-			map[string]any{"sem_id": true},
+			map[string]any{"without_id": true},
 			map[string]any{"id": 3},
 		},
 		reads: new(int),
@@ -189,7 +189,7 @@ func TestOutsideTheEngineNothingIsAnnounced(t *testing.T) {
 	p := testPipeline(countedSource{
 		records: []any{map[string]any{"id": 1}}, reads: new(int),
 	}, &box)
-	p.Run = RunContext{} // rodando a mao
+	p.Run = RunContext{} // running by hand
 
 	events, err := stagesOf(t, p)
 	if err != nil {
@@ -198,7 +198,7 @@ func TestOutsideTheEngineNothingIsAnnounced(t *testing.T) {
 	if len(events) != 0 {
 		t.Errorf("announced %d events when run by hand: %v", len(events), events)
 	}
-	// E o pipeline continua funcionando igual.
+	// And the pipeline keeps working the same.
 	if len(box) != 1 {
 		t.Errorf("loaded %d records, want 1", len(box))
 	}
@@ -309,10 +309,10 @@ func TestTheSourceAndTargetSayWhichTheyAre(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d := findStage(t, events, "extract", "done")["detail"]; d != "origem.teste" {
+	if d := findStage(t, events, "extract", "done")["detail"]; d != "source.test" {
 		t.Errorf("the source does not say which it is: %v", d)
 	}
-	if d := findStage(t, events, "load", "done")["detail"]; d != "destino.teste" {
+	if d := findStage(t, events, "load", "done")["detail"]; d != "target.test" {
 		t.Errorf("the destination does not say which it is: %v", d)
 	}
 }

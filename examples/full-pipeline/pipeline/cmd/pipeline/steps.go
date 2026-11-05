@@ -335,7 +335,7 @@ func newestReport() (string, time.Time, error) {
 // notify runs precisely when something above it failed.
 //
 // On a good night it never runs and the graph shows it `skipped` -- a state of
-// its own, drawn in its own colour, which is not a failure and not a success.
+// its own, drawn in its own color, which is not a failure and not a success.
 func notify() error {
 	fmt.Println("something above this step failed; this is where a page would go out")
 	return nil

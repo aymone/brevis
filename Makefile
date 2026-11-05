@@ -487,7 +487,7 @@ cluster-ui: ## The Argo CD URL and the admin password
 cluster-status: ## What Argo CD has synced, and what is running
 	@$(CLUSTER) exec -T k3s kubectl -n argocd get applications
 	@echo
-	@$(CLUSTER) exec -T k3s kubectl -n dados get pods
+	@$(CLUSTER) exec -T k3s kubectl -n data get pods
 
 cluster-dev-image: ## Builds the agent from THIS tree into the cluster (it is not published yet)
 	@docker build -q --target agent -t brevis-agent:dev --build-arg VERSION=dev . >/dev/null
@@ -514,9 +514,9 @@ cluster-goapp: ## The visual test: a Go pod you own, with Brevis running command
 	  -o jsonpath='{range .status.resources[*]}{.kind}/{.name}{"\n"}{end}' | sed -n 's/^/   /p' | grep goapp
 	@echo
 	@echo "3. THE POD, started before the run rather than for it"
-	@$(CLUSTER) exec -T k3s kubectl -n dados get pods -l app.kubernetes.io/component=goapp \
+	@$(CLUSTER) exec -T k3s kubectl -n data get pods -l app.kubernetes.io/component=goapp \
 	  -o 'custom-columns=NAME:.metadata.name,PHASE:.status.phase,IMAGE:.spec.containers[0].image,STARTED:.status.startTime'
-	@before=$$($(CLUSTER) exec -T k3s kubectl -n dados get pods --no-headers 2>/dev/null | wc -l | tr -d ' '); \
+	@before=$$($(CLUSTER) exec -T k3s kubectl -n data get pods --no-headers 2>/dev/null | wc -l | tr -d ' '); \
 	 echo "   pods in the namespace before the run: $$before"; \
 	 echo; \
 	 echo "4. BREVIS SENDS THE COMMANDS"; \
@@ -533,11 +533,11 @@ cluster-goapp: ## The visual test: a Go pod you own, with Brevis running command
 	 done; \
 	 echo; echo "   the run ended: $${state%% *}"; echo; \
 	 echo "5. WHAT THE POD WAS ASKED TO DO -- one line per command, all on one container"; \
-	 $(CLUSTER) exec -T k3s kubectl -n dados logs brevis-goapp-0 --tail=400 \
+	 $(CLUSTER) exec -T k3s kubectl -n data logs brevis-goapp-0 --tail=400 \
 	   | grep '"msg":"step started"' \
 	   | sed -E 's/.*"workflow":"([^"]*)".*"node":"([^"]*)".*/   \1 -> \2/' | tail -4; \
 	 echo; \
-	 after=$$($(CLUSTER) exec -T k3s kubectl -n dados get pods --no-headers 2>/dev/null | wc -l | tr -d ' '); \
+	 after=$$($(CLUSTER) exec -T k3s kubectl -n data get pods --no-headers 2>/dev/null | wc -l | tr -d ' '); \
 	 echo "6. PODS AFTER THE RUN: $$after, and there were $$before. Brevis created none."; \
 	 echo; \
 	 echo "   Open $$url for the output of each command,"; \
@@ -550,7 +550,7 @@ cluster-run: ## Triggers a workflow in the cluster: make cluster-run WORKFLOW=po
 
 cluster-watch: ## Watches the step pods appear and die
 	@echo "Two pods at once is the point. Ctrl-C to stop."
-	@$(CLUSTER) exec -T k3s kubectl -n dados get pods -w \
+	@$(CLUSTER) exec -T k3s kubectl -n data get pods -w \
 	  -o 'custom-columns=NAME:.metadata.name,PHASE:.status.phase,IMAGE:.spec.containers[0].image,CPU:.spec.containers[0].resources.requests.cpu,MEM:.spec.containers[0].resources.requests.memory'
 
 cluster-tree: ## What Argo CD OWNS -- the step pods are deliberately not in it

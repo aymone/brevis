@@ -26,7 +26,7 @@ func buildVersion() (string, string) {
 	if version == "" || version == "(devel)" {
 		// A checkout or a `go build`. "devel" is the truth, and telling it
 		// apart from a release artifact is exactly what somebody reporting odd
-		// behaviour needs.
+		// behavior needs.
 		version = "devel"
 	}
 	var commit string

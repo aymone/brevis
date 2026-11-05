@@ -21,9 +21,8 @@ type Server struct {
 	checkers map[string]Checker
 	mux      *http.ServeMux
 
-	// portao wraps the mux when there is a credential. Nil = an open interface,
-	// which
-	// so acontece em desenvolvimento (config.Load recusa o contrario).
+	// gate wraps the mux when there is a credential. Nil = an open interface,
+	// which only happens in development (config.Load refuses the opposite).
 	gate *auth.Gate
 }
 
@@ -125,7 +124,7 @@ func (s *Server) HTTPServer(addr string) *http.Server {
 	}
 }
 
-// gravador captures the status for the access log; http.ResponseWriter does not
+// recorder captures the status for the access log; http.ResponseWriter does not
 // expose it after it is written.
 type recorder struct {
 	http.ResponseWriter

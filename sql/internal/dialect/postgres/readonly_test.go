@@ -12,7 +12,7 @@ import (
 	"brevis.sh/brevis/sql/internal/dialect/postgres"
 )
 
-// THE SERVER REFUSES WHAT THE TOKENISER CANNOT SEE.
+// THE SERVER REFUSES WHAT THE TOKENIZER CANNOT SEE.
 //
 // `serve`'s classifier reads a statement and its own comment names the hole:
 // `SELECT nextval('s')` is a write, it is spelled as a read, and no classifier

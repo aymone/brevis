@@ -12,13 +12,12 @@
 # English catalog with Portuguese in it is a leak read by whoever operates an
 # installation.
 #
-# pt-BR.json and es.json are OUT, deliberately: they are the translations, and
-# Portuguese is what one of them is for.
+# The other ten catalogs are OUT, deliberately: they are the translations, and
+# another language is what each of them is for. Their parity with English is the
+# keys test's job (web/i18n/keys_test.go).
 #
-# The rest of the repository keeps its deliberately Portuguese identifiers -- `criado_em`,
-# `saida`, `disparar`, `Transicionar` -- each documented where it lives. A
-# detector that flagged those would be turned off within a week, and a check
-# that is turned off is worse than one that never existed.
+# The rest of the repository -- comments, identifiers, schema, file names -- is
+# judged by repo-language-check.sh; this one reads only the English catalog.
 set -uo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 

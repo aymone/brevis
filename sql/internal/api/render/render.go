@@ -152,7 +152,7 @@ func (a andExpr) eval(v Values) bool { return a.l.eval(v) && a.r.eval(v) }
 func (o orExpr) eval(v Values) bool  { return o.l.eval(v) || o.r.eval(v) }
 
 // identifier is what a name -- and an inlined value -- may be. ASCII only:
-// an identifier a warehouse folds or normalises differently from how it was
+// an identifier a warehouse folds or normalizes differently from how it was
 // checked is the gap an inlined value must not have.
 var identifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 

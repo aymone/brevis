@@ -26,7 +26,7 @@ import (
 // it -- `sql/` is a module of its own and cannot import a line of this one,
 // which is #66's rule and the reason the engine's weight gate stays put.
 //
-// AND THE GAP HAS NO EDGE. A target the engine does not recognise is
+// AND THE GAP HAS NO EDGE. A target the engine does not recognize is
 // DROPPED AND COUNTED, never refused: the step succeeds, the tables really
 // are built, and the models simply never appear. So this is the only place
 // the contract can be checked, and it is checked with the real binary, the

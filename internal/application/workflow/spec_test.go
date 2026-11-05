@@ -28,7 +28,7 @@ func TestParseExampleDailyReport(t *testing.T) {
 	if len(w.Nodes) != 3 {
 		t.Fatalf("nodes = %d, wanted 3", len(w.Nodes))
 	}
-	// chain vira arestas: o motor so ve DAG
+	// chain becomes edges: the engine only sees a DAG
 	if len(w.Edges) != 2 {
 		t.Fatalf("edges = %d, wanted 2 (a 3-step chain)", len(w.Edges))
 	}
@@ -97,11 +97,11 @@ func TestParseWithNoTypeAssumesDAG(t *testing.T) {
 
 func TestParseNamesTheFileInTheError(t *testing.T) {
 	y := []byte("type: chain\nsteps:\n  - id: a\n")
-	_, err := Parse("relatorio.yaml", y)
+	_, err := Parse("report.yaml", y)
 	if err == nil {
 		t.Fatal("expected an error")
 	}
-	if got := err.Error(); len(got) < 15 || got[:14] != "relatorio.yaml" {
+	if got := err.Error(); len(got) < 12 || got[:11] != "report.yaml" {
 		t.Errorf("error = %q; it has to start with the file", got)
 	}
 }
@@ -194,7 +194,7 @@ steps:
 // in YAML -- leaves a trailing newline, and a blank line at the end of a
 // paragraph is a gap on the screen nobody put there.
 func TestTheDescriptionCrossesFromTheYAML(t *testing.T) {
-	w, err := Parse("vendas.yaml", []byte(`
+	w, err := Parse("sales.yaml", []byte(`
 description: >
   Pulls yesterday's orders from the vendor and lands them in bronze.
   Runs at 04:00 because the vendor closes its books at 03:30.
@@ -221,7 +221,7 @@ steps:
 // screen reads as "draw nothing". A heading with no text under it looks like
 // something that failed to load.
 func TestNoDescriptionIsEmptyAndNotAPlaceholder(t *testing.T) {
-	w, err := Parse("vendas.yaml", []byte("steps:\n  - id: extract\n    run: python fetch.py\n"))
+	w, err := Parse("sales.yaml", []byte("steps:\n  - id: extract\n    run: python fetch.py\n"))
 	if err != nil {
 		t.Fatalf("Parse: %v", err)
 	}

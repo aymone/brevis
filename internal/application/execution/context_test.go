@@ -66,7 +66,7 @@ func (h *history) Handovers(context.Context, uuid.UUID) (map[dom.StepKey]executi
 
 func oneStepWorkflow() wf.Workflow {
 	return wf.Workflow{
-		Slug:  "clima",
+		Slug:  "weather",
 		Nodes: []wf.Node{{ID: "collectOutput", Run: "true"}},
 	}
 }
@@ -123,7 +123,7 @@ func TestTheFirstRunIsPerStepNotPerWorkflow(t *testing.T) {
 
 	runStep(t, app.Runner{RunID: id, History: h})
 
-	if h.slug != "clima" || h.nodeID != "collectOutput" {
+	if h.slug != "weather" || h.nodeID != "collectOutput" {
 		t.Errorf("the question has to be per (workflow, step): %q / %q", h.slug, h.nodeID)
 	}
 	// The current run itself must not count as a previous success.
@@ -164,13 +164,13 @@ func TestTheRunnersEnvironmentWinsACollision(t *testing.T) {
 	task := runStep(t, app.Runner{
 		RunID:   uuid.New(),
 		History: &history{alreadyHad: false},
-		Env:     map[string]string{"BREVIS_RUN_FIRST": "false", "OUTRA": "coisa"},
+		Env:     map[string]string{"BREVIS_RUN_FIRST": "false", "OTHER": "thing"},
 	})
 
 	if task.Env["BREVIS_RUN_FIRST"] != "false" {
 		t.Error("the runner's explicit configuration has to beat the computed value")
 	}
-	if task.Env["OUTRA"] != "coisa" {
+	if task.Env["OTHER"] != "thing" {
 		t.Error("the rest of the runner's environment has to survive")
 	}
 	if task.Env["BREVIS_RUN_ID"] == "" {
@@ -194,7 +194,7 @@ func TestWithNoRunIDItInventsNoManagedRun(t *testing.T) {
 	// The SDK decides it is under the engine by the PRESENCE of the id, so
 	// injecting the zero UUID would make a hand-run fetcher log "running under
 	// Brevis" with
-	// um id inventado.
+	// an invented id.
 	task := runStep(t, app.Runner{
 		Params:  map[string]string{"create_table": "true"},
 		History: &history{alreadyHad: false},
@@ -248,7 +248,7 @@ func TestTheDispatchersPath(t *testing.T) {
 		t.Error("the tasks' configured environment has to keep arriving")
 	}
 
-	// E o contexto do run chega junto.
+	// And the run's context arrives with it.
 	expected := map[string]string{
 		"BREVIS_RUN_ID":           id.String(),
 		"BREVIS_RUN_FIRST":        "true",

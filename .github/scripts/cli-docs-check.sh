@@ -7,7 +7,7 @@
 # added and documented in one place looks complete from either side.
 #
 # It compares NAMES only -- of subcommands, and of their FLAGS. Whether two
-# documents describe a command well is a judgement call; whether one has stopped
+# documents describe a command well is a judgment call; whether one has stopped
 # mentioning something that exists is not, and that is the half worth
 # automating.
 #

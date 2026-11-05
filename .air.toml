@@ -1,8 +1,8 @@
-# Hot reload de desenvolvimento.
+# Development hot reload.
 #
-# O CSS e gerado ANTES do `go build`, senao o binario embute o antigo. O
-# `full_bin` sobe a API com as variaveis do ambiente local. O app React tem o
-# proprio servidor de desenvolvimento (web/spa: `npm run dev`).
+# The CSS is generated BEFORE `go build`, otherwise the binary embeds the old
+# one. `full_bin` starts the API with the local environment's variables. The
+# React app has its own development server (web/spa: `npm run dev`).
 root = "."
 tmp_dir = "tmp"
 

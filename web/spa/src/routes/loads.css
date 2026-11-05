@@ -1,4 +1,4 @@
-/* The Loads list. Colours are the server's tokens; every rule is prefixed ldl-. */
+/* The Loads list. Colors are the server's tokens; every rule is prefixed ldl-. */
 
 /* The row is one link: the step's anchor is stretched over the row (one tab stop, Enter opens the drawer,
    ctrl-click works) and the row, not the anchor, draws the focus ring. */

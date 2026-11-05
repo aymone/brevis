@@ -70,7 +70,7 @@ func TestI3ChecksBeforeTheExtract(t *testing.T) {
 		Source: sdk.Source{From: source},
 		Target: sdk.Target{
 			To:      refusingTarget{},
-			Columns: []string{"coluna_que_nao_existe"},
+			Columns: []string{"column_that_does_not_exist"},
 		},
 	}
 	err := sdk.Execute(context.Background(), &p, nil)
@@ -90,19 +90,19 @@ func TestI4ThePartitionIsDeclared(t *testing.T) {
 	err := sdk.ValidateTarget(sdk.Target{
 		To:          postgres.Table{DSN: "postgres://x/y", Name: "t"},
 		Schema:      sdk.Schema{{Name: "a", Type: sdk.TypeString}},
-		PartitionBy: "nao_declarada",
+		PartitionBy: "not_declared",
 	})
 	if err == nil {
 		t.Fatal("partitioning by a column the Schema does not declare got through")
 	}
-	if !strings.Contains(err.Error(), "nao_declarada") {
+	if !strings.Contains(err.Error(), "not_declared") {
 		t.Errorf("the error does not name the column: %v", err)
 	}
 }
 
 type recordingSource struct{ called *bool }
 
-func (f recordingSource) Describe() string { return "fonte de teste" }
+func (f recordingSource) Describe() string { return "test source" }
 func (f recordingSource) Read(context.Context, sdk.ReadOptions) (iter.Seq2[sdk.Envelope, error], error) {
 	*f.called = true
 	return func(yield func(sdk.Envelope, error) bool) {}, nil
@@ -110,7 +110,7 @@ func (f recordingSource) Read(context.Context, sdk.ReadOptions) (iter.Seq2[sdk.E
 
 type refusingTarget struct{}
 
-func (refusingTarget) Describe() string { return "destino de teste" }
+func (refusingTarget) Describe() string { return "test target" }
 func (refusingTarget) Write(context.Context, []sdk.Envelope, sdk.WriteOptions) (*sdk.LoadResult, error) {
 	return nil, fmt.Errorf("should not get here")
 }

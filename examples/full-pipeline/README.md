@@ -49,7 +49,7 @@ what the pipeline reads, and those targets rebuild it. `make up` refills it, so
 a fresh clone runs on the first try.
 
 `make empty` and `make nothing` are worth running. The graph fills with
-**`skipped`** — a state of its own, in its own colour, that is neither a failure
+**`skipped`** — a state of its own, in its own color, that is neither a failure
 nor a success — and every skipped step says which step stopped it:
 
 ```

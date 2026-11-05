@@ -20,7 +20,7 @@ func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
 		forbidden bool
 	}{
 		{"the root alone", []string{"brevis.sh/brevis/sdk"}, true},
-		{"raiz + from", []string{
+		{"root + from", []string{
 			"brevis.sh/brevis/sdk",
 			"brevis.sh/brevis/sdk/from",
 		}, true},
@@ -28,7 +28,7 @@ func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
 		// in. This case was missing in v0.20.0, and without it the defect got
 		// through: to.BigQuery and to.Files lived in the same package, so writing
 		// a file compiled Google.
-		{"raiz + from + to (arquivos)", []string{
+		{"root + from + to (files)", []string{
 			"brevis.sh/brevis/sdk",
 			"brevis.sh/brevis/sdk/from",
 			"brevis.sh/brevis/sdk/to",
@@ -36,7 +36,7 @@ func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
 
 		// And the control: whoever asks for BigQuery gets BigQuery. Without it,
 		// the test would pass with an SDK that loads nothing.
-		{"raiz + to/bigquery", []string{
+		{"root + to/bigquery", []string{
 			"brevis.sh/brevis/sdk",
 			"brevis.sh/brevis/sdk/to/bigquery",
 		}, false},
@@ -72,10 +72,10 @@ func TestReadingALocalFileCompilesNoCloud(t *testing.T) {
 		{"from on its own does not bring Google in", []string{
 			"brevis.sh/brevis/sdk/from"}, "cloud.google.com", false},
 
-		// Os controles: quem pede o backend recebe o backend.
-		{"store/s3 traz a AWS", []string{
+		// The controls: whoever asks for a backend gets that backend.
+		{"store/s3 brings in AWS", []string{
 			"brevis.sh/brevis/sdk/store/s3"}, "aws-sdk-go", true},
-		{"store/gcs traz o Google", []string{
+		{"store/gcs brings in Google", []string{
 			"brevis.sh/brevis/sdk/store/gcs"}, "cloud.google.com", true},
 		{"store/s3 does not bring Google in", []string{
 			"brevis.sh/brevis/sdk/store/s3"}, "cloud.google.com", false},

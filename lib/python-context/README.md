@@ -47,8 +47,8 @@ Reading a step this one does not `depends_on` is an error pointing at the fix.
 
 ```python
 context.set(name="Daniel")
-context.set(label="Nome")
-# both survive: {"name": "Daniel", "label": "Nome"}
+context.set(label="Name")
+# both survive: {"name": "Daniel", "label": "Name"}
 ```
 
 Calls **merge**. Setting the same key twice keeps the last write; setting a
@@ -156,7 +156,7 @@ metrics.inc("vendor_rejected_total")       # a counter: it adds up
 metrics.inc("bytes_discarded_total", 4096)
 ```
 
-They come out of the **engine's** `/metrics`, on the scheduler's port, labelled
+They come out of the **engine's** `/metrics`, on the scheduler's port, labeled
 with the workflow and the step:
 
 ```

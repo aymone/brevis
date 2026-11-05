@@ -104,7 +104,7 @@ func (e *Executor) follow(ctx context.Context, name string, t execution.TaskExec
 			Message: err.Error(), Err: err,
 		}
 		if ctx.Err() != nil {
-			// Cancelled, and NOT a failed pod: it has not finished, it is still
+			// Canceled, and NOT a failed pod: it has not finished, it is still
 			// running the step. KeepFailedPod keeps a pod somebody can read; this
 			// one would keep a step running beside the run's next attempt (#121).
 			e.deletePod(name)
@@ -163,7 +163,7 @@ func (e *Executor) waitExit(ctx context.Context, name string, t execution.TaskEx
 	// and not just the run. The -race detector found this the first time the
 	// root module was tested in CI.
 	//
-	// Cancelling before waiting is what bounds the wait: the log response's
+	// Canceling before waiting is what bounds the wait: the log response's
 	// body closes with the context, so the follower exits. Losing the rest of
 	// the live follow costs nothing -- drainLogs reads the whole log right
 	// afterwards, which is how the last lines already arrived.
@@ -216,7 +216,7 @@ func (e *Executor) waitExit(ctx context.Context, name string, t execution.TaskEx
 		if !following && time.Since(started) > e.opts.StartTimeout {
 			reason := pod.WaitReason()
 			if reason == "" {
-				reason = "fase " + pod.Phase()
+				reason = "phase " + pod.Phase()
 			}
 			if scheduling := e.whyNotScheduled(ctx, name); scheduling != "" {
 				reason = scheduling
@@ -294,7 +294,7 @@ func copyOut(r io.Reader, nodeID string, events chan<- execution.Event) {
 	}
 }
 
-// limpar deletes the pod, honouring the option to keep the failed ones.
+// cleanUp deletes the pod, honoring the option to keep the failed ones.
 func (e *Executor) cleanUp(name string, succeeded bool) {
 	if !succeeded && e.opts.KeepFailedPod {
 		return
@@ -304,7 +304,7 @@ func (e *Executor) cleanUp(name string, succeeded bool) {
 
 // deletePod deletes it whatever the options say.
 func (e *Executor) deletePod(name string) {
-	// A context of its own: the run's may already be cancelled (the
+	// A context of its own: the run's may already be canceled (the
 	// cancellation is what brought us here), and deleting is precisely what
 	// must not be skipped -- an orphaned pod consumes namespace quota
 	// forever.

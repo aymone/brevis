@@ -113,7 +113,7 @@ type Var struct {
 	ValueFrom *VarSource `json:"valueFrom,omitempty"`
 }
 
-// FonteVar points a variable at a key of a Secret. The value never passes
+// VarSource points a variable at a key of a Secret. The value never passes
 // through the engine: the kubelet reads it when starting the container.
 type VarSource struct {
 	SecretKeyRef *KeyRef `json:"secretKeyRef,omitempty"`
@@ -182,7 +182,6 @@ func (p Pod) Finished() bool {
 	return f == "Succeeded" || f == "Failed"
 }
 
-// Saida returns the container's exit code and whether it has finished.
 // PublishedContext is what the step wrote to its termination message.
 //
 // The engine already fetches this status to get the exit code, so the context
@@ -494,7 +493,7 @@ func BuildPod(t execution.TaskExec, o Options) (Pod, error) {
 			Namespace: o.Namespace,
 			Labels:    labels,
 			// The annotation keeps the WHOLE value; the label keeps the
-			// sanitised one. That way filtering by label works and the original
+			// sanitized one. That way filtering by label works and the original
 			// value is not lost.
 			Annotations: map[string]string{
 				"brevis.dev/workflow": t.Workflow,

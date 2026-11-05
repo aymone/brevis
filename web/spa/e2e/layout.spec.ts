@@ -20,7 +20,7 @@ test("the page title sits at the same place on every screen", async ({ browser, 
     const ys = Object.values(at).map((v) => Number(v.split(" y")[1]));
     expect(xs.size, `${w}px: ${JSON.stringify(at)}`).toBe(1);
     // Desktop: exact. On a phone the Workflows head sits 4 px higher than the rest (known; its actions wrap
-    // differently), so that is the tolerance, not a licence for more.
+    // differently), so that is the tolerance, not a license for more.
     expect(Math.max(...ys) - Math.min(...ys), `${w}px: ${JSON.stringify(at)}`).toBeLessThanOrEqual(w < 600 ? 4 : 0);
   }
 });
@@ -43,7 +43,7 @@ for (const [w, h] of [[1440, 900], [1024, 768], [390, 844]] as const) {
 }
 
 // The drawers are addressable: a link with a hash opens one, and Escape closes it.
-for (const [url, label] of [["/workflows#how-to-create", "how to create"], ["/ingest/streams#novo", "new stream"], ["/data/endpoints#publicar", "publish endpoints"]] as const) {
+for (const [url, label] of [["/workflows#how-to-create", "how to create"], ["/ingest/streams#new", "new stream"], ["/data/endpoints#publish", "publish endpoints"]] as const) {
   test(`drawer opens from its address and Escape closes it: ${label}`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(String(e)));

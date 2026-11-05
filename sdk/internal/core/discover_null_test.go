@@ -17,10 +17,10 @@ func TestANilDoesNotDecideTheType(t *testing.T) {
 	}{
 		{"the value comes after the nil", []any{
 			map[string]any{"fuel": nil},
-			map[string]any{"fuel": []any{"gasolina"}},
+			map[string]any{"fuel": []any{"gasoline"}},
 		}, TypeJSON},
 		{"the value comes before the nil", []any{
-			map[string]any{"fuel": []any{"gasolina"}},
+			map[string]any{"fuel": []any{"gasoline"}},
 			map[string]any{"fuel": nil},
 		}, TypeJSON},
 		{"the nils surround it", []any{
@@ -31,7 +31,7 @@ func TestANilDoesNotDecideTheType(t *testing.T) {
 		}, TypeJSON},
 		{"a scalar after a nil is still a scalar", []any{
 			map[string]any{"fuel": nil},
-			map[string]any{"fuel": "gasolina"},
+			map[string]any{"fuel": "gasoline"},
 		}, TypeString},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

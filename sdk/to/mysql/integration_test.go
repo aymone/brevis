@@ -31,7 +31,7 @@ func open(t *testing.T) *sql.DB {
 	t.Helper()
 	db, err := sql.Open("mysql", frommy.WithParseTime(dsn(t)))
 	if err != nil {
-		t.Fatalf("abrindo: %v", err)
+		t.Fatalf("opening: %v", err)
 	}
 	if err := db.Ping(); err != nil {
 		t.Fatalf("ping: %v", err)
@@ -55,7 +55,7 @@ const defaultColumns = "" +
 	"ingestion_loaded_at DATETIME(6) NOT NULL," +
 	"provider VARCHAR(64)," +
 	"source_key VARCHAR(64)," +
-	"valor DECIMAL(18,2)"
+	"value DECIMAL(18,2)"
 
 func batch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
@@ -64,9 +64,9 @@ func batch(n int) []sdk.Envelope {
 		out[i] = sdk.Envelope{Payload: map[string]any{
 			"ingestion_id":        fmt.Sprintf("id-%04d", i),
 			"ingestion_loaded_at": now,
-			"provider":            "teste",
+			"provider":            "test",
 			"source_key":          fmt.Sprintf("k%d", i),
-			"valor":               "10.50",
+			"value":               "10.50",
 		}}
 	}
 	return out
@@ -100,14 +100,14 @@ func TestIntegrationARowActuallyGoesIn(t *testing.T) {
 // when the table's order is not the record's.
 func TestIntegrationTheTablesOrder(t *testing.T) {
 	db := open(t)
-	name := table(t, db, "valor DECIMAL(18,2), provider VARCHAR(64), "+
+	name := table(t, db, "value DECIMAL(18,2), provider VARCHAR(64), "+
 		"ingestion_loaded_at DATETIME(6) NOT NULL, ingestion_id VARCHAR(36) NOT NULL")
 
 	l := []sdk.Envelope{{Payload: map[string]any{
 		"ingestion_id":        "abc",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
 		"provider":            "acme",
-		"valor":               "99.90",
+		"value":               "99.90",
 	}}}
 	if _, err := (tomy.Table{DSN: dsn(t), Name: name}).Write(
 		context.Background(), l, sdk.WriteOptions{}); err != nil {
@@ -115,12 +115,12 @@ func TestIntegrationTheTablesOrder(t *testing.T) {
 	}
 
 	var id, prov, value string
-	if err := db.QueryRow("SELECT ingestion_id, provider, valor FROM "+name).
+	if err := db.QueryRow("SELECT ingestion_id, provider, value FROM "+name).
 		Scan(&id, &prov, &value); err != nil {
 		t.Fatal(err)
 	}
 	if id != "abc" || prov != "acme" || value != "99.90" {
-		t.Errorf("valores trocados: id=%q provider=%q valor=%q", id, prov, value)
+		t.Errorf("values swapped: id=%q provider=%q value=%q", id, prov, value)
 	}
 }
 
@@ -139,7 +139,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 
 	first, err := target.Write(context.Background(), l, opt)
 	if err != nil {
-		t.Fatalf("primeira: %v", err)
+		t.Fatalf("first: %v", err)
 	}
 	if first.RowsLoaded != 5 {
 		t.Errorf("first: %d loaded", first.RowsLoaded)
@@ -147,7 +147,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 
 	second, err := target.Write(context.Background(), l, opt)
 	if err != nil {
-		t.Fatalf("segunda: %v", err)
+		t.Fatalf("second: %v", err)
 	}
 	if second.RowsLoaded != 0 || second.RowsIgnored != 5 {
 		t.Errorf("second: %d loaded, %d ignored -- expected 0 and 5",
@@ -215,23 +215,23 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 	l := []sdk.Envelope{{Payload: map[string]any{
 		"ingestion_id":        "x",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
-		"coluna_inexistente":  1,
+		"nonexistent_column":  1,
 	}}}
 	_, err := tomy.Table{DSN: dsn(t), Name: name}.Write(context.Background(), l, sdk.WriteOptions{})
 	if err == nil {
 		t.Fatal("a field without a column got through")
 	}
-	for _, required := range []string{"coluna_inexistente", "remove the field in Transform"} {
+	for _, required := range []string{"nonexistent_column", "remove the field in Transform"} {
 		if !strings.Contains(err.Error(), required) {
 			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }
 
-// TestIntegrationTheReadIsStreamed falha se o driver bufferizar.
+// TestIntegrationTheReadIsStreamed fails if the driver buffers.
 func TestIntegrationTheReadIsStreamed(t *testing.T) {
 	db := open(t)
-	name := table(t, db, "i INT, texto TEXT")
+	name := table(t, db, "i INT, text TEXT")
 	// 20 thousand rows through recursion: MySQL has no generate_series, and the
 	// default
 	// recursion limit is 1000.
@@ -257,7 +257,7 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	seq, err := frommy.Query{DSN: dsn(t), SQL: "SELECT i, texto FROM " + name + " ORDER BY i"}.
+	seq, err := frommy.Query{DSN: dsn(t), SQL: "SELECT i, text FROM " + name + " ORDER BY i"}.
 		Read(context.Background(), sdk.ReadOptions{})
 	if err != nil {
 		t.Fatalf("Read: %v", err)
@@ -295,17 +295,17 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 	db := open(t)
 	name := table(t, db, `
-		numerico DECIMAL(20,2),
+		amount DECIMAL(20,2),
 		data DATE,
-		instante DATETIME(6),
-		documento JSON,
+		instant DATETIME(6),
+		document JSON,
 		bytes VARBINARY(16),
-		inteiro BIGINT,
-		texto VARCHAR(32),
-		vazio VARCHAR(8)`)
+		whole BIGINT,
+		text VARCHAR(32),
+		blank VARCHAR(8)`)
 	if _, err := db.Exec(fmt.Sprintf(`INSERT INTO %s VALUES
 		('123456789012345678.99', '2026-09-05', '2026-09-05 12:30:00',
-		 '{"a":[1,2]}', 0xDEADBEEF, 42, 'ola', NULL)`, name)); err != nil {
+		 '{"a":[1,2]}', 0xDEADBEEF, 42, 'hello', NULL)`, name)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -326,20 +326,20 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 	}
 
 	expected := map[string]any{
-		"numerico": "123456789012345678.99",
-		"data":     "2026-09-05",
-		"instante": "2026-09-05T12:30:00Z",
-		"inteiro":  int64(42),
-		"texto":    "ola",
-		"vazio":    nil,
+		"amount":  "123456789012345678.99",
+		"data":    "2026-09-05",
+		"instant": "2026-09-05T12:30:00Z",
+		"whole":   int64(42),
+		"text":    "hello",
+		"blank":   nil,
 	}
 	for field, want := range expected {
 		if got := line[field]; got != want {
 			t.Errorf("%s = %#v (%T), want %#v", field, got, got, want)
 		}
 	}
-	if _, ok := line["documento"].(map[string]any); !ok {
-		t.Errorf("document = %#v; the JSON should arrive nested", line["documento"])
+	if _, ok := line["document"].(map[string]any); !ok {
+		t.Errorf("document = %#v; the JSON should arrive nested", line["document"])
 	}
 	if b, ok := line["bytes"].([]byte); !ok || len(b) != 4 {
 		t.Errorf("bytes = %#v; VARBINARY should arrive as []byte", line["bytes"])
@@ -351,10 +351,10 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 func TestIntegrationMySQLToMySQL(t *testing.T) {
 	db := open(t)
 
-	src := table(t, db, "id INT, nome VARCHAR(64), valor DECIMAL(18,2), atualizado_em DATETIME(6)")
+	src := table(t, db, "id INT, name VARCHAR(64), value DECIMAL(18,2), updated_at DATETIME(6)")
 	if _, err := db.Exec(fmt.Sprintf(`INSERT INTO %s
 		WITH RECURSIVE s(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM s WHERE n < 100)
-		SELECT n, CONCAT('registro ', n), n * 1.5, NOW(6) FROM s`, src)); err != nil {
+		SELECT n, CONCAT('record ', n), n * 1.5, NOW(6) FROM s`, src)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -365,8 +365,8 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 		entity VARCHAR(32) NOT NULL,
 		source_key VARCHAR(32) NOT NULL,
 		record_ts VARCHAR(64) NOT NULL,
-		nome VARCHAR(64),
-		valor DECIMAL(18,2)`)
+		name VARCHAR(64),
+		value DECIMAL(18,2)`)
 	if _, err := db.Exec(fmt.Sprintf("CREATE UNIQUE INDEX u ON %s (ingestion_id)", target)); err != nil {
 		t.Fatal(err)
 	}
@@ -375,7 +375,7 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 		t.Helper()
 		data, err := sdk.Extract(context.Background(), sdk.Source{
 			From: frommy.Query{DSN: dsn(t),
-				SQL: "SELECT id, nome, valor, atualizado_em FROM " + src + " ORDER BY id"},
+				SQL: "SELECT id, name, value, updated_at FROM " + src + " ORDER BY id"},
 		})
 		if err != nil {
 			t.Fatalf("Extract: %v", err)
@@ -385,16 +385,16 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 				return fmt.Sprint(r["id"]), nil
 			}),
 			sdk.Without("id"),
-			sdk.Rename(map[string]string{"atualizado_em": "record_ts"}),
+			sdk.Rename(map[string]string{"updated_at": "record_ts"}),
 			sdk.Compute("provider", func(map[string]any) (any, error) { return "mysql", nil }),
-			sdk.Compute("entity", func(map[string]any) (any, error) { return "registros", nil }),
+			sdk.Compute("entity", func(map[string]any) (any, error) { return "records", nil }),
 			sdk.IngestionID(),
 			sdk.IngestionLoadedAt(),
 		)
 		res, err := sdk.Load(context.Background(), data, sdk.Target{
 			To: tomy.Table{DSN: dsn(t), Name: target},
 			Columns: []string{"ingestion_id", "ingestion_loaded_at", "provider", "entity",
-				"source_key", "record_ts", "nome", "valor"},
+				"source_key", "record_ts", "name", "value"},
 			Dedup: sdk.DedupMerge,
 		})
 		if err != nil {
@@ -419,7 +419,7 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 	}
 
 	var value string
-	if err := db.QueryRow("SELECT valor FROM " + target + " WHERE source_key = '2'").Scan(&value); err != nil {
+	if err := db.QueryRow("SELECT value FROM " + target + " WHERE source_key = '2'").Scan(&value); err != nil {
 		t.Fatal(err)
 	}
 	if value != "3.00" {
@@ -547,7 +547,7 @@ func TestIntegrationCreateTableFromTheDeclaration(t *testing.T) {
 //
 // MySQL's half. The interesting part is the same one Postgres found: an
 // `ADD COLUMN ... DEFAULT` backfills the rows already there, so the two
-// statements have to stay apart. And MySQL needs the parenthesised form for a
+// statements have to stay apart. And MySQL needs the parenthesized form for a
 // TEXT default even in SET DEFAULT, which only this test can settle.
 func TestIntegrationEvolveAddsAColumnWithoutRewritingHistory(t *testing.T) {
 	db := open(t)
@@ -732,19 +732,19 @@ func TestTheBatchTeachesTheTableAColumn(t *testing.T) {
 	ctx := context.Background()
 
 	name := table(t, db, "brevis_ingestion_id VARCHAR(36) NOT NULL,"+
-		"source_key VARCHAR(64), valor LONGTEXT")
+		"source_key VARCHAR(64), value LONGTEXT")
 
 	declared := sdk.Schema{
 		{Name: "brevis_ingestion_id", Type: sdk.TypeString, Required: true},
 		{Name: "source_key", Type: sdk.TypeString},
-		{Name: "valor", Type: sdk.TypeString},
+		{Name: "value", Type: sdk.TypeString},
 	}
 	to := tomy.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditiveFromPayload}
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	// Run one: nothing new. The table must not grow a column.
 	if _, err := to.Write(ctx, []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-1", "source_key": "21129|01/12/2025", "valor": "8.89",
+		"brevis_ingestion_id": "id-1", "source_key": "21129|01/12/2025", "value": "8.89",
 	}}}, opt); err != nil {
 		t.Fatalf("run one: %v", err)
 	}
@@ -754,9 +754,9 @@ func TestTheBatchTeachesTheTableAColumn(t *testing.T) {
 
 	// Run two: two fields nobody declared, one of them an object.
 	if _, err := to.Write(ctx, []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-2", "source_key": "21129|02/12/2025", "valor": "8.90",
+		"brevis_ingestion_id": "id-2", "source_key": "21129|02/12/2025", "value": "8.90",
 		"series": "21129",
-		"meta":   map[string]any{"uf": "SP", "fonte": "bacen"},
+		"meta":   map[string]any{"uf": "SP", "source": "bacen"},
 	}}}, opt); err != nil {
 		t.Fatalf("run two: %v", err)
 	}
@@ -842,23 +842,23 @@ func TestTheBatchIsReadWhole(t *testing.T) {
 // The mode completes the declaration; it does not switch the check off.
 func TestTheModeCompletesTheDeclarationRatherThanSilencingIt(t *testing.T) {
 	db := open(t)
-	name := table(t, db, "brevis_ingestion_id VARCHAR(36) NOT NULL, prometida LONGTEXT")
+	name := table(t, db, "brevis_ingestion_id VARCHAR(36) NOT NULL, promised LONGTEXT")
 
 	declared := sdk.Schema{
 		{Name: "brevis_ingestion_id", Type: sdk.TypeString, Required: true},
-		{Name: "prometida", Type: sdk.TypeString},
+		{Name: "promised", Type: sdk.TypeString},
 	}
 	to := tomy.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditiveFromPayload}
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	_, err := to.Write(context.Background(), []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-1", "achada": "x",
+		"brevis_ingestion_id": "id-1", "found": "x",
 	}}}, opt)
 	if err == nil {
 		t.Fatal("a declared column the chain does not produce was accepted: " +
 			"the row check was skipped instead of extended")
 	}
-	if !strings.Contains(err.Error(), "prometida") {
+	if !strings.Contains(err.Error(), "promised") {
 		t.Errorf("the refusal does not name the declared column: %v", err)
 	}
 	if strings.Contains(err.Error(), "which Columns does not declare") {
@@ -876,12 +876,12 @@ func TestTheBatchTeachesNothingWithoutTheMode(t *testing.T) {
 	to := tomy.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditive}
 
 	_, err := to.Write(context.Background(), []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-1", "nao_declarada": "x",
+		"brevis_ingestion_id": "id-1", "not_declared": "x",
 	}}}, sdk.WriteOptions{Schema: declared, Columns: declared.Names()})
 	if err == nil {
 		t.Fatal("EvolveAdditive accepted a field nothing declared")
 	}
-	if !strings.Contains(err.Error(), "nao_declarada") {
+	if !strings.Contains(err.Error(), "not_declared") {
 		t.Errorf("the refusal does not name the field: %v", err)
 	}
 }
@@ -908,7 +908,7 @@ func TestADiscoveredColumnIsNeverKeyed(t *testing.T) {
 	to := tomy.Table{DSN: dsn(t), Name: name, Evolve: sdk.EvolveAdditiveFromPayload}
 
 	if _, err := to.Write(context.Background(), []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-1", "achada": "x",
+		"brevis_ingestion_id": "id-1", "found": "x",
 	}}}, sdk.WriteOptions{Schema: declared, Columns: declared.Names()}); err != nil {
 		t.Fatalf("a discovered LONGTEXT column: %v", err)
 	}
@@ -916,7 +916,7 @@ func TestADiscoveredColumnIsNeverKeyed(t *testing.T) {
 	var nullable, key string
 	if err := db.QueryRow(`
 		SELECT is_nullable, column_key FROM information_schema.columns
-		WHERE table_schema = DATABASE() AND table_name = ? AND column_name = 'achada'`,
+		WHERE table_schema = DATABASE() AND table_name = ? AND column_name = 'found'`,
 		name).Scan(&nullable, &key); err != nil {
 		t.Fatal(err)
 	}
@@ -952,7 +952,7 @@ func TestATableCreatedFromTheBatchTakesNullableColumns(t *testing.T) {
 	opt := sdk.WriteOptions{Schema: declared, Columns: declared.Names()}
 
 	if _, err := to.Write(context.Background(), []sdk.Envelope{{Payload: map[string]any{
-		"brevis_ingestion_id": "id-1", "achada": "x",
+		"brevis_ingestion_id": "id-1", "found": "x",
 	}}}, opt); err != nil {
 		t.Fatalf("creating from the batch: %v", err)
 	}
@@ -960,7 +960,7 @@ func TestATableCreatedFromTheBatchTakesNullableColumns(t *testing.T) {
 	var nullable string
 	if err := db.QueryRow(`
 		SELECT is_nullable FROM information_schema.columns
-		WHERE table_schema = DATABASE() AND table_name = ? AND column_name = 'achada'`,
+		WHERE table_schema = DATABASE() AND table_name = ? AND column_name = 'found'`,
 		name).Scan(&nullable); err != nil {
 		t.Fatal(err)
 	}
@@ -1044,7 +1044,7 @@ func TestTheModeWithNothingToCompleteIsRefusedBeforeTheExtract(t *testing.T) {
 // marker it declared `meta LONGTEXT` where a gateway declares `meta JSON`.
 // Measured, before the fix:
 //
-//	colunas criadas: map[... meta:longtext tags:longtext ...]
+//	columns created: map[... meta:longtext tags:longtext ...]
 //
 // On a shared table that is a wall, not a cosmetic difference: the second
 // writer is refused with "meta is json in the table and string in the
@@ -1056,7 +1056,7 @@ func TestALandingPipelineDeclaresWhatAGatewayWould(t *testing.T) {
 
 	record := map[string]any{
 		"source_key": "21129|01/12/2025",
-		"valor":      "8.89",
+		"value":      "8.89",
 		"meta":       map[string]any{"uf": "SP"},
 		"tags":       []any{"a", "b"},
 	}
@@ -1076,7 +1076,7 @@ func TestALandingPipelineDeclaresWhatAGatewayWould(t *testing.T) {
 	types := columnTypes(t, db, name)
 	for _, c := range []struct{ name, want string }{
 		{"meta", "json"}, {"tags", "json"},
-		{"valor", "longtext"}, {"source_key", "longtext"},
+		{"value", "longtext"}, {"source_key", "longtext"},
 	} {
 		if types[c.name] != c.want {
 			t.Errorf("%s is %q, want %q -- a gateway declares it %q for the "+
@@ -1176,7 +1176,7 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 	declared := append(
 		sdk.LandingControlColumns(sdk.LandingOptions{UniqueID: true, Keyed: true}),
 		sdk.Column{Name: "source_key", Type: sdk.TypeString},
-		sdk.Column{Name: "Area_Drenagem", Type: sdk.TypeString},
+		sdk.Column{Name: "Area_Drainage", Type: sdk.TypeString},
 	)
 	if _, err := db.ExecContext(ctx, "CREATE TABLE "+name+" ("+
 		"brevis_ingestion_id VARCHAR(64) PRIMARY KEY,"+
@@ -1188,13 +1188,13 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 		"brevis_gateway LONGTEXT,"+
 		"brevis_received_bytes BIGINT,"+
 		"source_key LONGTEXT,"+
-		"Area_Drenagem VARCHAR(64) DEFAULT 'the default, not the null'"+
+		"Area_Drainage VARCHAR(64) DEFAULT 'the default, not the null'"+
 		")"); err != nil {
 		t.Fatal(err)
 	}
 
 	land := sdk.Landing(name, sdk.LandingKey("source_key"), sdk.LandingColumns())
-	row, err := land(map[string]any{"source_key": "k-1", "Area_Drenagem": nil})
+	row, err := land(map[string]any{"source_key": "k-1", "Area_Drainage": nil})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1206,11 +1206,11 @@ func TestADeclaredNullIsWrittenAndNotOmitted(t *testing.T) {
 
 	var area *string
 	if err := db.QueryRowContext(ctx,
-		"SELECT Area_Drenagem FROM "+name).Scan(&area); err != nil {
+		"SELECT Area_Drainage FROM "+name).Scan(&area); err != nil {
 		t.Fatal(err)
 	}
 	if area != nil {
-		t.Errorf("Area_Drenagem is %q: the column was left out of the "+
+		t.Errorf("Area_Drainage is %q: the column was left out of the "+
 			"statement and the DEFAULT filled it, so the producer's null was "+
 			"discarded", *area)
 	}

@@ -3,7 +3,7 @@ import { glyphs } from "./glyphs";
 type Props = { name: string; className?: string };
 
 /**
- * One glyph, inline, in the text's own colour and at the size the class gives
+ * One glyph, inline, in the text's own color and at the size the class gives
  * it (`size-4`, `h-4 w-4`). shrink-0 is always added: an icon beside a long
  * label in a flex row is the first thing the browser squeezes. A name nobody
  * drew renders nothing, as on the server.

@@ -8,14 +8,14 @@ type Stat struct {
 	Unit, Note string
 	// Icon is a glyph name for the label; empty draws none.
 	Icon string
-	// Dot is a state's colour (a `bg-state-*` class) for a dot before the
+	// Dot is a state's color (a `bg-state-*` class) for a dot before the
 	// label; empty draws none.
 	Dot string
 	// Bar is an optional thin bar under the value, in segments.
 	Bar []BarSegment
 	// Sub is faint text beside the label ("· 3 loads").
 	Sub string
-	// Tone is a text colour class for the value, for a number that needs a
+	// Tone is a text color class for the value, for a number that needs a
 	// look (`text-state-failed`); empty is the ink.
 	Tone string
 	// Title is the cell's tooltip: how to read what it shows.
@@ -23,7 +23,7 @@ type Stat struct {
 }
 
 // BarSegment is one part of a Stat's bar: its share of the whole (0..1) and
-// its colour class.
+// its color class.
 type BarSegment struct {
 	Share float64
 	Class string

@@ -52,7 +52,7 @@ func pair(t *testing.T, opt agent.Options) *remote.Executor {
 
 func task(id, command string) execution.TaskExec {
 	return execution.TaskExec{
-		ExecutionID: id, NodeID: "step", Workflow: "vendas",
+		ExecutionID: id, NodeID: "step", Workflow: "sales",
 		RunID: "run-1", Command: command,
 	}
 }
@@ -107,7 +107,7 @@ func last(events []execution.Event) execution.Event { return events[len(events)-
 // always had the same property.
 //
 // This test asserted the interleaving at first and failed, which is the right
-// outcome for an expectation the system cannot honour. What IS guaranteed is
+// outcome for an expectation the system cannot honor. What IS guaranteed is
 // worth pinning, so it is what is checked.
 func TestAStepRunsAndItsOutputComesBackInOrderWithinEachStream(t *testing.T) {
 	e := pair(t, agent.Options{})

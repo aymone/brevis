@@ -139,7 +139,7 @@ func (d Detection) Empty() bool { return d.Runtime == "" && len(d.Tools) == 0 }
 // The first version returned Go for any action, reasoning that an action is a
 // task registered in this binary. Two of the repository's own examples use
 // `action: kubernetes.run` and `action: docker.run` -- dispatch actions whose
-// payload is an arbitrary image -- and both came out labelled Go, which is a
+// payload is an arbitrary image -- and both came out labeled Go, which is a
 // confident lie about a step that runs somebody else's container.
 //
 // Telling a real in-process task from a dispatch one needs the executor's
@@ -182,7 +182,7 @@ func Detect(run, image, action string) Detection {
 // over the inferred one because the author is allowed to know better than the
 // parser -- an image whose command is a wrapper script is exactly that case.
 //
-// Declared runtime and declared tools are honoured INDEPENDENTLY: declaring
+// Declared runtime and declared tools are honored INDEPENDENTLY: declaring
 // only `tools:` keeps the inferred runtime, which is the common case (the
 // command says `python`, and only the author knows it drives Spark).
 func Resolve(declaredRuntime string, declaredTools []string, inferred Detection) Detection {

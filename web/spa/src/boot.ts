@@ -40,7 +40,7 @@ export async function boot(client: QueryClient): Promise<void> {
     ]).catch(() => undefined),
   ]);
   // The client's theme goes in BEFORE the first render: applied from an effect it
-  // would paint one frame in the default colours first.
+  // would paint one frame in the default colors first.
   if (config.brand.css) {
     const el = document.createElement("style");
     el.dataset.brand = "";

@@ -59,7 +59,7 @@ type Meter struct {
 type Options struct {
 	// Endpoint is the collector. Empty reads OTEL_EXPORTER_OTLP_ENDPOINT from
 	// the environment, which is the variable every OpenTelemetry tool already
-	// honours -- inventing a BREVIS_-prefixed one would mean an installation
+	// honors -- inventing a BREVIS_-prefixed one would mean an installation
 	// configuring the same collector twice.
 	Endpoint string
 
@@ -184,7 +184,7 @@ func (m *Meter) Histogram(name string, value float64, attrs ...sdk.Attr) {
 //	defer func() { _ = m.Close(context.Background()) }()
 //
 // The deferred context is a fresh one on purpose: the run's context is usually
-// already cancelled by the time the deferred call runs, and passing it would
+// already canceled by the time the deferred call runs, and passing it would
 // abort the flush at the exact moment it matters.
 func (m *Meter) Close(ctx context.Context) error {
 	if m == nil || m.provider == nil {

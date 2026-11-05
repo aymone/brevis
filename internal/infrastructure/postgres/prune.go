@@ -157,7 +157,7 @@ func (r *RunRepo) purgeEvents(ctx context.Context, after time.Duration, batch in
 
 // trim empties the bulk columns on old task_runs.
 //
-// The `log <> ”` half of the eligibility query is not an optimisation.
+// The `log <> ”` half of the eligibility query is not an optimization.
 // Removing it does not make this slower, it makes it NOT TERMINATE: every batch
 // finds the same rows still eligible, reports a full batch, and the loop goes
 // round forever rewriting the same hundred thousand rows.
@@ -199,7 +199,7 @@ func (r *RunRepo) trim(ctx context.Context, after time.Duration, batch int, dry 
 		if n < int64(batch) {
 			return total, nil
 		}
-		// A cancelled prune is a finished prune with work left over, not a
+		// A canceled prune is a finished prune with work left over, not a
 		// half-written one: every batch is its own transaction.
 		if err := ctx.Err(); err != nil {
 			return total, err

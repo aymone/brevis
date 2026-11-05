@@ -76,7 +76,7 @@ func (Dialect) ExpireSchema(schema string) string {
 // warehouses.
 //
 // Anything that is not a VIEW is reported as a table, deliberately: an
-// external or materialised view is not something this tool made, and
+// external or materialized view is not something this tool made, and
 // answering "nothing is there" would send a CREATE at it.
 func (Dialect) KindOf(ref string) string {
 	schema, name, _ := strings.Cut(ref, ".")
@@ -165,7 +165,7 @@ func (d Dialect) Build(m model.Model, st dialect.State) ([]string, error) {
 	ref := m.Ref()
 
 	var out []string
-	if m.Materialised == model.Incremental {
+	if m.Materialized == model.Incremental {
 		// A REBUILD IS A TABLE BUILD, and the DROP is only for a VIEW:
 		// `CREATE OR REPLACE TABLE` over an existing view is an error here
 		// rather than a replacement, and over an existing table it is the
@@ -178,7 +178,7 @@ func (d Dialect) Build(m model.Model, st dialect.State) ([]string, error) {
 		}
 		return []string{mergeInto(m, st, ref)}, nil
 	}
-	if m.Materialised == model.Table {
+	if m.Materialized == model.Table {
 		if st.Current == dialect.View {
 			out = append(out, "DROP VIEW IF EXISTS "+ref)
 		}

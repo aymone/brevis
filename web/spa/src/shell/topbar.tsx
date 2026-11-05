@@ -29,7 +29,7 @@ export function Topbar() {
   }
   const title = meta?.detail && crumb ? crumb : null;
   // A detail page's name arrives with its data. The trail is drawn as it will end ("Runs / ...") with the last
-  // segment's box held open, so the section word does not change colour and position when the name lands.
+  // segment's box held open, so the section word does not change color and position when the name lands.
   const waiting = !!meta?.detail && !meta.unnamed && !crumb;
 
   return (

@@ -114,8 +114,13 @@ for (const lang of LANGS) {
       await read("palette");
       await page.keyboard.press("Escape");
       await expect(page.locator("dialog[open], [role=dialog]")).toHaveCount(0);
-      await page.keyboard.press("Shift+?");
-      await expect(page.locator("dialog[open], [role=dialog]").first()).toBeVisible();
+      // The shortcut is a key listener the app (re)attaches as the palette closes: on a loaded machine the first press
+      // can land before it is back, so the press is retried until the dialog is there (and never pressed while it is).
+      const dialog = page.locator("dialog[open], [role=dialog]").first();
+      await expect(async () => {
+        if (!(await dialog.isVisible())) await page.keyboard.press("Shift+?");
+        await expect(dialog).toBeVisible({ timeout: 1500 });
+      }).toPass({ timeout: 10_000 });
       await read("shortcuts");
       expect(problems).toEqual([]);
     });

@@ -24,10 +24,10 @@ steps:
     run: dbt build
 `
 
-// TestEnvIsInheritedFromTheWorkflowAndTheStepOverrides: mesma regra de `image` e
+// TestEnvIsInheritedFromTheWorkflowAndTheStepOverrides: the same rule as `image` and
 // `resources`, and name by name -- a step that changes the log level does not
 // lose the
-// outras variaveis do workflow.
+// workflow's other variables.
 func TestEnvIsInheritedFromTheWorkflowAndTheStepOverrides(t *testing.T) {
 	w, err := Parse("gabriel.yaml", []byte(gabrielsFile))
 	if err != nil {
@@ -75,10 +75,10 @@ func TestASecretOnlyGoesToTheStepThatDeclaredIt(t *testing.T) {
 func TestSecretsRefusesWhatIsNotACoordinate(t *testing.T) {
 	cases := map[string]string{
 		"no slash":          "GABRIEL_SESSION_COOKIE: eyJhbGciOiJkaXIi==",
-		"secret vazio":      "GABRIEL_SESSION_COOKIE: /cookie",
+		"empty secret":      "GABRIEL_SESSION_COOKIE: /cookie",
 		"empty key":         "GABRIEL_SESSION_COOKIE: gabriel-session/",
-		"barra demais":      "GABRIEL_SESSION_COOKIE: ns/gabriel-session/cookie",
-		"nome invalido":     "GABRIEL-SESSION-COOKIE: gabriel-session/cookie",
+		"too many slashes":  "GABRIEL_SESSION_COOKIE: ns/gabriel-session/cookie",
+		"invalid name":      "GABRIEL-SESSION-COOKIE: gabriel-session/cookie",
 		"name with a space": "'GABRIEL COOKIE': gabriel-session/cookie",
 	}
 	for name, line := range cases {
@@ -93,7 +93,7 @@ func TestSecretsRefusesWhatIsNotACoordinate(t *testing.T) {
 
 // TestEnvAndSecretsCannotCollide: the same variable with a literal value and
 // coming from a secret is ambiguous, and any tie-break would be a rule nobody
-// lembra.
+// remembers.
 func TestEnvAndSecretsCannotCollide(t *testing.T) {
 	yaml := `
 name: x
@@ -104,7 +104,7 @@ steps:
   - id: a
     run: echo
     secrets:
-      TOKEN: cofre/token
+      TOKEN: vault/token
 `
 	_, err := Parse("x.yaml", []byte(yaml))
 	if err == nil {
@@ -117,7 +117,8 @@ steps:
 
 // TestASpaceInTheVariablesNameDoesNotGetThrough: `TOKEN : x` with a space before
 // the
-// pontos e YAML valido, e o espaco iria junto no nome -- o pod sobe, o binario
+// dots and is valid YAML, and the space would travel with the name -- the pod
+// starts, the binary
 // does not find the variable, and nothing along the way says why.
 func TestASpaceInTheVariablesNameDoesNotGetThrough(t *testing.T) {
 	yaml := "name: x\ntype: chain\nsteps:\n  - id: a\n    run: echo\n    env:\n      ' TOKEN ': value\n"

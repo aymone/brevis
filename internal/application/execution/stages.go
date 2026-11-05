@@ -9,7 +9,7 @@ import (
 // sdkMarker is the prefix the SDK uses to speak to the engine through stdout.
 //
 // The pipe already existed: the executor follows the pod's log while the
-// container lives, and this loop sees every line, one by one. Recognising it
+// container lives, and this loop sees every line, one by one. Recognizing it
 // here -- and not in the executor -- makes the LOCAL executor get the same for
 // free, because this code does not know which of them produced the event.
 const sdkMarker = "@brevis:"
@@ -22,9 +22,9 @@ const sdkMarker = "@brevis:"
 // is the cap of somebody who does not trust what came down the pipe.
 const stageCeiling = 60
 
-// Etapa is one phase of an SDK step, as it stands now.
+// Stage is one phase of an SDK step, as it stands now.
 //
-// Indice is what identifies it, and not Nome: a pipeline with two Map stages
+// Index is what identifies it, and not Name: a pipeline with two Map stages
 // announces `map` twice, and keying by name would make the second overwrite the
 // first -- three declared stages collapsing into two boxes on the screen, with
 // no warning.
@@ -79,7 +79,7 @@ func (s *Stage) UnmarshalJSON(b []byte) error {
 
 // knownStages is a closed list on purpose: a phase this engine does not
 // know is ignored, rather than becoming a meaningless box on the screen.
-// RecordedStage is the shape an Etapa takes in the JSONB column.
+// RecordedStage is the shape a Stage takes in the JSONB column.
 type RecordedStage = Stage
 
 // knownStages is a closed list on purpose: a phase this engine does not
@@ -181,7 +181,7 @@ func (c *stageCollector) line(msg string) bool {
 	// "versao","em"}. From v0.48.0 on it speaks English: {"type":"stage","name",
 	// "state","version","at"}. An engine that only understood the new one would
 	// make an older fetcher's phases vanish from the screen -- no error, no log,
-	// just the grey box back.
+	// just the gray box back.
 	//
 	// The bridge goes away once no fetcher below v0.48.0 remains in
 	// production.
@@ -264,8 +264,8 @@ func (c *stageCollector) line(msg string) bool {
 		// a watermark's age -- reported through the pipe that already exists.
 		//
 		// It is COLLECTED here and recorded by the runner, which is what knows
-		// the workflow and the step. A metric labelled by the step itself would
-		// be labelled wrongly, and asking every language's library to know its
+		// the workflow and the step. A metric labeled by the step itself would
+		// be labeled wrongly, and asking every language's library to know its
 		// own workflow slug is asking for the one thing they cannot see.
 		if ev.TaskName != "" {
 			// A metric's value is a NUMBER. Anything else is a step confusing
@@ -330,7 +330,7 @@ func (c *stageCollector) positionFor(name string) int {
 	return largest + 1
 }
 
-// aplicar replaces the phase at the same POSITION, keeping the pipeline's order.
+// apply replaces the phase at the same POSITION, keeping the pipeline's order.
 func (c *stageCollector) apply(e Stage) {
 	for i := range c.Stages {
 		if c.Stages[i].Index == e.Index {
@@ -342,7 +342,7 @@ func (c *stageCollector) apply(e Stage) {
 	sort.Slice(c.Stages, func(i, j int) bool { return c.Stages[i].Index < c.Stages[j].Index })
 }
 
-// reservedFields are the ones that become the Etapa's own columns; the rest of
+// reservedFields are the ones that become the Stage's own columns; the rest of
 // the object is numbers the phase produced.
 var reservedFields = map[string]bool{
 	"type": true, "name": true, "state": true, "ms": true, "at": true, "version": true,

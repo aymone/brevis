@@ -23,7 +23,7 @@ func testServer(checkers map[string]Checker) *Server {
 // make Kubernetes kill the pod instead of merely taking it out of the balancer.
 func TestHealthIgnoresABrokenDependency(t *testing.T) {
 	s := testServer(map[string]Checker{
-		"postgres": fakeChecker{err: errors.New("conexao recusada")},
+		"postgres": fakeChecker{err: errors.New("connection refused")},
 	})
 
 	rec := httptest.NewRecorder()
@@ -54,7 +54,7 @@ func TestReadyIsOkWhenEverythingAnswers(t *testing.T) {
 
 func TestReadyFailsAndSaysWhichDependency(t *testing.T) {
 	s := testServer(map[string]Checker{
-		"postgres": fakeChecker{err: errors.New("conexao recusada")},
+		"postgres": fakeChecker{err: errors.New("connection refused")},
 	})
 
 	rec := httptest.NewRecorder()
@@ -69,7 +69,7 @@ func TestReadyFailsAndSaysWhichDependency(t *testing.T) {
 	}
 	// Naming the dependency is the point: "unavailable" alone does not say where
 	// to look.
-	if body.Checks["postgres"] != "conexao recusada" {
+	if body.Checks["postgres"] != "connection refused" {
 		t.Errorf("checks[postgres] = %q, wanted the cause", body.Checks["postgres"])
 	}
 }

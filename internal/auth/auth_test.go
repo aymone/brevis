@@ -18,29 +18,29 @@ func credential(t *testing.T, user, password string) auth.Credential {
 	}
 	return auth.Credential{
 		User: user, Hash: h,
-		Secret: []byte("um-segredo-de-teste-com-mais-de-32-bytes"),
+		Secret: []byte("a-test-secret-with-more-than-32-bytes"),
 	}
 }
 
 func TestTheHashAcceptsTheRightPassword(t *testing.T) {
-	h, err := auth.GenerateHash("senha-correta-longa")
+	h, err := auth.GenerateHash("correct-long-password")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !auth.CheckPassword(h, "senha-correta-longa") {
+	if !auth.CheckPassword(h, "correct-long-password") {
 		t.Error("the right password was refused")
 	}
-	if auth.CheckPassword(h, "senha-errada-longa!") {
+	if auth.CheckPassword(h, "wrong-long-password!") {
 		t.Error("the wrong password was accepted")
 	}
 }
 
 // Two hashes of the SAME password have to differ: with no salt, equal hashes in
 // the database
-// entregam quais operadores escolheram a mesma senha.
+// reveal which operators chose the same password.
 func TestTheHashUsesARandomSalt(t *testing.T) {
-	a, _ := auth.GenerateHash("mesma-senha-aqui")
-	b, _ := auth.GenerateHash("mesma-senha-aqui")
+	a, _ := auth.GenerateHash("same-password-here")
+	b, _ := auth.GenerateHash("same-password-here")
 	if a == b {
 		t.Error("two hashes of the same password came out equal -- there is no salt")
 	}
@@ -54,7 +54,7 @@ func TestAMalformedHashDoesNotAuthenticate(t *testing.T) {
 		"pbkdf2-sha256$600000$!!!$!!!", "md5$1$x$y",
 		"pbkdf2-sha256$600000$c2Fs$", // empty key
 	} {
-		if auth.CheckPassword(h, "qualquer-coisa") {
+		if auth.CheckPassword(h, "anything") {
 			t.Errorf("a malformed hash authenticated: %q", h)
 		}
 		if auth.CheckPassword(h, "") {
@@ -68,7 +68,7 @@ func TestAMalformedHashDoesNotAuthenticate(t *testing.T) {
 // the data warehouse.
 func TestAnAnonymousTriggerIsBlocked(t *testing.T) {
 	gate := &auth.Gate{
-		Cred: credential(t, "operador", "senha-de-teste-longa"),
+		Cred: credential(t, "operator", "long-test-password"),
 		Next: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			t.Error("the anonymous request reached the protected handler")
 			w.WriteHeader(http.StatusOK)
@@ -94,7 +94,7 @@ func TestAnAnonymousTriggerIsBlocked(t *testing.T) {
 // `?` and a `=` of its own.
 func TestAnAnonymousGETGoesToTheLoginCarryingWhereItWasGoing(t *testing.T) {
 	gate := &auth.Gate{
-		Cred: credential(t, "operador", "senha-de-teste-longa"),
+		Cred: credential(t, "operator", "long-test-password"),
 		Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}),
 	}
 
@@ -127,12 +127,11 @@ func TestAnAnonymousGETGoesToTheLoginCarryingWhereItWasGoing(t *testing.T) {
 }
 
 // Kubernetes's probes have to get through: a /health asking for a password takes
-// the
-// pod em ciclo, e o operador procura o problema no lugar errado.
+// the pod in a loop, and the operator looks for the problem in the wrong place.
 func TestProbesAndAssetsPassWithNoSession(t *testing.T) {
 	var arrived []string
 	gate := &auth.Gate{
-		Cred: credential(t, "operador", "senha-de-teste-longa"),
+		Cred: credential(t, "operator", "long-test-password"),
 		Next: http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 			arrived = append(arrived, r.URL.Path)
 		}),
@@ -146,7 +145,7 @@ func TestProbesAndAssetsPassWithNoSession(t *testing.T) {
 }
 
 func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
-	cred := credential(t, "operador", "senha-de-teste-longa")
+	cred := credential(t, "operator", "long-test-password")
 	var seen string
 	gate := &auth.Gate{
 		Cred: cred,
@@ -156,7 +155,7 @@ func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 	}
 
 	login := httptest.NewRecorder()
-	if !gate.SignIn(login, "operador", "senha-de-teste-longa") {
+	if !gate.SignIn(login, "operator", "long-test-password") {
 		t.Fatal("the right credential was refused")
 	}
 	cookie := login.Result().Cookies()[0]
@@ -166,8 +165,8 @@ func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 	rec := httptest.NewRecorder()
 	gate.ServeHTTP(rec, req)
 
-	if seen != "operador" {
-		t.Errorf("operator in the context = %q; want %q", seen, "operador")
+	if seen != "operator" {
+		t.Errorf("operator in the context = %q; want %q", seen, "operator")
 	}
 	if rec.Code == http.StatusSeeOther {
 		t.Error("the valid session was sent to the login")
@@ -175,9 +174,9 @@ func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 }
 
 // A forged cookie must not count. If the signature were not checked, the
-// cliente escreveria o proprio nome de usuario e a propria validade.
+// client would write its own username and its own expiry.
 func TestAForgedCookieDoesNotGetIn(t *testing.T) {
-	cred := credential(t, "operador", "senha-de-teste-longa")
+	cred := credential(t, "operator", "long-test-password")
 	gate := &auth.Gate{
 		Cred: cred,
 		Next: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -186,10 +185,10 @@ func TestAForgedCookieDoesNotGetIn(t *testing.T) {
 		}),
 	}
 	for _, value := range []string{
-		"operador|99999999999|qualquer-assinatura",
-		"operador|99999999999|",
-		"operador|99999999999",
-		"outro|99999999999|",
+		"operator|99999999999|any-signature",
+		"operator|99999999999|",
+		"operator|99999999999",
+		"other|99999999999|",
 		"",
 	} {
 		req := httptest.NewRequest("GET", "/runs", nil)
@@ -198,16 +197,16 @@ func TestAForgedCookieDoesNotGetIn(t *testing.T) {
 	}
 }
 
-// Trocar o segredo derruba as sessoes — e a alavanca de emergencia.
+// Changing the secret invalidates the sessions -- and it is the emergency lever.
 func TestChangingTheSecretInvalidatesSessions(t *testing.T) {
-	cred := credential(t, "operador", "senha-de-teste-longa")
+	cred := credential(t, "operator", "long-test-password")
 	issuer := &auth.Gate{Cred: cred, Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})}
 	rec := httptest.NewRecorder()
-	issuer.SignIn(rec, "operador", "senha-de-teste-longa")
+	issuer.SignIn(rec, "operator", "long-test-password")
 	cookie := rec.Result().Cookies()[0]
 
 	fresh := cred
-	fresh.Secret = []byte("outro-segredo-completamente-diferente-32")
+	fresh.Secret = []byte("another-completely-different-secret-32")
 	gate := &auth.Gate{
 		Cred: fresh,
 		Next: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -224,7 +223,7 @@ func TestAnExternalDestinationIsDiscarded(t *testing.T) {
 	for raw, expected := range map[string]string{
 		"https://malicioso.example": "/",
 		"//malicioso.example":       "/",
-		"/runs?pagina=2":            "/runs?pagina=2",
+		"/runs?page=2":              "/runs?page=2",
 		"":                          "/",
 	} {
 		if d := auth.Target(raw); d != expected {
@@ -234,25 +233,25 @@ func TestAnExternalDestinationIsDiscarded(t *testing.T) {
 }
 
 func TestAHalfCredentialIsRefused(t *testing.T) {
-	if err := (auth.Credential{User: "operador"}).Validate(); err == nil {
+	if err := (auth.Credential{User: "operator"}).Validate(); err == nil {
 		t.Error("a user with no hash was accepted -- the door would stay open believing it had shut")
 	}
 	if err := (auth.Credential{Hash: "pbkdf2-sha256$1$a$b"}).Validate(); err == nil {
 		t.Error("a hash with no user was accepted")
 	}
-	short := auth.Credential{User: "o", Hash: "pbkdf2-sha256$1$a$b", Secret: []byte("curto")}
+	short := auth.Credential{User: "o", Hash: "pbkdf2-sha256$1$a$b", Secret: []byte("short")}
 	if err := short.Validate(); err == nil {
 		t.Error("a secret that is too short was accepted")
 	}
 }
 
 // `?next=` CANNOT LEAVE THIS SITE, including by the spelling a browser
-// normalises on the way out.
+// normalizes on the way out.
 //
 // `escapeTarget` refused `//evil.com` and `https://evil.com` and let
 // `/\evil.com` through. It looks like a path and it is not one: a backslash
 // is a SLASH in a URL, so the browser reads `//evil.com` and the host is
-// evil.com. Measured, not reasoned about -- `url.Parse` on the normalised
+// evil.com. Measured, not reasoned about -- `url.Parse` on the normalized
 // string reports `Host: evil.com`.
 //
 // What that buys an attacker is the thing this function's own comment says
@@ -280,7 +279,7 @@ func TestTheNextParameterCannotLeaveThisSite(t *testing.T) {
 			t.Errorf("Target(%q) = %q, which can leave this site", away, got)
 		}
 		// AND A BROWSER'S READING OF IT, which is the only reading that
-		// matters: normalise the backslashes the way a URL parser does and
+		// matters: normalize the backslashes the way a URL parser does and
 		// ask whether a host appeared.
 		u, err := url.Parse(strings.ReplaceAll(auth.Target(away), `\`, "/"))
 		if err != nil {
@@ -307,5 +306,37 @@ func TestTheNextParameterKeepsAnOrdinaryPath(t *testing.T) {
 		if got := auth.Target(keep); got != keep {
 			t.Errorf("Target(%q) = %q, and the operator loses where they were going", keep, got)
 		}
+	}
+}
+
+// UPGRADING SIGNS NOBODY OUT: a session cookie written by a release before 0.43, under the old name, is still honored
+// until it expires, and signing out ends it too.
+func TestASessionUnderTheLegacyCookieNameStillSignsIn(t *testing.T) {
+	cred := credential(t, "operator", "long-test-password")
+	issuer := &auth.Gate{Cred: cred, Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})}
+	rec := httptest.NewRecorder()
+	issuer.SignIn(rec, "operator", "long-test-password")
+	signed := rec.Result().Cookies()[0]
+	if signed.Name != auth.CookieName {
+		t.Fatalf("a new session is written as %q, want %q", signed.Name, auth.CookieName)
+	}
+
+	reached := false
+	gate := &auth.Gate{Cred: cred, Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true })}
+	req := httptest.NewRequest("GET", "/runs", nil)
+	req.AddCookie(&http.Cookie{Name: auth.LegacyCookieName, Value: signed.Value})
+	gate.ServeHTTP(httptest.NewRecorder(), req)
+	if !reached {
+		t.Error("a session under the legacy cookie name was refused")
+	}
+
+	out := httptest.NewRecorder()
+	gate.SignOut(out)
+	cleared := map[string]bool{}
+	for _, c := range out.Result().Cookies() {
+		cleared[c.Name] = c.MaxAge < 0
+	}
+	if !cleared[auth.CookieName] || !cleared[auth.LegacyCookieName] {
+		t.Errorf("signing out clears %v, want both names", cleared)
 	}
 }

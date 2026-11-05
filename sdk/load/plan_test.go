@@ -22,17 +22,17 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 		failure bool
 	}{
 		{
-			"com Schema, monta o DDL da declaração",
+			"with a Schema, builds the DDL from the declaration",
 			&core.LoadConfig{Schema: core.Schema{{Name: "a", Type: core.TypeString}}},
 			CreateFromSchema, false,
 		},
 		{
-			"com CreateSQL, roda o DDL de quem escreveu",
+			"with CreateSQL, runs the DDL its author wrote",
 			&core.LoadConfig{CreateSQL: "CREATE TABLE t (a STRING)"},
 			CreateFromSQL, false,
 		},
 		{
-			"CreateSQL vence o Schema: um DDL escrito à mão diz mais",
+			"CreateSQL beats the Schema: a hand-written DDL says more",
 			&core.LoadConfig{
 				CreateSQL: "CREATE TABLE t (a NUMERIC(18,2))",
 				Schema:    core.Schema{{Name: "a", Type: core.TypeNumeric}},
@@ -40,7 +40,7 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 			CreateFromSQL, false,
 		},
 		{
-			"sem nenhum dos dois, RECUSA -- e é isto que o I2 exige",
+			"with neither, it REFUSES -- and that is what I2 demands",
 			&core.LoadConfig{Columns: []string{"a", "b"}},
 			0, true,
 		},
@@ -73,14 +73,14 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 // TestI2SchemaBecomesBigQuerysType: the translation table, one row per type.
 func TestI2SchemaBecomesBigQuerysType(t *testing.T) {
 	s := core.Schema{
-		{Name: "texto", Type: core.TypeString, Required: true},
-		{Name: "inteiro", Type: core.TypeInt64},
-		{Name: "flutuante", Type: core.TypeFloat64},
+		{Name: "text", Type: core.TypeString, Required: true},
+		{Name: "integer", Type: core.TypeInt64},
+		{Name: "float", Type: core.TypeFloat64},
 		{Name: "decimal", Type: core.TypeNumeric},
-		{Name: "booleano", Type: core.TypeBool},
-		{Name: "instante", Type: core.TypeTimestamp},
+		{Name: "boolean", Type: core.TypeBool},
+		{Name: "instant", Type: core.TypeTimestamp},
 		{Name: "data", Type: core.TypeDate},
-		{Name: "documento", Type: core.TypeJSON},
+		{Name: "document", Type: core.TypeJSON},
 		{Name: "bytes", Type: core.TypeBytes},
 	}
 
@@ -89,9 +89,9 @@ func TestI2SchemaBecomesBigQuerysType(t *testing.T) {
 		t.Fatal(err)
 	}
 	expected := map[string]string{
-		"texto": "STRING", "inteiro": "INTEGER", "flutuante": "FLOAT",
-		"decimal": "NUMERIC", "booleano": "BOOLEAN", "instante": "TIMESTAMP",
-		"data": "DATE", "documento": "JSON", "bytes": "BYTES",
+		"text": "STRING", "integer": "INTEGER", "float": "FLOAT",
+		"decimal": "NUMERIC", "boolean": "BOOLEAN", "instant": "TIMESTAMP",
+		"data": "DATE", "document": "JSON", "bytes": "BYTES",
 	}
 	if len(got) != len(expected) {
 		t.Fatalf("%d columns, want %d", len(got), len(expected))
@@ -128,7 +128,7 @@ func TestI2TheSDKsColumnsBeatTheDeclaration(t *testing.T) {
 
 // TestI4ThePartitionComesFromTheDeclaration.
 func TestI4ThePartitionComesFromTheDeclaration(t *testing.T) {
-	if got := partitionOf(&core.LoadConfig{PartitionBy: "minha_coluna"}); got != "minha_coluna" {
+	if got := partitionOf(&core.LoadConfig{PartitionBy: "my_column"}); got != "my_column" {
 		t.Errorf("= %q, the declaration should win", got)
 	}
 	if got := partitionOf(&core.LoadConfig{}); got != core.MetadataLoadedAt {

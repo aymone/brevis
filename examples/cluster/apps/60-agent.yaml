@@ -24,7 +24,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: brevis-agent-token
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 stringData:
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: brevis-agent
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
@@ -57,7 +57,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: brevis-agent
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:

@@ -14,7 +14,7 @@ import (
 // interleaved samples, with a wide bound (an early return skips ~200 ms of
 // PBKDF2, a gap of whole multiples, so noise cannot hide it).
 func TestAWrongUserCostsAsMuchAsAWrongPassword(t *testing.T) {
-	gate := &auth.Gate{Cred: credential(t, "operador", "senha-de-teste-longa"), Insecure: true}
+	gate := &auth.Gate{Cred: credential(t, "operator", "long-test-password"), Insecure: true}
 	sample := func(user, pw string) time.Duration {
 		start := time.Now()
 		gate.SignIn(httptest.NewRecorder(), user, pw)
@@ -22,8 +22,8 @@ func TestAWrongUserCostsAsMuchAsAWrongPassword(t *testing.T) {
 	}
 	var wu, wp []time.Duration
 	for i := 0; i < 5; i++ {
-		wu = append(wu, sample("ninguem", "senha-de-teste-longa"))
-		wp = append(wp, sample("operador", "senha-errada-qualquer"))
+		wu = append(wu, sample("nobody", "long-test-password"))
+		wp = append(wp, sample("operator", "any-wrong-password"))
 	}
 	med := func(d []time.Duration) time.Duration {
 		sort.Slice(d, func(i, j int) bool { return d[i] < d[j] })

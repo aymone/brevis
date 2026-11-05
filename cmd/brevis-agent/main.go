@@ -2,7 +2,7 @@
 //
 // It is the other half of `host:` in a workflow. The engine dispatches a
 // command here, follows its output, and can cancel it; this machine is where
-// the licence lives, or the GPU, or the data that cannot leave.
+// the license lives, or the GPU, or the data that cannot leave.
 //
 //	brevis-agent \
 //	  --listen :9443 \
@@ -41,7 +41,7 @@
 // bounds it, 0 by default: the orchestrator's grace period is the real bound,
 // so set THAT -- terminationGracePeriodSeconds, TimeoutStopSec -- to the
 // longest step this host runs. Past the timeout, or on a second SIGTERM, what
-// is left is cancelled, process group and all, and the exit code is 1.
+// is left is canceled, process group and all, and the exit code is 1.
 //
 // # What it will not do
 //

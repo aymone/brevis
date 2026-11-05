@@ -121,7 +121,7 @@ func TestTwoCallsMergeRatherThanReplace(t *testing.T) {
 	if err := Set("name", "Daniel"); err != nil {
 		t.Fatal(err)
 	}
-	if err := Set("label", "Nome"); err != nil {
+	if err := Set("label", "Name"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -133,7 +133,7 @@ func TestTwoCallsMergeRatherThanReplace(t *testing.T) {
 	if err := json.Unmarshal(raw, &got); err != nil {
 		t.Fatal(err)
 	}
-	if got["name"] != "Daniel" || got["label"] != "Nome" {
+	if got["name"] != "Daniel" || got["label"] != "Name" {
 		t.Errorf("published = %v; both calls have to survive, or a helper "+
 			"publishing one key silently erases what its caller published", got)
 	}
@@ -321,7 +321,7 @@ func TestOutsideTheEngineNothingIsPrinted(t *testing.T) {
 }
 
 // One line, one Write. stdout is shared with whatever else the step prints, and
-// a marker split across two writes is a marker the engine will not recognise --
+// a marker split across two writes is a marker the engine will not recognize --
 // the executor's scanner breaks on lines.
 func TestTheMarkerIsASingleWrite(t *testing.T) {
 	reset(t, "{}")

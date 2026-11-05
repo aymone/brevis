@@ -125,7 +125,7 @@ func TestAnUnknownCommunicationRefusesToStart(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("GW_KEYS", "k")
 
-	for _, v := range []string{"interno", "Internal", "true"} {
+	for _, v := range []string{"interal", "Internal", "true"} {
 		t.Run(v, func(t *testing.T) {
 			t.Setenv("BREVIS_COMMUNICATION", v)
 			// With auth declared, so nothing but the value can be the reason.

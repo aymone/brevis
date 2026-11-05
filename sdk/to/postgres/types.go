@@ -149,13 +149,13 @@ func elide(s string) string {
 	return s[:37] + "…"
 }
 
-// declaredType maps a Postgres catalogue type back onto the SDK's declared
+// declaredType maps a Postgres catalog type back onto the SDK's declared
 // ones, for the schema diff.
 //
 // It answers "what does this column hold", not "what is it called": both
 // `character varying` and `text` are TypeString here, and a column this does
-// not recognise returns false rather than a guess -- the diff then leaves it
-// alone instead of proposing an ALTER on a type nobody modelled.
+// not recognize returns false rather than a guess -- the diff then leaves it
+// alone instead of proposing an ALTER on a type nobody modeled.
 func declaredType(pg string) (core.ColumnType, bool) {
 	switch pg {
 	case "text", "character varying", "character", "citext", "uuid":
@@ -181,7 +181,7 @@ func declaredType(pg string) (core.ColumnType, bool) {
 	}
 }
 
-// declaredTypes turns the catalogue into what Schema.Plan compares against.
+// declaredTypes turns the catalog into what Schema.Plan compares against.
 func declaredTypes(types map[string]string) map[string]core.ColumnType {
 	out := make(map[string]core.ColumnType, len(types))
 	for name, pg := range types {

@@ -110,7 +110,7 @@ func TestTheBackfillAgreesWithTheRunner(t *testing.T) {
 			if _, err := pool.Exec(ctx, `TRUNCATE load_metrics, task_runs, runs CASCADE`); err != nil {
 				t.Fatal(err)
 			}
-			runID := seedRunWithStages(t, pool, "vendas", c.stages)
+			runID := seedRunWithStages(t, pool, "sales", c.stages)
 
 			// (1) The SQL half: exactly the backfill of migration 00012.
 			backfill(t, pool)
@@ -152,7 +152,7 @@ func TestRecordLoadIsReadBackByTheTrend(t *testing.T) {
 	repo := postgres.NewRunRepo(pool)
 	reads := postgres.NewReadRepo(pool)
 
-	runID := seedRunWithStages(t, pool, "vendas", `[]`)
+	runID := seedRunWithStages(t, pool, "sales", `[]`)
 	// The run happened three days ago. The trend groups by the RUN's day, so a
 	// row stamped now() would land in today's bucket and the chart would show
 	// work on a day nothing ran.
@@ -165,12 +165,12 @@ func TestRecordLoadIsReadBackByTheTrend(t *testing.T) {
 		Rows: 1000, Records: 1100, Ignored: 3, BytesOut: 64000, LoadMs: 2000,
 		BytesIn: 128000, Pages: 4, HTTPAttempts: 5, ExtractMs: 8000,
 	}
-	step := dom.StepKey{Node: "carga", MapIndex: dom.Unmapped}
-	if err := repo.RecordLoad(ctx, runID, step, "vendas", n); err != nil {
+	step := dom.StepKey{Node: "load", MapIndex: dom.Unmapped}
+	if err := repo.RecordLoad(ctx, runID, step, "sales", n); err != nil {
 		t.Fatal(err)
 	}
 
-	days, err := reads.LoadTrend(ctx, "vendas", 30)
+	days, err := reads.LoadTrend(ctx, "sales", 30)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,17 +203,17 @@ func TestARetryOverwritesItsOwnRow(t *testing.T) {
 	repo := postgres.NewRunRepo(pool)
 	reads := postgres.NewReadRepo(pool)
 
-	runID := seedRunWithStages(t, pool, "vendas", `[]`)
-	step := dom.StepKey{Node: "carga", MapIndex: dom.Unmapped}
+	runID := seedRunWithStages(t, pool, "sales", `[]`)
+	step := dom.StepKey{Node: "load", MapIndex: dom.Unmapped}
 
-	if err := repo.RecordLoad(ctx, runID, step, "vendas", app.LoadNumbers{Rows: 40000}); err != nil {
+	if err := repo.RecordLoad(ctx, runID, step, "sales", app.LoadNumbers{Rows: 40000}); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.RecordLoad(ctx, runID, step, "vendas", app.LoadNumbers{Rows: 48000}); err != nil {
+	if err := repo.RecordLoad(ctx, runID, step, "sales", app.LoadNumbers{Rows: 48000}); err != nil {
 		t.Fatal(err)
 	}
 
-	days, err := reads.LoadTrend(ctx, "vendas", 30)
+	days, err := reads.LoadTrend(ctx, "sales", 30)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,15 +230,15 @@ func TestAMappedStepContributesOneRowPerInstance(t *testing.T) {
 	repo := postgres.NewRunRepo(pool)
 	reads := postgres.NewReadRepo(pool)
 
-	runID := seedRunWithStages(t, pool, "vendas", `[]`)
+	runID := seedRunWithStages(t, pool, "sales", `[]`)
 	for i := 0; i < 4; i++ {
-		step := dom.StepKey{Node: "carga", MapIndex: i}
-		if err := repo.RecordLoad(ctx, runID, step, "vendas", app.LoadNumbers{Rows: 1000}); err != nil {
+		step := dom.StepKey{Node: "load", MapIndex: i}
+		if err := repo.RecordLoad(ctx, runID, step, "sales", app.LoadNumbers{Rows: 1000}); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	days, err := reads.LoadTrend(ctx, "vendas", 30)
+	days, err := reads.LoadTrend(ctx, "sales", 30)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,15 +261,15 @@ func TestTheTrendOutlivesTheRun(t *testing.T) {
 	repo := postgres.NewRunRepo(pool)
 	reads := postgres.NewReadRepo(pool)
 
-	runID := seedRunWithStages(t, pool, "vendas", `[]`)
-	step := dom.StepKey{Node: "carga", MapIndex: dom.Unmapped}
-	if err := repo.RecordLoad(ctx, runID, step, "vendas", app.LoadNumbers{Rows: 7}); err != nil {
+	runID := seedRunWithStages(t, pool, "sales", `[]`)
+	step := dom.StepKey{Node: "load", MapIndex: dom.Unmapped}
+	if err := repo.RecordLoad(ctx, runID, step, "sales", app.LoadNumbers{Rows: 7}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx, `DELETE FROM runs WHERE id = $1`, runID); err != nil {
 		t.Fatal(err)
 	}
-	days, err := reads.LoadTrend(ctx, "vendas", 30)
+	days, err := reads.LoadTrend(ctx, "sales", 30)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,7 +292,7 @@ func seedRunWithStages(t *testing.T, pool *postgres.Pool, slug, stages string) u
 	}
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO task_runs (id, run_id, node_id, status, attempt, map_index, stages)
-		VALUES ($1, $2, 'carga', 'success', 0, -1, $3)`,
+		VALUES ($1, $2, 'load', 'success', 0, -1, $3)`,
 		uuid.New(), r.ID, stages); err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +397,7 @@ func TestAScalarInStagesDoesNotAbortTheBackfill(t *testing.T) {
 	runID := uuid.New()
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definition, created_at)
-		VALUES ($1, 'vendas', $2, 'done', '{}'::jsonb, now())`,
+		VALUES ($1, 'sales', $2, 'done', '{}'::jsonb, now())`,
 		runID, runID.String()); err != nil {
 		t.Fatal(err)
 	}

@@ -60,7 +60,7 @@ func TestEveryExampleRoundTripsThroughItsYAML(t *testing.T) {
 	}
 }
 
-// EVERYTHING A WORKFLOW CAN SAY survives the trip: a chain, labelled
+// EVERYTHING A WORKFLOW CAN SAY survives the trip: a chain, labeled
 // dependencies, a concurrency group, a debounce, the four presentation keys
 // of a param, a step's every field.
 func TestAWorkflowWithEverythingRoundTrips(t *testing.T) {

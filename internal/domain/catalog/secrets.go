@@ -22,7 +22,7 @@ import (
 // reads /data; a secret stored here is a secret published.
 var (
 	// A setting NAMED like a credential: the credential word is the LAST part
-	// of its normalised name (see credentialName). `api_key`, `db_password`,
+	// of its normalized name (see credentialName). `api_key`, `db_password`,
 	// `apiKey`, `x-api-key`, `Password` are; `token_ttl`, `secret_name`,
 	// `password_policy`, `source_key` and `dsn_from` -- the convention this
 	// exists to protect -- are not: they name something about a credential,

@@ -184,7 +184,7 @@ func TestOnlyASucceedingAttemptsRowsAreCounted(t *testing.T) {
 }
 
 // JSON has one number type, so a counter arrives as 48213 or as 48213.0
-// depending on what serialised it. Postgres refuses '1234.0'::bigint outright,
+// depending on what serialized it. Postgres refuses '1234.0'::bigint outright,
 // so the failure would be a report that stops being SENT -- a week of silence
 // rather than a number that looks wrong.
 //

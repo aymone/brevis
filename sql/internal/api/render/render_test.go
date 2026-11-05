@@ -278,7 +278,7 @@ func TestNamesAreEveryNameUsed(t *testing.T) {
 // CONDITIONS SIDE BY SIDE ARE NOT A GLUED WORD: each branch is checked as
 // the text it is, and a placeholder that ends one branch does not touch the
 // one that starts the next.
-func TestPlaceholdersInNeighbouringConditionsParse(t *testing.T) {
+func TestPlaceholdersInNeighboringConditionsParse(t *testing.T) {
 	src := "select 1 {% if a %}{{ a }}{% endif %}{% if b %}{{ b }}{% else %}{{ c }}{% endif %}"
 	if _, err := Parse("postgres", src); err != nil {
 		t.Errorf("refused: %v", err)

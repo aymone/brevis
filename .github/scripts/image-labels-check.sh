@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# The image's licence label has to be the licence.
+# The image's license label has to be the license.
 #
 # It was not. LICENSE has said MIT since the repository existed and the api
 # image shipped `org.opencontainers.image.licenses="Apache-2.0"` -- a legal
 # claim, in the metadata that Docker Scout, Syft and Grype read, wrong in every
-# image ever published. The worker declared no licence at all.
+# image ever published. The worker declared no license at all.
 #
 # Nothing would have caught it: it is not prose, so repo-language-check.sh does
 # not look; it is not a pin, so image-pins-check.sh does not either. It was
@@ -12,8 +12,8 @@
 # process.
 #
 # Four rules, and each exists because it failed once:
-#   1. Every LABEL block naming a title also names a licence.
-#   2. That licence is the one in LICENSE.
+#   1. Every LABEL block naming a title also names a license.
+#   2. That license is the one in LICENSE.
 #   3. Every one names its source as "${SOURCE}", never a written URL: the
 #      repository moved from AreteAcademy to brevis-sh on 2026-11-01, and
 #      seven labels went on naming the old home.

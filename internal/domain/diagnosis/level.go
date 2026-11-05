@@ -58,7 +58,7 @@ var warnLine = []*regexp.Regexp{
 //
 // A HEURISTIC, and it says so: a word is not a meaning, and a line that
 // starts by counting errors reads as one even when the count is zero. The
-// screen shows a line among its neighbours, which keeps a false alarm cheap;
+// screen shows a line among its neighbors, which keeps a false alarm cheap;
 // a structured marker from the step is the real answer, and it belongs to
 // the steps that can print one.
 func LevelOf(line string) Level {

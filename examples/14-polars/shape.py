@@ -30,7 +30,7 @@ orders = pl.read_ndjson(staged).with_columns(
     pl.col("total").cast(pl.Float64),
 )
 
-# Revenue is paid + shipped. Cancelled and refunded orders are real rows with
+# Revenue is paid + shipped. Canceled and refunded orders are real rows with
 # real totals, and summing them is the mistake this dataset was shaped to
 # expose -- a quarter of the file is not revenue.
 earned = orders.filter(pl.col("status").is_in(["paid", "shipped"]))

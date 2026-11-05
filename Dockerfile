@@ -47,7 +47,7 @@ ARG BUILD_DATE=""
 ARG TARGETOS
 ARG TARGETARCH
 
-# -trimpath e -s -w tiram caminhos absolutos e tabelas de debug.
+# -trimpath and -s -w strip absolute paths and debug tables.
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath \

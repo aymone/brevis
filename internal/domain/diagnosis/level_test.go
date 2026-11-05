@@ -43,7 +43,7 @@ func TestALinesLevelIsWhatTheToolMeantByIt(t *testing.T) {
 // A HEURISTIC, AND IT IS WRONG SOMETIMES -- written down here so nobody
 // "fixes" it into something worse. A word is not a meaning: a table called
 // report that starts by counting errors reads as one, even when the count is zero. The screen shows the line with its
-// neighbours, which is what makes a false alarm cheap.
+// neighbors, which is what makes a false alarm cheap.
 func TestAKnownFalseAlarmIsDocumented(t *testing.T) {
 	if got := LevelOf(`ERROR count for the day: 0 (every row loaded)`); got != Err {
 		t.Skipf("the false alarm no longer fires (%s); remove this test and the note", got)

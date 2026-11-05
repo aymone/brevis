@@ -18,7 +18,7 @@ import (
 //
 // It matters more now than it did. Those sentences were written for a
 // parchment ground; the console is taking the site's dark identity, and a
-// colour tuned against #f2f4ed has no reason to work against #141711.
+// color tuned against #f2f4ed has no reason to work against #141711.
 
 var tokenLine = regexp.MustCompile(`--color-([a-z0-9-]+):\s*([^;]+);`)
 
@@ -185,16 +185,16 @@ func textRolesReadable(t *testing.T, tok map[string]string) {
 	}
 }
 
-// THE STATE COLOURS ARE TEXT TOO, which their own comment says: "they are
+// THE STATE COLORS ARE TEXT TOO, which their own comment says: "they are
 // used as text on a pill and not only as a dot". A dot would need 3:1; a word
 // needs 4.5:1, and the word is what is there.
-func TestEveryStateColourIsReadableAsAWord(t *testing.T) {
+func TestEveryStateColorIsReadableAsAWord(t *testing.T) {
 	for _, theme := range themes {
-		t.Run(theme, func(t *testing.T) { stateColoursReadable(t, tokens(t, theme)) })
+		t.Run(theme, func(t *testing.T) { stateColorsReadable(t, tokens(t, theme)) })
 	}
 }
 
-func stateColoursReadable(t *testing.T, tok map[string]string) {
+func stateColorsReadable(t *testing.T, tok map[string]string) {
 	const aa = 4.5
 
 	states := []string{}
@@ -264,7 +264,7 @@ func contrastReport(t *testing.T, tok map[string]string) {
 	}
 }
 
-// THE LIGHT THEME REPAINTS EVERY COLOUR, OR IT IS THE DARK ONE WITH A HOLE.
+// THE LIGHT THEME REPAINTS EVERY COLOR, OR IT IS THE DARK ONE WITH A HOLE.
 //
 // The contrast checks above would pass on a light block that forgot a name,
 // because the dark value shows through and the dark values pass. So the light

@@ -37,7 +37,7 @@ func TestWhatOnlyReadsAndWhatDoesNot(t *testing.T) {
 			"WITH a (x) AS (SELECT 1) SELECT * FROM a", true},
 		{"a nested CTE inside a subquery", "postgres",
 			"SELECT * FROM (WITH x AS (SELECT 1) SELECT * FROM x) s", true},
-		{"a parenthesised union", "postgres", "(SELECT 1) UNION ALL (SELECT 2)", true},
+		{"a parenthesized union", "postgres", "(SELECT 1) UNION ALL (SELECT 2)", true},
 		{"a VALUES list", "postgres", "VALUES (1), (2)", true},
 		{"a leading comment", "postgres", "-- what this is for\nSELECT 1", true},
 		{"a block comment first", "postgres", "/* a note */ SELECT 1", true},

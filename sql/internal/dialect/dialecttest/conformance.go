@@ -118,12 +118,12 @@ type harness struct {
 // run what the dialect says. Going through kindOf rather than passing a Kind
 // is deliberate -- it means every test here also exercises KindOf, which is
 // the one method a dialect can get wrong without any statement being wrong.
-func (h *harness) build(t *testing.T, name string, mat model.Materialisation, query string) {
+func (h *harness) build(t *testing.T, name string, mat model.Materialization, query string) {
 	t.Helper()
-	m := model.Model{Schema: h.schema, Name: name, Materialised: mat, SQL: query}
+	m := model.Model{Schema: h.schema, Name: name, Materialized: mat, SQL: query}
 
 	st, err := dialect.StateOf(h.ctx, h.d, h.conn, m.Ref(),
-		m.Materialised == model.Incremental, false)
+		m.Materialized == model.Incremental, false)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -635,7 +635,7 @@ func (h *harness) incSource(t *testing.T, rows string) {
 func (h *harness) runModel(t *testing.T, m model.Model, fullRefresh bool) {
 	t.Helper()
 	st, err := dialect.StateOf(h.ctx, h.d, h.conn, m.Ref(),
-		m.Materialised == model.Incremental, fullRefresh)
+		m.Materialized == model.Incremental, fullRefresh)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -654,7 +654,7 @@ func (h *harness) runModel(t *testing.T, m model.Model, fullRefresh bool) {
 func (h *harness) incBuild(t *testing.T, fullRefresh bool) {
 	t.Helper()
 	h.runModel(t, model.Model{
-		Schema: h.schema, Name: "inc", Materialised: model.Incremental,
+		Schema: h.schema, Name: "inc", Materialized: model.Incremental,
 		UniqueKey: []string{"k"}, Watermark: "w",
 		SQL: fmt.Sprintf(incModel, h.schema),
 	}, fullRefresh)
@@ -752,7 +752,7 @@ func (h *harness) incrementalFirstBuild(t *testing.T) {
 
 // NOTHING NEW CHANGES NOTHING. The whole point: a second build of an
 // unchanged source is not a rebuild, and a dialect that re-ran the model in
-// full would pass every count here and cost the money this materialisation
+// full would pass every count here and cost the money this materialization
 // exists to save.
 func (h *harness) incrementalNothingNew(t *testing.T) {
 	h.incBuild(t, false)
@@ -788,7 +788,7 @@ func (h *harness) incrementalFromEmpty(t *testing.T) {
 		row(2, "b", "2026-01-02 00:00:00"),
 	))
 	h.runModel(t, model.Model{
-		Schema: h.schema, Name: "inc_empty", Materialised: model.Incremental,
+		Schema: h.schema, Name: "inc_empty", Materialized: model.Incremental,
 		UniqueKey: []string{"k"}, Watermark: "w",
 		SQL: "SELECT k, v, w FROM " + h.schema + ".inc_e_src",
 	}, false)
@@ -823,7 +823,7 @@ func (h *harness) incrementalAddsTheNewRow(t *testing.T) {
 //
 // The changed row carries a LATER watermark, which is not a detail of the
 // test: a watermark is how the model knows a row is new, so a correction
-// written with yesterday's timestamp is a correction this materialisation
+// written with yesterday's timestamp is a correction this materialization
 // cannot see. That is the bargain, and it is why `lookback` exists elsewhere.
 func (h *harness) incrementalUpdatesInPlace(t *testing.T) {
 	h.incSource(t, rows(
@@ -893,7 +893,7 @@ func (h *harness) incrementalReplacesAView(t *testing.T) {
 	}
 
 	m := model.Model{
-		Schema: h.schema, Name: "inc_v", Materialised: model.Incremental,
+		Schema: h.schema, Name: "inc_v", Materialized: model.Incremental,
 		UniqueKey: []string{"k"}, Watermark: "w",
 		SQL: fmt.Sprintf(incModel, h.schema),
 	}
@@ -920,7 +920,7 @@ func (h *harness) incrementalLookback(t *testing.T) {
 	))
 	build := func(lookback time.Duration) {
 		h.runModel(t, model.Model{
-			Schema: h.schema, Name: "inc_lb", Materialised: model.Incremental,
+			Schema: h.schema, Name: "inc_lb", Materialized: model.Incremental,
 			UniqueKey: []string{"k"}, Watermark: "w", Lookback: lookback,
 			SQL: "SELECT k, v, w FROM " + h.schema + ".inc_lb_src",
 		}, false)

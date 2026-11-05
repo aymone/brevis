@@ -10,7 +10,7 @@ import (
 	topg "brevis.sh/brevis/sdk/to/postgres"
 )
 
-// BenchmarkPostgresLoad mede a carga contra o servidor de verdade.
+// BenchmarkPostgresLoad measures the load against a real server.
 //
 // It exists because §5 of phase 5 asks for a number: without one the
 // documentation promises performance nobody measured, which is how
@@ -19,7 +19,7 @@ import (
 //	BREVIS_IT_PG_DSN=... go test -run XXX -bench CargaPostgres ./to/postgres/
 func BenchmarkPostgresLoad(b *testing.B) {
 	d := ""
-	if d = envOuPular(b); d == "" {
+	if d = envOrSkip(b); d == "" {
 		return
 	}
 	conn := connectBench(b, d)
@@ -34,7 +34,7 @@ func BenchmarkPostgresLoad(b *testing.B) {
 			"ingestion_loaded_at": now,
 			"provider":            "bench",
 			"source_key":          fmt.Sprintf("k%d", i),
-			"valor":               "10.50",
+			"value":               "10.50",
 		}}
 	}
 

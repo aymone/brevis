@@ -45,7 +45,7 @@ func TestItRefusesToBeBuiltOutsideLocal(t *testing.T) {
 
 func TestItRunsAndReportsSuccess(t *testing.T) {
 	ev, err := executor(t).Execute(context.Background(), execution.TaskExec{
-		ExecutionID: "1", NodeID: "hello", Command: "echo ola",
+		ExecutionID: "1", NodeID: "hello", Command: "echo hello",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestItRunsAndReportsSuccess(t *testing.T) {
 	if last.Kind != execution.EventSucceeded {
 		t.Errorf("last event = %v, wanted succeeded", last.Kind)
 	}
-	if !hasLog(events, "ola", "stdout") {
+	if !hasLog(events, "hello", "stdout") {
 		t.Error("it did not capture the command's output")
 	}
 }
@@ -105,18 +105,18 @@ func TestItReportsAFailureWithTheExitCode(t *testing.T) {
 // The environment is explicit: the orchestrator carries credentials a task must
 // not get to see by accident.
 func TestItDoesNotInheritTheParentsEnvironment(t *testing.T) {
-	t.Setenv("SEGREDO_DO_ORQUESTRADOR", "nao-vazar")
+	t.Setenv("ORCHESTRATOR_SECRET", "do-not-leak")
 
 	ev, err := executor(t).Execute(context.Background(), execution.TaskExec{
 		ExecutionID: "4", NodeID: "n",
-		Command: "echo [$SEGREDO_DO_ORQUESTRADOR]",
-		Env:     map[string]string{"PERMITIDA": "sim"},
+		Command: "echo [$ORCHESTRATOR_SECRET]",
+		Env:     map[string]string{"ALLOWED": "sim"},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, e := range collectOutput(t, ev) {
-		if strings.Contains(e.Message, "nao-vazar") {
+		if strings.Contains(e.Message, "do-not-leak") {
 			t.Fatal("the task could see a variable of the parent process")
 		}
 	}

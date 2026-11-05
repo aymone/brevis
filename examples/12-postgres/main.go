@@ -33,7 +33,7 @@ func main() {
 	var create bool
 
 	sdk.Run(sdk.Pipeline{
-		Name:  "exemplo_postgres",
+		Name:  "example_postgres",
 		Flags: func(fs *flag.FlagSet) { fs.BoolVar(&create, "create-tables", false, "creates the tables and exits") },
 
 		Before: func(ctx context.Context, _ *sdk.Pipeline) error {

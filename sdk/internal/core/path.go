@@ -17,8 +17,8 @@ type Location struct {
 
 // ParseLocation reads a Files path.
 //
-//	./entrada/*.csv              local, glob
-//	/var/dados/                  local, directory
+//	./input/*.csv              local, glob
+//	/var/data/                  local, directory
 //	s3://bucket/dia=1/*.ndjson   S3, glob under a prefix
 //	gs://bucket/landing/         GCS, directory
 func ParseLocation(p string) (Location, error) {

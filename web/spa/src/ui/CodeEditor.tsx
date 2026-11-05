@@ -9,7 +9,7 @@ type Props = {
   id?: string;
 };
 
-// A plain labelled textarea with a line-number gutter. No wrapping, so one
+// A plain labeled textarea with a line-number gutter. No wrapping, so one
 // gutter number is one line. Tab indents; Escape then Tab leaves the field, so
 // the keyboard is never trapped. Ctrl/Cmd+Enter runs.
 export function CodeEditor({ value, onChange, onRun, label, placeholder, id }: Props) {

@@ -50,7 +50,7 @@ func Open(_ context.Context, addr string) (gateway.Metastore, error) {
 
 	// The socket deadline IS the budget, because this client cannot take a
 	// context: `Add`, `Get`, `Set` and `Increment` have no ctx parameter, so
-	// every method below discards the one it is handed. Redis honours it;
+	// every method below discards the one it is handed. Redis honors it;
 	// this cannot, and the only other place to put the bound is here.
 	//
 	// It was 5 seconds, which made gateway.ClaimTimeout decoration: measured
@@ -62,7 +62,7 @@ func Open(_ context.Context, addr string) (gateway.Metastore, error) {
 	// It bounds the cache calls too, and that is deliberate rather than
 	// incidental: a metastore that cannot answer a lookup inside the claim's
 	// budget is a cache that is costing more than it saves. It is a
-	// behaviour change for a deployment whose memcached is slow and working.
+	// behavior change for a deployment whose memcached is slow and working.
 	client.Timeout = gateway.ClaimTimeout
 
 	// Above peak parallel requests, which is what this client's own

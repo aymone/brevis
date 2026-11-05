@@ -23,7 +23,7 @@ func TestTheCallersCookieArrivesWhole(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("session-token")
 		if err != nil {
-			http.Error(w, "sem cookie", http.StatusUnauthorized)
+			http.Error(w, "no cookie", http.StatusUnauthorized)
 			return
 		}
 		received = c.Value
@@ -49,14 +49,14 @@ func TestARenewedCookieSurvivesIntoTheNextPage(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie("session-token")
 		if err != nil {
-			http.Error(w, "sem cookie", http.StatusUnauthorized)
+			http.Error(w, "no cookie", http.StatusUnauthorized)
 			return
 		}
 		seenValues = append(seenValues, c.Value)
 
 		if len(seenValues) == 1 {
 			// the API renews the session in the middle of the walk
-			http.SetCookie(w, &http.Cookie{Name: "session-token", Value: "renovado==", Path: "/"})
+			http.SetCookie(w, &http.Cookie{Name: "session-token", Value: "renewed==", Path: "/"})
 			_, _ = fmt.Fprint(w, `{"results":[{"n":1}]}`)
 			return
 		}
@@ -74,20 +74,20 @@ func TestARenewedCookieSurvivesIntoTheNextPage(t *testing.T) {
 	if len(seenValues) != 2 {
 		t.Fatalf("expected 2 requests, got %d", len(seenValues))
 	}
-	if seenValues[1] != "renovado==" {
+	if seenValues[1] != "renewed==" {
 		t.Errorf("page 2 went with %q; page 1's Set-Cookie did not take", seenValues[1])
 	}
 }
 
 // TestTheCookieDoesNotGoTwice: the caller's header and the jar are the same
 // thing. If both go, the server receives two values for the same name and
-// escolhe um deles -- silenciosamente o errado.
+// picks one of them -- silently the wrong one.
 func TestTheCookieDoesNotGoTwice(t *testing.T) {
 	var raw string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		raw = r.Header.Get("Cookie")
-		http.SetCookie(w, &http.Cookie{Name: "session-token", Value: "renovado==", Path: "/"})
-		if strings.Contains(raw, "renovado") {
+		http.SetCookie(w, &http.Cookie{Name: "session-token", Value: "renewed==", Path: "/"})
+		if strings.Contains(raw, "renewed") {
 			_, _ = fmt.Fprint(w, `{"results":[]}`)
 			return
 		}
@@ -111,8 +111,8 @@ func TestTheCookieDoesNotGoTwice(t *testing.T) {
 // assembly time, not become a 401 at the server.
 func TestAMalformedCookieFailsEarly(t *testing.T) {
 	_, err := JSON(context.Background(), core.Source{
-		URL:    "http://exemplo.invalido",
-		Header: map[string][]string{"Cookie": {"isso nao e um cookie"}},
+		URL:    "http://example.invalid",
+		Header: map[string][]string{"Cookie": {"that is not a cookie"}},
 	}, nil)
 	if err == nil {
 		t.Fatal("an invalid cookie got through")
@@ -146,7 +146,7 @@ func drain(t *testing.T, s core.Source) {
 	}
 	for _, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 	}
 }

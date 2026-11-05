@@ -104,7 +104,7 @@ func TestEachTypeConvertsFromWhatARecordCarries(t *testing.T) {
 		{sdk.TypeDate,
 			[]any{"2026-11-02", time.Date(2026, 11, 2, 23, 59, 0, 0, time.UTC)},
 			[]any{"2026-11-02", "2026-11-02"}},
-		// json is the serialised document: an object is marshalled, text
+		// json is the serialized document: an object is marshalled, text
 		// that already is a document goes as it is.
 		{sdk.TypeJSON,
 			[]any{map[string]any{"a": 1}, `{"b":[1,2]}`, json.RawMessage(`[1]`), []any{"x"}},
@@ -220,7 +220,7 @@ func TestAnAbsentOrNullValueIsNullUnlessTheColumnIsRequired(t *testing.T) {
 // HEAP UNDER 512 MB (spec criterion 8). The envelopes are the caller's and
 // already in memory; what this measures is that the conversion streams --
 // one batch alive at a time, released when the loop moves on -- instead of
-// materialising a million Arrow rows before the first Parquet byte. The
+// materializing a million Arrow rows before the first Parquet byte. The
 // payloads cycle through a pool so the input itself stays small enough for
 // the whole heap, input included, to fit the budget.
 func TestAMillionRowsStreamInBatchesUnderTheMemoryBudget(t *testing.T) {

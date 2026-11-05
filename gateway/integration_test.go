@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	// v1, deprecated upstream in favour of v2 -- and deliberately the same
+	// v1, deprecated upstream in favor of v2 -- and deliberately the same
 	// major the SDK driver imports (sdk/go.mod pins v1.30.0). A test that
 	// published with one client and read with another would be exercising a
 	// combination that never ships. It moves when the driver moves.

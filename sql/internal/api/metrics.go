@@ -24,7 +24,7 @@ import (
 //
 // NO TENANT IN ANY LABEL, NO VALUE ANYWHERE. A label is a series for as long
 // as the database keeps it: one per tenant is a cardinality problem and a
-// customer list on a port. Paths are not labels either -- an unauthorised
+// customer list on a port. Paths are not labels either -- an unauthorized
 // caller chooses the path, and a label from it would be a series per guess.
 // Endpoints are labels because the file bounds them.
 type metrics struct {

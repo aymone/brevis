@@ -36,7 +36,7 @@ const (
 // already settles who reads. An application key would protect against somebody
 // who has read access and not the key -- but the key lives in the same secret
 // the tasks do, so whoever reads the bucket has it too. Calling that security
-// would be theatre, and theatre is worse than absence because it ends the
+// would be theater, and theater is worse than absence because it ends the
 // conversation.
 //
 // In a directory the recommendation flips: a directory is easier to end up

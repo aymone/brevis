@@ -83,7 +83,7 @@ func TestTheCounterWindowRolls(t *testing.T) {
 			ctx := context.Background()
 			key := fmt.Sprintf("rolls:%s:%d", b.name, time.Now().UnixNano())
 
-			// The timing separates the two behaviours rather than merely
+			// The timing separates the two behaviors rather than merely
 			// outlasting both, which the first version of this did and so
 			// passed against the bug.
 			//
@@ -335,7 +335,7 @@ func TestIntegrationTwoReplicasBothLand(t *testing.T) {
 		go func(i int, u string) {
 			defer wg.Done()
 			postKeyed(t, u+"/v1/tables", fmt.Sprintf(
-				`[{"table_name":%q,"data":{"id":"R-%d","total":10,"novo_campo":"v%d"}}]`,
+				`[{"table_name":%q,"data":{"id":"R-%d","total":10,"new_field":"v%d"}}]`,
 				table, i, i), http.StatusAccepted)
 		}(i, u)
 	}
@@ -355,9 +355,9 @@ func TestIntegrationTwoReplicasBothLand(t *testing.T) {
 	// And the column exists exactly once, whichever replica made it.
 	cols := query(t, dsn, fmt.Sprintf(
 		`SELECT count(*)::text FROM information_schema.columns
-		 WHERE table_name='%s' AND column_name='novo_campo'`, table))
+		 WHERE table_name='%s' AND column_name='new_field'`, table))
 	if cols[0] != "1" {
-		t.Errorf("novo_campo exists %s times", cols[0])
+		t.Errorf("new_field exists %s times", cols[0])
 	}
 }
 

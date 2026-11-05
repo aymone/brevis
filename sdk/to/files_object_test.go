@@ -18,7 +18,7 @@ import (
 func batch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
 	for i := range out {
-		out[i] = sdk.Envelope{Payload: map[string]any{"i": i, "nome": fmt.Sprintf("linha %d", i)}}
+		out[i] = sdk.Envelope{Payload: map[string]any{"i": i, "name": fmt.Sprintf("line %d", i)}}
 	}
 	return out
 }
@@ -71,7 +71,7 @@ func TestFilesPathGoesBackIntoFromFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, ok := env.Payload.(map[string]any)["nome"]; !ok {
+		if _, ok := env.Payload.(map[string]any)["name"]; !ok {
 			t.Errorf("row without the fields: %v", env.Payload)
 		}
 		n++
@@ -119,7 +119,7 @@ func TestFilesWithFlushEveryReportsAllOfThem(t *testing.T) {
 
 type sourceOfN struct{ n int }
 
-func (sourceOfN) Describe() string { return "fonte de teste" }
+func (sourceOfN) Describe() string { return "test source" }
 func (f sourceOfN) Read(context.Context, sdk.ReadOptions) (iter.Seq2[sdk.Envelope, error], error) {
 	return func(yield func(sdk.Envelope, error) bool) {
 		for i := 0; i < f.n; i++ {
@@ -159,7 +159,7 @@ func TestFilesWritesIntoTheConfiguredDirectory(t *testing.T) {
 // URI -- it is what has to go back into a from.Files with no reassembly.
 func TestFilesObjectInObjectStorage(t *testing.T) {
 	var written []string
-	f := to.Files{Path: "s3://meu-bucket/landing", Store: fakeStore{&written}}
+	f := to.Files{Path: "s3://my-bucket/landing", Store: fakeStore{&written}}
 
 	res, err := f.Write(context.Background(), batch(1), sdk.WriteOptions{})
 	if err != nil {
@@ -168,7 +168,7 @@ func TestFilesObjectInObjectStorage(t *testing.T) {
 	if len(res.Objects) != 1 {
 		t.Fatalf("Objects = %v", res.Objects)
 	}
-	if !strings.HasPrefix(res.Objects[0], "s3://meu-bucket/landing/parte-") {
+	if !strings.HasPrefix(res.Objects[0], "s3://my-bucket/landing/parte-") {
 		t.Errorf("path = %q; expected the full URI inside landing/", res.Objects[0])
 	}
 	// And it is the same one handed to the store, with no scheme and no bucket.

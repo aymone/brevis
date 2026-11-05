@@ -62,9 +62,9 @@ type Executor struct {
 	LeaseLimit time.Duration
 
 	// HandOver lets a shutdown leave the step running on its agent, to be
-	// reattached by the next scheduler (#125), instead of cancelling it. Only a
+	// reattached by the next scheduler (#125), instead of canceling it. Only a
 	// shutdown: any other end of the run's context still cancels. Off is
-	// #122's behaviour.
+	// #122's behavior.
 	HandOver bool
 
 	// Retries is how many times a dropped connection is resumed before the step
@@ -145,7 +145,7 @@ func (e *Executor) Execute(ctx context.Context, t execution.TaskExec) (<-chan ex
 	// The instance is recorded WITH the cancel function, in one place, because
 	// the two are needed together and by different callers: pump resumes and
 	// Cancel stops, and a step whose instance lived somewhere else would be one
-	// refactor away from being cancelled at the wrong replica.
+	// refactor away from being canceled at the wrong replica.
 	e.running[t.ExecutionID] = &step{cancel: cancel, instance: session.Instance}
 	e.mu.Unlock()
 
@@ -217,7 +217,7 @@ type step struct {
 	instance string
 
 	// told is set by Cancel, which tells the agent itself. pump then does not
-	// tell it a second time when the context it cancelled ends the stream.
+	// tell it a second time when the context it canceled ends the stream.
 	told bool
 }
 
@@ -265,8 +265,8 @@ func (e *Executor) pump(ctx context.Context, cancel context.CancelFunc,
 			return
 		}
 		if ctx.Err() != nil {
-			// Cancelled. The step's outcome was already reported by whoever
-			// cancelled it; saying anything here would be a second verdict.
+			// Canceled. The step's outcome was already reported by whoever
+			// canceled it; saying anything here would be a second verdict.
 			//
 			// But the PROCESS is not ours to abandon. A run's context ends
 			// when the scheduler shuts down or when its claim was lost to the
@@ -343,7 +343,7 @@ func (e *Executor) handOver(t execution.TaskExec, instance string, seen int64,
 	return true
 }
 
-// stopOnHost asks the agent to stop a step whose run was cancelled here, unless
+// stopOnHost asks the agent to stop a step whose run was canceled here, unless
 // Cancel already did.
 //
 // The error is dropped, and not by oversight: there is no one left to tell. The
@@ -550,11 +550,11 @@ func reasonOf(err error) string {
 //
 // Two things this does NOT hide:
 //
-//   - the local context is cancelled first, so the engine stops reading the
+//   - the local context is canceled first, so the engine stops reading the
 //     stream whatever the agent does. The step's own outcome is then decided by
 //     the caller, not by this stream going quiet.
 //   - if the agent is unreachable, the error says so plainly. The step is
-//     cancelled HERE and may well still be running THERE, which is a real state
+//     canceled HERE and may well still be running THERE, which is a real state
 //     and worth naming rather than showing as a spinner that never resolves.
 func (e *Executor) Cancel(ctx context.Context, execID string) error {
 	e.mu.Lock()
@@ -579,7 +579,7 @@ func (e *Executor) Cancel(ctx context.Context, execID string) error {
 
 // HTTPAgent is the real agent, over HTTP.
 //
-// Deliberately thin: everything that decides behaviour is in Executor and is
+// Deliberately thin: everything that decides behavior is in Executor and is
 // tested against a fake. This is transport.
 type HTTPAgent struct {
 	BaseURL string
@@ -764,16 +764,16 @@ func sameInstallation(configured, advertised string) bool {
 
 	// THE ADVERTISED HOST IS THE CONFIGURED ONE, OR A NAME INSIDE IT.
 	//
-	// A pool is configured with its SERVICE -- `brevis-agent.dados.svc` -- and
-	// each replica advertises its POD -- `brevis-agent-2.brevis-agent.dados.svc`.
+	// A pool is configured with its SERVICE -- `brevis-agent.data.svc` -- and
+	// each replica advertises its POD -- `brevis-agent-2.brevis-agent.data.svc`.
 	// The pod's name is the Service's with a label in FRONT, which is what
 	// Kubernetes gives a StatefulSet with a governing headless Service, and it
 	// is the only shape in which a pool works at all: configuring one pod
 	// instead sends every start to that pod and the others never see work.
 	//
 	// So the rule is containment and not similarity. `evil.example.com` is
-	// neither; `redis.dados.svc` is a sibling of the Service and is NOT a name
-	// inside it; `pod.notbrevis-agent.dados.svc` ends with the right characters
+	// neither; `redis.data.svc` is a sibling of the Service and is NOT a name
+	// inside it; `pod.notbrevis-agent.data.svc` ends with the right characters
 	// and not with the right LABEL, which is why the dot is part of the
 	// comparison.
 	baseHost, advHost := base.Hostname(), adv.Hostname()

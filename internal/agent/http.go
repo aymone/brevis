@@ -13,7 +13,7 @@ import (
 
 // Handler serves the three routes the engine calls, and one it does not.
 //
-// Thin on purpose: everything that decides behaviour is in the Agent, so the
+// Thin on purpose: everything that decides behavior is in the Agent, so the
 // tests that matter drive it directly and this file is transport. The route
 // names are remote.HTTPAgent's, and the two are the only pair that has to
 // agree -- which is why a test puts them on a socket together rather than
@@ -194,7 +194,7 @@ func (a *Agent) handleCancel(log *slog.Logger) http.HandlerFunc {
 			// A refused cancel is a 409 and not a 500, and the distinction is
 			// the point: nothing broke here. The most important one -- a pid the
 			// OS recycled -- is this agent DECLINING to signal, and the body
-			// says so, because an operator told "cancelled" about a pid that is
+			// says so, because an operator told "canceled" about a pid that is
 			// now somebody's database has no way to find out otherwise.
 			log.Warn("a cancel was not carried out", "execution", id, "error", err)
 			http.Error(w, err.Error(), http.StatusConflict)
@@ -248,7 +248,7 @@ func stream_(w http.ResponseWriter, r *http.Request, body io.ReadCloser) {
 		}
 		// The engine hung up. The process goes on and the ring goes on filling,
 		// which is what makes the resume possible -- so this returns rather
-		// than cancelling anything.
+		// than canceling anything.
 		if r.Context().Err() != nil {
 			return
 		}

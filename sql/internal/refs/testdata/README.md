@@ -1,7 +1,7 @@
 # Corpus
 
 30 queries, 15 per dialect, each with the references a model built on it
-depends on, labelled by hand before any candidate ran.
+depends on, labeled by hand before any candidate ran.
 
 ## What counts as a reference
 

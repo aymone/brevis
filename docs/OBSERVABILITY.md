@@ -152,7 +152,7 @@ The two "per run" versus "per attempt" choices are the useful ones:
   passes through the same code three times, and counting each pass would report
   three runs where the operator saw one.
 - **A step that fails twice and then succeeds is three attempts**, two of them
-  labelled `status="failed"`. That is the only place flapping is visible — the
+  labeled `status="failed"`. That is the only place flapping is visible — the
   run is green, the screen is green, and the step has been failing every night
   for a month.
 
@@ -222,11 +222,11 @@ Which makes **`Close` the most important call in that example**. The periodic
 reader's interval is tens of seconds and a fetcher that runs for twelve exits
 before the first tick — every number it recorded dies with the process unless
 the flush happens on the way out. Use a fresh context for it: the run's is
-usually already cancelled by then, and passing it aborts the flush at the exact
+usually already canceled by then, and passing it aborts the flush at the exact
 moment it matters.
 
 The endpoint comes from `OTEL_EXPORTER_OTLP_ENDPOINT`, the variable every
-OpenTelemetry tool already honours, rather than a `BREVIS_` one invented beside
+OpenTelemetry tool already honors, rather than a `BREVIS_` one invented beside
 it.
 
 ### Name a duration `*_seconds`

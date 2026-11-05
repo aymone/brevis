@@ -45,7 +45,7 @@ the bootstrap means pointing them apart is a flag away instead.
 
 ## The chart, not a copy of it
 
-`brevis.yaml` deploys `deployments/helm/brevis` — the artefact a client
+`brevis.yaml` deploys `deployments/helm/brevis` — the artifact a client
 installs, including its RBAC. A demo that deployed an edited version of it
 would demonstrate something nobody has.
 
@@ -178,7 +178,7 @@ What makes a pool spread is **the address in `BREVIS_HOSTS`**:
 ```yaml
 hosts:
   - name: tools
-    url: http://brevis-agent.dados.svc:9443     # the SERVICE, not a pod
+    url: http://brevis-agent.data.svc:9443     # the SERVICE, not a pod
 ```
 
 A pod address sends every start to that one replica and the others never see
@@ -189,7 +189,7 @@ and a resume that reaches a different replica is answered "not running here"
 while the step runs on undisturbed.
 
 ```bash
-make cluster-shell ARGS="-n dados logs brevis-agent-0" | grep -c 'step started'
+make cluster-shell ARGS="-n data logs brevis-agent-0" | grep -c 'step started'
 ```
 
 across the three pods shows the work split.
@@ -209,7 +209,7 @@ make cluster-tree
 ```
 
 ```
-ConfigMap/brevis-workflows-…   Namespace/dados   Secret/brevis-db
+ConfigMap/brevis-workflows-…   Namespace/data   Secret/brevis-db
 Service/brevis-ui   Service/postgres   Deployment/postgres   Job/brevis-publish
 ```
 

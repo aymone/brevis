@@ -20,10 +20,10 @@ func bacen() map[string]any {
 		"data":        "01/12/2025",
 		"series":      float64(21129),
 		"source_key":  "21129|01/12/2025",
-		"valor":       8.89,
+		"value":       8.89,
 		"external_id": float64(26130000),
-		"meta":        map[string]any{"uf": "SP", "fonte": "bacen"},
-		"tags":        []any{"serie", "diaria"},
+		"meta":        map[string]any{"uf": "SP", "source": "bacen"},
+		"tags":        []any{"series", "daily"},
 	}
 }
 
@@ -536,7 +536,7 @@ func TestANullInAnEarlierRecordDoesNotTypeTheColumn(t *testing.T) {
 	_, schemas, err := r.group([]gateway.Envelope{
 		event("A-1", nil),
 		event("A-2", nil),
-		event("A-3", []any{"gasolina", "etanol"}),
+		event("A-3", []any{"gasoline", "ethanol"}),
 		event("A-4", nil),
 	})
 	if err != nil {

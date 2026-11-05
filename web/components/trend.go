@@ -82,7 +82,7 @@ func Trend(days []postgres.LoadDay) []TrendSeries {
 
 // buildTrend draws one series.
 //
-// `worseWhenUp` decides only the COLOUR of the trendDelta, and only where the
+// `worseWhenUp` decides only the COLOR of the trendDelta, and only where the
 // direction has a meaning: a load taking longer is worse, and more rows is just
 // more rows -- a pipeline whose volume doubled may be healthy or may be
 // double-reading, and painting that red would be the screen guessing.

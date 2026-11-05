@@ -43,10 +43,10 @@ func (c pgConn) Exec(ctx context.Context, sql string) error {
 // third-party store to implement it because of one driver -- the driver asks
 // whether that store knows how to delete.
 func (t Table) remove(ctx context.Context, bucket, key string) error {
-	type remover interface {
+	type deleter interface {
 		Delete(ctx context.Context, bucket, key string) error
 	}
-	d, knows := t.Store.(remover)
+	d, knows := t.Store.(deleter)
 	if !knows {
 		return fmt.Errorf("this store does not delete; set KeepStagedFile to silence this")
 	}

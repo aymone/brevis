@@ -52,7 +52,21 @@ const SessionLifetime = 12 * time.Hour
 const CodeSignInRequired = "sign_in_required"
 
 // CookieName is the session cookie's name.
-const CookieName = "brevis_sessao"
+const CookieName = "brevis_session"
+
+// LegacyCookieName is what releases before 0.43 called the session cookie ("sessao" is Portuguese for "session").
+// It is only READ: a session signed in under it stays valid until its own expiry, so upgrading signs nobody out,
+// and every new session is written under CookieName. shortcut: one session lifetime (SessionLifetime) after 0.43
+// every such cookie has expired; delete this and the two fallbacks below in the next release.
+const LegacyCookieName = "brevis_sessao"
+
+// sessionCookie is the request's session cookie, under its current name or, failing that, its legacy one.
+func sessionCookie(r *http.Request) (*http.Cookie, error) {
+	if c, err := r.Cookie(CookieName); err == nil {
+		return c, nil
+	}
+	return r.Cookie(LegacyCookieName)
+}
 
 // ---------------------------------------------------------------------------
 // Password hash
@@ -84,19 +98,19 @@ func GenerateHash(password string) (string, error) {
 // login path, and the only safe answer there is "did not get in". The
 // configuration error is caught at boot, by Credential.Validate.
 func CheckPassword(hash, password string) bool {
-	partes := strings.Split(hash, "$")
-	if len(partes) != 4 || partes[0] != "pbkdf2-sha256" {
+	parts := strings.Split(hash, "$")
+	if len(parts) != 4 || parts[0] != "pbkdf2-sha256" {
 		return false
 	}
-	iter, err := strconv.Atoi(partes[1])
+	iter, err := strconv.Atoi(parts[1])
 	if err != nil || iter <= 0 {
 		return false
 	}
-	salt, err := base64.RawStdEncoding.DecodeString(partes[2])
+	salt, err := base64.RawStdEncoding.DecodeString(parts[2])
 	if err != nil {
 		return false
 	}
-	expected, err := base64.RawStdEncoding.DecodeString(partes[3])
+	expected, err := base64.RawStdEncoding.DecodeString(parts[3])
 	if err != nil {
 		return false
 	}
@@ -219,7 +233,7 @@ func (c Credential) checkSession(value string, now time.Time) bool {
 type Gate struct {
 	Cred     Credential
 	Next     http.Handler
-	Login    http.Handler // renderiza a tela de login
+	Login    http.Handler // renders the login screen
 	Insecure bool         // plain http: sends the cookie without the Secure flag
 
 	// Limit throttles Attempt; nil gets a default on first use.
@@ -269,7 +283,7 @@ func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// context, an anonymous one is marked, so what a public endpoint says
 		// can differ (the config hides the engine's version from a stranger).
 		ctx := r.Context()
-		if cookie, err := r.Cookie(CookieName); err == nil && p.Cred.checkSession(cookie.Value, time.Now()) {
+		if cookie, err := sessionCookie(r); err == nil && p.Cred.checkSession(cookie.Value, time.Now()) {
 			ctx = IntoContext(ctx, p.Cred.User)
 		} else {
 			ctx = context.WithValue(ctx, anonymousKey{}, true)
@@ -278,7 +292,7 @@ func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie(CookieName)
+	cookie, err := sessionCookie(r)
 	if err == nil && p.Cred.checkSession(cookie.Value, time.Now()) {
 		p.Next.ServeHTTP(w, r.WithContext(IntoContext(r.Context(), p.Cred.User)))
 		return
@@ -319,7 +333,7 @@ func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (p *Gate) verify(user, password string) bool {
 	// Both comparisons ALWAYS run, even with the wrong user: returning early
 	// makes an invalid user answer faster than a valid one, and the
-	// diferenca de tempo entrega quais nomes existem.
+	// time difference gives away which names exist.
 	userOK := subtle.ConstantTimeCompare([]byte(user), []byte(p.Cred.User)) == 1
 	check := p.Check
 	if check == nil {
@@ -369,13 +383,15 @@ func (p *Gate) setCookie(w http.ResponseWriter) {
 	})
 }
 
-// SignOut apaga o cookie.
+// SignOut deletes the cookie, under both names: a session that was signed in under the legacy one must end too.
 func (p *Gate) SignOut(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name: CookieName, Value: "", Path: "/",
-		HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: !p.Insecure,
-		MaxAge: -1,
-	})
+	for _, name := range []string{CookieName, LegacyCookieName} {
+		http.SetCookie(w, &http.Cookie{
+			Name: name, Value: "", Path: "/",
+			HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: !p.Insecure,
+			MaxAge: -1,
+		})
+	}
 }
 
 // NextParam is the query parameter carrying where the operator was going.
@@ -392,7 +408,7 @@ const NextParam = "next"
 //
 // IT CHECKED TWO SPELLINGS AND THERE ARE MORE. `//evil.com` was refused and
 // `/\evil.com` was not: it looks like a path and a browser does not read it
-// as one, because a BACKSLASH IS A SLASH in a URL. Normalised, that is
+// as one, because a BACKSLASH IS A SLASH in a URL. Normalized, that is
 // `//evil.com`, and the host is evil.com -- measured with `url.Parse`, not
 // reasoned about. Found by gosec, which this repository ran against the SDK
 // only, so the console it was pointed away from is where it was true.

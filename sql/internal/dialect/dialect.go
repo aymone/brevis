@@ -136,7 +136,7 @@ type State struct {
 	//
 	// Read only when it is going to be used -- an incremental model that is
 	// adding to an existing table -- and nil otherwise. A list read on every
-	// build would be a query per model for an answer three materialisations
+	// build would be a query per model for an answer three materializations
 	// out of four never look at.
 	Columns []string
 }
@@ -432,7 +432,7 @@ type Plan struct {
 	//
 	// CARRIED SO A REFUSAL CAN QUOTE AND NEVER PARAPHRASE, and never parsed
 	// by a caller: the day a warehouse adds a kind, a service reading this
-	// as a list would classify it by not recognising it.
+	// as a list would classify it by not recognizing it.
 	Kind string
 
 	// Reads is the WAREHOUSE's verdict that this statement only reads. It is
@@ -515,7 +515,7 @@ type WriteProbe interface {
 // refuse a write, instead of this service guessing from the text.
 //
 // IT IS THE ANSWER TO WHAT THE CLASSIFIER SAYS IT CANNOT DO. `serve`'s
-// ReadOnly reads a statement over a tokeniser and its own comment names the
+// ReadOnly reads a statement over a tokenizer and its own comment names the
 // hole: "a function call writes whatever the function writes. `SELECT
 // nextval('s')` advances a sequence and `SELECT dblink_exec(...)` runs
 // anything at all, and no classifier that is not a planner can see inside
@@ -659,7 +659,7 @@ type Disposable interface {
 // also exercises KindOf" -- and a harness that assembled the State its own
 // way would pass a suite about itself. Both call this.
 //
-// THE COLUMNS ARE READ ONLY WHEN THEY WILL BE USED. Three materialisations
+// THE COLUMNS ARE READ ONLY WHEN THEY WILL BE USED. Three materializations
 // out of four never look at them, and a query per model for an answer nobody
 // reads is a round trip per model per build.
 func StateOf(ctx context.Context, d Dialect, conn Conn, ref string,

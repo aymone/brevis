@@ -48,7 +48,7 @@ jobs:
       # A RATCHET, not an aspiration.
       #
       # This step was called "Check test coverage" and checked nothing: the
-      # number was measured, echoed, and turned into the colour of an emoji in
+      # number was measured, echoed, and turned into the color of an emoji in
       # a PR comment. It has read 67% against a comment that goes green at 80
       # since it was written, and nobody acted, which is what a number printed
       # and never asserted buys.

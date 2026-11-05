@@ -11,12 +11,12 @@ import (
 
 func view() model.Model {
 	return model.Model{Schema: "staging", Name: "stg_orders",
-		Materialised: model.View, SQL: "/* brevis */\nSELECT 1 AS n"}
+		Materialized: model.View, SQL: "/* brevis */\nSELECT 1 AS n"}
 }
 
 func table() model.Model {
 	return model.Model{Schema: "marts", Name: "orders",
-		Materialised: model.Table, SQL: "SELECT 1 AS n"}
+		Materialized: model.Table, SQL: "SELECT 1 AS n"}
 }
 
 func all(ss []string) string { return strings.Join(ss, "\n;;\n") }
@@ -93,7 +93,7 @@ func TestAFirstBuildDropsNothing(t *testing.T) {
 // on Postgres, and both are correct.
 func TestMixedCaseIsAModelNameHere(t *testing.T) {
 	m := model.Model{Schema: "Staging", Name: "Stg_Orders",
-		Materialised: model.View, SQL: "SELECT 1 AS n"}
+		Materialized: model.View, SQL: "SELECT 1 AS n"}
 	got, err := Dialect{}.Build(m, dialect.State{Current: dialect.Absent})
 	if err != nil {
 		t.Fatalf("BigQuery keeps the case it was given: %v", err)
@@ -106,9 +106,9 @@ func TestMixedCaseIsAModelNameHere(t *testing.T) {
 // A name BigQuery itself cannot hold is still refused, naming it.
 func TestANameBigQueryCannotHoldIsRefused(t *testing.T) {
 	for _, bad := range []model.Model{
-		{Schema: "staging", Name: "stg-orders", Materialised: model.View, SQL: "SELECT 1"},
-		{Schema: "my dataset", Name: "t", Materialised: model.View, SQL: "SELECT 1"},
-		{Schema: "staging", Name: "1st", Materialised: model.View, SQL: "SELECT 1"},
+		{Schema: "staging", Name: "stg-orders", Materialized: model.View, SQL: "SELECT 1"},
+		{Schema: "my dataset", Name: "t", Materialized: model.View, SQL: "SELECT 1"},
+		{Schema: "staging", Name: "1st", Materialized: model.View, SQL: "SELECT 1"},
 	} {
 		if _, err := (Dialect{}).Build(bad, dialect.State{Current: dialect.Absent}); err == nil {
 			t.Errorf("%s was accepted", bad.Ref())
@@ -150,7 +150,7 @@ func TestNameIsBigquery(t *testing.T) {
 
 func TestTheIncrementalFilterTakesALookback(t *testing.T) {
 	m := model.Model{Schema: "s", Name: "t", Watermark: "w", UniqueKey: []string{"k"},
-		Materialised: model.Incremental, SQL: "select 1", Lookback: 2 * time.Hour}
+		Materialized: model.Incremental, SQL: "select 1", Lookback: 2 * time.Hour}
 	if got := mergeInto(m, dialect.State{Columns: []string{"k", "w"}}, "s.t"); !strings.Contains(got, "w >= TIMESTAMP_SUB((SELECT MAX(w) FROM s.t), INTERVAL 7200 SECOND)") {
 		t.Errorf("no lookback bound in:\n%s", got)
 	}

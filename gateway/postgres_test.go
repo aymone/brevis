@@ -123,7 +123,7 @@ func TestIntegrationPostgresMergeRefusesATableWithoutTheIndex(t *testing.T) {
 // This is why the sink declares no Columns. A pipeline knows its row's shape; a
 // gateway's batch is whatever N clients posted in one flush window, and an
 // event that omits an optional field is written as NULL rather than failing the
-// batch that its neighbour is in.
+// batch that its neighbor is in.
 func TestIntegrationPostgresABatchOfDifferentShapesLands(t *testing.T) {
 	dsn := os.Getenv("BREVIS_GATEWAY_TEST_PG_DSN")
 	if dsn == "" {

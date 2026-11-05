@@ -92,13 +92,13 @@ func elide(s string) string {
 	return s[:37] + "…"
 }
 
-// declaredType maps a MySQL catalogue type back onto the SDK's declared ones,
+// declaredType maps a MySQL catalog type back onto the SDK's declared ones,
 // for the schema diff.
 //
 // `data_type` is the bare name -- `varchar`, not `varchar(255)` -- which is
-// what makes this a short list. A type it does not recognise returns false and
+// what makes this a short list. A type it does not recognize returns false and
 // the diff leaves that column alone: proposing an ALTER on a type nobody
-// modelled is worse than doing nothing.
+// modeled is worse than doing nothing.
 func declaredType(my string) (core.ColumnType, bool) {
 	switch my {
 	case "char", "varchar", "text", "tinytext", "mediumtext", "longtext", "enum":
@@ -129,7 +129,7 @@ func declaredType(my string) (core.ColumnType, bool) {
 	}
 }
 
-// declaredTypes turns the catalogue into what Schema.Plan compares against.
+// declaredTypes turns the catalog into what Schema.Plan compares against.
 func declaredTypes(types map[string]string) map[string]core.ColumnType {
 	out := make(map[string]core.ColumnType, len(types))
 	for name, my := range types {

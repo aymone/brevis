@@ -11,7 +11,7 @@ import (
 // ticks, the boot time itself a whole second that can be off by one. The
 // recorded instant is taken just before the fork. So the same process can be
 // reported up to a second either side of the second it was recorded in, and a
-// cancel must still recognise it: refusing it leaves a step running that the
+// cancel must still recognize it: refusing it leaves a step running that the
 // engine asked to stop. A recycled pid started seconds or days later, and is
 // still refused.
 func TestTheStartComparisonToleratesWholeSecondsAndRefusesARecycledPid(t *testing.T) {

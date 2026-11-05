@@ -13,7 +13,7 @@ import (
 // THIS IS THE FUNCTION BETWEEN A BROWSER AND A CUSTOMER'S WAREHOUSE, and it
 // is written to be read by somebody deciding whether to trust it.
 //
-// OVER A TOKENISER AND NOT A REGEX, which is the whole reason `sqltok`
+// OVER A TOKENIZER AND NOT A REGEX, which is the whole reason `sqltok`
 // exists as its own package. A pattern matching `DELETE` cannot tell code
 // from a string literal or a comment, so it refuses
 // `WHERE note = 'please DELETE this row'` -- a legitimate query -- and it

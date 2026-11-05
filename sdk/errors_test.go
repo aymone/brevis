@@ -10,7 +10,7 @@ import (
 //
 // FormatError used to carry a Format field that was interpolated into the
 // message and never filled at any of the four sites that build the error, so
-// every format error read "formato  from ..." with a hole in it -- and no test
+// every format error read "format  from ..." with a hole in it -- and no test
 // noticed, because no test looked at the message. These do.
 func TestFormatErrorMessage(t *testing.T) {
 	cases := []struct {
@@ -19,12 +19,12 @@ func TestFormatErrorMessage(t *testing.T) {
 		wants string
 	}{
 		{
-			name:  "sem registro",
+			name:  "without record",
 			err:   &FormatError{URL: "https://api.example.com/v1", Line: -1, Cause: errors.New("not a JSON object")},
 			wants: "format error in https://api.example.com/v1: not a JSON object",
 		},
 		{
-			name:  "com registro",
+			name:  "with record",
 			err:   &FormatError{URL: "https://api.example.com/v1", Line: 7, Cause: errors.New("building source_key: missing lat")},
 			wants: "format error in https://api.example.com/v1, record 7: building source_key: missing lat",
 		},

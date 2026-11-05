@@ -1,4 +1,4 @@
-// summarise-weather reads the CSV the previous step landed and folds it into
+// summarize-weather reads the CSV the previous step landed and folds it into
 // one row per day.
 //
 // Two things worth noticing. It never talks to the vendor: the raw extract is

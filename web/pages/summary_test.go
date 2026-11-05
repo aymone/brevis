@@ -120,7 +120,7 @@ func TestTheSummarySaysWhatAPipelineDoes(t *testing.T) {
 		{"files to files, with an aggregation", fields(
 			"source.driver", "from.Files", "source.path", "gs://acme-raw/orders/",
 			"transform.1.map", []any{"compute(area)"},
-			"transform.2.aggregate.by", []any{"area", "year"}, "transform.2.aggregate.total", "sum(valor)",
+			"transform.2.aggregate.by", []any{"area", "year"}, "transform.2.aggregate.total", "sum(value)",
 			"target.driver", "to.Files", "target.path", "gs://acme-silver/orders/"),
 			"Reads files at gs://acme-raw/orders/, applies 1 transformation, groups by area, year " +
 				"and writes to files at gs://acme-silver/orders/, appended."},

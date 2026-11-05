@@ -184,7 +184,7 @@ func TestOverRefusesANilBuilder(t *testing.T) {
 // iteration reaches it, and the first rows arrive before the last source is
 // touched.
 //
-// driver.go states the contract this defends: "a driver that materialises the
+// driver.go states the contract this defends: "a driver that materializes the
 // whole source before returning puts a 5 GB export in memory". Twenty-seven
 // inventories are not 5 GB, but the rule does not get to have exceptions.
 func TestOverStaysLazyThroughMany(t *testing.T) {

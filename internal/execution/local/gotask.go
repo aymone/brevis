@@ -8,7 +8,7 @@ import (
 	"brevis.sh/brevis/internal/execution"
 )
 
-// GoExecutor roda tasks Go registradas, dentro do proprio processo.
+// GoExecutor runs registered Go tasks, inside its own process.
 //
 // It is section 14's executor: no container, no pod, no child process. That is
 // exactly the gain — a simple Go task does not pay container startup, which was
@@ -32,13 +32,12 @@ func (g *GoExecutor) Name() string { return "go" }
 
 // Execute resolves the task in the registry and runs it in a goroutine,
 // streaming the
-// eventos.
+// events.
 func (g *GoExecutor) Execute(ctx context.Context, t execution.TaskExec) (<-chan execution.Event, error) {
 	task, ok := g.reg.Get(t.Action)
 	if !ok {
 		// Listing what exists saves a trip to the documentation, and exposes a
-		// mistake
-		// de digitacao de imediato.
+		// typo right away.
 		available := g.reg.Names()
 		if len(available) == 0 {
 			// An empty registry is the common case today: `docker.run` and
@@ -75,7 +74,7 @@ func (g *GoExecutor) Execute(ctx context.Context, t execution.TaskExec) (<-chan 
 
 		// A task that panics must not take the orchestrator down with it:
 		// it runs in the SAME process, unlike a pod. The panic becomes a failure
-		// daquela task.
+		// of that task.
 		var err error
 		func() {
 			defer func() {

@@ -133,7 +133,7 @@ type StepSpec struct {
 	With      map[string]any `yaml:"with,omitempty"`
 	DependsOn []Dependency   `yaml:"depends_on,omitempty"`
 
-	// Image e Resources sobrescrevem os do workflow. Ausentes = herda.
+	// Image and Resources override the workflow's. Absent = inherits.
 	Image     string       `yaml:"image,omitempty"`
 	Host      string       `yaml:"host,omitempty"`
 	Resources ResourceSpec `yaml:"resources,omitempty"`
@@ -418,7 +418,7 @@ func Parse(path string, content []byte) (domain.Workflow, error) {
 	return w, nil
 }
 
-// dominio turns the YAML's trigger into the domain's.
+// domain turns the YAML's trigger into the domain's.
 //
 // It does NOT check the targets: that is an invariant, it belongs in
 // Validate with the workflow's slug and the catalog's own message, and a
@@ -442,7 +442,7 @@ func normalizeTools(in []string) []string {
 	return out
 }
 
-// aparar trims the name and the value, and discards an entry with an empty
+// trimList trims the name and the value, and discards an entry with an empty
 // name.
 //
 // `GABRIEL_SESSION_COOKIE : gabriel-session/cookie` with a space before the
@@ -501,7 +501,7 @@ func normalizeTags(brutas []string) []string {
 	return out
 }
 
-// arestas turns the declaration into a graph.
+// edges turns the declaration into a graph.
 //
 // `chain` is sugar: every step depends on the previous one. Converting here, the
 // execution engine knows only DAGs — one more format in the file, zero extra
@@ -513,7 +513,7 @@ func edges(kind domain.Kind, steps []StepSpec) ([]domain.Edge, error) {
 	case domain.KindChain:
 		for _, st := range steps {
 			if len(st.DependsOn) > 0 {
-				return nil, fmt.Errorf("step %q usa `depends_on` num workflow `chain`; "+
+				return nil, fmt.Errorf("step %q uses `depends_on` in a `chain` workflow; "+
 					"in a chain the order is the file's -- use `type: dag` to declare dependencies", st.ID)
 			}
 		}

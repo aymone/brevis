@@ -18,8 +18,8 @@ import (
 )
 
 // fakeGCS is a pretend GCS with what matters here: a per-object generation,
-// and
-// ifGenerationMatch de verdade.
+// and a real
+// ifGenerationMatch.
 type fakeGCS struct {
 	mu         sync.Mutex
 	content    []byte
@@ -38,7 +38,7 @@ func (g *fakeGCS) server(t *testing.T) *storage.Client {
 		// (/bucket/object),
 		// and not through the JSON API -- that is how the first version of this
 		// fake
-		// errou.
+		// got it wrong.
 		if r.Method == http.MethodGet {
 			if !g.exists {
 				http.Error(w, `{"error":{"code":404}}`, http.StatusNotFound)
@@ -86,13 +86,13 @@ func (g *fakeGCS) server(t *testing.T) *storage.Client {
 	return cli
 }
 
-// extractMultipartBody pega a segunda parte do upload multipart do GCS.
+// extractMultipartBody takes the second part of the GCS multipart upload.
 func extractMultipartBody(b []byte) []byte {
-	partes := strings.Split(string(b), "\r\n\r\n")
-	if len(partes) < 3 {
+	parts := strings.Split(string(b), "\r\n\r\n")
+	if len(parts) < 3 {
 		return b
 	}
-	body := partes[2]
+	body := parts[2]
 	if i := strings.LastIndex(body, "\r\n--"); i >= 0 {
 		body = body[:i]
 	}
@@ -106,7 +106,7 @@ func credential(t *testing.T, g *fakeGCS) Credential {
 	return Credential{Bucket: "b", Object: "obj", Client: g.server(t)}
 }
 
-// TestItStoresAndReturns: o caminho feliz.
+// TestItStoresAndReturns: the happy path.
 func TestItStoresAndReturns(t *testing.T) {
 	g := &fakeGCS{}
 	c := credential(t, g)
@@ -134,21 +134,21 @@ func TestTheConditionalWrite(t *testing.T) {
 	g := &fakeGCS{}
 	c := credential(t, g)
 
-	if err := c.Save("primeiro"); err != nil {
+	if err := c.Save("first"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := c.Load(); err != nil { // lembra a geracao 1
+	if _, err := c.Load(); err != nil { // remembers generation 1
 		t.Fatal(err)
 	}
 
 	// Another process writes from outside, advancing the generation.
 	g.mu.Lock()
 	g.generation++
-	g.content = []byte("brevis-cred/1p\nde-outro-processo")
+	g.content = []byte("brevis-cred/1p\nfrom-another-process")
 	g.mu.Unlock()
 
 	// This run's write was conditional on the generation it read.
-	if err := c.Save("meu-valor"); err != nil {
+	if err := c.Save("my-value"); err != nil {
 		t.Fatalf("the conflict became an error: %v", err)
 	}
 	g.mu.Lock()
@@ -158,7 +158,7 @@ func TestTheConditionalWrite(t *testing.T) {
 	if conflicts != 1 {
 		t.Errorf("conflicts = %d, want 1 -- the write was not conditional", conflicts)
 	}
-	if !strings.Contains(content, "de-outro-processo") {
+	if !strings.Contains(content, "from-another-process") {
 		t.Errorf("overwrote the newer value: %q", content)
 	}
 }
@@ -169,15 +169,15 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 	g := &fakeGCS{}
 	c := credential(t, g)
 
-	if _, err := c.Load(); err != nil { // objeto ausente, geracao 0
+	if _, err := c.Load(); err != nil { // missing object, generation 0
 		t.Fatal(err)
 	}
 	// Another process creates the object first.
 	g.mu.Lock()
-	g.exists, g.generation, g.content = true, 7, []byte("brevis-cred/1p\nde-outro")
+	g.exists, g.generation, g.content = true, 7, []byte("brevis-cred/1p\nfrom-another")
 	g.mu.Unlock()
 
-	if err := c.Save("meu"); err != nil {
+	if err := c.Save("my"); err != nil {
 		t.Fatalf("the conflict became an error: %v", err)
 	}
 	g.mu.Lock()
@@ -185,8 +185,8 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 	if g.conflicts != 1 {
 		t.Errorf("conflicts = %d; the first write did not use DoesNotExist", g.conflicts)
 	}
-	if !strings.Contains(string(g.content), "de-outro") {
-		t.Errorf("sobrescreveu: %q", g.content)
+	if !strings.Contains(string(g.content), "from-another") {
+		t.Errorf("overwrote: %q", g.content)
 	}
 }
 
@@ -201,8 +201,8 @@ func TestBucketAndObjectAreRequired(t *testing.T) {
 
 // TestDescribeRevealsNothing: Describe reaches the log.
 func TestDescribeRevealsNothing(t *testing.T) {
-	c := Credential{Bucket: "b", Object: "o", Key: "chave-secreta-aqui"}
-	if strings.Contains(c.Describe(), "chave-secreta") {
+	c := Credential{Bucket: "b", Object: "o", Key: "secret-key-here"}
+	if strings.Contains(c.Describe(), "secret-key") {
 		t.Errorf("Describe leaks the key: %q", c.Describe())
 	}
 	if c.Describe() != "gs://b/o" {

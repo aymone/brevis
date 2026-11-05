@@ -2,7 +2,7 @@
 -- The alerts outbox.
 --
 -- Today the dispatcher calls notify.Slack directly and, if the call fails, logs
--- and carries on. That is the right behaviour -- a Slack outage must not stop a
+-- and carries on. That is the right behavior -- a Slack outage must not stop a
 -- pipeline -- and it is also how an alert is LOST: no retry, no record, and
 -- nothing on the screen to say one was meant to be sent. Whoever was supposed
 -- to be woken up simply is not.

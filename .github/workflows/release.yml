@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Versao a publicar (ex.: 0.1.0)"
+        description: "Version to publish (e.g. 0.1.0)"
         required: true
 
 env:

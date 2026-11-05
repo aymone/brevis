@@ -185,7 +185,7 @@ func servingAuthed(t *testing.T, dir string) *httptest.Server {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Not t.Context(): it is cancelled just BEFORE cleanups run, so Close
+	// Not t.Context(): it is canceled just BEFORE cleanups run, so Close
 	// would see a dead deadline and return without waiting for the deliveries
 	// -- which then race the TempDir being removed. A shutdown window is a
 	// window, and a test that gives none is testing a different thing.

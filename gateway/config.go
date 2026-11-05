@@ -527,7 +527,7 @@ type MetastoreConfig struct {
 	// is the case the shared store exists for.
 	//
 	// Keeping the default at a minute anyway: an installation that has not
-	// thought about this should get the conservative behaviour, and the
+	// thought about this should get the conservative behavior, and the
 	// installation that has can say so in one field. Issue #35 is the
 	// argument, made by a consumer with 52 tables and a limit of 20.
 	// The type is `Duration` and not `time.Duration`, and that is the other
@@ -692,7 +692,7 @@ const (
 	//
 	// The FIRST delivery of an event wins. A redelivery is ignored, not
 	// applied -- so a correction that arrives under the same ingestion_id does
-	// not overwrite what is there. That is the right behaviour for an event,
+	// not overwrite what is there. That is the right behavior for an event,
 	// which happened once and does not change, and the wrong one for a row
 	// that carries a mutable state.
 	//
@@ -748,7 +748,7 @@ const (
 	// Sixty seconds is 1,440 a day: inside the quota with room for a retry, and
 	// it is Google's own framing of the limit. The real answer is the Storage
 	// Write API, which is not written yet; until it is, the config refuses a
-	// window it cannot honour rather than letting the first deploy find out.
+	// window it cannot honor rather than letting the first deploy find out.
 	BigQueryFlushFloor = 60 * time.Second
 
 	// BigQueryDailyLoadJobs is the quota BigQueryFlushFloor exists to protect:

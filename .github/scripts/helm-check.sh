@@ -3,7 +3,7 @@
 #
 # `helm lint` only says the templates parse. What breaks an installation is a
 # rendered manifest that Kubernetes ACCEPTS and that is wrong at runtime -- two
-# scheduler replicas materialising duplicate runs, a Role without `pods/log` so
+# scheduler replicas materializing duplicate runs, a Role without `pods/log` so
 # every log stays empty, migrations racing the API instead of preceding it. Each
 # of those is asserted below, on the rendered output.
 #
@@ -41,16 +41,16 @@ MIN=(--set database.url=postgres://u:p@pg/brevis
      --set auth.passwordHash='pbkdf2-sha256$x'
      --set auth.secret=0123456789012345678901234567890123456789)
 
-falhas=0
-erro() { echo "::error::$*"; falhas=$((falhas + 1)); }
+failures=0
+fail() { echo "::error::$*"; failures=$((failures + 1)); }
 
 echo "→ helm $($HELM version --short), kubeconform, kubernetes $K8S_VERSION"
 
-$HELM lint "$CHART" "${MIN[@]}" >/dev/null || erro "helm lint failed"
+$HELM lint "$CHART" "${MIN[@]}" >/dev/null || fail "helm lint failed"
 
 rendered="$(mktemp)"; trap 'rm -f "$rendered" "$full"' EXIT
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" > "$rendered" || {
-  erro "the chart does not render with the minimum values"; exit 1; }
+  fail "the chart does not render with the minimum values"; exit 1; }
 
 full="$(mktemp)"
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
@@ -61,23 +61,23 @@ $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
   --set brand.enabled=true --set brand.content.title=Acme \
   --set 'scheduler.taskEnvFromSecrets={brevis-task-env}' \
   --set scheduler.taskNodeSelector=kubernetes.io/arch=arm64 > "$full" || {
-  erro "the chart does not render with everything enabled"; exit 1; }
+  fail "the chart does not render with everything enabled"; exit 1; }
 
 for f in "$rendered" "$full"; do
-  $KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$f" || erro "kubeconform rejected the output"
+  $KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$f" || fail "kubeconform rejected the output"
 done
 
 # --- what has to be true of the output -------------------------------------
-tem() { grep -q -- "$2" "$1"; }
+has() { grep -q -- "$2" "$1"; }
 
 # One scheduler, and a rollout that does not overlap it. Two replicas would
-# materialise the same slots; RollingUpdate would briefly run two.
-python3 - "$rendered" <<'PY' || erro "the scheduler is not exactly one replica with strategy Recreate"
+# materialize the same slots; RollingUpdate would briefly run two.
+python3 - "$rendered" <<'PY' || fail "the scheduler is not exactly one replica with strategy Recreate"
 import re, sys
 doc = open(sys.argv[1]).read()
-bloco = [d for d in doc.split('---') if 'component: scheduler' in d and 'kind: Deployment' in d]
-assert len(bloco) == 1, "expected exactly one scheduler Deployment"
-b = bloco[0]
+block = [d for d in doc.split('---') if 'component: scheduler' in d and 'kind: Deployment' in d]
+assert len(block) == 1, "expected exactly one scheduler Deployment"
+b = block[0]
 assert re.search(r'^  replicas: 1$', b, re.M), "scheduler replicas is not 1"
 assert 'type: Recreate' in b, "scheduler strategy is not Recreate"
 PY
@@ -88,55 +88,55 @@ PY
 # Parsed rather than grepped: the template's own YAML comment mentions
 # `pods/log`, and that comment survives into the rendered output -- so a grep
 # passed with the rule deleted. A test that cannot fail is worse than none.
-python3 - "$rendered" <<'PY' || erro "the scheduler Role's rules are wrong"
+python3 - "$rendered" <<'PY' || fail "the scheduler Role's rules are wrong"
 import re, sys
 doc = open(sys.argv[1]).read()
-blocos = [d for d in doc.split('---') if re.search(r'^kind: Role$', d, re.M)]
-assert len(blocos) == 1, 'expected exactly one Role, got %d' % len(blocos)
+blocks = [d for d in doc.split('---') if re.search(r'^kind: Role$', d, re.M)]
+assert len(blocks) == 1, 'expected exactly one Role, got %d' % len(blocks)
 # Strip comments before reading the rules, for the reason above.
-corpo = '\n'.join(l for l in blocos[0].split('\n') if not l.strip().startswith('#'))
-regras = corpo.split('rules:')[1]
-recursos = re.findall(r'resources: \[([^\]]*)\]', regras)
-verbos = re.findall(r'verbs: \[([^\]]*)\]', regras)
-achatado = ' '.join(recursos)
-assert '"pods/log"' in achatado, 'the Role does not grant pods/log: %r' % recursos
-assert '"pods"' in achatado, 'the Role does not grant pods: %r' % recursos
-todos = ' '.join(verbos)
-for proibido in ('"update"', '"patch"', '"*"'):
-    assert proibido not in todos, 'the Role grants %s, which the scheduler never needs' % proibido
-for preciso in ('"create"', '"get"', '"list"', '"watch"', '"delete"'):
-    assert preciso in todos, 'the Role is missing %s' % preciso
+body = '\n'.join(l for l in blocks[0].split('\n') if not l.strip().startswith('#'))
+rules = body.split('rules:')[1]
+resources = re.findall(r'resources: \[([^\]]*)\]', rules)
+verbs = re.findall(r'verbs: \[([^\]]*)\]', rules)
+flattened = ' '.join(resources)
+assert '"pods/log"' in flattened, 'the Role does not grant pods/log: %r' % resources
+assert '"pods"' in flattened, 'the Role does not grant pods: %r' % resources
+all_verbs = ' '.join(verbs)
+for forbidden in ('"update"', '"patch"', '"*"'):
+    assert forbidden not in all_verbs, 'the Role grants %s, which the scheduler never needs' % forbidden
+for needed in ('"create"', '"get"', '"list"', '"watch"', '"delete"'):
+    assert needed in all_verbs, 'the Role is missing %s' % needed
 PY
 
 # Migrations precede everything: `serve` never changes the schema.
-python3 - "$rendered" <<'PY' || erro "the migrate Job is not a pre-install/pre-upgrade hook"
+python3 - "$rendered" <<'PY' || fail "the migrate Job is not a pre-install/pre-upgrade hook"
 import sys
 doc = open(sys.argv[1]).read()
-bloco = [d for d in doc.split('---') if 'kind: Job' in d and 'migrate' in d]
-assert len(bloco) == 1, "expected exactly one migrate Job"
-b = bloco[0]
+block = [d for d in doc.split('---') if 'kind: Job' in d and 'migrate' in d]
+assert len(block) == 1, "expected exactly one migrate Job"
+b = block[0]
 assert 'helm.sh/hook: pre-install,pre-upgrade' in b, "missing the hook annotation"
 assert 'hook-weight: "-5"' in b, "missing the weight that puts it first"
 PY
 
 # The right image per role: the API executes nothing (distroless, no shell) and
 # the worker image is the one with a shell.
-python3 - "$rendered" <<'PY' || erro "the images per role are wrong"
+python3 - "$rendered" <<'PY' || fail "the images per role are wrong"
 import sys
 doc = open(sys.argv[1]).read()
-for comp, sufixo in (("api", False), ("scheduler", True)):
+for comp, suffix in (("api", False), ("scheduler", True)):
     b = [d for d in doc.split('---') if f'component: {comp}' in d and 'kind: Deployment' in d][0]
-    linha = [l for l in b.split('\n') if 'image:' in l][0]
-    if sufixo and not linha.strip().endswith('-worker'):
-        raise SystemExit(f"{comp} should use the -worker image: {linha.strip()}")
-    if not sufixo and linha.strip().endswith('-worker'):
-        raise SystemExit(f"{comp} should NOT use the -worker image: {linha.strip()}")
+    line = [l for l in b.split('\n') if 'image:' in l][0]
+    if suffix and not line.strip().endswith('-worker'):
+        raise SystemExit(f"{comp} should use the -worker image: {line.strip()}")
+    if not suffix and line.strip().endswith('-worker'):
+        raise SystemExit(f"{comp} should NOT use the -worker image: {line.strip()}")
 PY
 
 # Behind the ingress every browser shares the proxy's address, so the login
 # throttle needs the client-IP header or one guesser locks the operator out.
 # Set with the ingress, absent without it, and overridable.
-python3 - "$full" "$rendered" <<'PY' || erro "BREVIS_AUTH_CLIENT_IP_HEADER is not wired to api.ingress.enabled"
+python3 - "$full" "$rendered" <<'PY' || fail "BREVIS_AUTH_CLIENT_IP_HEADER is not wired to api.ingress.enabled"
 import sys
 on, off = (open(p).read() for p in sys.argv[1:])
 def api(doc):
@@ -146,14 +146,14 @@ assert 'BREVIS_AUTH_CLIENT_IP_HEADER' not in api(off), "set without an ingress"
 PY
 over="$(mktemp)"
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" --set api.ingress.enabled=true \
-  --set api.ingress.host=h --set auth.clientIPHeader=X-Real-IP > "$over" || erro "the chart does not render with auth.clientIPHeader"
-grep -q '"X-Real-IP"' "$over" || erro "auth.clientIPHeader does not override"
+  --set api.ingress.host=h --set auth.clientIPHeader=X-Real-IP > "$over" || fail "the chart does not render with auth.clientIPHeader"
+grep -q '"X-Real-IP"' "$over" || fail "auth.clientIPHeader does not override"
 rm -f "$over"
 
 # The metrics port stays off the Service. On the http port it would sit behind
 # the login; exposed through the Service it is one ServiceMonitor away from
 # publishing every workflow and step name.
-python3 - "$full" <<'PY' || erro "the metrics port leaked into the Service or the Ingress"
+python3 - "$full" <<'PY' || fail "the metrics port leaked into the Service or the Ingress"
 import re, sys
 doc = open(sys.argv[1]).read()
 # `kind: Service` matches `kind: ServiceAccount` as a substring, so anchor it.
@@ -169,7 +169,7 @@ assert '9090' not in ing[0] and 'metrics' not in ing[0], "the Ingress routes met
 PY
 
 # The API never talks to the API server, so it gets no token at all.
-python3 - "$rendered" <<'PY' || erro "the API mounts a ServiceAccount token"
+python3 - "$rendered" <<'PY' || fail "the API mounts a ServiceAccount token"
 import sys
 doc = open(sys.argv[1]).read()
 b = [d for d in doc.split('---') if 'component: api' in d and 'kind: Deployment' in d][0]
@@ -177,7 +177,7 @@ assert 'automountServiceAccountToken: false' in b, "the API pod mounts a token"
 PY
 
 # The task identity has no Role: a step runs commands that came out of a YAML.
-python3 - "$rendered" <<'PY' || erro "something binds a Role to the task ServiceAccount"
+python3 - "$rendered" <<'PY' || fail "something binds a Role to the task ServiceAccount"
 import sys
 doc = open(sys.argv[1]).read()
 task = [d for d in doc.split('---') if 'kind: ServiceAccount' in d and '-task' in d]
@@ -199,15 +199,15 @@ agent="$(mktemp)"; agent_long="$(mktemp)"
 trap 'rm -f "$rendered" "$full" "$agent" "$agent_long"' EXIT
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
   --set agent.enabled=true --set agent.tokenSecret=t > "$agent" || {
-  erro "the chart does not render with the agent"; exit 1; }
-$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent" || erro "kubeconform rejected the agent"
+  fail "the chart does not render with the agent"; exit 1; }
+$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent" || fail "kubeconform rejected the agent"
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
   --set agent.enabled=true --set agent.tokenSecret=t \
   --set agent.terminationGracePeriodSeconds=7200 > "$agent_long" || {
-  erro "the chart does not render with agent.terminationGracePeriodSeconds"; exit 1; }
+  fail "the chart does not render with agent.terminationGracePeriodSeconds"; exit 1; }
 python3 - "$agent:3600" "$agent_long:7200" \
   "deployments/kubernetes/agent.yaml:3600" "examples/cluster/apps/60-agent.yaml:3600" <<'PY' \
-  || erro "an agent manifest would cut its own drain"
+  || fail "an agent manifest would cut its own drain"
 import re, sys
 for arg in sys.argv[1:]:
     path, grace = arg.rsplit(':', 1)
@@ -237,17 +237,17 @@ trap 'rm -f "$rendered" "$full" "$agent" "$agent_long" "$agent_ephemeral" "$agen
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
   --set agent.enabled=true --set agent.tokenSecret=t \
   --set agent.state.persistent=false > "$agent_ephemeral" || {
-  erro "the chart does not render with agent.state.persistent=false"; exit 1; }
-$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent_ephemeral" || erro "kubeconform rejected the ephemeral agent"
+  fail "the chart does not render with agent.state.persistent=false"; exit 1; }
+$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent_ephemeral" || fail "kubeconform rejected the ephemeral agent"
 $HELM template brevis "$CHART" --namespace data "${MIN[@]}" \
   --set agent.enabled=true --set agent.tokenSecret=t \
   --set agent.state.storageClassName=fast-ssd --set agent.state.size=5Gi > "$agent_class" || {
-  erro "the chart does not render with agent.state.storageClassName"; exit 1; }
-$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent_class" || erro "kubeconform rejected the agent with a storage class"
+  fail "the chart does not render with agent.state.storageClassName"; exit 1; }
+$KUBECONFORM -strict -kubernetes-version "$K8S_VERSION" "$agent_class" || fail "kubeconform rejected the agent with a storage class"
 python3 - "$agent:claim:1Gi" "$agent_ephemeral:emptyDir" "$agent_class:claim:5Gi:fast-ssd" \
   "deployments/kubernetes/agent.yaml:claim:1Gi" "examples/cluster/apps/60-agent.yaml:claim:1Gi" \
   "examples/cluster/apps/70-goapp.yaml:claim:1Gi" <<'PY' \
-  || erro "an agent's --state-dir does not live where it should"
+  || fail "an agent's --state-dir does not live where it should"
 import re, sys
 for arg in sys.argv[1:]:
     path, want, *rest = arg.split(':')
@@ -279,28 +279,28 @@ for arg in sys.argv[1:]:
 PY
 
 # --- what has to be refused -------------------------------------------------
-recusa() {
+refuse() {
   local desc="$1"; shift
   if $HELM template t "$CHART" "$@" >/dev/null 2>&1; then
-    erro "the chart accepted: $desc"
+    fail "the chart accepted: $desc"
   fi
 }
-recusa "no database"            --set auth.user=a --set auth.passwordHash=h --set auth.secret=0123456789012345678901234567890123456789
-recusa "two database sources"   "${MIN[@]}" --set database.existingSecret=s
-recusa "no credential in prod"  --set database.url=x
-recusa "a secret under 32 bytes" --set database.url=x --set auth.user=a --set auth.passwordHash=h --set auth.secret=short
-recusa "an ingress with no host" "${MIN[@]}" --set api.ingress.enabled=true
-recusa "tls with no secretName" "${MIN[@]}" --set api.ingress.enabled=true --set api.ingress.host=h --set api.ingress.tls.enabled=true
-recusa "maxPods=0"              "${MIN[@]}" --set scheduler.maxPods=0
-recusa "concurrency=0"          "${MIN[@]}" --set scheduler.concurrency=0
-recusa "alerts with no webhook" "${MIN[@]}" --set alerts.enabled=true
-recusa "more than one scheduler" "${MIN[@]}" --set scheduler.replicas=2
-recusa "an unknown value"       "${MIN[@]}" --set nonsense=1
-recusa "an agent state size that is a number" "${MIN[@]}" --set agent.enabled=true --set agent.tokenSecret=t --set agent.state.size=1
-recusa "an agent grace period of 0" "${MIN[@]}" --set agent.enabled=true --set agent.tokenSecret=t --set agent.terminationGracePeriodSeconds=0
+refuse "no database"            --set auth.user=a --set auth.passwordHash=h --set auth.secret=0123456789012345678901234567890123456789
+refuse "two database sources"   "${MIN[@]}" --set database.existingSecret=s
+refuse "no credential in prod"  --set database.url=x
+refuse "a secret under 32 bytes" --set database.url=x --set auth.user=a --set auth.passwordHash=h --set auth.secret=short
+refuse "an ingress with no host" "${MIN[@]}" --set api.ingress.enabled=true
+refuse "tls with no secretName" "${MIN[@]}" --set api.ingress.enabled=true --set api.ingress.host=h --set api.ingress.tls.enabled=true
+refuse "maxPods=0"              "${MIN[@]}" --set scheduler.maxPods=0
+refuse "concurrency=0"          "${MIN[@]}" --set scheduler.concurrency=0
+refuse "alerts with no webhook" "${MIN[@]}" --set alerts.enabled=true
+refuse "more than one scheduler" "${MIN[@]}" --set scheduler.replicas=2
+refuse "an unknown value"       "${MIN[@]}" --set nonsense=1
+refuse "an agent state size that is a number" "${MIN[@]}" --set agent.enabled=true --set agent.tokenSecret=t --set agent.state.size=1
+refuse "an agent grace period of 0" "${MIN[@]}" --set agent.enabled=true --set agent.tokenSecret=t --set agent.terminationGracePeriodSeconds=0
 
-if [ "$falhas" -gt 0 ]; then
-  echo "$falhas problem(s) with the chart."
+if [ "$failures" -gt 0 ]; then
+  echo "$failures problem(s) with the chart."
   exit 1
 fi
 echo "✅ the chart renders, validates, and refuses what it should"

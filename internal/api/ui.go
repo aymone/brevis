@@ -598,7 +598,7 @@ func inFlight(counts map[string]int) (n int) {
 // validState refuses any state outside §7's machine.
 //
 // This is not about SQL -- the value already goes parameterised. It is about the
-// screen: `?estado=xpto` would return an empty list with every chip greyed out,
+// screen: `?estado=xpto` would return an empty list with every chip grayed out,
 // and the operator would read that as "there are no runs" rather than "that
 // filter does not exist".
 func validState(s string) string {
@@ -617,7 +617,7 @@ func page(s string) int {
 	return n
 }
 
-// instante accepts the RFC3339 the chart's links emit. An invalid value becomes
+// instant accepts the RFC3339 the chart's links emit. An invalid value becomes
 // no filter rather than an error: a half-pasted link should not give a 500.
 func instant(s string) *time.Time {
 	if s == "" {
@@ -630,8 +630,8 @@ func instant(s string) *time.Time {
 	return &t
 }
 
-// contar is how many workflows each state would show: the same filter with
-// that one field swapped, run through filtrar, so a count cannot disagree
+// count is how many workflows each state would show: the same filter with
+// that one field swapped, run through filter, so a count cannot disagree
 // with the list its link opens.
 func count(all []postgres.WorkflowSummary, f pages.Filter, x listFacts) pages.WorkflowCounts {
 	c := pages.WorkflowCounts{State: map[string]int{}}
@@ -717,7 +717,7 @@ func compareTime(a, b *time.Time) int {
 	return 0
 }
 
-// recortar returns the requested page. A page past the end comes back empty
+// clip returns the requested page. A page past the end comes back empty
 // rather than overflowing the slice -- which happens when filtering while on a
 // high page.
 func clip(ws []postgres.WorkflowSummary, f pages.Filter) []postgres.WorkflowSummary {
@@ -744,7 +744,7 @@ func nextOfWorkflow(w postgres.WorkflowSummary, now time.Time) *time.Time {
 	return &next
 }
 
-// filtrar applies the search bar in memory.
+// filter applies the search bar in memory.
 //
 // In memory and not in SQL because the workflow list is in the dozens, and
 // filtering by LAST state would mean repeating the query's LATERAL inside a
@@ -1031,7 +1031,7 @@ func (u *UI) trigger(w http.ResponseWriter, r *http.Request) {
 	next := "/runs/" + id.String()
 	if id == uuid.Nil {
 		// The idempotency key collided: two clicks in the same second become
-		// one run. Going back is the right behaviour -- there is no new run to
+		// one run. Going back is the right behavior -- there is no new run to
 		// go to.
 		u.log.Info("trigger ignored by idempotency", "workflow", slug)
 		next = backTo(r)

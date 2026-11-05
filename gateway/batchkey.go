@@ -8,7 +8,7 @@ import (
 
 // A batch key names one delivery of one batch, across all its attempts.
 //
-// Issue #85: a retry that a destination cannot recognise as the same write is
+// Issue #85: a retry that a destination cannot recognize as the same write is
 // a second write. BigQuery names the load job after this key, so attempt two
 // finds the job attempt one left running and takes its outcome, instead of
 // starting another that writes the rows again.

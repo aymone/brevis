@@ -19,15 +19,15 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 		s            string
 		onlySemantic bool
 	}{
-		{"", false}, {"simples", false}, {"com espaço", false},
-		{`aspas "no meio"`, false},
-		{`contrabarra \ e \\ dupla`, false},
-		{"quebra\nde\rlinha\te tab", false},
-		{"controle \x00\x01\x1f no meio", false},
-		{"acentuação e emoji 🎉", false},
-		{"html < > & sem escape", false},
+		{"", false}, {"plain", false}, {"with space", false},
+		{`quotes "in the middle"`, false},
+		{`backslash \ and \\ double`, false},
+		{"break\nof\rline\tand tab", false},
+		{"control \x00\x01\x1f in the middle", false},
+		{"café and emoji 🎉", false},
+		{"html < > & no escape", false},
 		{string([]byte{0xff, 0xfe}), true},
-		{"válido " + string([]byte{0xff}) + " misturado", true},
+		{"café " + string([]byte{0xff}) + " mixed", true},
 	}
 
 	for _, c := range cases {
@@ -71,12 +71,12 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 	}
 }
 
-// TestAppendJSONStringAppendsToTheDestination: ela recebe o buffer e devolve o
+// TestAppendJSONStringAppendsToTheDestination: it takes the buffer and returns the
 // buffer, so it does not allocate one per string on a load of millions.
 func TestAppendJSONStringAppendsToTheDestination(t *testing.T) {
-	dst := []byte("antes:")
+	dst := []byte("before:")
 	got := string(AppendJSONString(dst, "x"))
-	if got != `antes:"x"` {
+	if got != `before:"x"` {
 		t.Errorf("= %q", got)
 	}
 }

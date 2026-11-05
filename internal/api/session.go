@@ -40,7 +40,7 @@ type configView struct {
 
 // brandView is the installation's identity. CSS is the theme the server
 // already writes for the pages (branding.CSS): the app injects it as it is, so
-// a client's colours have one source and no second reading of the same file.
+// a client's colors have one source and no second reading of the same file.
 type brandView struct {
 	Title       string `json:"title"`
 	Subtitle    string `json:"subtitle"`

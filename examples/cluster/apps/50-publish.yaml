@@ -1,6 +1,6 @@
 # Publishing the workflows, as a sync.
 #
-# The folder is the artefact -- a ConfigMap with the YAMLs and a Job that
+# The folder is the artifact -- a ConfigMap with the YAMLs and a Job that
 # applies them -- and `deployments/kubernetes/publish-job.yaml` spells out the
 # three commands somebody runs by hand to do it:
 #
@@ -17,7 +17,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: brevis-publish
-  namespace: dados
+  namespace: data
   annotations:
     argocd.argoproj.io/hook: PostSync
     # Deleted before the next one is created, which is what makes a second

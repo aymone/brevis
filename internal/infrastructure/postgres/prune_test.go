@@ -32,13 +32,13 @@ func aged(t *testing.T, pool *postgres.Pool, slug string, age time.Duration, sta
 	}
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO task_runs (id, run_id, node_id, status, attempt, map_index, stages, log, output)
-		VALUES ($1, $2, 'carga', 'success', 0, -1,
+		VALUES ($1, $2, 'load', 'success', 0, -1,
 		        '[{"indice":0,"nome":"load","estado":"done","em":"x","ms":900,"numeros":{"rows":10}}]',
 		        'fetched page 1 of 300', '{"rows":10}')`,
 		uuid.New(), r.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.RecordLoad(ctx, r.ID, dom.Step("carga"), slug,
+	if err := repo.RecordLoad(ctx, r.ID, dom.Step("load"), slug,
 		app.LoadNumbers{Rows: 10, LoadMs: 900}); err != nil {
 		t.Fatal(err)
 	}
@@ -96,9 +96,9 @@ func TestPruneWithNothingConfigured(t *testing.T) {
 		PurgeAfter: 365 * 24 * time.Hour,
 	}
 
-	yesterday := aged(t, pool, "vendas", 24*time.Hour, dom.StatusSuccess)
-	lastQuarter := aged(t, pool, "vendas", 60*24*time.Hour, dom.StatusSuccess)
-	twoYearsAgo := aged(t, pool, "vendas", 730*24*time.Hour, dom.StatusSuccess)
+	yesterday := aged(t, pool, "sales", 24*time.Hour, dom.StatusSuccess)
+	lastQuarter := aged(t, pool, "sales", 60*24*time.Hour, dom.StatusSuccess)
+	twoYearsAgo := aged(t, pool, "sales", 730*24*time.Hour, dom.StatusSuccess)
 
 	report, err := postgres.NewRunRepo(pool).Prune(ctx, policy, false)
 	if err != nil {
@@ -116,7 +116,7 @@ func TestPruneWithNothingConfigured(t *testing.T) {
 	// Last quarter's is trimmed but still there.
 	if log, stages, output, ok := bulk(t, pool, lastQuarter); !ok ||
 		log != "" || stages != "[]" || output != nil {
-		t.Errorf("a 60-day-old run kept its bulk: log=%q stages=%q saida=%v", log, stages, output)
+		t.Errorf("a 60-day-old run kept its bulk: log=%q stages=%q output=%v", log, stages, output)
 	}
 	if !runExists(t, pool, lastQuarter) {
 		t.Error("a 60-day-old run was deleted; the default only trims until a year")
@@ -126,7 +126,7 @@ func TestPruneWithNothingConfigured(t *testing.T) {
 		t.Error("a two-year-old run survived the default purge")
 	}
 	// And the trend kept every one of the three.
-	if got := trendRows(t, pool, "vendas"); got != 3 {
+	if got := trendRows(t, pool, "sales"); got != 3 {
 		t.Errorf("the trend has %d of 3 rows; the summary must outlive the detail", got)
 	}
 }
@@ -136,7 +136,7 @@ func TestPruneWithNothingConfigured(t *testing.T) {
 func TestATrimmedRunKeepsEverythingButTheBulk(t *testing.T) {
 	pool := loadDB(t)
 	ctx := context.Background()
-	id := aged(t, pool, "vendas", 60*24*time.Hour, dom.StatusFailed)
+	id := aged(t, pool, "sales", 60*24*time.Hour, dom.StatusFailed)
 	if _, err := pool.Exec(ctx,
 		`UPDATE task_runs SET status = 'failed', exit_code = 3, error = 'connection refused',
 		 started_at = now() - interval '60 days', finished_at = now() - interval '60 days' + interval '4 minutes'
@@ -158,7 +158,7 @@ func TestATrimmedRunKeepsEverythingButTheBulk(t *testing.T) {
 		t.Fatal(err)
 	}
 	if status != "failed" || errText != "connection refused" || exit != 3 {
-		t.Errorf("the trim took the diagnosis with the log: status=%q erro=%q exit=%d", status, errText, exit)
+		t.Errorf("the trim took the diagnosis with the log: status=%q error=%q exit=%d", status, errText, exit)
 	}
 	if started == nil || finished == nil {
 		t.Error("the trim took the timings")
@@ -176,7 +176,7 @@ func TestASecondPruneTouchesNothing(t *testing.T) {
 	ctx := context.Background()
 	repo := postgres.NewRunRepo(pool)
 	for i := 0; i < 3; i++ {
-		aged(t, pool, "vendas", 60*24*time.Hour, dom.StatusSuccess)
+		aged(t, pool, "sales", 60*24*time.Hour, dom.StatusSuccess)
 	}
 	policy := postgres.Retention{TrimAfter: 30 * 24 * time.Hour}
 
@@ -208,7 +208,7 @@ func TestAnInFlightRunIsNeverPurgedHoweverOld(t *testing.T) {
 
 	kept := map[dom.Status]uuid.UUID{}
 	for _, s := range dom.RunStatuses() {
-		kept[s] = aged(t, pool, "vendas", 730*24*time.Hour, s)
+		kept[s] = aged(t, pool, "sales", 730*24*time.Hour, s)
 	}
 	if _, err := postgres.NewRunRepo(pool).Prune(ctx,
 		postgres.Retention{TrimAfter: time.Hour, PurgeAfter: 365 * 24 * time.Hour}, false); err != nil {
@@ -232,8 +232,8 @@ func TestAnInFlightRunIsNeverPurgedHoweverOld(t *testing.T) {
 func TestDryRunCountsAndChangesNothing(t *testing.T) {
 	pool := loadDB(t)
 	ctx := context.Background()
-	old := aged(t, pool, "vendas", 60*24*time.Hour, dom.StatusSuccess)
-	ancient := aged(t, pool, "vendas", 730*24*time.Hour, dom.StatusSuccess)
+	old := aged(t, pool, "sales", 60*24*time.Hour, dom.StatusSuccess)
+	ancient := aged(t, pool, "sales", 730*24*time.Hour, dom.StatusSuccess)
 
 	report, err := postgres.NewRunRepo(pool).Prune(ctx, postgres.Retention{
 		TrimAfter: 30 * 24 * time.Hour, PurgeAfter: 365 * 24 * time.Hour,
@@ -260,7 +260,7 @@ func TestDryRunCountsAndChangesNothing(t *testing.T) {
 func TestPurgeZeroNeverDeletes(t *testing.T) {
 	pool := loadDB(t)
 	ctx := context.Background()
-	ancient := aged(t, pool, "vendas", 3650*24*time.Hour, dom.StatusSuccess)
+	ancient := aged(t, pool, "sales", 3650*24*time.Hour, dom.StatusSuccess)
 
 	report, err := postgres.NewRunRepo(pool).Prune(ctx,
 		postgres.Retention{TrimAfter: 30 * 24 * time.Hour, PurgeAfter: 0}, false)
@@ -281,7 +281,7 @@ func TestABatchSmallerThanTheWorkStillFinishesIt(t *testing.T) {
 	pool := loadDB(t)
 	ctx := context.Background()
 	for i := 0; i < 7; i++ {
-		aged(t, pool, "vendas", 60*24*time.Hour, dom.StatusSuccess)
+		aged(t, pool, "sales", 60*24*time.Hour, dom.StatusSuccess)
 	}
 	report, err := postgres.NewRunRepo(pool).Prune(ctx,
 		postgres.Retention{TrimAfter: 30 * 24 * time.Hour, Batch: 2}, false)

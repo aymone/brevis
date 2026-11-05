@@ -98,7 +98,7 @@ func For(d dialect.Dialect, m model.Model, t model.Test) ([]Check, error) {
 			// business. `col NOT IN (…)` is already unknown for a NULL and
 			// returns no row, so the clause changes nothing today; it is
 			// written because the day somebody wraps a NOT around this, the
-			// behaviour it is relying on would change in silence.
+			// behavior it is relying on would change in silence.
 			violations = fmt.Sprintf("SELECT %s FROM %s WHERE %s IS NOT NULL AND %s NOT IN (%s)",
 				col, ref, col, col, strings.Join(lits, ", "))
 

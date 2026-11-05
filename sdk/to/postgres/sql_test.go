@@ -13,11 +13,11 @@ import (
 // built inside a method that held a client and had never been seen by a
 // teste.
 func TestInsertSQLNamesTheColumns(t *testing.T) {
-	got := InsertSQL("landing.pedidos", "brevis_stage",
-		[]string{"ingestion_id", "provider", "valor"}, core.MetadataID)
+	got := InsertSQL("landing.orders", "brevis_stage",
+		[]string{"ingestion_id", "provider", "value"}, core.MetadataID)
 
-	expected := `INSERT INTO landing.pedidos ("ingestion_id", "provider", "valor") ` +
-		`SELECT "ingestion_id", "provider", "valor" FROM brevis_stage ` +
+	expected := `INSERT INTO landing.orders ("ingestion_id", "provider", "value") ` +
+		`SELECT "ingestion_id", "provider", "value" FROM brevis_stage ` +
 		`ON CONFLICT ("ingestion_id") DO NOTHING`
 	if got != expected {
 		t.Errorf("SQL:\n  got  %s\n  want %s", got, expected)
@@ -48,7 +48,7 @@ func TestInsertSQLEscapesQuotes(t *testing.T) {
 // TestInsertSQLConflictsOnIngestionID: the SDK's dedup is on ingestion_id, and
 // swapping that column for another would make the dedup match on the wrong
 // thing in
-// silencio.
+// silence.
 func TestInsertSQLConflictsOnIngestionID(t *testing.T) {
 	got := InsertSQL("t", "s", []string{"a"}, core.MetadataID)
 	if !strings.Contains(got, `ON CONFLICT ("`+core.MetadataID+`")`) {
@@ -62,8 +62,8 @@ func TestSplitName(t *testing.T) {
 		name, schema, table string
 		failure             bool
 	}{
-		{"pedidos", "public", "pedidos", false},
-		{"landing.pedidos", "landing", "pedidos", false},
+		{"orders", "public", "orders", false},
+		{"landing.orders", "landing", "orders", false},
 		{"a.b.c", "", "", true},
 	}
 	for _, c := range cases {

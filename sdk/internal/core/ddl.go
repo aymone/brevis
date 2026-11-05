@@ -34,7 +34,7 @@ type Dialect struct {
 	// never sees this path.
 	IfNotExists bool
 
-	// ParenDefault names the types whose DEFAULT has to be parenthesised.
+	// ParenDefault names the types whose DEFAULT has to be parenthesized.
 	//
 	// It exists for exactly one dialect and one refusal, and it was found by a
 	// real server rather than by reading a manual: MySQL rejects a plain

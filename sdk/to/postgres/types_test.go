@@ -26,32 +26,32 @@ func TestToColumnRowByRow(t *testing.T) {
 		want  any
 		why   string
 	}{
-		{"nil vira NULL em qualquer coluna", nil, "timestamp with time zone", nil, ""},
+		{"nil becomes NULL in any column", nil, "timestamp with time zone", nil, ""},
 		{
-			"string RFC 3339 vira time.Time",
+			"RFC 3339 string becomes time.Time",
 			"2026-09-05T12:30:00Z", "timestamp with time zone", instant,
-			"e a forma que IngestionLoadedAt produz, e a que toda API JSON devolve",
+			"it is the shape IngestionLoadedAt produces, and the one every JSON API returns",
 		},
 		{
-			"RFC 3339 com fracao",
+			"RFC 3339 with a fraction",
 			"2026-09-05T12:30:00.000Z", "timestamp with time zone", instant, "",
 		},
 		{
-			"outro fuso vira o mesmo instante",
+			"another zone becomes the same instant",
 			"2026-09-05T09:30:00-03:00", "timestamp with time zone", instant, "",
 		},
-		{"time.Time passa direto", instant, "timestamp with time zone", instant, ""},
+		{"time.Time passes straight through", instant, "timestamp with time zone", instant, ""},
 		{
-			"epoch em segundos",
+			"epoch in seconds",
 			float64(instant.Unix()), "timestamp with time zone", instant,
-			"um JSON traz epoch como float64, e recusa-lo perderia a linha",
+			"a JSON carries epoch as float64, and refusing it would lose the row",
 		},
 		// numeric has a case of its own, in TestNumericGoesTypedAndNotAsText: it
 		// comes out neither as a string nor as a float, but as a pgtype.Numeric
 		// -- which preserves the precision AND avoids an error built per row
 		// inside pgx.
-		{"text passa como veio", "qualquer coisa", "text", "qualquer coisa", ""},
-		{"integer passa como veio", int64(42), "integer", int64(42), ""},
+		{"text passes as it came", "anything", "text", "anything", ""},
+		{"integer passes as it came", int64(42), "integer", int64(42), ""},
 	}
 
 	for _, c := range cases {
@@ -106,7 +106,7 @@ func TestToColumnTruncatesADate(t *testing.T) {
 // TestToColumnsErrorSaysTheFormat: "cannot find encode plan" tells nobody
 // what to do. This error does.
 func TestToColumnsErrorSaysTheFormat(t *testing.T) {
-	_, err := toColumn("cinco de setembro", "timestamp with time zone")
+	_, err := toColumn("fifth of September", "timestamp with time zone")
 	if err == nil {
 		t.Fatal("text that is not a date got through")
 	}
@@ -123,7 +123,7 @@ func TestToColumnElidesALongValue(t *testing.T) {
 	long := strings.Repeat("x", 4000)
 	_, err := toColumn(long, "date")
 	if err == nil {
-		t.Fatal("passou")
+		t.Fatal("passed")
 	}
 	if len(err.Error()) > 300 {
 		t.Errorf("the message has %d bytes; the value should have been elided", len(err.Error()))
@@ -133,10 +133,9 @@ func TestToColumnElidesALongValue(t *testing.T) {
 // TestNumericGoesTypedAndNotAsText pins a measured gain, so it does not
 // come back in silence.
 //
-// Passando a string crua, o pgx tenta um plano de encode string->numeric, ele
+// Passing the raw string, pgx tries a string->numeric encode plan, it
 // fails, and pgx builds an error just to fall through to the next plan -- once
-// per
-// row. On a 10-thousand-row load that was ~30% of the allocations, all in
+// per row. On a 10-thousand-row load that was ~30% of the allocations, all in
 // newEncodeError and fmt.Errorf: work spent producing an error nobody reads.
 //
 // Measured against the server: 290,529 allocations became 190,506, memory
@@ -171,7 +170,7 @@ func TestNumericGoesTypedAndNotAsText(t *testing.T) {
 // TestAnInvalidNumericSaysWhatItGot, without dumping the whole value into the
 // log.
 func TestAnInvalidNumericSaysWhatItGot(t *testing.T) {
-	if _, err := toColumn("dez reais", "numeric"); err == nil {
+	if _, err := toColumn("ten bucks", "numeric"); err == nil {
 		t.Fatal("text that is not a number got through")
 	}
 	if _, err := toColumn(strings.Repeat("9", 4000)+"x", "numeric"); err != nil {

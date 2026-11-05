@@ -7,7 +7,7 @@ import (
 	core "brevis.sh/brevis/sdk/internal/core"
 )
 
-// Source says where records come from, and what every origin honours.
+// Source says where records come from, and what every origin honors.
 //
 // The origin itself is From -- from.HTTP, from.Files, postgres.Query. What
 // lives here instead of in the driver is what is true of all of them: the

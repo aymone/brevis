@@ -16,7 +16,7 @@ import (
 // The pipe already exists and is already running: the executor follows the
 // pod's log while the container lives, and the runner sees every line, one by
 // one. No callback, no new port, no new authentication and no new RBAC -- and
-// the local executor gets the same for free, because what recognises the marker
+// the local executor gets the same for free, because what recognizes the marker
 // is the runner, which does not know which executor produced the event.
 //
 // One line per transition. The executor's copier breaks on lines, so an event
@@ -181,7 +181,7 @@ func (r *reporter) emit(ev map[string]any) {
 	ev["at"] = time.Now().UTC().Format(time.RFC3339Nano)
 	line, err := json.Marshal(ev)
 	if err != nil {
-		return // an event that does not serialise is not worth killing the pipeline for
+		return // an event that does not serialize is not worth killing the pipeline for
 	}
 	// Ignored on purpose: if stdout no longer accepts writes the pipeline has
 	// a bigger problem, and failing because of telemetry would trade an

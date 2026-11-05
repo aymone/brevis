@@ -220,7 +220,7 @@ func TestOneFailedInstanceFailsTheStep(t *testing.T) {
 // The interaction between mapping and resume, and the reason AlreadySucceeded
 // is keyed by instance rather than by node: twenty partitions do not fail
 // together, and a retry that redid all twenty because two broke would be the
-// old behaviour wearing a new column.
+// old behavior wearing a new column.
 func TestIntegrationARetryRedoesOnlyTheInstancesThatFailed(t *testing.T) {
 	dsn := os.Getenv("BREVIS_IT_PG_DSN")
 	if dsn == "" {

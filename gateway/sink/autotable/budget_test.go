@@ -203,7 +203,7 @@ func TestWithNoDeadlineNoneIsImposed(t *testing.T) {
 // Narrow on purpose. A deadline says nothing about the other tables; any other
 // error says the destination disagreed with what we believed, and the designed
 // response to that is to drop the cached belief and stop -- the next batch
-// re-reads the catalogue. Continuing past it would re-ask a destination that
+// re-reads the catalog. Continuing past it would re-ask a destination that
 // has just told us we are wrong, once per table.
 func TestAnErrorThatIsNotTheBudgetStillStopsTheRun(t *testing.T) {
 	log := newShares()

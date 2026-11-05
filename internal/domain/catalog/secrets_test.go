@@ -2,7 +2,7 @@ package catalog
 
 import "testing"
 
-// The engine's wall in text recognises a credential by its SHAPE -- what a
+// The engine's wall in text recognizes a credential by its SHAPE -- what a
 // password in a URL, a token, a key look like -- never by the word written
 // next to it. Each of these is refused.
 func TestCredentialsInTextAreRefusedByTheirShape(t *testing.T) {

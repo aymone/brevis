@@ -89,7 +89,7 @@ func TestMetricsHoldNoTenantAndNoValue(t *testing.T) {
 // A REQUEST WITH NO VALID KEY IS COUNTED, under no endpoint: a 401 storm is
 // worth seeing, and the path it asked for is the caller's to choose -- a
 // label from it would be a series per guess.
-func TestAnUnauthorisedRequestIsCountedUnderNoEndpoint(t *testing.T) {
+func TestAnUnauthorizedRequestIsCountedUnderNoEndpoint(t *testing.T) {
 	h, err := guarded(t, &warehouse{}, hashOf("a-key-long-enough-0123456789abcdef")+"=acme")
 	if err != nil {
 		t.Fatal(err)

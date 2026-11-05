@@ -180,7 +180,7 @@ def set(*mapping: Mapping[str, Any], **values: Any) -> None:  # noqa: A001
     """Publish values for the steps that depend on this one.
 
         context.set(name="Daniel")
-        context.set(label="Nome")
+        context.set(label="Name")
         context.set({"partitions": ["2026-09-06", "2026-09-07"]})
 
     Calls MERGE. Those two lines leave both ``name`` and ``label`` published;

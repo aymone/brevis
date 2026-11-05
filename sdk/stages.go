@@ -12,7 +12,7 @@ import (
 // reshapes each record, or an Aggregate that folds them into groups.
 //
 //	Stages: []sdk.Stage{
-//		sdk.Map(normalise),
+//		sdk.Map(normalize),
 //		sdk.Aggregate(sdk.Reduce{By: sdk.GroupBy("area", "year"), Agg: ...}),
 //		sdk.Map(sdk.IngestionID()),
 //	}

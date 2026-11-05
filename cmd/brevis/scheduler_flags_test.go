@@ -13,7 +13,7 @@ import (
 //
 // A flag that parses into a variable nobody passes on is a flag that does
 // nothing, and it looks exactly like a working one: `--help` lists it, the
-// value parses, and the behaviour never changes. This repository has shipped
+// value parses, and the behavior never changes. This repository has shipped
 // that twice -- the Kubernetes return path and Runner.ContextDir -- both green,
 // both inert, and both found by a question rather than by a test.
 //

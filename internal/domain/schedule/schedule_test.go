@@ -17,7 +17,7 @@ func ptr(t time.Time) *time.Time { return &t }
 
 // catchup=true fills the whole gap: every missed slot becomes a run, because
 // every day has a meaning of its own.
-func TestCatchupTruePreencheALacuna(t *testing.T) {
+func TestCatchupTrueFillsTheGap(t *testing.T) {
 	s := Schedule{
 		Cron: "0 2 * * *", Timezone: "UTC", Catchup: true, Active: true,
 		LastSlot: ptr(inUTC("2026-01-01T02:00:00Z")),
@@ -29,7 +29,7 @@ func TestCatchupTruePreencheALacuna(t *testing.T) {
 	if truncated {
 		t.Error("it should not truncate")
 	}
-	if len(slots) != 4 { // 02, 03, 04, 05 de janeiro
+	if len(slots) != 4 { // January 2nd, 3rd, 4th and 5th
 		t.Fatalf("slots = %d (%v), wanted 4", len(slots), slots)
 	}
 	if !slots[0].Equal(inUTC("2026-01-02T02:00:00Z")) {
@@ -57,8 +57,7 @@ func TestCatchupFalseKeepsOnlyTheMostRecent(t *testing.T) {
 }
 
 // A workflow stopped for a long time with catchup=true would drown the queue. The
-// limit
-// corta e SINALIZA, em vez de truncar em silencio.
+// limit cuts and SIGNALS, instead of truncating in silence.
 func TestTheLimitTruncatesAndSaysSo(t *testing.T) {
 	s := Schedule{
 		Cron: "0 * * * *", Timezone: "UTC", Catchup: true, Active: true,
@@ -138,10 +137,10 @@ func TestAnInactiveScheduleProducesNoSlot(t *testing.T) {
 // schedules nothing, and the error would surface far from whoever wrote the
 // file.
 func TestValidation(t *testing.T) {
-	if _, _, err := (Schedule{Cron: "invalido", Timezone: "UTC"}).Parse(); err == nil {
+	if _, _, err := (Schedule{Cron: "invalid", Timezone: "UTC"}).Parse(); err == nil {
 		t.Error("expected an invalid-cron error")
 	}
-	if _, _, err := (Schedule{Cron: "0 2 * * *", Timezone: "Marte/Olimpo"}).Parse(); err == nil {
+	if _, _, err := (Schedule{Cron: "0 2 * * *", Timezone: "Mars/Olympus"}).Parse(); err == nil {
 		t.Error("expected an invalid-timezone error")
 	}
 	if _, _, err := (Schedule{Cron: "0 2 * * *"}).Parse(); err != nil {
@@ -163,7 +162,7 @@ func TestTheCronFromTheAuthorsExample(t *testing.T) {
 
 // REGRESSION: with catchup=false and a gap larger than the per-cycle limit,
 // the
-// retorno antecipado da truncagem pulava o filtro e devolvia `limite` slots —
+// early return of the truncation skipped the filter and returned `limit` slots --
 // making catchup=false behave like true. Found by an end-to-end test that created
 // 1,100 runs where it should have created 1.
 func TestCatchupFalseIsNotBypassedByTheTruncation(t *testing.T) {

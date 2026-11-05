@@ -18,7 +18,7 @@ metadata:
   # creating the pod and recording that, the next attempt runs into THIS pod
   # instead of starting a second one running the same dbt in parallel.
   name: platform-workspace-bronze-workspace-a632ae46
-  namespace: dados
+  namespace: data
   labels:
     app.kubernetes.io/managed-by: brevis
     brevis.dev/workflow: platform-workspace

@@ -17,9 +17,9 @@ func TestBackoffWithoutJitterDoesNotPanic(t *testing.T) {
 		cfg  core.RetryConfig
 	}{
 		{"so MaxAttempts", core.RetryConfig{MaxAttempts: 5}},
-		{"sem jitter", core.RetryConfig{MaxAttempts: 3, InitialBackoff: time.Millisecond, MaxBackoff: time.Second}},
-		{"sem MaxBackoff", core.RetryConfig{MaxAttempts: 3, InitialBackoff: time.Millisecond, JitterFraction: 0.1}},
-		{"zerado", core.RetryConfig{}},
+		{"without jitter", core.RetryConfig{MaxAttempts: 3, InitialBackoff: time.Millisecond, MaxBackoff: time.Second}},
+		{"without MaxBackoff", core.RetryConfig{MaxAttempts: 3, InitialBackoff: time.Millisecond, JitterFraction: 0.1}},
+		{"zeroed", core.RetryConfig{}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

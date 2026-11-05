@@ -48,11 +48,11 @@ func TestKeyAddsNoDecimalsToAnInteger(t *testing.T) {
 }
 
 func TestKeyFailsOnAMissingField(t *testing.T) {
-	_, err := Key("id")(map[string]any{"outro": 1})
+	_, err := Key("id")(map[string]any{"other": 1})
 	if err == nil {
 		t.Fatal("a missing field must be an error, not a short key")
 	}
-	if !strings.Contains(err.Error(), `"id"`) || !strings.Contains(err.Error(), "outro") {
+	if !strings.Contains(err.Error(), `"id"`) || !strings.Contains(err.Error(), "other") {
 		t.Errorf("the error must name the field and list what is available: %v", err)
 	}
 }
@@ -124,7 +124,7 @@ func TestArrayAt(t *testing.T) {
 // --- Guardas ---------------------------------------------------------------
 
 func resp(status int, body string) Response {
-	return core.NewResponse(status, nil, "http://exemplo", []byte(body), false)
+	return core.NewResponse(status, nil, "http://example", []byte(body), false)
 }
 
 func TestRejectIf(t *testing.T) {
@@ -148,9 +148,9 @@ func TestRejectIf(t *testing.T) {
 
 // An HTML error page served with a 200 -- a portal under maintenance, a WAF, a
 // proxy -- is exactly the case the guard exists for, and was the only one it
-// deixava passar.
+// let through.
 func TestRejectIfDoesNotLetANonJSONBodyThrough(t *testing.T) {
-	err := RejectIf("error")(resp(200, `<html><body>Em manutenção</body></html>`))
+	err := RejectIf("error")(resp(200, `<html><body>Under maintenance</body></html>`))
 	if err == nil {
 		t.Fatal("a body that is not JSON has to be refused, not accepted")
 	}
@@ -178,14 +178,14 @@ func TestRedactRemovesSecrets(t *testing.T) {
 	// An API key in the query string is the common case, and leaking one into
 	// pod logs is an incident.
 	cases := map[string]string{
-		"https://api.x/v1?api_key=SEGREDO&lat=1": marker,
-		"https://api.x/v1?token=SEGREDO":         marker,
-		"https://api.x/v1?MAP_KEY=SEGREDO":       marker,
+		"https://api.x/v1?api_key=SECRET&lat=1": marker,
+		"https://api.x/v1?token=SECRET":         marker,
+		"https://api.x/v1?MAP_KEY=SECRET":       marker,
 	}
 	for raw, expected := range cases {
 		got := redact(raw)
-		if strings.Contains(got, "SEGREDO") {
-			t.Errorf("secret vazou: %s -> %s", raw, got)
+		if strings.Contains(got, "SECRET") {
+			t.Errorf("secret leaked: %s -> %s", raw, got)
 		}
 		if !strings.Contains(got, expected) {
 			t.Errorf("%s -> %s, expected it to contain %s", raw, got, expected)
@@ -203,7 +203,7 @@ func TestRedactRemovesSecrets(t *testing.T) {
 	}
 }
 
-// --- Extract + Load ponta a ponta -----------------------------------------
+// --- Extract + Load end to end -----------------------------------------
 
 func openMeteoServer(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -265,7 +265,7 @@ func TestExtractExpandsAndMaps(t *testing.T) {
 
 func TestExtractRecordsRefusesBeforeDecoding(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprint(w, `{"error": true, "reason": "latitude fora do intervalo"}`)
+		_, _ = fmt.Fprint(w, `{"error": true, "reason": "latitude out of range"}`)
 	}))
 	defer srv.Close()
 
@@ -277,17 +277,17 @@ func TestExtractRecordsRefusesBeforeDecoding(t *testing.T) {
 		t.Fatal("Records should have rejected a 200 carrying an error")
 	}
 	// Without this, the error document would land in the warehouse as data.
-	if !strings.Contains(err.Error(), "latitude fora do intervalo") {
+	if !strings.Contains(err.Error(), "latitude out of range") {
 		t.Errorf("the reason must reach the caller: %v", err)
 	}
 }
 
-// --- Erros tipados ---------------------------------------------------------
+// --- Typed errors ---------------------------------------------------------
 
 func TestSourceErrorOnAMissingHost(t *testing.T) {
 	_, err := Extract(context.Background(), Source{
 		From: from.HTTP{
-			URL:         "http://127.0.0.1:1/nada",
+			URL:         "http://127.0.0.1:1/nothing",
 			RetryConfig: &RetryConfig{MaxAttempts: 1},
 		},
 	})
@@ -659,7 +659,7 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 				Records: func(r Response) ([]any, error) {
 					seen = r.Status
 					if len(r.Bytes()) == 0 {
-						return nil, nil // janela vazia
+						return nil, nil // empty window
 					}
 					var docs []any
 					return docs, r.JSON(&docs)
@@ -690,7 +690,7 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 func TestANon2xxStillFails(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(404)
-		_, _ = fmt.Fprint(w, `nao existe`)
+		_, _ = fmt.Fprint(w, `does not exist`)
 	}))
 	defer srv.Close()
 
@@ -714,11 +714,11 @@ func TestANon2xxStillFails(t *testing.T) {
 // A refusal from the source and a programming error ask different things of
 // whoever is on call, so they have to be distinguishable.
 func TestARejectionIsDistinctFromAProgrammingError(t *testing.T) {
-	refused := Reject("open-meteo recusou: %s", "latitude inválida")
+	refused := Reject("open-meteo refused: %s", "invalid latitude")
 	if !errors.Is(refused, ErrRejected) {
 		t.Error("Reject has to match errors.Is(err, ErrRejected)")
 	}
-	if !strings.Contains(refused.Error(), "latitude inválida") {
+	if !strings.Contains(refused.Error(), "invalid latitude") {
 		t.Errorf("the reason must survive: %v", refused)
 	}
 
@@ -737,7 +737,7 @@ func TestARejectionIsDistinctFromAProgrammingError(t *testing.T) {
 // arrive to become a log line and an alert.
 func TestTheRejectionSurvivesTheExtract(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `{"error":true,"reason":"latitude fora do intervalo"}`)
+		_, _ = fmt.Fprint(w, `{"error":true,"reason":"latitude out of range"}`)
 	}))
 	defer srv.Close()
 
@@ -751,7 +751,7 @@ func TestTheRejectionSurvivesTheExtract(t *testing.T) {
 	if !errors.Is(err, ErrRejected) {
 		t.Errorf("the refusal lost its type in transit: %T %v", err, err)
 	}
-	if !strings.Contains(err.Error(), "latitude fora do intervalo") {
+	if !strings.Contains(err.Error(), "latitude out of range") {
 		t.Errorf("the vendor's reason was lost: %v", err)
 	}
 }
@@ -760,7 +760,7 @@ func TestTheRejectionSurvivesTheExtract(t *testing.T) {
 // would never be read -- a field that does nothing is worse than an error.
 func TestRecordsWithDataKeyIsRefused(t *testing.T) {
 	_, err := Extract(context.Background(), Source{From: from.HTTP{
-		URL:     "http://exemplo.invalido",
+		URL:     "http://example.invalid",
 		DataKey: "results",
 		Records: func(Response) ([]any, error) { return nil, nil },
 	}})
@@ -778,7 +778,7 @@ func TestRecordsWithDataKeyIsRefused(t *testing.T) {
 // not data, and that holds when the fetcher calls the decoders directly too --
 // which is what the spec's own example does.
 func TestDecodingTheWrongBodyIsARejection(t *testing.T) {
-	r := resp(200, `<html>Em manutenção</html>`)
+	r := resp(200, `<html>Under maintenance</html>`)
 
 	_, err := r.Object()
 	if err == nil {
@@ -832,7 +832,7 @@ func TestTargetCarriesTheDedupKey(t *testing.T) {
 	}
 }
 
-// Empty is today's behaviour, exactly: the drivers default to ingestion_id.
+// Empty is today's behavior, exactly: the drivers default to ingestion_id.
 func TestAnEmptyDedupKeyChangesNothing(t *testing.T) {
 	d := Target{To: fakeTarget{}, Columns: []string{"ingestion_id", "id"}, Dedup: DedupMerge}
 	if err := d.validate(); err != nil {

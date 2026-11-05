@@ -62,7 +62,7 @@ func TestTheTypesAreValidated(t *testing.T) {
 		{wf.Param{Name: "t", Type: wf.ParamString, Enum: []string{"a", "b"}}, "a", true},
 		{wf.Param{Name: "t", Type: wf.ParamString, Enum: []string{"a", "b"}}, "c", false},
 		{wf.Param{Name: "t", Type: wf.ParamString, Pattern: `^\d{4}-\d{2}-\d{2}$`}, "2026-09-01", true},
-		{wf.Param{Name: "t", Type: wf.ParamString, Pattern: `^\d{4}-\d{2}-\d{2}$`}, "ontem", false},
+		{wf.Param{Name: "t", Type: wf.ParamString, Pattern: `^\d{4}-\d{2}-\d{2}$`}, "yesterday", false},
 	}
 	for _, c := range cases {
 		err := c.param.Accepts(c.value)
@@ -99,7 +99,7 @@ func TestTextRefusesAShellCharacter(t *testing.T) {
 	// And it still serves what the real params need.
 	for _, legit := range []string{
 		"2026-09-01", "bronze_id_verification+", "true", "path/to/file.csv",
-		"a,b,c", "chave=valor", "50", "us-central1",
+		"a,b,c", "key=value", "50", "us-central1",
 	} {
 		if err := p.Accepts(legit); err != nil {
 			t.Errorf("it refused the legitimate value %q: %v", legit, err)
@@ -118,7 +118,7 @@ func TestPatternWidensWhatIsAccepted(t *testing.T) {
 
 // An invalid default would only surface on the first scheduled run, at 3am.
 func TestAnInvalidPatternFailsAtPublishTime(t *testing.T) {
-	w := withParams(wf.Param{Name: "days", Type: wf.ParamInteger, Default: "muitos"})
+	w := withParams(wf.Param{Name: "days", Type: wf.ParamInteger, Default: "many"})
 	if err := w.Validate(); err == nil {
 		t.Fatal("an invalid default value passed validation")
 	}
@@ -126,11 +126,11 @@ func TestAnInvalidPatternFailsAtPublishTime(t *testing.T) {
 
 func TestAnInvalidDeclarationIsRefused(t *testing.T) {
 	cases := []wf.Param{
-		{Name: "Load_Full", Type: wf.ParamBool},           // maiuscula
+		{Name: "Load_Full", Type: wf.ParamBool},           // uppercase
 		{Name: "2days", Type: wf.ParamInteger},            // starts with a digit
-		{Name: "ok", Type: "float"},                       // tipo inexistente
+		{Name: "ok", Type: "float"},                       // nonexistent type
 		{Name: "ok"},                                      // no type
-		{Name: "ok", Type: wf.ParamString, Pattern: "[("}, // regex quebrada
+		{Name: "ok", Type: wf.ParamString, Pattern: "[("}, // broken regex
 	}
 	for _, p := range cases {
 		if err := p.Validate(); err == nil {
@@ -219,7 +219,7 @@ func TestAParamStoredWithPortugueseKeysStillReads(t *testing.T) {
 // what every param is from the form to the step's environment.
 func TestAListParamValidatesEachItem(t *testing.T) {
 	tables := wf.Param{Name: "tables", Type: "list|string"}
-	numeros := wf.Param{Name: "days", Type: "list|integer"}
+	numbers := wf.Param{Name: "days", Type: "list|integer"}
 
 	accepted := []struct {
 		p     wf.Param
@@ -230,7 +230,7 @@ func TestAListParamValidatesEachItem(t *testing.T) {
 		{tables, "users", "one item is still a list"},
 		{tables, "", "nobody filled it in"},
 		{tables, "users, orders", "the space after a comma is the form's, not the value's"},
-		{numeros, "1,7,30", "integers"},
+		{numbers, "1,7,30", "integers"},
 	}
 	for _, c := range accepted {
 		if err := c.p.Accepts(c.value); err != nil {
@@ -243,7 +243,7 @@ func TestAListParamValidatesEachItem(t *testing.T) {
 		value string
 		why   string
 	}{
-		{numeros, "1,x,30", "an item that is not an integer"},
+		{numbers, "1,x,30", "an item that is not an integer"},
 		{tables, "users,,orders", "an empty item"},
 		{tables, "users,users", "the same item twice"},
 		{tables, "users;rm -rf /", "a character the shell interprets"},

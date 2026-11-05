@@ -13,7 +13,7 @@ import (
 	"brevis.sh/brevis/sdk/from"
 )
 
-// perto compares floats. Writing 14.1*9/5+32 as a literal would be evaluated
+// near compares floats. Writing 14.1*9/5+32 as a literal would be evaluated
 // as an untyped constant at arbitrary precision and not equal the float64 the
 // code actually produces.
 func near(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
@@ -350,11 +350,11 @@ func TestAcceptAfterRename(t *testing.T) {
 
 // Nothing to name, nothing to do.
 func TestAcceptPassesScalarsThrough(t *testing.T) {
-	got, err := Accept("a")("um texto")
+	got, err := Accept("a")("some text")
 	if err != nil {
 		t.Fatalf("a scalar record has no fields to name: %v", err)
 	}
-	if got != "um texto" {
+	if got != "some text" {
 		t.Errorf("the record changed: %v", got)
 	}
 }
@@ -378,14 +378,14 @@ func TestIngestionIDReadsItAfterTheRename(t *testing.T) {
 		t.Errorf("the error must list what the row has: %v", err)
 	}
 
-	// Com o nome novo, funciona.
+	// With the new name, it works.
 	if _, err := IngestionID("provider", "entity", "source_key", "observed_at")(renamed); err != nil {
 		t.Errorf("with the new name it should work: %v", err)
 	}
 }
 
 // TestRenameDoesNotChain guards a trap the move to in-place writing created,
-// and that the previous behaviour did not have.
+// and that the previous behavior did not have.
 //
 // Before, Rename built a new map by walking the record once, so {a: b, b: c}
 // over a record holding only `a` always produced {b: …}. Applying the swaps one

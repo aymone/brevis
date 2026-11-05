@@ -21,7 +21,7 @@ const TABLES = parseInt(__ENV.BREVIS_BENCH_TABLES || '1', 10);
 
 // Counted here rather than derived from the status code, because a 503 is not
 // a failure: it is the gateway refusing an event it has nowhere to put, which
-// is the honest answer and the one behaviour this service exists to have.
+// is the honest answer and the one behavior this service exists to have.
 // Folding it into `http_req_failed` would make backpressure look like a bug.
 const accepted = new Counter('brevis_events_accepted');
 const refused = new Counter('brevis_events_refused_503');
@@ -78,7 +78,7 @@ function body() {
         id: `${seed}-${i}`,
         total: '1500.25',
         status: 'PAID',
-        customer: { id: 7741, uf: 'SP', nome: 'Fulano de Tal' },
+        customer: { id: 7741, uf: 'SP', name: 'John Doe' },
         items: [{ sku: 'X-1', qtd: 2 }, { sku: 'Y-9', qtd: 1 }],
       },
     });

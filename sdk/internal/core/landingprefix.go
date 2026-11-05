@@ -56,7 +56,7 @@ func NormalizeLandingPrefix(raw string) (string, error) {
 	name := strings.ToLower(strings.Trim(trimmed, "_"))
 	if name == "" {
 		// Underscores and nothing else. They typed characters, so this is a
-		// request, and the request cannot be honoured.
+		// request, and the request cannot be honored.
 		return "", fmt.Errorf("%q leaves no prefix at all, and a landing table "+
 			"without one would call its identity column `ingestion_id` -- which "+
 			"is exactly the column sdk.IngestionID() writes for every ordinary "+

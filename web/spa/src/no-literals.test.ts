@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 //
 // Scope, and why: JSX text and JSX attributes only. The ghost fixtures at the top
 // of the screens (GHOST rows with "Source label") are plain object properties
-// drawn as grey bars, never read by a person, so properties are not scanned.
+// drawn as gray bars, never read by a person, so properties are not scanned.
 
 const ATTRS = new Set(["title", "aria-label", "placeholder", "alt", "label", "text", "aria-description"]);
 
@@ -34,10 +34,10 @@ const ALLOWED: Record<string, string> = {
   "UTC —": "time zone code and a separator, followed by the change's own text",
   "$BREVIS_AUTO_*": "environment variable prefix",
   auto_table: "a column name from the data",
-  "00 steps · 00 stages": "ghost placeholder, drawn as a grey bar",
+  "00 steps · 00 stages": "ghost placeholder, drawn as a gray bar",
   Workflows: "glossary term",
-  "1–25 of 25": "ghost placeholder under the runs list, drawn as a grey bar of the loaded text's width",
-  connection: "ghost placeholder of the connection picker's value, a grey bar",
+  "1–25 of 25": "ghost placeholder under the runs list, drawn as a gray bar of the loaded text's width",
+  connection: "ghost placeholder of the connection picker's value, a gray bar",
 };
 // Commands a person types are code (as is the SQL example); so are HTML entities (arrows) on their own.
 const codeLike = (s: string) => /^(brevis|gateway|brevis-sql-api) /.test(s) || /^(&\w+;|\s)+$/.test(s) || /^SELECT /.test(s) || !/[A-Za-z]{2}/.test(s);

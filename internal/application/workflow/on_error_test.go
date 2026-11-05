@@ -182,7 +182,7 @@ steps:
 
 // TestAnUnknownTriggerRuleIsRefusedAtPublish.
 //
-// A rule nobody recognises would otherwise mean "the default", so a step
+// A rule nobody recognizes would otherwise mean "the default", so a step
 // declaring `when: on_failure` would run on SUCCESS -- the opposite of what it
 // says, discovered the night it mattered.
 func TestAnUnknownTriggerRuleIsRefusedAtPublish(t *testing.T) {

@@ -9,10 +9,10 @@ import (
 // provenance and compose the ingestion_id.
 func typicalChain() []Transformer {
 	return []Transformer{
-		Accept("id", "nome", "valor", "ts"),
+		Accept("id", "name", "value", "ts"),
 		Rename(map[string]string{"id": "source_key", "ts": "record_ts"}),
 		Compute("provider", func(map[string]any) (any, error) { return "bench", nil }),
-		Compute("entity", func(map[string]any) (any, error) { return "registros", nil }),
+		Compute("entity", func(map[string]any) (any, error) { return "records", nil }),
 		IngestionID(),
 		IngestionLoadedAt(),
 	}
@@ -21,8 +21,8 @@ func typicalChain() []Transformer {
 func record(i int) map[string]any {
 	return map[string]any{
 		"id":    fmt.Sprint(i),
-		"nome":  "registro qualquer",
-		"valor": 10.5,
+		"name":  "any record",
+		"value": 10.5,
 		"ts":    "2026-09-05T12:00:00Z",
 	}
 }
@@ -45,7 +45,7 @@ func BenchmarkTransformChain(b *testing.B) {
 		}
 	}
 	b.StopTimer()
-	b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(), "registros/s")
+	b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(), "records/s")
 }
 
 // BenchmarkOneTransformerAlone isolates the cost of ONE map copy, so the
@@ -64,11 +64,11 @@ func BenchmarkOneTransformerAlone(b *testing.B) {
 
 // BenchmarkIngestionID isolates the id's composition, which the profile pointed
 // at as the
-// maior bloco sozinho.
+// biggest block by itself.
 func BenchmarkIngestionID(b *testing.B) {
 	fns := []Transformer{IngestionID()}
 	r := map[string]any{
-		"provider": "acme", "entity": "pedidos",
+		"provider": "acme", "entity": "orders",
 		"source_key": "12345", "record_ts": "2026-09-05T12:00:00Z",
 	}
 	b.ReportAllocs()

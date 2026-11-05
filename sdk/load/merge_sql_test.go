@@ -106,13 +106,13 @@ func TestMergeEscapesABacktickInsideAName(t *testing.T) {
 // Asymmetric on purpose, and this is the half that has to fail loudly.
 func TestReconcileRefusesAColumnTheDestinationLacks(t *testing.T) {
 	dest := schema("ingestion_id", str, "a", str)
-	incoming := schema("ingestion_id", str, "a", str, "surpresa", i64)
+	incoming := schema("ingestion_id", str, "a", str, "surprise", i64)
 
 	_, err := reconcile(dest, incoming)
 	if err == nil {
 		t.Fatal("an extra column would be dropped in silence; the load must stop")
 	}
-	if !strings.Contains(err.Error(), "surpresa") {
+	if !strings.Contains(err.Error(), "surprise") {
 		t.Errorf("the error does not name the column: %v", err)
 	}
 }
@@ -132,14 +132,14 @@ func TestReconcileAllowsAColumnTheRowsOmit(t *testing.T) {
 }
 
 func TestReconcileRefusesATypeMismatchAndNamesBothTypes(t *testing.T) {
-	dest := schema("ingestion_id", str, "quando", ts)
-	incoming := schema("ingestion_id", str, "quando", str)
+	dest := schema("ingestion_id", str, "when", ts)
+	incoming := schema("ingestion_id", str, "when", str)
 
 	_, err := reconcile(dest, incoming)
 	if err == nil {
 		t.Fatal("a STRING into a TIMESTAMP column has to be refused")
 	}
-	for _, want := range []string{"quando", "TIMESTAMP", "STRING"} {
+	for _, want := range []string{"when", "TIMESTAMP", "STRING"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("the error does not mention %q: %v", want, err)
 		}

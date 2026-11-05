@@ -12,7 +12,7 @@ import { setDrawer, toggleNavMode, useNavMode } from "./prefs";
 
 const DEFAULT_LOGO = "/assets/logo.svg";
 
-// The embedded mark inlined, so it takes the theme's colour (currentColor).
+// The embedded mark inlined, so it takes the theme's color (currentColor).
 function Mark() {
   return (
     <svg viewBox="0 0 24 24" fill="none" role="img" aria-label="Brevis">

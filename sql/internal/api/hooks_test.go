@@ -97,7 +97,7 @@ func TestAnUnregisteredHookIsRefusedAtLoadNamingWhatExists(t *testing.T) {
 }
 
 // THE PUBLISHED BINARY HAS NO HOOKS, and its refusal is the same path as a
-// misspelt name -- with the one thing a reader of it needs: where a binary
+// misspelled name -- with the one thing a reader of it needs: where a binary
 // with hooks comes from.
 func TestNoHooksRegisteredPointsAtTheExample(t *testing.T) {
 	for name, hooks := range map[string]*Hooks{"empty": NewHooks(), "nil": nil} {

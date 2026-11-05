@@ -9,36 +9,35 @@ import (
 // A leak here is a live credential in a log aggregator plenty of people read.
 func TestRedactLetsNoSecretThrough(t *testing.T) {
 	cases := []string{
-		"https://api.exemplo.com/v1?key=SEGREDO",
-		"https://api.exemplo.com/v1?api_key=SEGREDO",
-		"https://api.exemplo.com/v1?API_KEY=SEGREDO",
-		"https://api.exemplo.com/v1?apiKey=SEGREDO",
-		"https://api.exemplo.com/v1?apikey=SEGREDO",
-		"https://api.exemplo.com/v1?access_token=SEGREDO",
-		"https://api.exemplo.com/v1?Token=SEGREDO",
-		"https://api.exemplo.com/v1?refresh-token=SEGREDO",
-		"https://api.exemplo.com/v1?client_secret=SEGREDO",
-		"https://api.exemplo.com/v1?secret=SEGREDO",
-		"https://api.exemplo.com/v1?signature=SEGREDO",
-		"https://api.exemplo.com/v1?sig=SEGREDO",
-		"https://api.exemplo.com/v1?password=SEGREDO",
-		"https://api.exemplo.com/v1?pwd=SEGREDO",
-		"https://api.exemplo.com/v1?auth=SEGREDO",
-		"https://api.exemplo.com/v1?X-Api-Key=SEGREDO",
-		"https://api.exemplo.com/v1?sessionId=SEGREDO",
-		"https://api.exemplo.com/v1?credentials=SEGREDO",
+		"https://api.example.com/v1?key=SECRET",
+		"https://api.example.com/v1?api_key=SECRET",
+		"https://api.example.com/v1?API_KEY=SECRET",
+		"https://api.example.com/v1?apiKey=SECRET",
+		"https://api.example.com/v1?apikey=SECRET",
+		"https://api.example.com/v1?access_token=SECRET",
+		"https://api.example.com/v1?Token=SECRET",
+		"https://api.example.com/v1?refresh-token=SECRET",
+		"https://api.example.com/v1?client_secret=SECRET",
+		"https://api.example.com/v1?secret=SECRET",
+		"https://api.example.com/v1?signature=SECRET",
+		"https://api.example.com/v1?sig=SECRET",
+		"https://api.example.com/v1?password=SECRET",
+		"https://api.example.com/v1?pwd=SECRET",
+		"https://api.example.com/v1?auth=SECRET",
+		"https://api.example.com/v1?X-Api-Key=SECRET",
+		"https://api.example.com/v1?sessionId=SECRET",
+		"https://api.example.com/v1?credentials=SECRET",
 		// The worst of them all: the password in the userinfo, which url.String
-		// prints
-		// inteira.
-		"https://usuario:SEGREDO@api.exemplo.com/v1",
+		// prints whole.
+		"https://user:SECRET@api.example.com/v1",
 		// And combined, so it does not pass by accident on a single one.
-		"https://usuario:SEGREDO@api.exemplo.com/v1?token=SEGREDO&latitude=-23.5",
+		"https://user:SECRET@api.example.com/v1?token=SECRET&latitude=-23.5",
 	}
 
 	for _, c := range cases {
 		got := redactURL(c)
-		if strings.Contains(got, "SEGREDO") {
-			t.Errorf("vazou:\n  %s\n  -> %s", c, got)
+		if strings.Contains(got, "SECRET") {
+			t.Errorf("leaked:\n  %s\n  -> %s", c, got)
 		}
 	}
 }
@@ -61,14 +60,14 @@ func TestRedactPreservesWhatIsNotASecret(t *testing.T) {
 // A user with no password is not a secret, and erasing it would remove useful
 // information.
 func TestRedactKeepsAUserWithNoPassword(t *testing.T) {
-	got := redactURL("https://usuario@api.exemplo.com/v1")
-	if !strings.Contains(got, "usuario") {
+	got := redactURL("https://user@api.example.com/v1")
+	if !strings.Contains(got, "user") {
 		t.Errorf("the user without a password vanished: %s", got)
 	}
 }
 
 func TestRedactDoesNotPanicOnAnInvalidURL(t *testing.T) {
-	if got := redactURL("://isto-nao-e-url"); got != "[invalid url]" {
+	if got := redactURL("://this-is-not-a-url"); got != "[invalid url]" {
 		t.Errorf("redactURL(invalid) = %q", got)
 	}
 }

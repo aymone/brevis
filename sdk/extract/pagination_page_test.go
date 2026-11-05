@@ -22,11 +22,11 @@ func numberedPage(t *testing.T, key string, seenValues *[]string) *httptest.Serv
 
 		n, err := strconv.Atoi(raw)
 		if err != nil {
-			http.Error(w, "sem numero de pagina: "+r.URL.RawQuery, http.StatusBadRequest)
+			http.Error(w, "no page number: "+r.URL.RawQuery, http.StatusBadRequest)
 			return
 		}
-		if len(*seenValues) > 6 { // trava contra loop infinito no teste
-			http.Error(w, "paginou demais", http.StatusInternalServerError)
+		if len(*seenValues) > 6 { // guard against an infinite loop in the test
+			http.Error(w, "paged too much", http.StatusInternalServerError)
 			return
 		}
 		if n >= 3 {
@@ -56,8 +56,8 @@ func TestPageKeyAdvancesOneAtATime(t *testing.T) {
 }
 
 // TestPageKeyNumbersTheFirstRequest: without it the server picks its own default
-// and the SDK guesses the next number -- guessing wrong skips a page
-// inteira em silencio.
+// and the SDK guesses the next number -- guessing wrong skips a whole page
+// in silence.
 func TestPageKeyNumbersTheFirstRequest(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -65,10 +65,10 @@ func TestPageKeyNumbersTheFirstRequest(t *testing.T) {
 		first int
 		seq   string
 	}{
-		{"padrao comeca em 1", func(u string) string { return u }, 0, "1,2,3"},
-		{"FirstPage escolhe onde comecar", func(u string) string { return u }, 2, "2,3"},
-		{"numero na propria url vence", func(u string) string { return u + "?page=2" }, 0, "2,3"},
-		{"a url vence ate contra FirstPage", func(u string) string { return u + "?page=2" }, 9, "2,3"},
+		{"default starts at 1", func(u string) string { return u }, 0, "1,2,3"},
+		{"FirstPage chooses where to start", func(u string) string { return u }, 2, "2,3"},
+		{"a number in the URL itself wins", func(u string) string { return u + "?page=2" }, 0, "2,3"},
+		{"the url wins even against FirstPage", func(u string) string { return u + "?page=2" }, 9, "2,3"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -144,7 +144,7 @@ func gather(t *testing.T, s core.Source) int {
 	n := 0
 	for _, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		n++
 	}

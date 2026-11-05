@@ -9,7 +9,7 @@ import (
 
 // A FUNCTION IS NOT A MODEL. `functions/<schema>/<name>.sql` holds a
 // statement run before the models, verbatim: no header, no
-// materialisation, no tests and no place in the graph.
+// materialization, no tests and no place in the graph.
 //
 // The spike's verdict put them in M2 by name. With `trim_make_empty_string_null`
 // and `generate_surrogate_key` as SQL functions, 53% of a real dbt project's
@@ -34,7 +34,7 @@ func TestAProjectReadsItsFunctions(t *testing.T) {
 
 // AND IT IS NOT IN THE GRAPH. A call in a SELECT list is not a relation,
 // so the model that uses it has no edge and no source for it -- which is
-// the extractor's own behaviour and worth pinning, because the day it
+// the extractor's own behavior and worth pinning, because the day it
 // starts reporting one, every model using a function gains a dependency on
 // something that is not a model.
 func TestAFunctionIsNeitherAnEdgeNorASource(t *testing.T) {

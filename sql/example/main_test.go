@@ -44,7 +44,7 @@ func TestDatesWrittenDayFirstAreRewritten(t *testing.T) {
 	}
 }
 
-// WHAT THE HOOK DOES NOT RECOGNISE IT LEAVES ALONE: the API's own date type
+// WHAT THE HOOK DOES NOT RECOGNIZE IT LEAVES ALONE: the API's own date type
 // is what refuses it, with the API's own message.
 func TestAnythingElseIsLeftForTheAPI(t *testing.T) {
 	q, err := before(t, "start_date=2026-10-01&end_date=yesterday")

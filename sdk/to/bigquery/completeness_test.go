@@ -11,9 +11,9 @@ import (
 // bigquery.Table is an adapter: it translates its fields into the LoadConfig
 // the load package consumes. A LoadConfig field it never writes is a
 // adjustment the facade's consumer has no way to make -- and nothing breaks,
-// nada avisa.
+// nothing warns.
 //
-// Aconteceu de verdade: a fase 0 parou de repassar Provider e Entity, e toda
+// It really happened: phase 0 stopped passing Provider and Entity on, and every
 // table created since then came out with no cost-attribution labels. No
 // test saw it, because no row count changes.
 //
@@ -26,9 +26,9 @@ func TestEveryLoadConfigFieldIsReachable(t *testing.T) {
 
 	// These the adapter does not write, and for stated reasons.
 	notApplicable := map[string]string{
-		"Format":   "sempre ndjson: é o único formato que o load escreve",
-		"Provider": "vem do lote, não do Target -- ver Write",
-		"Entity":   "vem do lote, não do Target -- ver Write",
+		"Format":   "always ndjson: it is the only format the load writes",
+		"Provider": "comes from the batch, not from the Target -- see Write",
+		"Entity":   "comes from the batch, not from the Target -- see Write",
 	}
 
 	var missing []string

@@ -94,7 +94,7 @@ func TestNormalizeLandingPrefixRefusesWhatCannotBeOne(t *testing.T) {
 	}
 }
 
-// Unset means today's behaviour, and that is the only promise every existing
+// Unset means today's behavior, and that is the only promise every existing
 // table depends on.
 func TestLandingPrefixDefaultsToBrevis(t *testing.T) {
 	if LandingPrefix() != "brevis_" {

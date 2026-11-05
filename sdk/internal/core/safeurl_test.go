@@ -60,7 +60,7 @@ func TestSafeURLKeepsWhatIsKnownToBeSafe(t *testing.T) {
 		"s3://zarv-development-94b6-brevis-staging/extracts/":                      "s3://zarv-development-94b6-brevis-staging/extracts/",
 		"file:///tmp/x.csv":                                                        "file:///tmp/x.csv",
 		"./dead-letter/clicks/":                                                    "./dead-letter/clicks/",
-		"entrada.ndjson":                                                           "entrada.ndjson",
+		"input.ndjson":                                                             "input.ndjson",
 		"http://[::1]:8080/v1/items":                                               "http://[::1]:8080/v1/items",
 		"https://my-repository-name/x":                                             "https://my-repository-name/x",
 	} {

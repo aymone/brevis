@@ -12,7 +12,7 @@ import (
 //
 // Every refusal here reaches the producer in the response, at the moment they
 // can still fix it, and every well-formed event in the same request lands.
-func TestTheEnvelopeRefusesWhatItCannotHonour(t *testing.T) {
+func TestTheEnvelopeRefusesWhatItCannotHonor(t *testing.T) {
 	for _, c := range []struct {
 		name string
 		in   map[string]any
@@ -142,7 +142,7 @@ func TestTheRowCarriesTheFixedColumns(t *testing.T) {
 		"table_name": "app_orders", "operation": "update",
 		"data": map[string]any{"id": "A-3"},
 	})
-	row, err := env.row(now, "tables", "ingestao")
+	row, err := env.row(now, "tables", "ingestion")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +152,7 @@ func TestTheRowCarriesTheFixedColumns(t *testing.T) {
 		ColumnOperation:  OpUpdate, // lowercase in, upper out
 		ColumnReceivedAt: "2026-09-25T14:00:00Z",
 		ColumnStream:     "tables",
-		ColumnGateway:    "ingestao",
+		ColumnGateway:    "ingestion",
 	} {
 		if row[k] != want {
 			t.Errorf("%s is %v, want %v", k, row[k], want)
@@ -221,12 +221,12 @@ func TestTheColumnsShapeTypesNothing(t *testing.T) {
 // for months, and it breaks the day somebody points a stream at BigQuery. So
 // the narrowest of the four rules is the one applied everywhere.
 func TestAFieldNameBigQueryRefusesIsRefusedEverywhere(t *testing.T) {
-	for _, bad := range []string{"novo-campo", "cliente.uf", "1abc", "com espaço", `as"pas`, ""} {
+	for _, bad := range []string{"new-field", "customer.uf", "1abc", "with space", `as"pas`, ""} {
 		if _, err := (columns{}).schema(map[string]any{bad: "x"}); err == nil {
 			t.Errorf("the field name %q was accepted", bad)
 		}
 	}
-	for _, good := range []string{"id", "_private", "novo_campo", "Total2"} {
+	for _, good := range []string{"id", "_private", "new_field", "Total2"} {
 		if _, err := (columns{}).schema(map[string]any{good: "x"}); err != nil {
 			t.Errorf("the field name %q was refused: %v", good, err)
 		}
@@ -238,7 +238,7 @@ func TestAFieldNameBigQueryRefusesIsRefusedEverywhere(t *testing.T) {
 func TestTheDocumentShapeIsAlwaysOneColumn(t *testing.T) {
 	for _, record := range []map[string]any{
 		{"id": "A"},
-		{"id": "A", "novo_campo": "x", "outro": map[string]any{"a": 1}},
+		{"id": "A", "new_field": "x", "other": map[string]any{"a": 1}},
 	} {
 		got, err := document{}.schema(record)
 		if err != nil {

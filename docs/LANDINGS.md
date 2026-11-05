@@ -150,7 +150,7 @@ source still says what it tried:
   {"path":"source.query_params","value":["api_key","page"]},
   {"path":"transform.1.map","value":["compute(provider)","ingestion_id"]},
   {"path":"transform.2.aggregate.by","value":["area"]},
-  {"path":"transform.2.aggregate.total","value":"sum(valor)"},
+  {"path":"transform.2.aggregate.total","value":"sum(amount)"},
   {"path":"target.driver","value":"bigquery.Table"},
   {"path":"target.dataset","value":"landing"},
   {"path":"target.dedup","value":"merge"}]}

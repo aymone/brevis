@@ -19,7 +19,7 @@ type LoadTabs struct {
 	// SourceCount is how many sources a from.Many lists; 0 for one source.
 	SourceCount int
 	// Common are the settings every source has with the same value, default
-	// flag and note, said once, labelled by their key ("timeout").
+	// flag and note, said once, labeled by their key ("timeout").
 	Common []ConfigRow
 	// Varying are the other keys, in the order they first appear, and
 	// Sources one line per source with a cell per key (nil where a source

@@ -12,7 +12,7 @@ export type NodeData = Record<string, any>;
 type P = NodeProps & { data: NodeData };
 
 const known = new Set(["success", "failed", "running", "retrying", "queued", "canceled", "pending", "skipped"]);
-/** A step's state as the colour token it is drawn in. */
+/** A step's state as the color token it is drawn in. */
 export const tone = (s: string | undefined) => (s && known.has(s) ? s : "pending");
 // A stage's state reuses the steps' palette: `done` is the same green as `success`.
 const STAGE_TONE: Record<string, string> = { done: "success", running: "running", failed: "failed", aborted: "canceled" };
@@ -29,7 +29,7 @@ export const useSourceWord = () => {
 export const stageTone = (s: string | undefined) => STAGE_TONE[s ?? ""] ?? "pending";
 // A language's own token; the chip falls back to the muted ink where the sheet has none.
 const tint = (id: string) => ({ "--t": `var(--color-lang-${id}, var(--muted))` }) as CSSProperties;
-const colour = (t: string) => ({ "--c": `var(--st-${t})` }) as CSSProperties;
+const color = (t: string) => ({ "--c": `var(--st-${t})` }) as CSSProperties;
 
 export { langLabel };
 
@@ -51,7 +51,7 @@ export function StepCard({ data: d }: P) {
   const mark = hasMark(lang) ? lang : "";
   const published = d.context ? Object.keys(d.context).length : 0;
   return (
-    <div className="dag-card" style={colour(st)} data-status={d.status} data-tall={d.hasStages ? "" : undefined}>
+    <div className="dag-card" style={color(st)} data-status={d.status} data-tall={d.hasStages ? "" : undefined}>
       <Handle type="target" position={Position.Left} />
       <div className="dag-row">
         <span className="dag-dot" />
@@ -121,7 +121,7 @@ export function StageBox({ data: d }: P) {
   }).slice(0, 2);
   const detail: string | undefined = d.numbers?.detail;
   return (
-    <div className="dag-stage" style={colour(stageTone(d.state))} data-state={d.state} title={detail ?? ""}>
+    <div className="dag-stage" style={color(stageTone(d.state))} data-state={d.state} title={detail ?? ""}>
       <span className="d" />
       <b>{words(d.label || d.name)}</b>
       <span className="detail">{detail}</span>

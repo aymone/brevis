@@ -185,7 +185,7 @@ func TestColumnsRefusesANameItWillNotQuote(t *testing.T) {
 	for _, r := range []dialect.Relation{
 		{Schema: "bronze", Name: "orders'; DROP TABLE x --"},
 		{Schema: "bronze-prod", Name: "orders"},
-		{Schema: "bronze", Name: "ordens`"},
+		{Schema: "bronze", Name: "orders`"},
 		{Schema: "", Name: "orders"},
 		{Schema: "bronze", Name: strings.Repeat("c", maxIdentifier+1)},
 	} {

@@ -1,4 +1,4 @@
-/* A language's own colour: the old graph's fallbacks, since the server sheet does not emit --color-lang-*. */
+/* A language's own color: the old graph's fallbacks, since the server sheet does not emit --color-lang-*. */
 :root { --color-lang-python: #3572a5; --color-lang-go: #00add8; --color-lang-node: #3c873a; --color-lang-java: #b07219; --color-lang-rust: #a04b28; --color-lang-php: #4f5b93; --color-lang-ruby: #9b1c22; --color-lang-dotnet: #5c2d91; --color-lang-sql: #5a6b7b; --color-lang-shell: #6e6254; }
 .dag { position: relative; width: 100%; overflow: hidden; }
 .dag .react-flow { --xy-background-color: transparent; --xy-edge-stroke: var(--color-line-strong); --xy-attribution-background-color: transparent; font-family: inherit; }

@@ -11,7 +11,7 @@ import (
 type Evolution int
 
 const (
-	// EvolveNone refuses any difference. It is the behaviour every driver had
+	// EvolveNone refuses any difference. It is the behavior every driver had
 	// before this existed, and it stays the zero value: a load that starts
 	// altering tables because a field defaulted to on is not a surprise anybody
 	// wants.
@@ -112,7 +112,7 @@ var widenings = map[ColumnType]map[ColumnType]bool{
 // Plan compares the declaration against the table as it is now.
 //
 // `actual` maps a column name to the declared type it currently holds -- the
-// driver reads its own catalogue and translates, because only the driver knows
+// driver reads its own catalog and translates, because only the driver knows
 // that `character varying` and `text` are both TypeString here.
 //
 // It returns the changes to make, or an error naming what cannot be made. The

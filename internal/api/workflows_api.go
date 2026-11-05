@@ -94,7 +94,7 @@ type workflowsView struct {
 }
 
 // workflowsJSON is the list's data: the same filtering, sorting, counting and
-// paging the page does (filtrar, sortBy, contar, recortar), already applied.
+// paging the page does (filter, sortBy, count, clip), already applied.
 func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	all, err := u.reads.Workflows(ctx)

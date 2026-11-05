@@ -26,7 +26,7 @@ import (
 	"brevis.sh/brevis/sdk/to/bigquery"
 )
 
-dados, err := sdk.Extract(ctx, sdk.Source{
+data, err := sdk.Extract(ctx, sdk.Source{
 	From: from.HTTP{
 		URL: "https://api.open-meteo.com/v1/forecast?...",
 		Records: func(r sdk.Response) ([]any, error) {
@@ -43,10 +43,10 @@ dados, err := sdk.Extract(ctx, sdk.Source{
 })
 
 // What we take from the source.
-dados = sdk.Transform(dados, sdk.Accept("time", "temperature_2m", "latitude", "longitude"))
+data = sdk.Transform(data, sdk.Accept("time", "temperature_2m", "latitude", "longitude"))
 
 // Where it goes, and the columns it has.
-res, err := sdk.Load(ctx, dados, sdk.Target{
+res, err := sdk.Load(ctx, data, sdk.Target{
 	To:      bigquery.Table{Dataset: "bronze", Name: "hourly_temperatures"},
 	Columns: []string{"time", "temperature_2m", "latitude", "longitude"},
 })
@@ -75,7 +75,7 @@ at all. **A driver with a vendor SDK behind it lives in its own package**, which
 is why BigQuery is `to/bigquery` and the object stores are `store/s3` and
 `store/gcs`.
 
-`Source` and `Target` hold what every driver honours: the preview and counters
+`Source` and `Target` hold what every driver honors: the preview and counters
 on one side, the declared columns, metadata and deduplication on the other.
 
 **The columns come from `Transform` and are declared in `Target.Columns`.**
@@ -106,8 +106,8 @@ result you log.
 One driver, three backends. The scheme in `Path` says which:
 
 ```go
-from.Files{Path: "./entrada/*.csv", Format: sdk.FormatCSV}
-from.Files{Path: "s3://bucket/dia=2026-09-04/*.ndjson.gz", Store: s3.New(client)}
+from.Files{Path: "./input/*.csv", Format: sdk.FormatCSV}
+from.Files{Path: "s3://bucket/day=2026-09-04/*.ndjson.gz", Store: s3.New(client)}
 to.Files{Path: "gs://bucket/landing/", PartitionBy: "ingestion_loaded_at", Store: gcs.New(client)}
 ```
 
@@ -361,7 +361,7 @@ func main() {
 ## CSV with `;`, and gzip over HTTP
 
 ```go
-from.HTTP{URL: "https://portal.exemplo/dados.csv.gz", Format: sdk.FormatCSV, Delimiter: ';'}
+from.HTTP{URL: "https://portal.example/data.csv.gz", Format: sdk.FormatCSV, Delimiter: ';'}
 ```
 
 `;` is the de-facto standard across much of Europe and in most open-data
@@ -410,12 +410,12 @@ import (
 sdk.Run(sdk.Pipeline{
     Source: sdk.Source{From: frompg.Query{
         DSN:  os.Getenv("PG_DSN"),
-        SQL:  "SELECT * FROM pedidos WHERE atualizado_em > $1 ORDER BY atualizado_em, id LIMIT $2",
+        SQL:  "SELECT * FROM orders WHERE updated_at > $1 ORDER BY updated_at, id LIMIT $2",
         Args: []any{run.LogicalDate, 50_000},
     }},
     Target: sdk.Target{
-        To:      topg.Table{DSN: os.Getenv("PG_DSN"), Name: "landing.pedidos"},
-        Columns: []string{"ingestion_id", "ingestion_loaded_at", "provider", "valor"},
+        To:      topg.Table{DSN: os.Getenv("PG_DSN"), Name: "landing.orders"},
+        Columns: []string{"ingestion_id", "ingestion_loaded_at", "provider", "value"},
         Dedup:   sdk.DedupMerge,
     },
 })
@@ -460,8 +460,8 @@ import (
     tomy   "brevis.sh/brevis/sdk/to/mysql"
 )
 
-From: frommy.Query{DSN: dsn, SQL: "SELECT * FROM pedidos WHERE id > ? ORDER BY id LIMIT ?", Args: args}
-To:   tomy.Table{DSN: dsn, Name: "landing.pedidos"}
+From: frommy.Query{DSN: dsn, SQL: "SELECT * FROM orders WHERE id > ? ORDER BY id LIMIT ?", Args: args}
+To:   tomy.Table{DSN: dsn, Name: "landing.orders"}
 ```
 
 Two differences from Postgres, and both are the database's, not a design choice:
@@ -505,7 +505,7 @@ import (
 
 To: redshift.Table{
     DSN:     os.Getenv("RS_DSN"),
-    Name:    "landing.pedidos",
+    Name:    "landing.orders",
     Staging: "s3://my-bucket/stage/",
     IAMRole: "arn:aws:iam::123456789012:role/redshift-copy",
     Store:   s3.New(client),
@@ -596,7 +596,7 @@ has DuckDB read every table the tests write and check the count and a sum.
 not overwrite the first — and `Result.Objects` is where it says which:
 
 ```go
-res, _ := sdk.Load(ctx, dados, sdk.Target{To: to.Files{Path: "s3://bucket/landing/"}})
+res, _ := sdk.Load(ctx, data, sdk.Target{To: to.Files{Path: "s3://bucket/landing/"}})
 res.Objects[0]   // "s3://bucket/landing/parte-1788639822216855000.ndjson"
 ```
 
@@ -647,7 +647,7 @@ When the fetcher has to stay a single binary:
 
 ```go
 sdk.Run(sdk.Pipeline{
-    Source:     sdk.Source{From: from.HTTP{URL: "https://api.exemplo.com/eventos"}},
+    Source:     sdk.Source{From: from.HTTP{URL: "https://api.example.com/events"}},
     Checkpoint: sdk.Checkpoint{At: "gs://landing/_checkpoint", Store: gcs.New(cli)},
     Target:     sdk.Target{To: to.BigQuery{...}},
 })
@@ -734,12 +734,12 @@ out := sdk.Transform(d, sdk.Compute("b", ...))
 sdk.Run(sdk.Pipeline{
     Source: /* ... */,
     Reduce: &sdk.Reduce{
-        By: sdk.GroupBy("regiao", "ano"),
+        By: sdk.GroupBy("region", "year"),
         Agg: map[string]sdk.Aggregator{
-            "linhas":     sdk.Count(),
-            "total":      sdk.Sum("valor"),
-            "media":      sdk.Mean("valor"),
-            "nome_final": sdk.MaxBy("nome", "ano"),
+            "lines":      sdk.Count(),
+            "total":      sdk.Sum("value"),
+            "mean":       sdk.Mean("value"),
+            "name_final": sdk.MaxBy("name", "year"),
         },
     },
     Target: /* ... */,
@@ -774,7 +774,7 @@ fail.
 | booleans | `Any`, `All` |
 | anything else | `Custom` |
 
-`MaxBy("nome", "ano")` — *the name from the row with the largest year* — is the
+`MaxBy("name", "year")` — *the name from the row with the largest year* — is the
 one that is usually missing, and its absence is what makes people keep the rows
 so they can pick later.
 
@@ -802,7 +802,7 @@ computes it has to run *after*:
 
 ```go
 Stages: []sdk.Stage{
-    sdk.Map(normalise),
+    sdk.Map(normalize),
     sdk.Aggregate(sdk.Reduce{By: sdk.GroupBy("area", "year"), Agg: ...}),
     sdk.Map(sdk.IngestionID()),   // last, over the row that lands
 },
@@ -832,7 +832,7 @@ Without it, "5,515 rows" says nothing about where the other six million went.
 ### A global pass over the groups
 
 ```go
-Finish: func(grupos iter.Seq2[sdk.Group, map[string]any]) ([]map[string]any, error)
+Finish: func(groups iter.Seq2[sdk.Group, map[string]any]) ([]map[string]any, error)
 ```
 
 It sees the **groups**, never the records — which is what allows a global
@@ -928,7 +928,7 @@ later. Taken where the record leaves the source, no ordering can contaminate it.
 It is a shallow copy: top-level fields are isolated from what the chain does
 next, which is where transformers write. A **nested** value stays shared.
 
-`sdk.SkipWithout("id", "atualizado_em")` drops a record whose field is missing
+`sdk.SkipWithout("id", "updated_at")` drops a record whose field is missing
 **or null** — a row without the field that composes the key has no stable
 identity and cannot go in, but it is also no reason to bring down the whole
 window. Note the level: `RequireFields` rejects the whole *response*;
@@ -941,12 +941,12 @@ and it is what a destination needs in order to *create* the table:
 
 ```go
 Target: sdk.Target{
-    To: bigquery.Table{Dataset: "bronze", Name: "pedidos", CreateTable: sdk.Bool(true)},
+    To: bigquery.Table{Dataset: "bronze", Name: "orders", CreateTable: sdk.Bool(true)},
     Schema: sdk.Schema{
         {Name: "ingestion_id",        Type: sdk.TypeString,    Required: true},
         {Name: "ingestion_loaded_at", Type: sdk.TypeTimestamp, Required: true},
         {Name: "provider",            Type: sdk.TypeString,    Required: true},
-        {Name: "temperatura",         Type: sdk.TypeFloat64},
+        {Name: "temperature",         Type: sdk.TypeFloat64},
     },
     PartitionBy: "ingestion_loaded_at",
 }
@@ -1036,7 +1036,7 @@ Imitating it would be a bet placed inside a key.
 every number as `float64`, so `{"id": 19}` and `{"id": 19.0}` arrive identical —
 and in Python the first was an `int` (`"19"`) and the second a `float`
 (`"19.0"`). With it, the literal survives as a `json.Number` and the decision is
-the one Python's `json` makes. `Response.JSON` and `Response.Object` honour it
+the one Python's `json` makes. `Response.JSON` and `Response.Object` honor it
 too, so a fetcher that decodes the body itself through `Records` does not have
 to remember `UseNumber`.
 
@@ -1058,13 +1058,13 @@ outlive your function, copy it.
 // fine, and the cheap way
 func(payload any) (any, error) {
     r := payload.(map[string]any)
-    r["total"] = r["preco"].(float64) * r["qtd"].(float64)
+    r["total"] = r["price"].(float64) * r["qty"].(float64)
     return r, nil
 }
 
 // also fine -- returning a different map is still supported
 func(payload any) (any, error) {
-    return map[string]any{"resumo": payload}, nil
+    return map[string]any{"summary": payload}, nil
 }
 ```
 
@@ -1100,7 +1100,7 @@ config file. Anything a literal cannot say — `NUMERIC(18,2)`, a sequence, an
 index — is `CreateSQL`, which runs your DDL instead.
 
 **A column with a default may be absent from the row.** That is what declaring
-one means, and the column check honours it.
+one means, and the column check honors it.
 
 ### Evolution
 
@@ -1139,7 +1139,7 @@ supply the implementation — so a fetcher that counted something published it
 **nowhere** unless it imported `sdk/metrics/otelmeter` and ran a collector.
 
 `StdoutMeter` writes to the pipe the engine already reads, and the numbers come
-out of the engine's own `/metrics`, labelled with the workflow and the step:
+out of the engine's own `/metrics`, labeled with the workflow and the step:
 
 ```
 brevis_step_rows_loaded{workflow="daily_sales",step="load"} 48213
@@ -1293,7 +1293,7 @@ know before it lapses, on the log line *and* in `Stats.CredentialExpiry`.
 Auth: &from.Credential{
     Login: &from.Login{
         URL:   "https://api.example.com/oauth/token",
-        Body:  from.JSONBody(map[string]any{"client_id": id, "client_secret": segredo}),
+        Body:  from.JSONBody(map[string]any{"client_id": id, "client_secret": secret}),
         Token: from.JSONToken("data.accessToken"),
     },
     Apply: from.AsBearer,
@@ -1486,7 +1486,7 @@ in `=` padding, and cutting it produces a `401` rather than a parse error.
 SDK taking on the dependency:
 
 ```go
-fonte.RateLimiter = rate.NewLimiter(rate.Every(time.Second), 1)
+source.RateLimiter = rate.NewLimiter(rate.Every(time.Second), 1)
 ```
 
 It is consulted before every attempt, retries included.
@@ -1566,7 +1566,7 @@ sdk.Target{
 
 ```
    ingestion_id                          order_id  client_id    total  status
-0  b70c5149-8f66-5bbe-aa67-288694a107b6  O00001    C0022      1274.26  cancelled
+0  b70c5149-8f66-5bbe-aa67-288694a107b6  O00001    C0022      1274.26  canceled
 1  7bf901d3-703b-50b3-8b84-4614cc207724  O00002    C0029       311.02  shipped
 
 [5 of 2000 rows · 5 columns · 10ms]
@@ -1587,7 +1587,7 @@ From the command line, without a rebuild:
 ./my-fetcher -preview-target 5
 ```
 
-Not to be confused with two neighbours: `-preview` samples the **source**, and
+Not to be confused with two neighbors: `-preview` samples the **source**, and
 `-dry-run` prints **instead of** writing. This one prints *and* writes, which is
 what an operator watching a real load wants.
 
@@ -2119,7 +2119,7 @@ if err != nil {
 
 ### Extract
 ```go
-fonte := sdk.Source{
+source := sdk.Source{
 	URL:          "https://api.example.com/data",
 	Method:       "GET",           // default
 	Timeout:      30 * time.Second, // per attempt

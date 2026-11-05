@@ -27,14 +27,14 @@ func TestCanonicalJSONAgainstRealPython(t *testing.T) {
 		{"nested", obj(`{"c":{"z":"x","y":"w"},"a":1}`), `{"c":{"z":"x","y":"w"},"a":1}`},
 		{"a list", obj(`{"a":[1,2.0,null,true]}`), `{"a":[1,2.0,null,true]}`},
 		{"unescaped html", obj(`{"h":"<a href='x'>&amp;</a>"}`), `{"h":"<a href='x'>&amp;</a>"}`},
-		{"raw unicode", obj(`{"d":"acentuação e 🎉"}`), `{"d":"acentuação e 🎉"}`},
+		{"raw unicode", obj(`{"d":"café and 🎉"}`), `{"d":"café and 🎉"}`},
 		{"int and float kept apart", obj(`{"f":19.0,"i":19}`), `{"f":19.0,"i":19}`},
 		{"a large integer", obj(`{"n":9007199254740993}`), `{"n":9007199254740993}`},
 		{"negative", obj(`{"n":-20.04}`), `{"n":-20.04}`},
 		{"empty", obj(`{}`), `{}`},
 		{"an empty list", obj(`{"a":[]}`), `{"a":[]}`},
-		{"quotes and a backslash", obj(`{"s":"com \"aspas\" e \\ barra"}`), `{"s":"com \"aspas\" e \\ barra"}`},
-		{"control characters", obj(`{"s":"quebra\nlinha\ttab"}`), `{"s":"quebra\nlinha\ttab"}`},
+		{"quotes and a backslash", obj(`{"s":"with \"quotes\" e \\ barra"}`), `{"s":"with \"quotes\" e \\ barra"}`},
+		{"control characters", obj(`{"s":"break\nline\ttab"}`), `{"s":"break\nline\ttab"}`},
 	}
 
 	for _, c := range cases {
@@ -110,7 +110,7 @@ func TestCanonicalJSONDoesNotEscapeHTML(t *testing.T) {
 	}
 	// The assertion is about the ABSENCE of the escape: encoding/json writes
 	// \u003c, and Python writes the character. Written the other way round, it
-	// failed precisely when the behaviour was right.
+	// failed precisely when the behavior was right.
 	if strings.Contains(string(got), `\u003c`) {
 		t.Errorf("escaped HTML the way encoding/json does: %s", got)
 	}
@@ -158,7 +158,7 @@ func TestCanonicalJSONRefusesWhatItDoesNotKnow(t *testing.T) {
 // is where the records built by whoever aggregates land. An average is decimal
 // by definition: there is no literal to preserve, and nothing to guess.
 func TestCanonicalJSONAcceptingFloat64(t *testing.T) {
-	row := map[string]any{"media": 48.0, "n": 3.5, "nome": "sul"}
+	row := map[string]any{"mean": 48.0, "n": 3.5, "name": "south"}
 
 	if _, err := CanonicalJSON(row); err == nil {
 		t.Fatal("the strict one has to go on refusing a bare float64")
@@ -169,7 +169,7 @@ func TestCanonicalJSONAcceptingFloat64(t *testing.T) {
 		t.Fatalf("the permissive one refused a computed record: %v", err)
 	}
 	// 48.0 and not 48: it is what Python's json.dumps writes for a float.
-	if got, want := string(b), `{"media":48.0,"n":3.5,"nome":"sul"}`; got != want {
+	if got, want := string(b), `{"mean":48.0,"n":3.5,"name":"south"}`; got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}
 }

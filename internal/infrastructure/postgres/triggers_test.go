@@ -59,11 +59,11 @@ func TestLandingsSinceReadsTheEnginesClock(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
 	repo := postgres.NewRunRepo(pool)
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 
 	before := time.Now().Add(-time.Second)
 	old := time.Now().Add(-2 * time.Hour).UTC()
-	if err := repo.RecordLandings(ctx, runID, dom.Step("carga"), "vendas", []app.Landing{
+	if err := repo.RecordLandings(ctx, runID, dom.Step("load"), "sales", []app.Landing{
 		{Target: "bigquery://acme-prod/bronze/orders", Rows: n(3), At: old},
 	}); err != nil {
 		t.Fatal(err)
@@ -76,7 +76,7 @@ func TestLandingsSinceReadsTheEnginesClock(t *testing.T) {
 	if len(got) != 1 {
 		t.Fatalf("%d landings since a second ago, wanted 1 -- it read loaded_at", len(got))
 	}
-	if got[0].Target != "bigquery://acme-prod/bronze/orders" || got[0].Workflow != "vendas" {
+	if got[0].Target != "bigquery://acme-prod/bronze/orders" || got[0].Workflow != "sales" {
 		t.Errorf("landing = %+v", got[0])
 	}
 	// And the instant it carries is the one a debounce window is cut from.

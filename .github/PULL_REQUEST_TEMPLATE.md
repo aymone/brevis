@@ -10,7 +10,7 @@
 
 <!--
 Which test would fail without this change? For a bug fix, the test IS the proof
-the bug existed -- not "added tests", but which behaviour they pin down.
+the bug existed -- not "added tests", but which behavior they pin down.
 
 If you fixed something, revert your fix and check the test goes red. A test that
 cannot fail is worse than no test, because it buys confidence it has not earned.
@@ -20,5 +20,5 @@ cannot fail is worse than no test, because it buys confidence it has not earned.
 
 - [ ] `go test ./...` passes at the repository root and in `sdk/`
 - [ ] `golangci-lint run ./...` is clean in both modules
-- [ ] Generated artefacts are up to date (`make generate`, then commit `web/`)
+- [ ] Generated artifacts are up to date (`make generate`, then commit `web/`)
 - [ ] Comments, identifiers and error messages are in **English** (see CONTRIBUTING.md)

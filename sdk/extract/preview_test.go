@@ -16,7 +16,7 @@ import (
 
 func TestExtractPrintsThePreviewItWasAskedFor(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = io.WriteString(w, `[{"id":1,"nome":"alfa"},{"id":2,"nome":"beta"},{"id":3,"nome":"gama"}]`)
+		_, _ = io.WriteString(w, `[{"id":1,"name":"alpha"},{"id":2,"name":"beta"},{"id":3,"name":"gamma"}]`)
 	}))
 	defer srv.Close()
 
@@ -44,7 +44,7 @@ func TestExtractPrintsThePreviewItWasAskedFor(t *testing.T) {
 	if block == "" {
 		t.Fatal("Preview was set and nothing was printed")
 	}
-	if !strings.Contains(block, "nome") || !strings.Contains(block, "alfa") {
+	if !strings.Contains(block, "name") || !strings.Contains(block, "alpha") {
 		t.Errorf("the preview does not show the data:\n%s", block)
 	}
 	// Two sampled out of three seen -- the footer reports the total, not the
@@ -52,7 +52,7 @@ func TestExtractPrintsThePreviewItWasAskedFor(t *testing.T) {
 	if !strings.Contains(block, "2 of 3 rows") {
 		t.Errorf("the footer misreports the sample:\n%s", block)
 	}
-	if strings.Contains(block, "gama") {
+	if strings.Contains(block, "gamma") {
 		t.Errorf("Preview: 2 printed a third record:\n%s", block)
 	}
 }

@@ -21,7 +21,7 @@ func Render(command string, params map[string]string) (string, error) {
 	if !strings.Contains(command, "{{") {
 		return command, nil
 	}
-	t, err := template.New("passo").Option("missingkey=error").Parse(command)
+	t, err := template.New("step").Option("missingkey=error").Parse(command)
 	if err != nil {
 		return "", fmt.Errorf("the command has an invalid template: %w", err)
 	}

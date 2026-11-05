@@ -88,7 +88,7 @@ func (r *RunRepo) RecordLandings(ctx context.Context, runID uuid.UUID, step dom.
 	// before it. Against the instance alone, eight instances moving to one
 	// new configuration would be eight lines for one change.
 	if len(configs) > 0 {
-		// Check-then-insert, so it is serialised per writer and target:
+		// Check-then-insert, so it is serialized per writer and target:
 		// mapped instances land one table in parallel, and under READ
 		// COMMITTED each saw the last line from before the others committed
 		// and recorded the same change once per instance. Transaction-scoped,

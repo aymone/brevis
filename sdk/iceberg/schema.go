@@ -30,7 +30,7 @@ type mapping struct {
 //	bool       boolean         bool
 //	timestamp  timestamptz     timestamp[us, UTC]  an instant with a zone; Iceberg v2 keeps microseconds
 //	date       date            date32
-//	json       string          utf8                the serialised document; v3's variant waits for readers
+//	json       string          utf8                the serialized document; v3's variant waits for readers
 //	bytes      binary          binary
 var types = map[sdk.ColumnType]mapping{
 	sdk.TypeString:    {ice.PrimitiveTypes.String, arrow.BinaryTypes.String},

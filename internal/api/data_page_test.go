@@ -86,7 +86,7 @@ func demoCatalog() []postgres.CatalogEntry {
 	}
 }
 
-// Catalog's tests, restated on the screens that inherited each behaviour
+// Catalog's tests, restated on the screens that inherited each behavior
 // (IN6): the list's on /ingest/loads, the destination page's on a load's page,
 // the gateway's on /ingest/streams.
 

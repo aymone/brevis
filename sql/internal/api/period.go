@@ -66,7 +66,7 @@ func civil(t time.Time) dialect.Date {
 	return dialect.Date{Year: t.Year(), Month: t.Month(), Day: t.Day()}
 }
 
-// checkPeriod refuses a period an endpoint could not honour: it sets
+// checkPeriod refuses a period an endpoint could not honor: it sets
 // start_date and end_date, so both have to be there, as dates, and one
 // period is the most an endpoint can have -- two would be two answers to
 // "which days".

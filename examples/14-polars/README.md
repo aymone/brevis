@@ -84,12 +84,12 @@ that looks like success: the table grows and every number in it is correct.
 It is not the `sdk.Frame(sdk.Polars, …)` stage — that is a separate design, and
 this is the shape that works with what exists today. The trade is real and worth
 knowing: one file on disk between steps, in exchange for Go never holding more
-than one record at a time. Only the Python step materialises a frame.
+than one record at a time. Only the Python step materializes a frame.
 
 ## The data
 
 `../testdata/shop/` — 120 clients, 350 products, 2,000 orders, deliberately
 uneven. Twelve clients place a third of the orders, some carry a discount, and a
-quarter of the file is `cancelled` or `refunded`. Revenue means `paid +
+quarter of the file is `canceled` or `refunded`. Revenue means `paid +
 shipped`, so forgetting that filter is visibly wrong rather than plausibly
 wrong — R$ 2,625,941.39 across 1,508 orders is the right answer.

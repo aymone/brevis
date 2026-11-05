@@ -24,7 +24,7 @@ steps:
   # the raw extract is already on disk, retrying this step alone costs the
   # vendor nothing.
   - id: daily_summary
-    run: /opt/brevis/bin/summarise-weather
+    run: /opt/brevis/bin/summarize-weather
     runtime: go
     env:
       OUT_DIR: /data

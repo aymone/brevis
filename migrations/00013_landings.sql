@@ -34,7 +34,7 @@ CREATE TABLE landings (
 
     target        TEXT        NOT NULL,
 
-    -- Denormalised, as in load_metrics: the writer is what the catalog groups
+    -- Denormalized, as in load_metrics: the writer is what the catalog groups
     -- by, and joining `runs` to find it is exactly what made the JSONB trend
     -- slow.
     workflow_slug TEXT        NOT NULL,

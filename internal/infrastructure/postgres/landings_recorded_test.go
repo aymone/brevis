@@ -23,12 +23,12 @@ import (
 func TestALandingIsRecordedWhenItArrivesAndNotWhenItSaysItHappened(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 
 	stepSays := time.Now().Add(-time.Hour).UTC().Truncate(time.Second)
 	before := time.Now().Add(-time.Minute)
 
-	err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("carga"), "vendas",
+	err := postgres.NewRunRepo(pool).RecordLandings(ctx, runID, dom.Step("load"), "sales",
 		[]app.Landing{{Target: "bigquery://acme-prod/silver/orders", Rows: n(3), At: stepSays}})
 	if err != nil {
 		t.Fatal(err)
@@ -64,13 +64,13 @@ func TestALandingIsRecordedWhenItArrivesAndNotWhenItSaysItHappened(t *testing.T)
 func TestTheBackfillKeepsEachRowsOwnTime(t *testing.T) {
 	pool := landingsDB(t)
 	ctx := context.Background()
-	runID := aged(t, pool, "vendas", time.Hour, dom.StatusSuccess)
+	runID := aged(t, pool, "sales", time.Hour, dom.StatusSuccess)
 
 	old := time.Date(2025, 3, 4, 5, 6, 7, 0, time.UTC)
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO landings (run_id, node_id, map_index, target, workflow_slug,
 		                      loaded_at, recorded_at, legacy)
-		VALUES ($1, 'carga', -1, 'postgres:landing.orders', 'vendas', $2, $2, true)`,
+		VALUES ($1, 'load', -1, 'postgres:landing.orders', 'sales', $2, $2, true)`,
 		runID, old); err != nil {
 		t.Fatal(err)
 	}

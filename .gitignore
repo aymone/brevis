@@ -14,8 +14,8 @@
 # project keeps. Read against the tree it becomes a spec in docs/plan/.
 NOTES.md
 
-# Identidade visual de uma instalacao especifica. O modelo versionado e
-# `brand.example.yaml`; o arquivo real e do cliente, nao do repositorio.
+# The visual identity of one specific installation. The versioned template is
+# `brand.example.yaml`; the real file belongs to the customer, not the repository.
 /brand.yaml
 
 # go.work lets you point cmd/brevis-sdk at the local sdk while developing.
@@ -25,9 +25,9 @@ NOTES.md
 go.work
 go.work.sum
 
-# Binários compilados dos comandos. `go build -o brevis` dentro de cmd/brevis-sdk
-# deixa um de 30 MB ali, e um deles entrou no repositório na v0.4.1 e seguiu
-# sendo recommitado. Artefato de build não é fonte.
+# Compiled command binaries. `go build -o brevis` inside cmd/brevis-sdk leaves a
+# 30 MB one there, and one got into the repository in v0.4.1 and kept being
+# recommitted. A build artifact is not source.
 /cmd/brevis-sdk/brevis-sdk
 /brevis
 # `go build ./...` inside sql/ leaves this one. The module was created after
@@ -39,7 +39,7 @@ go.work.sum
 /gateway/gateway
 /gateway/gateway-slim
 
-# Python build and test artefacts. `python -m build` leaves a wheel and an
+# Python build and test artifacts. `python -m build` leaves a wheel and an
 # sdist in lib/python-context/dist/, `uv run` leaves a .venv and a lock, and
 # pytest leaves its caches. None of it is source, and the lock in particular
 # would pin a dev tool's resolution into a library that declares no

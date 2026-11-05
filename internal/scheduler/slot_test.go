@@ -22,7 +22,7 @@ func TestATriggerForAPastSlotRunsThatSlot(t *testing.T) {
 	slot := inUTC("2026-10-27T04:00:00Z")
 	now := inUTC("2026-10-29T15:20:07Z")
 
-	id, err := s.Trigger(ctx, "diario", now, nil, at(slot))
+	id, err := s.Trigger(ctx, "daily", now, nil, at(slot))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestATriggerForAPastSlotRunsThatSlot(t *testing.T) {
 	if r.LogicalDate == nil || !r.LogicalDate.Equal(slot) {
 		t.Errorf("logical date = %v, want the slot %s", r.LogicalDate, slot)
 	}
-	if want := "diario:manual:2026-10-27T04:00:00Z:2026-10-29T15:20:07Z"; r.IdempotencyKey != want {
+	if want := "daily:manual:2026-10-27T04:00:00Z:2026-10-29T15:20:07Z"; r.IdempotencyKey != want {
 		t.Errorf("key = %q, want %q", r.IdempotencyKey, want)
 	}
 
@@ -60,15 +60,15 @@ func TestTheSameSlotRunsAgainButNotTwiceInASecond(t *testing.T) {
 	ctx := context.Background()
 	slot := inUTC("2026-10-27T04:00:00Z")
 
-	first, err := s.Trigger(ctx, "diario", inUTC("2026-10-29T15:20:07Z"), nil, at(slot))
+	first, err := s.Trigger(ctx, "daily", inUTC("2026-10-29T15:20:07Z"), nil, at(slot))
 	if err != nil || first == uuid.Nil {
 		t.Fatalf("first = %v, %v", first, err)
 	}
-	again, err := s.Trigger(ctx, "diario", inUTC("2026-10-29T15:20:07.600Z"), nil, at(slot))
+	again, err := s.Trigger(ctx, "daily", inUTC("2026-10-29T15:20:07.600Z"), nil, at(slot))
 	if err != nil || again != uuid.Nil {
 		t.Errorf("a second click in the same second = %v, %v, want nothing", again, err)
 	}
-	later, err := s.Trigger(ctx, "diario", inUTC("2026-10-29T15:31:00Z"), nil, at(slot))
+	later, err := s.Trigger(ctx, "daily", inUTC("2026-10-29T15:31:00Z"), nil, at(slot))
 	if err != nil || later == uuid.Nil || later == first {
 		t.Errorf("the same slot later = %v, %v, want a new run", later, err)
 	}
@@ -78,7 +78,7 @@ func TestTheSameSlotRunsAgainButNotTwiceInASecond(t *testing.T) {
 // that would be right: the nearest one before it.
 func TestASlotOffTheCronIsRefusedWithTheNearest(t *testing.T) {
 	s, _, _, _ := build(t, "0 4 * * *", false)
-	_, err := s.Trigger(context.Background(), "diario", inUTC("2026-10-29T15:00:00Z"), nil,
+	_, err := s.Trigger(context.Background(), "daily", inUTC("2026-10-29T15:00:00Z"), nil,
 		at(inUTC("2026-10-28T05:30:00Z")))
 	if err == nil {
 		t.Fatal("a slot off the cron was accepted")
@@ -92,7 +92,7 @@ func TestASlotOffTheCronIsRefusedWithTheNearest(t *testing.T) {
 
 func TestASlotInTheFutureIsRefused(t *testing.T) {
 	s, _, _, _ := build(t, "0 4 * * *", false)
-	_, err := s.Trigger(context.Background(), "diario", inUTC("2026-10-29T15:00:00Z"), nil,
+	_, err := s.Trigger(context.Background(), "daily", inUTC("2026-10-29T15:00:00Z"), nil,
 		at(inUTC("2026-10-30T04:00:00Z")))
 	if err == nil || !strings.Contains(err.Error(), "future") {
 		t.Errorf("a future slot: %v", err)
@@ -101,7 +101,7 @@ func TestASlotInTheFutureIsRefused(t *testing.T) {
 
 func TestASlotOfAWorkflowWithNoScheduleIsRefused(t *testing.T) {
 	s, _, _, _ := build(t, "", false)
-	_, err := s.Trigger(context.Background(), "diario", inUTC("2026-10-29T15:00:00Z"), nil,
+	_, err := s.Trigger(context.Background(), "daily", inUTC("2026-10-29T15:00:00Z"), nil,
 		at(inUTC("2026-10-28T04:00:00Z")))
 	if err == nil || !strings.Contains(err.Error(), "no schedule") {
 		t.Errorf("a slot with no schedule: %v", err)
@@ -113,10 +113,10 @@ func TestASlotOfAWorkflowWithNoScheduleIsRefused(t *testing.T) {
 func TestAPausedScheduleStillTakesAPastSlot(t *testing.T) {
 	s, _, _, pool := build(t, "0 4 * * *", false)
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE schedules SET active = false WHERE workflow_slug = 'diario'`); err != nil {
+		`UPDATE schedules SET active = false WHERE workflow_slug = 'daily'`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Trigger(context.Background(), "diario", inUTC("2026-10-29T15:00:00Z"), nil,
+	if _, err := s.Trigger(context.Background(), "daily", inUTC("2026-10-29T15:00:00Z"), nil,
 		at(inUTC("2026-10-28T04:00:00Z"))); err != nil {
 		t.Errorf("a past slot of a paused schedule: %v", err)
 	}
@@ -127,15 +127,15 @@ func TestAPausedScheduleStillTakesAPastSlot(t *testing.T) {
 func TestASlotIsReadInTheSchedulesZone(t *testing.T) {
 	s, _, _, pool := build(t, "0 4 * * *", false)
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE schedules SET timezone = 'America/Sao_Paulo' WHERE workflow_slug = 'diario'`); err != nil {
+		`UPDATE schedules SET timezone = 'America/Sao_Paulo' WHERE workflow_slug = 'daily'`); err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
 	now := inUTC("2026-10-29T15:00:00Z")
-	if _, err := s.Trigger(ctx, "diario", now, nil, at(inUTC("2026-10-28T07:00:00Z"))); err != nil {
+	if _, err := s.Trigger(ctx, "daily", now, nil, at(inUTC("2026-10-28T07:00:00Z"))); err != nil {
 		t.Errorf("04:00 in São Paulo: %v", err)
 	}
-	_, err := s.Trigger(ctx, "diario", now, nil, at(inUTC("2026-10-28T04:00:00Z")))
+	_, err := s.Trigger(ctx, "daily", now, nil, at(inUTC("2026-10-28T04:00:00Z")))
 	if err == nil {
 		t.Fatal("04:00 UTC was accepted for a São Paulo schedule")
 	}
@@ -150,7 +150,7 @@ func TestASlotIsReadInTheSchedulesZone(t *testing.T) {
 func TestATriggerWithNoSlotHasNoLogicalDate(t *testing.T) {
 	s, runs, _, _ := build(t, "0 4 * * *", false)
 	ctx := context.Background()
-	id, err := s.Trigger(ctx, "diario", inUTC("2026-10-29T15:20:07Z"), nil, nil)
+	id, err := s.Trigger(ctx, "daily", inUTC("2026-10-29T15:20:07Z"), nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestATriggerWithNoSlotHasNoLogicalDate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.LogicalDate != nil || r.IdempotencyKey != "diario:manual:2026-10-29T15:20:07Z" {
+	if r.LogicalDate != nil || r.IdempotencyKey != "daily:manual:2026-10-29T15:20:07Z" {
 		t.Errorf("logical date = %v, key = %q", r.LogicalDate, r.IdempotencyKey)
 	}
 }

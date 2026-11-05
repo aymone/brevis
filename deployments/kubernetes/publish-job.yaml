@@ -7,15 +7,15 @@
 # workflow is updating the ConfigMap and running the Job again — there is no
 # per-DAG build.
 #
-#   kubectl -n dados create configmap brevis-workflows \
+#   kubectl -n data create configmap brevis-workflows \
 #     --from-file=brevis/workflows/ --dry-run=client -o yaml | kubectl apply -f -
-#   kubectl -n dados delete job brevis-publish --ignore-not-found
+#   kubectl -n data delete job brevis-publish --ignore-not-found
 #   kubectl apply -f deployments/kubernetes/publish-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: brevis-publish
-  namespace: dados
+  namespace: data
 spec:
   # The Job does not retry on its own: publishing is idempotent, but an error
   # here is about CONTENT (invalid YAML, an impossible cron) and retrying does

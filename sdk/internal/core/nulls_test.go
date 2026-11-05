@@ -18,8 +18,8 @@ import (
 // takes it out of this half of the check entirely.
 func TestANilInTheFirstRecordIsNotAnEmptyField(t *testing.T) {
 	records := []Envelope{
-		{Payload: map[string]any{"id": "A", "valor": nil}},
-		{Payload: map[string]any{"id": "B", "valor": "8.89"}},
+		{Payload: map[string]any{"id": "A", "value": nil}},
+		{Payload: map[string]any{"id": "B", "value": "8.89"}},
 	}
 
 	err := CheckRow(WriteOptions{Columns: []string{"id"}, Schema: Schema{{Name: "id", Type: TypeString}}}, records)
@@ -29,7 +29,7 @@ func TestANilInTheFirstRecordIsNotAnEmptyField(t *testing.T) {
 			"whole point of this half of the check is to say so rather than " +
 			"drop it quietly")
 	}
-	if !strings.Contains(err.Error(), "valor") {
+	if !strings.Contains(err.Error(), "value") {
 		t.Errorf("the refusal is %q and does not name the field", err)
 	}
 }
@@ -38,8 +38,8 @@ func TestANilInTheFirstRecordIsNotAnEmptyField(t *testing.T) {
 // nothing to write.
 func TestAFieldNilInEveryRecordIsNotAnExtra(t *testing.T) {
 	records := []Envelope{
-		{Payload: map[string]any{"id": "A", "valor": nil}},
-		{Payload: map[string]any{"id": "B", "valor": nil}},
+		{Payload: map[string]any{"id": "A", "value": nil}},
+		{Payload: map[string]any{"id": "B", "value": nil}},
 	}
 	if err := CheckRow(WriteOptions{Columns: []string{"id"},
 		Schema: Schema{{Name: "id", Type: TypeString}}}, records); err != nil {

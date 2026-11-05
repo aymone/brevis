@@ -108,7 +108,7 @@ func publishedBy(t *testing.T, events []execution.Event) string {
 // a filesystem this host cannot see.
 //
 // The runner picks a path in its own ContextDir and sends it with the rest of
-// the environment. A step that honoured it would write a file on THIS host at
+// the environment. A step that honored it would write a file on THIS host at
 // a path that means something over THERE, and the engine would read its own
 // empty one — publishing nothing, with nothing said. The pod executor makes
 // the same override for the same reason, to the kubelet's termination message.

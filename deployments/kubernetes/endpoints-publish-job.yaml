@@ -18,7 +18,7 @@
 #
 # By hand, after the API's deploy:
 #
-#   kubectl -n dados delete job brevis-endpoints-publish --ignore-not-found
+#   kubectl -n data delete job brevis-endpoints-publish --ignore-not-found
 #   kubectl apply -f deployments/kubernetes/endpoints-publish-job.yaml
 #
 # Under Argo CD, uncomment the two annotations: it then runs after every sync.
@@ -26,7 +26,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: brevis-endpoints-publish
-  namespace: dados
+  namespace: data
   # annotations:
   #   argocd.argoproj.io/hook: PostSync
   #   argocd.argoproj.io/hook-delete-policy: BeforeHookCreation

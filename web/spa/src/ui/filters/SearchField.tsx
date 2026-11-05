@@ -4,7 +4,7 @@ import { Icon } from "../icon";
 import "./filters.css";
 
 /**
- * The bar's search: a labelled `type=search` inside a `role=search` form. `/` focuses it from anywhere
+ * The bar's search: a labeled `type=search` inside a `role=search` form. `/` focuses it from anywhere
  * that is not already a field (the hint hides itself while typing, and on touch screens); Escape clears,
  * then leaves. Debouncing is the caller's (see useUrlSearch), so a local search (the log) can be instant.
  */

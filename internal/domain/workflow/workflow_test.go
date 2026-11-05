@@ -31,7 +31,7 @@ func TestValidateRefusesAMissingDependency(t *testing.T) {
 	w := Workflow{
 		Slug:  "x",
 		Nodes: []Node{no("a", "echo")},
-		Edges: []Edge{{From: "fantasma", To: "a"}},
+		Edges: []Edge{{From: "ghost", To: "a"}},
 	}
 	if err := w.Validate(); err == nil {
 		t.Fatal("expected a missing-dependency error")
@@ -155,7 +155,7 @@ func TestAHostAndAnImageAreAlternatives(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			w := Workflow{Slug: "vendas", Nodes: []Node{node}}
+			w := Workflow{Slug: "sales", Nodes: []Node{node}}
 			err := w.Validate()
 			if err == nil {
 				t.Fatalf("%+v was accepted", node)
@@ -167,7 +167,7 @@ func TestAHostAndAnImageAreAlternatives(t *testing.T) {
 	}
 
 	// And a host on its own is fine, which is the whole point.
-	ok := Workflow{Slug: "vendas", Nodes: []Node{
+	ok := Workflow{Slug: "sales", Nodes: []Node{
 		{ID: "extract", Run: "python pipelines/orders.py", Host: "dlt-runner-01"},
 	}}
 	if err := ok.Validate(); err != nil {

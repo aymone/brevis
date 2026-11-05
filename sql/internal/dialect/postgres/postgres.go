@@ -38,7 +38,7 @@ func (Dialect) EnsureSchema(schema string) []string {
 
 // KindOf asks pg_catalog what the relation is.
 //
-// `relkind` and not information_schema: a materialised view is `m` there and
+// `relkind` and not information_schema: a materialized view is `m` there and
 // invisible here, and "the build thinks nothing is there and CREATE fails"
 // is a worse answer than "something else is there".
 func (Dialect) KindOf(ref string) string {
@@ -51,7 +51,7 @@ func (Dialect) KindOf(ref string) string {
 
 // ColumnsOf reads information_schema, and here that is the right catalog.
 //
-// KindOf deliberately uses pg_catalog instead, because a materialised view is
+// KindOf deliberately uses pg_catalog instead, because a materialized view is
 // invisible in information_schema and "nothing is there" is the worst
 // possible answer to that question. Columns are a different question: this is
 // only ever asked about a table this project built, and information_schema's
@@ -118,7 +118,7 @@ func (d Dialect) Build(m model.Model, st dialect.State) ([]string, error) {
 	ref := m.Ref()
 
 	var out []string
-	switch m.Materialised {
+	switch m.Materialized {
 	case model.Incremental:
 		// A REBUILD IS A TABLE BUILD. Nothing is there to add to -- or a
 		// `--full-refresh` said to pretend so -- and from tomorrow the

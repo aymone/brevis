@@ -19,9 +19,9 @@ import (
 // client had never been seen by a test, and shipped with a positional match.
 
 func TestCopySQLUsesTheRoleAndNotAKey(t *testing.T) {
-	got := CopySQL("landing.pedidos", "s3://b/k.ndjson", "arn:aws:iam::1:role/r")
+	got := CopySQL("landing.orders", "s3://b/k.ndjson", "arn:aws:iam::1:role/r")
 	for _, required := range []string{
-		"COPY landing.pedidos FROM 's3://b/k.ndjson'",
+		"COPY landing.orders FROM 's3://b/k.ndjson'",
 		"IAM_ROLE 'arn:aws:iam::1:role/r'",
 		"FORMAT AS JSON 'auto'",
 	} {
@@ -35,12 +35,12 @@ func TestCopySQLUsesTheRoleAndNotAKey(t *testing.T) {
 // -- BigQuery's INSERT ROW matches by position, and v0.12.0 shipped with the
 // columns swapped because nobody had seen the generated SQL.
 func TestMergeSQLNamesTheColumns(t *testing.T) {
-	got := MergeSQL("destino", "brevis_stage", []string{"ingestion_id", "valor"}, core.MetadataID)
+	got := MergeSQL("target", "brevis_stage", []string{"ingestion_id", "value"}, core.MetadataID)
 
-	want := `MERGE INTO destino USING brevis_stage ` +
-		`ON destino."ingestion_id" = brevis_stage."ingestion_id" ` +
-		`WHEN NOT MATCHED THEN INSERT ("ingestion_id", "valor") ` +
-		`VALUES (brevis_stage."ingestion_id", brevis_stage."valor")`
+	want := `MERGE INTO target USING brevis_stage ` +
+		`ON target."ingestion_id" = brevis_stage."ingestion_id" ` +
+		`WHEN NOT MATCHED THEN INSERT ("ingestion_id", "value") ` +
+		`VALUES (brevis_stage."ingestion_id", brevis_stage."value")`
 	if got != want {
 		t.Errorf("SQL:\n  got  %s\n  want %s", got, want)
 	}
@@ -66,8 +66,8 @@ func TestMergeSQLQuotesAReservedWord(t *testing.T) {
 // TestStagingTableUsesLike: a hand-written column list is what makes the MERGE
 // fail months later, when somebody adds a column to the destination.
 func TestStagingTableUsesLike(t *testing.T) {
-	got := StagingTableSQL("landing.pedidos", "brevis_stage")
-	if !strings.Contains(got, "LIKE landing.pedidos") {
+	got := StagingTableSQL("landing.orders", "brevis_stage")
+	if !strings.Contains(got, "LIKE landing.orders") {
 		t.Errorf("the temporary table does not follow the destination:\n%s", got)
 	}
 	if !strings.Contains(got, "TEMP") {
@@ -78,7 +78,7 @@ func TestStagingTableUsesLike(t *testing.T) {
 // TestEncodeNDJSONOneLinePerRecord.
 func TestEncodeNDJSONOneLinePerRecord(t *testing.T) {
 	envelopes := []core.Envelope{
-		{Payload: map[string]any{"a": 1, "b": "x", "sobra": true}},
+		{Payload: map[string]any{"a": 1, "b": "x", "extra": true}},
 		{Payload: map[string]any{"a": 2}},
 	}
 	b, err := EncodeNDJSON(envelopes, []string{"a", "b"})
@@ -97,7 +97,7 @@ func TestEncodeNDJSONOneLinePerRecord(t *testing.T) {
 	}
 	// Only the declared columns go in: one extra field would make the COPY with
 	// 'auto' try a column that does not exist.
-	if _, ok := first["sobra"]; ok {
+	if _, ok := first["extra"]; ok {
 		t.Errorf("a field outside the declaration reached the file: %v", first)
 	}
 	if first["a"] != float64(1) || first["b"] != "x" {
@@ -136,7 +136,7 @@ func TestEncodeNDJSONDoesNotPayTheMapPath(t *testing.T) {
 	const lines = 2000
 	envelopes := make([]core.Envelope, lines)
 	for i := range envelopes {
-		envelopes[i] = core.Envelope{Payload: map[string]any{"a": i, "b": "texto"}}
+		envelopes[i] = core.Envelope{Payload: map[string]any{"a": i, "b": "text"}}
 	}
 	columns := []string{"a", "b"}
 
@@ -230,7 +230,7 @@ func TestTheOrderOfTheCommands(t *testing.T) {
 	store := &fakeStore{}
 
 	table := Table{
-		Name: "landing.pedidos", Staging: "s3://b/stage/",
+		Name: "landing.orders", Staging: "s3://b/stage/",
 		IAMRole: "arn:aws:iam::1:role/r", Store: store, Executor: exec,
 	}
 	_, err := table.Write(context.Background(),
@@ -260,7 +260,7 @@ func TestTheOrderOfTheCommands(t *testing.T) {
 func TestWithoutDedupItCopiesStraightIntoTheDestination(t *testing.T) {
 	exec := &fakeExecutor{}
 	table := Table{
-		Name: "landing.pedidos", Staging: "s3://b/stage/",
+		Name: "landing.orders", Staging: "s3://b/stage/",
 		IAMRole: "arn:aws:iam::1:role/r", Store: &fakeStore{}, Executor: exec,
 	}
 	if _, err := table.Write(context.Background(),
@@ -268,7 +268,7 @@ func TestWithoutDedupItCopiesStraightIntoTheDestination(t *testing.T) {
 		core.WriteOptions{Columns: []string{"a"}}); err != nil {
 		t.Fatal(err)
 	}
-	if len(exec.sqls) != 1 || !strings.HasPrefix(exec.sqls[0], "COPY landing.pedidos") {
+	if len(exec.sqls) != 1 || !strings.HasPrefix(exec.sqls[0], "COPY landing.orders") {
 		t.Errorf("commands = %v", exec.sqls)
 	}
 }

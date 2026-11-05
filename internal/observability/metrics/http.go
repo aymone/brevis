@@ -38,7 +38,7 @@ func (m *Metrics) Handler() http.Handler {
 	})
 }
 
-// Serve runs the metrics listener until the context is cancelled.
+// Serve runs the metrics listener until the context is canceled.
 //
 // It NEVER returns an error that stops the caller, and that is deliberate: a
 // port already in use must not take down the scheduler. Two Brevis processes on
@@ -59,7 +59,7 @@ func (m *Metrics) Serve(ctx context.Context, addr string, log *slog.Logger) {
 		WriteTimeout:      30 * time.Second,
 	}
 
-	// Background is the POINT: this goroutine runs BECAUSE ctx was cancelled,
+	// Background is the POINT: this goroutine runs BECAUSE ctx was canceled,
 	// so a deadline derived from it would already be expired and Shutdown
 	// would abort every in-flight scrape instead of draining it.
 	// #nosec G118

@@ -1,14 +1,14 @@
 // Package branding loads the installation's visual identity.
 //
 // It exists because the interface will be used by different customers, and each
-// wants its own name, its own phrase and its own colours. What is NOT
-// customisable is the "Powered by Brevis" attribution: it does not come from
+// wants its own name, its own phrase and its own colors. What is NOT
+// customizable is the "Powered by Brevis" attribution: it does not come from
 // configuration, it comes from the code, and so there is no YAML value capable
 // of removing it.
 //
 // Choosing YAML follows the rest of the project -- workflows are YAML, and a
 // second configuration mechanism (a database, a panel, environment variables
-// for twenty colours) would be a new way of doing the same thing.
+// for twenty colors) would be a new way of doing the same thing.
 package branding
 
 import (
@@ -41,7 +41,7 @@ type Brand struct {
 	// Empty falls back to the embedded symbol, and the default is internal on
 	// purpose: a logo that depends on an external host disappears when that host
 	// goes down, when the cluster has no route to the internet, or when the
-	// customer reorganises their own site. An operations tool's screen must not
+	// customer reorganizes their own site. An operations tool's screen must not
 	// break over that.
 	Logo string `yaml:"logo"`
 
@@ -52,13 +52,13 @@ type Brand struct {
 	// ITS OWN BLOCK, NOT A VARIANT OF Theme: `theme:` has always described a
 	// dark console, and a client's dark ground carried into the light theme
 	// would be dark text on dark. Nil leaves the light theme the product's.
-	// A field left empty keeps the product's value for that one colour.
+	// A field left empty keeps the product's value for that one color.
 	ThemeLight *Theme `yaml:"theme_light"`
 }
 
-// Theme is the colours. Each field maps to a CSS variable Tailwind already
+// Theme is the colors. Each field maps to a CSS variable Tailwind already
 // emits; overriding them at runtime repaints the whole interface without
-// recompiling CSS, because EVERY utility resolves its colour through
+// recompiling CSS, because EVERY utility resolves its color through
 // `var(--color-*)`.
 type Theme struct {
 	Background     string `yaml:"background"`
@@ -77,7 +77,7 @@ type Theme struct {
 	Canceled  string `yaml:"canceled"`
 	Waiting   string `yaml:"pending"`
 
-	// Skipped is a step whose trigger rule was not satisfied. It gets a colour
+	// Skipped is a step whose trigger rule was not satisfied. It gets a color
 	// of its own and a MUTED one: a step that was correctly not run must not
 	// read as something that went wrong, and it must not read as `pending`
 	// either, which means "has not run yet".
@@ -106,11 +106,11 @@ func Default() Brand {
 		Subtitle: "Orchestration",
 		Logo:     DefaultLogo,
 		Phrase:   "Clarity, structure and virtue\nare also part\nof whoever builds.",
-		// THE THEME IS EMPTY, ON PURPOSE. An empty colour means "the product's
-		// own", and the product's colours live in the compiled stylesheet --
+		// THE THEME IS EMPTY, ON PURPOSE. An empty color means "the product's
+		// own", and the product's colors live in the compiled stylesheet --
 		// the dark console. They used to be copied here as well, as the
 		// parchment palette from before the console went dark, so a file
-		// that changed ONE colour repainted the other fourteen in a palette
+		// that changed ONE color repainted the other fourteen in a palette
 		// the stylesheet no longer had (issue #142). There is no second list
 		// to fall out of step with the first.
 		Theme: Theme{},
@@ -119,7 +119,7 @@ func Default() Brand {
 
 // Load reads the brand file. Absence is NOT an error: the default
 // installation has no file at all, and requiring one would make the container
-// fail at boot over an optional customisation.
+// fail at boot over an optional customization.
 //
 // Missing fields inherit the default, so a two-line file -- just the name and
 // the phrase -- is a valid file.
@@ -141,7 +141,7 @@ func Load(path string) (Brand, error) {
 	// KnownFields, so an unrecognized key is an ERROR. Before this, a typo --
 	// or a file still using the pre-v0.7 Portuguese keys, `titulo:` and
 	// `tema:` -- was ignored in silence, and the installation came up with the
-	// default identity while somebody looked for the reason their colours had
+	// default identity while somebody looked for the reason their colors had
 	// not been applied.
 	dec := yaml.NewDecoder(bytes.NewReader(content))
 	dec.KnownFields(true)
@@ -157,7 +157,7 @@ func Load(path string) (Brand, error) {
 
 var hex = regexp.MustCompile(`^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$`)
 
-// Validate refuses a colour that is not hexadecimal.
+// Validate refuses a color that is not hexadecimal.
 //
 // This is security, not purism: the theme's values are written inside a <style>
 // block on the page. A free-form string there could close the declaration and
@@ -167,18 +167,18 @@ func (m Brand) Validate() error {
 	if strings.TrimSpace(m.Title) == "" {
 		return fmt.Errorf("the title cannot be empty")
 	}
-	for name, colour := range m.Theme.colours() {
-		// Empty keeps the product's colour; anything else must be hex.
-		if colour != "" && !hex.MatchString(colour) {
-			return fmt.Errorf("color %s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
+	for name, color := range m.Theme.colors() {
+		// Empty keeps the product's color; anything else must be hex.
+		if color != "" && !hex.MatchString(color) {
+			return fmt.Errorf("color %s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, color)
 		}
 	}
 	if m.ThemeLight != nil {
-		for name, colour := range m.ThemeLight.colours() {
+		for name, color := range m.ThemeLight.colors() {
 			// Empty is allowed here and only here: it keeps the product's
-			// light value for that colour.
-			if colour != "" && !hex.MatchString(colour) {
-				return fmt.Errorf("color theme_light.%s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
+			// light value for that color.
+			if color != "" && !hex.MatchString(color) {
+				return fmt.Errorf("color theme_light.%s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, color)
 			}
 		}
 	}
@@ -190,7 +190,7 @@ func (m Brand) Validate() error {
 
 // validateLogo accepts only https://, http:// and an internal path.
 //
-// For the same reason as the colours: the value goes into an <img>'s `src`. A
+// For the same reason as the colors: the value goes into an <img>'s `src`. A
 // `javascript:` or a `data:text/html,...` there runs script in the session of
 // whoever opened the panel -- and whoever edits the brand file may not be
 // whoever operates the cluster. The list is an allowlist, not a blocklist:
@@ -210,10 +210,10 @@ func validateLogo(logo string) error {
 		"starting with /", logo)
 }
 
-func (t Theme) colours() map[string]string {
+func (t Theme) colors() map[string]string {
 	return map[string]string{
 		// Keyed by the YAML NAME, not the Go field: the error this feeds names a
-		// colour, and naming one the file does not contain sends whoever is
+		// color, and naming one the file does not contain sends whoever is
 		// fixing it looking for a key that is not there.
 		"background": t.Background, "background_soft": t.BackgroundSoft, "surface": t.Surface,
 		"ink": t.Ink, "muted": t.Muted,
@@ -226,15 +226,15 @@ func (t Theme) colours() map[string]string {
 
 // CSS returns the variables to inject into the <head>.
 //
-// Empty when no colour is set and there is no light theme: the compiled sheet
+// Empty when no color is set and there is no light theme: the compiled sheet
 // already carries the product's, and repeating them would be bytes on every
-// page to change nothing. A colour left out is not written, so the file's one
+// page to change nothing. A color left out is not written, so the file's one
 // accent repaints the accent and nothing else.
 //
 // The dark block is `:root`, as it always was. The light one is
 // `:root[data-theme="light"]`, the attribute the server writes on <html> from
 // the visitor's cookie: it outranks `:root`, so a light visitor gets the light
-// colours whatever the dark block says.
+// colors whatever the dark block says.
 func (m Brand) CSS() string {
 	dark := m.Theme != Theme{}
 	if !dark && m.ThemeLight == nil {
@@ -255,7 +255,7 @@ func (m Brand) CSS() string {
 	return b.String()
 }
 
-// writeTheme writes one theme's declarations, skipping the colours it leaves
+// writeTheme writes one theme's declarations, skipping the colors it leaves
 // empty.
 func writeTheme(b *strings.Builder, t Theme) {
 	write := func(variable, value string) {
@@ -271,7 +271,7 @@ func writeTheme(b *strings.Builder, t Theme) {
 	write("--color-gold", t.Accent)
 	write("--color-gold-strong", t.AccentStrong)
 
-	// Derived: line and highlight are the same colour with transparency.
+	// Derived: line and highlight are the same color with transparency.
 	// Computing them here, rather than asking the customer, keeps them from
 	// configuring a border that clashes with the ink they picked.
 	write("--color-line", withAlpha(t.Ink, "1a"))
@@ -288,14 +288,14 @@ func writeTheme(b *strings.Builder, t Theme) {
 	write("--color-state-skipped", t.Skipped)
 }
 
-// withAlpha appends the alpha channel to a 6-digit colour. Short formats, or ones
+// withAlpha appends the alpha channel to a 6-digit color. Short formats, or ones
 // that already carry alpha, are returned untouched — mixing channels would give
-// a wrong colour instead of a visible error.
-func withAlpha(colour, alpha string) string {
-	if len(colour) != 7 {
-		return colour
+// a wrong color instead of a visible error.
+func withAlpha(color, alpha string) string {
+	if len(color) != 7 {
+		return color
 	}
-	return colour + alpha
+	return color + alpha
 }
 
 // Lines splits the sentence for the template. The break is the author's, and

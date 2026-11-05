@@ -65,7 +65,7 @@ func pipeline(url string) sdk.Pipeline {
 		Target: sdk.Target{
 			To: bigquery.Table{
 				Project: "p",
-				Name:    "prova",
+				Name:    "proof",
 				// nil: the engine decides, or nobody does.
 				CreateTable: nil,
 			},
@@ -129,13 +129,13 @@ func TestParamsIsNeverNil(t *testing.T) {
 	// With no engine at all: reading a missing key must not blow up.
 	p := pipeline(srv.URL)
 	p.Before = func(ctx context.Context, p *sdk.Pipeline) error {
-		_ = p.Run.Params["qualquer"]
+		_ = p.Run.Params["any"]
 		return nil
 	}
 	run(t, p) // a panic here fails the test
 }
 
-func TestBoolEstaExportado(t *testing.T) {
+func TestBoolIsExported(t *testing.T) {
 	// sdk.Bool is the only way to express an explicit refusal, and three options
 	// have already ended up unreachable for not having been re-exported.
 	if v := sdk.Bool(false); v == nil || *v {
@@ -204,7 +204,7 @@ func TestAConsumerReadsTheSizeOfWhatWasExtracted(t *testing.T) {
 // provenance, reads no field of the record, and writes nothing beyond what it
 // received.
 func TestAConsumerLoadsWithNoProvenanceAtAll(t *testing.T) {
-	t.Setenv("GOOGLE_PROJECT_ID", "um-projeto")
+	t.Setenv("GOOGLE_PROJECT_ID", "a-project")
 
 	srv := source(t)
 	data, err := sdk.Extract(context.Background(), sdk.Source{From: from.HTTP{URL: srv.URL}})
@@ -213,7 +213,7 @@ func TestAConsumerLoadsWithNoProvenanceAtAll(t *testing.T) {
 	}
 
 	// No Provider, no Entity, no Key. Only where to write.
-	_, err = sdk.Load(context.Background(), data, sdk.Target{To: bigquery.Table{Name: "minha_tabela"}})
+	_, err = sdk.Load(context.Background(), data, sdk.Target{To: bigquery.Table{Name: "my_table"}})
 
 	// With no credential the load never reaches BigQuery, and that is enough: what
 	// this test proves is that the facade's validation lets it through. An error
@@ -264,13 +264,13 @@ func TestAConsumerSeesTheSchemaFailWhenTheFieldGoes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Extract: %v", err)
 	}
-	data = sdk.Transform(data, sdk.Accept("campo_que_a_fonte_parou_de_mandar"))
+	data = sdk.Transform(data, sdk.Accept("field_the_source_stopped_sending"))
 
 	for _, err := range data.Records {
 		if err == nil {
 			t.Fatal("a field declared and missing has to be an error, not a NULL column")
 		}
-		if !strings.Contains(err.Error(), "campo_que_a_fonte_parou_de_mandar") {
+		if !strings.Contains(err.Error(), "field_the_source_stopped_sending") {
 			t.Errorf("the error does not name the field: %v", err)
 		}
 		return
@@ -293,8 +293,8 @@ func TestAConsumerWritesBothColumnsInTheChain(t *testing.T) {
 	}
 
 	data = sdk.Transform(data,
-		sdk.Compute("provider", func(map[string]any) (any, error) { return "prova", nil }),
-		sdk.Compute("entity", func(map[string]any) (any, error) { return "linhas", nil }),
+		sdk.Compute("provider", func(map[string]any) (any, error) { return "proof", nil }),
+		sdk.Compute("entity", func(map[string]any) (any, error) { return "rows", nil }),
 		sdk.ComputeText("source_key", sdk.Key("id")),
 		sdk.IngestionID("provider", "entity", "source_key", "id"),
 		sdk.IngestionLoadedAt(),

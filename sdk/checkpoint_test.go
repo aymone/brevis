@@ -25,7 +25,7 @@ type countedSource struct {
 	onlyOnce bool
 }
 
-func (countedSource) Describe() string { return "origem.teste" }
+func (countedSource) Describe() string { return "source.test" }
 
 func (o countedSource) Read(context.Context, ReadOptions) (iter.Seq2[Envelope, error], error) {
 	*o.reads++
@@ -48,14 +48,14 @@ type keepingTarget struct {
 	fail     bool
 }
 
-func (keepingTarget) Describe() string { return "destino.teste" }
+func (keepingTarget) Describe() string { return "target.test" }
 
 func (d keepingTarget) Write(_ context.Context, envs []Envelope, _ WriteOptions) (*LoadResult, error) {
 	*d.received = append(*d.received, envs...)
 	if d.fail {
-		return &LoadResult{}, fmt.Errorf("o destino recusou a carga")
+		return &LoadResult{}, fmt.Errorf("the target refused the load")
 	}
-	return &LoadResult{RowsLoaded: int64(len(envs)), Strategy: "teste"}, nil
+	return &LoadResult{RowsLoaded: int64(len(envs)), Strategy: "test"}, nil
 }
 
 func runIt(t *testing.T, p *Pipeline) (string, error) {
@@ -245,8 +245,7 @@ func TestACheckpointWithAMissingPartRedoesTheExtract(t *testing.T) {
 //
 // This can only happen with the object tampered with after it was written.
 // Carrying on quietly would load fewer rows than the first attempt loaded,
-// and
-// ninguem saberia.
+// and nobody would know.
 func TestACheckpointWithAWrongCountFailsLoudly(t *testing.T) {
 	dir := t.TempDir()
 	var reads int
@@ -302,7 +301,7 @@ func TestTheCheckpointPreservesTheIngestionID(t *testing.T) {
 		t.Fatalf("first attempt: %v", err)
 	}
 	if log, err := runIt(t, p(1, &doCheckpoint)); err != nil {
-		t.Fatalf("retomada: %v\n%s", err, log)
+		t.Fatalf("resumed: %v\n%s", err, log)
 	}
 
 	if len(fromSource) != len(doCheckpoint) {
@@ -347,7 +346,7 @@ func TestTheCheckpointPreservesTheNumbersLiteral(t *testing.T) {
 		t.Fatalf("first attempt: %v", err)
 	}
 	if log, err := runIt(t, p(1)); err != nil {
-		t.Fatalf("retomada: %v\n%s", err, log)
+		t.Fatalf("resumed: %v\n%s", err, log)
 	}
 
 	if len(box) != 2 {
@@ -375,7 +374,7 @@ func TestACheckpointThatCannotWriteDoesNotFailTheRun(t *testing.T) {
 	log, err := runIt(t, &Pipeline{
 		Name:       "fetcher",
 		Source:     Source{From: countedSource{records: twoRecords(), reads: &reads}},
-		Checkpoint: Checkpoint{At: "s3://balde/cp", Store: refusingStore{}},
+		Checkpoint: Checkpoint{At: "s3://bucket/cp", Store: refusingStore{}},
 		Target:     Target{To: keepingTarget{received: &box}},
 		Run:        RunContext{ID: "run-7", Attempt: 0},
 	})
@@ -403,7 +402,7 @@ func TestACheckpointFailingMidwayDegradesWithoutRereadingTheSource(t *testing.T)
 	log, err := runIt(t, &Pipeline{
 		Name:       "fetcher",
 		Source:     Source{From: countedSource{records: twoRecords(), reads: &reads, onlyOnce: true}},
-		Checkpoint: Checkpoint{At: "s3://balde/cp", Store: storeRefusingParts{}},
+		Checkpoint: Checkpoint{At: "s3://bucket/cp", Store: storeRefusingParts{}},
 		Target:     Target{To: keepingTarget{received: &box}},
 		Run:        RunContext{ID: "run-8", Attempt: 0},
 	})
@@ -448,7 +447,7 @@ func TestACheckpointWithTheWrongStoreIsAnError(t *testing.T) {
 	_, err := runIt(t, &Pipeline{
 		Name:       "fetcher",
 		Source:     Source{From: countedSource{records: twoRecords(), reads: &reads}},
-		Checkpoint: Checkpoint{At: "gs://balde/cp", Store: refusingStore{}}, // store e s3
+		Checkpoint: Checkpoint{At: "gs://bucket/cp", Store: refusingStore{}}, // store is s3
 		Target:     Target{To: keepingTarget{received: &box}},
 		Run:        RunContext{ID: "run-9"},
 	})
@@ -472,10 +471,10 @@ func (refusingStore) List(context.Context, string, string) ([]string, error) {
 	return nil, nil
 }
 func (refusingStore) Open(context.Context, string, string) (io.ReadCloser, error) {
-	return nil, fmt.Errorf("sem permissao de leitura")
+	return nil, fmt.Errorf("no read permission")
 }
 func (refusingStore) Create(context.Context, string, string, io.Reader) error {
-	return fmt.Errorf("sem permissao de escrita")
+	return fmt.Errorf("no write permission")
 }
 
 // storeRefusingParts allows the reservation and refuses the parts: it is the
@@ -485,7 +484,7 @@ type storeRefusingParts struct{ refusingStore }
 
 func (storeRefusingParts) Create(_ context.Context, _, key string, _ io.Reader) error {
 	if strings.Contains(key, "part-") {
-		return fmt.Errorf("balde cheio")
+		return fmt.Errorf("bucket full")
 	}
 	return nil
 }
@@ -516,7 +515,7 @@ func remove(t *testing.T, root, name string) {
 
 func readJSON(t *testing.T, path string, v any) {
 	t.Helper()
-	data, err := os.ReadFile(path) //nolint:gosec // caminho de teste
+	data, err := os.ReadFile(path) //nolint:gosec // a test path
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 
 func task() execution.TaskExec {
 	return execution.TaskExec{
-		ExecutionID: "wf:passo",
+		ExecutionID: "wf:step",
 		NodeID:      "bronze_workspace",
 		Workflow:    "platform_workspace",
 		RunID:       "1f2e3d4c-0000-0000-0000-000000000000",
@@ -28,7 +28,7 @@ func task() execution.TaskExec {
 }
 
 func TestThePodCarriesImageCommandAndResources(t *testing.T) {
-	p, err := k8s.BuildPod(task(), k8s.Options{Namespace: "dados", ServiceAccount: "brevis"})
+	p, err := k8s.BuildPod(task(), k8s.Options{Namespace: "data", ServiceAccount: "brevis"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestThePodCarriesImageCommandAndResources(t *testing.T) {
 	if p.Spec.RestartPolicy != "Never" {
 		t.Errorf("restartPolicy = %q", p.Spec.RestartPolicy)
 	}
-	if p.Spec.ServiceAccountName != "brevis" || p.Metadata.Namespace != "dados" {
+	if p.Spec.ServiceAccountName != "brevis" || p.Metadata.Namespace != "data" {
 		t.Errorf("wrong identity: sa=%q ns=%q", p.Spec.ServiceAccountName, p.Metadata.Namespace)
 	}
 	if p.Spec.ActiveDeadlineSeconds == nil || *p.Spec.ActiveDeadlineSeconds != 1800 {
@@ -71,14 +71,14 @@ func TestThePodCarriesImageCommandAndResources(t *testing.T) {
 func TestWithNoShellItUsesArgvDirectly(t *testing.T) {
 	tk := task()
 	tk.Shell = false
-	tk.Command = "/notify --canal dados"
+	tk.Command = "/notify --channel data"
 
 	p, err := k8s.BuildPod(tk, k8s.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	c := p.Spec.Containers[0].Command
-	if len(c) != 3 || c[0] != "/notify" || c[2] != "dados" {
+	if len(c) != 3 || c[0] != "/notify" || c[2] != "data" {
 		t.Errorf("command = %v, want argv as is", c)
 	}
 }
@@ -106,13 +106,13 @@ func TestEnvIsOrderedAndEnvFrom(t *testing.T) {
 // A pipeline's YAML must not get to choose the service account it runs as.
 func TestTheOptionsDoNotComeFromTheWorkflow(t *testing.T) {
 	p, _ := k8s.BuildPod(task(), k8s.Options{
-		ServiceAccount: "restrita",
+		ServiceAccount: "restricted",
 		PullSecrets:    []string{"registry"},
-		NodeSelector:   map[string]string{"pool": "dados"},
+		NodeSelector:   map[string]string{"pool": "data"},
 	})
-	if p.Spec.ServiceAccountName != "restrita" ||
+	if p.Spec.ServiceAccountName != "restricted" ||
 		p.Spec.ImagePullSecrets[0].Name != "registry" ||
-		p.Spec.NodeSelector["pool"] != "dados" {
+		p.Spec.NodeSelector["pool"] != "data" {
 		t.Errorf("the installation's options did not reach the pod: %+v", p.Spec)
 	}
 }
@@ -143,8 +143,8 @@ func TestThePodsNameIsStablePerAttempt(t *testing.T) {
 
 func TestThePodsNameObeysKubernetesLimit(t *testing.T) {
 	tk := task()
-	tk.Workflow = strings.Repeat("workflow-de-nome-absurdamente-longo-", 3)
-	tk.NodeID = strings.Repeat("passo-tambem-enorme-", 3)
+	tk.Workflow = strings.Repeat("absurdly-long-workflow-name-", 3)
+	tk.NodeID = strings.Repeat("step-also-huge-", 3)
 
 	name := k8s.PodName(tk)
 	if len(name) > 63 {
@@ -161,7 +161,7 @@ func TestThePodsNameObeysKubernetesLimit(t *testing.T) {
 
 	// Two long names sharing a prefix must not collide after the trim.
 	another := tk
-	another.NodeID = strings.Repeat("passo-tambem-enorme-", 3) + "-b"
+	another.NodeID = strings.Repeat("step-also-huge-", 3) + "-b"
 	if k8s.PodName(another) == name {
 		t.Error("the 63-character trim created a collision between two steps")
 	}

@@ -32,7 +32,7 @@ func TestTheExampleValidates(t *testing.T) {
 	}
 }
 
-func TestAFileThatCannotBeHonouredExitsOne(t *testing.T) {
+func TestAFileThatCannotBeHonoredExitsOne(t *testing.T) {
 	var out, errOut bytes.Buffer
 	code := run([]string{"validate", "--config", filepath.Join(t.TempDir(), "absent.yaml")}, nil, &out, &errOut)
 	if code != 1 || errOut.Len() == 0 {

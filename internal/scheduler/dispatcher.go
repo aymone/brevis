@@ -248,7 +248,7 @@ func New(cfg Config, f *queue.Queue, r Repo, e Execute, log *slog.Logger) *Dispa
 		log: log.With("worker", cfg.Worker), held: map[uuid.UUID]context.CancelCauseFunc{}}
 }
 
-// Run drains the queue until the context is cancelled, then waits for in-flight
+// Run drains the queue until the context is canceled, then waits for in-flight
 // work to finish before returning.
 func (d *Dispatcher) Run(ctx context.Context) error {
 	tick := time.NewTicker(d.cfg.Interval)
@@ -428,8 +428,8 @@ func (d *Dispatcher) process(ctx context.Context, it queue.Item) {
 	// The run's context says WHY it ends (#125), because an executor has a
 	// choice to make that depends on it: a `host:` step may be handed to the
 	// next scheduler on a shutdown, and must be stopped on a lost claim. It is
-	// detached from this process's context and then cancelled from it with a
-	// cause -- a child of a cancelled context would only ever say "canceled".
+	// detached from this process's context and then canceled from it with a
+	// cause -- a child of a canceled context would only ever say "canceled".
 	runCtx, cancelRun := context.WithCancelCause(context.WithoutCancel(ctx))
 	unwatch := context.AfterFunc(ctx, func() { cancelRun(execution.ErrShutdown) })
 	stop := d.keepClaim(runCtx, it, func() { cancelRun(execution.ErrClaimLost) })
@@ -452,7 +452,7 @@ func (d *Dispatcher) process(ctx context.Context, it queue.Item) {
 	// and `queued -> success` were this attempt writing anyway (#121).
 	//
 	// Asked once more here rather than taken from the heartbeat, because the
-	// claim can be lost after the last tick and before executar returned, where
+	// claim can be lost after the last tick and before execute returned, where
 	// the heartbeat cannot see it -- and when the heartbeat did see it, this
 	// sees it too.
 	//
@@ -575,7 +575,7 @@ func (d *Dispatcher) release(id uuid.UUID) {
 
 // stopCanceled reads whether someone asked to cancel a run this dispatcher is
 // executing, and stops each one with ErrCanceled: the executors stop its
-// steps, and process writes `canceled` when executar returns. Nothing is read
+// steps, and process writes `canceled` when execute returns. Nothing is read
 // while nothing runs.
 func (d *Dispatcher) stopCanceled(ctx context.Context) {
 	d.mu.Lock()
@@ -687,7 +687,7 @@ func (d *Dispatcher) renew() func(context.Context, queue.Item) (bool, error) {
 // it says the database did not answer, not that the claim is gone.
 //
 // A renewal that matches nothing means the claim is GONE -- the sweep took it,
-// and somebody else may be running this run already. The run is then cancelled
+// and somebody else may be running this run already. The run is then canceled
 // through `cancelRun`, which stops its pod or process, because the alternative
 // is the two concurrent executions this exists to prevent.
 //
@@ -729,7 +729,7 @@ func (d *Dispatcher) keepClaim(ctx context.Context, it queue.Item, cancelRun fun
 
 // settle returns the context for everything that happens AFTER a run finishes.
 //
-// The run's own context is usually already cancelled by the time this matters:
+// The run's own context is usually already canceled by the time this matters:
 // a SIGTERM is what ended the run, and every database call made with it then
 // fails silently. Run() waits for in-flight work before returning, which is
 // pointless if the work it waits for cannot write anything down.
@@ -934,7 +934,7 @@ func (d *Dispatcher) measure(ctx context.Context, runID uuid.UUID, status dom.St
 	}
 	r, err := d.repo.Get(ctx, runID)
 	if err != nil {
-		// Labelled rather than dropped. Dropping keeps the labels clean and
+		// Labeled rather than dropped. Dropping keeps the labels clean and
 		// makes brevis_run_total quietly wrong; "unknown" keeps the total
 		// honest and announces itself on the chart.
 		d.log.Warn("run measured without its workflow", "run", runID, "error", err)
@@ -1080,7 +1080,7 @@ func lastLines(text string, n int) string {
 	return strings.Join(rows, "\n")
 }
 
-// InFlight devolve quantas execucoes estao correndo agora.
+// InFlight returns how many executions are running right now.
 func (d *Dispatcher) InFlight() int {
 	d.mu.Lock()
 	defer d.mu.Unlock()

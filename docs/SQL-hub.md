@@ -175,4 +175,4 @@ jaffle-shop, built by this image on the same seed data dbt used:
 Source, issues and the full reference:
 <https://github.com/brevis-sh/brevis>
 
-Licence: MIT.
+License: MIT.

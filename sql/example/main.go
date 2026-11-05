@@ -38,7 +38,7 @@ const maxWindow = 90 * 24 * time.Hour
 // dayFirstWindow is a before: an ordinary Go function over the caller's
 // query string.
 //
-// It TRANSLATES what it recognises -- dates written 14/10/2026 become the
+// It TRANSLATES what it recognizes -- dates written 14/10/2026 become the
 // 2026-10-14 the date type takes -- and leaves everything else for the API,
 // whose own checks still run on what this returns. Refuse is the one way it
 // speaks to the caller; any other error is a 500 whose text only the log

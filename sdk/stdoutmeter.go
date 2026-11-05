@@ -27,7 +27,7 @@ import (
 // SDK's phases reach the graph -- and it already has a meter and a Prometheus
 // endpoint. So the step declares and the ENGINE carries.
 //
-// The metric arrives labelled with the workflow and the step, supplied by the
+// The metric arrives labeled with the workflow and the step, supplied by the
 // engine. A step cannot label itself correctly: it does not know its own slug,
 // and asking every language's library for it would get it wrong the first time
 // somebody renamed a file.

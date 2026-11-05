@@ -14,7 +14,7 @@ import (
 // exist today covers three of five the moment a fifth is added. It would pass
 // for ever and prove less every year.
 //
-// So the invariant is structural rather than behavioural — `http.Error` is
+// So the invariant is structural rather than behavioral — `http.Error` is
 // called only where counting is guaranteed — and the allowlist below is the
 // whole argument, which is why each entry carries its reason.
 func TestEveryRefusalGoesThroughSomethingThatCounts(t *testing.T) {

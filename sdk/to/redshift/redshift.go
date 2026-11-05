@@ -89,7 +89,7 @@ var _ core.Locator = Table{}
 // Locate satisfies sdk.Locator: redshift://database/schema/table.
 //
 // Redshift speaks Postgres's dialect, and the rules are Postgres's: the
-// database from the DSN, parsed and never dialled; an unquoted name folded; an
+// database from the DSN, parsed and never dialed; an unquoted name folded; an
 // unqualified one in the DSN's search_path, else `public`. With only an
 // Executor and no DSN there is no database to name, and nothing lands.
 func (t Table) Locate() string {
@@ -232,7 +232,7 @@ func (t Table) check() error {
 	return nil
 }
 
-// EncodeNDJSON serialises the batch into the format COPY reads.
+// EncodeNDJSON serializes the batch into the format COPY reads.
 //
 // Exported so it is testable without a cluster, and written with a single
 // growing buffer: a batch of hundreds of thousands of rows must not allocate a
@@ -242,7 +242,7 @@ func EncodeNDJSON(envelopes []core.Envelope, columns []string) ([]byte, error) {
 	// A rough estimate, only to avoid the first few growths.
 	buf.Grow(len(envelopes) * 128)
 
-	// The keys are the same on every row, so they are serialised ONCE.
+	// The keys are the same on every row, so they are serialized ONCE.
 	// Handing a map[string]any to json.Encoder per record cost five allocations
 	// per row -- the encoder sorts the keys and boxes every value, and none of
 	// that changes between records.
@@ -336,7 +336,7 @@ func MergeSQL(target, source string, columns []string, key string) string {
 		strings.Join(names, ", "), strings.Join(values, ", "))
 }
 
-// DropSQL apaga a temporaria.
+// DropSQL drops the temporary table.
 func DropSQL(temp string) string { return "DROP TABLE IF EXISTS " + temp }
 
 func quote(s string) string { return `"` + strings.ReplaceAll(s, `"`, `""`) + `"` }

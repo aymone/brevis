@@ -76,7 +76,7 @@ describe("getJSON", () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it("passes no AbortSignal to fetch (a cancellable read re-sends on every StrictMode mount)", async () => {
+  it("passes no AbortSignal to fetch (a cancelable read re-sends on every StrictMode mount)", async () => {
     const f = stub(reply(200, {}));
     await getJSON("/api/x");
     const init = (f.mock.calls[0] as unknown as [string, RequestInit])[1];

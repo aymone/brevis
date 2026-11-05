@@ -80,7 +80,7 @@
    minutes. This is a console, read for hours, in a bright office, beside a
    browser full of light tools. So the hues are the site's -- the same
    green-tinted neutrals and the same olive accent -- and the ground is
-   inverted: the site's background colour (#141711) becomes this one's text.
+   inverted: the site's background color (#141711) becomes this one's text.
 
    Every value below is MEASURED against both grounds, in the shape the site's
    own CSS uses. A palette whose contrast is asserted rather than computed is a
@@ -137,7 +137,7 @@
      repaint would make both impossible to review.
 
      The values come from site/css/styles.css. The two were inversions of
-     each other sharing one colour -- the site's background WAS the
+     each other sharing one color -- the site's background WAS the
      console's ink -- so somebody arriving from the page that sells this
      found what looked like another product. */
   --color-parchment: #0d1117;
@@ -158,7 +158,7 @@
   --color-accent-wash: var(--color-gold-wash);
   --color-line-strong: #484f58;
 
-  /* THE ROLES THE REDESIGN ADDS, AND NOT ONE OF THEM IS A COLOUR.
+  /* THE ROLES THE REDESIGN ADDS, AND NOT ONE OF THEM IS A COLOR.
 
      Each is a MIX of variables internal/branding writes, so a brand.yaml
      that repaints the ground and the ink repaints these too -- a literal
@@ -229,10 +229,10 @@
   --color-state-skipped: #a371f7;
 
   /* What a step runs in. Each is the language's own convention, because the
-     colour is what makes the chip readable before anybody reads the label.
+     color is what makes the chip readable before anybody reads the label.
 
      They are tokens rather than literals in dag.js for the same reason every
-     other colour here is: an installation can bring its own theme through
+     other color here is: an installation can bring its own theme through
      internal/branding, and a palette hard-coded in one file would make the DAG
      the one part of the screen that ignores it. */
   --color-lang-python: #2f5f8a;
@@ -351,10 +351,10 @@ body {
 }
 
 /* One card lifted off the background, by a ring rather than by a glow.
-   `oklch(from ...)` derives it from the theme's own colour, so an installation
+   `oklch(from ...)` derives it from the theme's own color, so an installation
    that changes the accent takes the ring along with no second variable. */
 /* The label on the accent, derived from the accent itself: near-white on a
-   dark brand colour, near-black on a light one (flip at oklch L 0.65). The
+   dark brand color, near-black on a light one (flip at oklch L 0.65). The
    `--color-on-accent` token stays the dark theme's own pairing (the contrast
    test reads it as a hex); every label that sits on `accent-strong` -- the
    primary buttons, the open sidebar item -- uses this instead, so a client's
@@ -442,7 +442,7 @@ body {
 }
 
 /* Tailwind's reset zeroes every element's margin, and with it the <dialog> loses
-   the `margin: auto` the browser uses to centre it — it was being born stuck to
+   the `margin: auto` the browser uses to center it — it was being born stuck to
    the top-left corner. */
 dialog {
   margin: auto;
@@ -456,7 +456,7 @@ dialog:focus {
 }
 
 /* React Flow's controls.
-   The xyflow bundle ships fixed colours (white on the button, black on the icon)
+   The xyflow bundle ships fixed colors (white on the button, black on the icon)
    and is loaded AFTER the compiled sheet, so it wins at equal specificity —
    which is why the selectors here are doubled. Without this, a dark theme ends
    up with a white block in the graph's corner. */
@@ -675,7 +675,7 @@ main[data-fill] > :last-child {
  *
  * `brevis-sql serve` can be told that a connection accepts statements which
  * CHANGE data, and when it has been, the workbench says so above the box.
- * Styled against the `queued` state's amber rather than a colour of its own:
+ * Styled against the `queued` state's amber rather than a color of its own:
  * this console already means "attention, not failure" with that hue, and a
  * second amber would be a second thing to keep in step.
  *
@@ -852,7 +852,7 @@ main[data-fill] > :last-child {
   }
 }
 /* The dead letter hangs off the destination by a dashed line, in the
-   colour of what travels down it: refused batches. */
+   color of what travels down it: refused batches. */
 .flow-branch {
   position: relative;
 }
@@ -946,11 +946,11 @@ table.ct > tbody > tr > td {
 }
 
 /* ---------------------------------------------------------------------------
-   STATE: A SHAPE, A WORD AND A COLOUR (web/components/status.go)
+   STATE: A SHAPE, A WORD AND A COLOR (web/components/status.go)
 
    The mark is drawn here, in currentColor, so the word and the mark are
-   always the same colour and a class on the span is all a state needs. The
-   shapes are what somebody who cannot tell the colours apart reads: filled
+   always the same color and a class on the span is all a state needs. The
+   shapes are what somebody who cannot tell the colors apart reads: filled
    is settled, a ring is waiting, a spinning ring is working, a diamond needs
    a person, a triangle is late, a square is a choice, a pulse never ends.
 --------------------------------------------------------------------------- */
@@ -1213,7 +1213,7 @@ tr[data-paused] > td[data-fade] {
   outline-offset: 1px;
 }
 
-/* A switch: on is the ok colour, because on means "this is running". */
+/* A switch: on is the ok color, because on means "this is running". */
 .switch {
   position: relative;
   display: inline-block;
@@ -1241,7 +1241,7 @@ tr[data-paused] > td[data-fade] {
   transform: translateX(12px);
 }
 
-/* A sidebar badge: a count in the failure colour, or a live pulse. */
+/* A sidebar badge: a count in the failure color, or a live pulse. */
 .nav-badge {
   margin-left: auto;
   display: inline-flex;
@@ -1291,7 +1291,7 @@ tr[data-paused] > td[data-fade] {
 
    A brand's mark on a quiet tile: the raised surface on the dark theme,
    white on the light one, where most marks were drawn to sit. The mark takes
-   two thirds of the tile. A one-colour mark is in its brand colour (written
+   two thirds of the tile. A one-color mark is in its brand color (written
    in the file); one too dark for the dark ground is drawn in ink, one too
    light for the light ground is darkened there. A key with no mark is a
    monogram in the same tile.
@@ -1309,7 +1309,7 @@ tr[data-paused] > td[data-fade] {
 :root[data-theme="light"] .cg {
   background: var(--color-surface);
 }
-/* pandas' navy is invisible on a dark tile, and its own colours are the
+/* pandas' navy is invisible on a dark tile, and its own colors are the
    mark: it keeps a white tile in both themes. */
 .cg.cg-on-white {
   background: #ffffff;
@@ -1385,7 +1385,7 @@ tr[data-paused] > td[data-fade] {
   }
 }
 
-/* THE RELEASE NOTES in the version dialog: GitHub's own HTML, sanitised on the
+/* THE RELEASE NOTES in the version dialog: GitHub's own HTML, sanitized on the
    way in (internal/updates), set in the console's type. A section's heading is
    a label with a dot; a list is a column of short lines. */
 .release-notes {
@@ -1514,7 +1514,7 @@ tr[data-paused] > td[data-fade] {
    IT IS A CURTAIN, NOT A REARRANGEMENT. Every icon keeps its place in both
    states -- the 56px rail is the icon column of the 236px sidebar -- so
    folding only draws the width in, clipping the labels as it goes while they
-   fade (`data-collapse`). Nothing is centred, switched off or re-flowed, which
+   fade (`data-collapse`). Nothing is centered, switched off or re-flowed, which
    is what made the old fold jump. Group titles fold their height away, and
    the groups pick up a hairline between them as they do. The curve is an
    ease-out that lands softly. A badge moves to the icon's corner; the account
@@ -1570,7 +1570,7 @@ tr[data-paused] > td[data-fade] {
   }
   /* SQUARE ITEMS. The rail's 56px less 12px a side leaves 32px, and every item
      is 32px tall: a square, with its icon in the middle. The icon's left
-     padding is what centres it in the square, so an item never changes how it
+     padding is what centers it in the square, so an item never changes how it
      is laid out -- only how much room it has. */
   .sb-pad {
     transition: padding-inline 360ms var(--ease-cine);

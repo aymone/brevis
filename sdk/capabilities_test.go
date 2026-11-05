@@ -138,7 +138,7 @@ func TestNoSQLDestinationInventsAType(t *testing.T) {
 // TestEveryDestinationDescribesItselfWithoutASecret: Describe reaches the log,
 // the Result and error messages, and DSNs carry passwords.
 func TestEveryDestinationDescribesItselfWithoutASecret(t *testing.T) {
-	secrets := []string{"senha", "secret", "password", "@tcp", "://x/y"}
+	secrets := []string{"password", "secret", "password", "@tcp", "://x/y"}
 	for name, d := range destinations {
 		t.Run(name, func(t *testing.T) {
 			desc := d.writer.Describe()

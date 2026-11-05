@@ -143,7 +143,7 @@ func TestARefusedHandoffIsNotCountedAsAFlush(t *testing.T) {
 // The volume series are OFF unless the environment says otherwise, and a
 // value nobody can parse is off rather than fatal.
 //
-// Every other instrument here is labelled by what an OPERATOR wrote in a YAML
+// Every other instrument here is labeled by what an OPERATOR wrote in a YAML
 // file, so the series count is known before the process starts. `table` is
 // chosen by the PRODUCER, and nobody should discover a metrics bill because
 // they upgraded.
@@ -393,7 +393,7 @@ func TestTheTTLTakesTheSpellingTheDocsUse(t *testing.T) {
 		{yaml: "2h", want: 2 * time.Hour},
 		{yaml: "60", bad: "NANOSECONDS"},
 		{yaml: "-1", bad: "NANOSECONDS"},
-		{yaml: "tarde", bad: "not a duration"},
+		{yaml: "late", bad: "not a duration"},
 		{yaml: "true", bad: "a duration is text"},
 	} {
 		t.Run(c.yaml, func(t *testing.T) {
@@ -658,7 +658,7 @@ func TestArmUsesTheDeadline(t *testing.T) {
 
 // --- the metastore is a stream-level promise (issue #36, slice 2) ----------
 
-// `metastore:` is honoured for EVERY stream and was validated for only one
+// `metastore:` is honored for EVERY stream and was validated for only one
 // kind.
 //
 // `metastoreFor` opens one per stream from `s.Metastore`, whatever the sink —
@@ -713,7 +713,7 @@ func TestTheMetastoreIsCheckedForEverySink(t *testing.T) {
 
 	// A dead letter is a Sink too, and it has no metastore of its own. The
 	// check belongs to the STREAM's sink, so a dead letter naming one must not
-	// be silently honoured -- there is no code that would open it.
+	// be silently honored -- there is no code that would open it.
 	t.Run("the dead letter's own metastore is not a thing", func(t *testing.T) {
 		s := stream("files", MetastoreConfig{})
 		s.DeadLetter.Metastore = MetastoreConfig{Type: MetastoreRedis}
@@ -1078,7 +1078,7 @@ func TestWithAClaimTheTimerWakesOnTheBoundary(t *testing.T) {
 		{"claimed, mid-window", true, "2026-09-27T12:00:02Z", 3 * time.Second},
 		{"claimed, just after a boundary", true, "2026-09-27T12:00:05.100Z", 4900 * time.Millisecond},
 		{"claimed, on a boundary", true, "2026-09-27T12:00:05Z", 5 * time.Second},
-		// Without a claim nothing contests, so the old behaviour stands: a
+		// Without a claim nothing contests, so the old behavior stands: a
 		// full `every` from whenever this armed.
 		{"unclaimed keeps every", false, "2026-09-27T12:00:02Z", 5 * time.Second},
 	} {
@@ -1419,7 +1419,7 @@ func keyedPipe(sink Sinker, b Buffer) *pipe {
 	}, nil, sink, nowhereSink{}, 1<<20, NewMetrics(), nil)
 }
 
-// A quiet table must not inherit a busy neighbour's cadence.
+// A quiet table must not inherit a busy neighbor's cadence.
 //
 // This is issue #38 reduced to its smallest reproduction: the buffer is per
 // stream and the sink routes per table, so a producer that fills the buffer
@@ -1581,7 +1581,7 @@ func TestTheClaimWorksOnEveryMetastore(t *testing.T) {
 // There is one timer, armed for the EARLIEST bucket, because a bucket created
 // later can only be due later. When it rings, the buckets that have not
 // waited their target go on filling -- otherwise the alarm one table set
-// would flush all ninety-four, which is the neighbour's cadence again by a
+// would flush all ninety-four, which is the neighbor's cadence again by a
 // different road.
 //
 // A mutation that makes `due` always true passes every other test in this

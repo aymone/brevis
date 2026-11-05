@@ -18,7 +18,7 @@ import (
 // order to catch a typo in one of them. The engine behaves exactly as it did.
 //
 // It is the near half of the gap `host:` exposed. An engine that does not know
-// a field DROPS it -- so a step meant for the machine with the licence on it
+// a field DROPS it -- so a step meant for the machine with the license on it
 // runs in the engine's own container instead, with nothing said. Nothing here
 // fixes that for an OLD engine, and nothing can; it is why the silence was
 // worth breaking on this one.

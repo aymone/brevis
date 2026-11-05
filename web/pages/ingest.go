@@ -761,7 +761,7 @@ func (v StreamView) DeadLetterPanel() *DeadLetterView {
 	return v.Configured.Config.DeadLetter
 }
 
-// BuriedMetric is the gateway's counter of what this stream buried, labelled
+// BuriedMetric is the gateway's counter of what this stream buried, labeled
 // by the stream's name as the gateway labels it.
 func (v StreamView) BuriedMetric() string {
 	if n := v.Field("name"); n != "" {

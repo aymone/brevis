@@ -74,7 +74,7 @@ var _ core.Locator = Table{}
 
 // Locate satisfies sdk.Locator: postgres://database/schema/table.
 //
-// The database comes from the DSN, parsed and never dialled, or from Conn's
+// The database comes from the DSN, parsed and never dialed, or from Conn's
 // config; host, port and user are read past and dropped. An unqualified Name
 // takes the first schema of the DSN's search_path when it sets one, and
 // `public` otherwise -- the server's default. A search_path set on the role or
@@ -117,7 +117,7 @@ func (t Table) Write(ctx context.Context, envelopes []core.Envelope, opt core.Wr
 		return fail(fmt.Errorf("postgres.Table needs DSN (or Conn)"))
 	}
 	if t.Name == "" {
-		return fail(fmt.Errorf("postgres.Table needs Name, with the schema: \"landing.pedidos\""))
+		return fail(fmt.Errorf("postgres.Table needs Name, with the schema: \"landing.orders\""))
 	}
 	if len(envelopes) == 0 {
 		return fail(nil)
@@ -185,7 +185,7 @@ func (t Table) Write(ctx context.Context, envelopes []core.Envelope, opt core.Wr
 	} else if err := t.evolve(ctx, conn, opt, types); err != nil {
 		return fail(err)
 	} else if len(opt.Schema) > 0 {
-		// The catalogue is re-read after an ALTER, for the same reason it is
+		// The catalog is re-read after an ALTER, for the same reason it is
 		// after a CREATE: the column list and the types below drive the COPY.
 		tableColumns, types, err = columnsOf(ctx, conn, schema, table)
 		if err != nil {

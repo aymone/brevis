@@ -19,7 +19,7 @@ import (
 // Built is one model, after.
 type Built struct {
 	Ref  string
-	Kind model.Materialisation
+	Kind model.Materialization
 	// Was is what the relation had been. It is reported because "this was a
 	// view until today" is the first thing somebody wants to know when a
 	// query that worked yesterday is slow.
@@ -132,7 +132,7 @@ func Build(ctx context.Context, d dialect.Dialect, conn dialect.Conn,
 		// second answer, and the suite that exists to catch a dialect
 		// disagreeing with itself would be testing the harness instead.
 		st, err := dialect.StateOf(ctx, d, conn, ref,
-			m.Materialised == model.Incremental, opt.FullRefresh)
+			m.Materialized == model.Incremental, opt.FullRefresh)
 		if err != nil {
 			return res, fmt.Errorf("%s: %w", ref, err)
 		}
@@ -177,7 +177,7 @@ func Build(ctx context.Context, d dialect.Dialect, conn dialect.Conn,
 		}
 
 		b := Built{
-			Ref: ref, Kind: m.Materialised, Was: was,
+			Ref: ref, Kind: m.Materialized, Was: was,
 			Target: conn.Target(ref),
 		}
 		// COUNTED ONLY FOR A TABLE, and with its own query. A table built
@@ -185,7 +185,7 @@ func Build(ctx context.Context, d dialect.Dialect, conn dialect.Conn,
 		// asking the same of a view would report the row count of whatever
 		// it selects from today, which is a number about the SOURCE and
 		// changes without this model being rebuilt.
-		if m.Materialised != model.View {
+		if m.Materialized != model.View {
 			n, err := conn.Scalar(ctx, "SELECT COUNT(*) FROM "+ref)
 			if err != nil {
 				return res, fmt.Errorf("%s: counting what it wrote: %w", ref, err)
@@ -197,7 +197,7 @@ func Build(ctx context.Context, d dialect.Dialect, conn dialect.Conn,
 		// number worth publishing is where this run got TO. Read before, it
 		// would be where the LAST one stopped -- indistinguishable on a run
 		// that added nothing, and wrong on every run that added something.
-		if m.Materialised == model.Incremental {
+		if m.Materialized == model.Incremental {
 			v, err := conn.Scalar(ctx, "SELECT MAX("+m.Watermark+") FROM "+ref)
 			if err != nil {
 				return res, fmt.Errorf("%s: reading the new watermark: %w", ref, err)
@@ -214,7 +214,7 @@ func Build(ctx context.Context, d dialect.Dialect, conn dialect.Conn,
 //
 // It never has to round-trip: this is printed and published, never parsed
 // back into SQL. So "whatever the driver said" is the honest answer, and
-// normalising it here would be this file deciding what a TIMESTAMP looks
+// normalizing it here would be this file deciding what a TIMESTAMP looks
 // like on two warehouses that do not agree.
 func asText(v any) string {
 	switch t := v.(type) {
@@ -258,7 +258,7 @@ func asInt(v any) int64 {
 
 // abandon removes what a failed build left aside. The first statement of the
 // part built before the swap is the one that clears the scratch table, so it
-// is also the cleanup; it runs detached from ctx because a cancelled or
+// is also the cleanup; it runs detached from ctx because a canceled or
 // timed-out build is exactly when the scratch table has to go. Best effort:
 // the next build begins with the same statement.
 func abandon(ctx context.Context, conn dialect.Conn, pre []string) {

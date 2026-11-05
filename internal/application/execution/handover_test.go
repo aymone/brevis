@@ -19,8 +19,8 @@ import (
 // handingOver is a host: step that, when its run's context ends, says where it
 // goes on running instead of stopping -- the remote executor on a shutdown.
 type handingOver struct {
-	mu        sync.Mutex
-	cancelled []string
+	mu       sync.Mutex
+	canceled []string
 }
 
 func (*handingOver) Name() string { return "handing-over" }
@@ -28,7 +28,7 @@ func (*handingOver) Name() string { return "handing-over" }
 func (h *handingOver) Cancel(_ context.Context, execID string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.cancelled = append(h.cancelled, execID)
+	h.canceled = append(h.canceled, execID)
 	return nil
 }
 
@@ -84,14 +84,14 @@ func TestAHandedOverStepStaysRunningAndSaysWhere(t *testing.T) {
 	if !ok || h.Instance != "http://agent-0:9443" || h.After != 41 || h.ExecutionID == "" {
 		t.Errorf("handover recorded = %+v (%v); wanted the agent's instance, the id and line 41", h, ok)
 	}
-	if len(exec.cancelled) != 0 {
-		t.Errorf("a step handed over was canceled: %v", exec.cancelled)
+	if len(exec.canceled) != 0 {
+		t.Errorf("a step handed over was canceled: %v", exec.canceled)
 	}
 }
 
 // And a handover nobody wrote down is not a handover. The next scheduler
 // could not find the step and would start it again beside itself, so it is
-// stopped instead -- #122's behaviour -- and ends canceled.
+// stopped instead -- #122's behavior -- and ends canceled.
 func TestAHandoverThatCannotBeRecordedStopsTheStep(t *testing.T) {
 	rows := &endings{spyPersister: &spyPersister{}}
 	exec := &handingOver{}
@@ -100,10 +100,10 @@ func TestAHandoverThatCannotBeRecordedStopsTheStep(t *testing.T) {
 		t.Fatal("the run succeeded")
 	}
 	exec.mu.Lock()
-	cancelled := append([]string(nil), exec.cancelled...)
+	canceled := append([]string(nil), exec.canceled...)
 	exec.mu.Unlock()
-	if len(cancelled) != 1 {
-		t.Errorf("cancels = %v; an unrecorded handover has to stop the step", cancelled)
+	if len(canceled) != 1 {
+		t.Errorf("cancels = %v; an unrecorded handover has to stop the step", canceled)
 	}
 	if status, _, ended := rows.of("long"); !ended || status != dom.StatusCanceled {
 		t.Errorf("the step ended %s (recorded %v); wanted canceled", status, ended)

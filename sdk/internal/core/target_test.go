@@ -108,7 +108,7 @@ func TestMySQLAndPubSubTargets(t *testing.T) {
 
 func TestObjectTargetsNameThePrefixWithATrailingSlash(t *testing.T) {
 	cases := []struct{ scheme, bucket, prefix, want string }{
-		{"s3", "acme-landing", "vendors/dia=1", "s3://acme-landing/vendors/dia=1/"},
+		{"s3", "acme-landing", "vendors/day=1", "s3://acme-landing/vendors/day=1/"},
 		{"s3", "acme-landing", "vendors/", "s3://acme-landing/vendors/"},
 		{"gs", "acme-landing", "", "gs://acme-landing/"},
 		{"file", "", "/var/data/out", "file:///var/data/out/"},
@@ -133,7 +133,7 @@ func TestEveryBuiltTargetPassesTheCheck(t *testing.T) {
 		PostgresTarget("redshift", "warehouse", "public", "events"),
 		MySQLTarget("shop", "customers"),
 		PubSubTarget("acme-prod", "clicks"),
-		ObjectTarget("s3", "acme-landing", "vendors/dia=1 x"),
+		ObjectTarget("s3", "acme-landing", "vendors/day=1 x"),
 		ObjectTarget("file", "", "/tmp/out dir"),
 	}
 	for _, s := range built {

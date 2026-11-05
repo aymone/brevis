@@ -23,7 +23,7 @@ func triggered(t *testing.T, tr wf.Trigger) (*scheduler.Scheduler, *postgres.Poo
 
 	project := uuid.New()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Projeto')`, project); err != nil {
+		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Project')`, project); err != nil {
 		t.Fatal(err)
 	}
 	wRepo := postgres.NewWorkflowRepo(pool)
@@ -47,7 +47,7 @@ func land(t *testing.T, pool *postgres.Pool, writer, target string, recorded tim
 	if _, err := pool.Exec(context.Background(), `
 		INSERT INTO landings (run_id, node_id, map_index, target, workflow_slug,
 		                      loaded_at, recorded_at)
-		VALUES ($1, 'carga', -1, $2, $3, $4, $5)`,
+		VALUES ($1, 'load', -1, $2, $3, $4, $5)`,
 		uuid.New(), target, writer,
 		recorded.Add(-7*time.Hour), // what a skewed step would have said
 		recorded); err != nil {
@@ -125,7 +125,7 @@ func TestTheNextWindowIsANewRun(t *testing.T) {
 // A PATTERN SUBSCRIBES TO A DATASET, which is the only thing auto_table's
 // tables can be named by -- and it must not reach a dataset that merely
 // starts with the same letters.
-func TestAPatternMatchesTheDatasetAndNotItsNeighbour(t *testing.T) {
+func TestAPatternMatchesTheDatasetAndNotItsNeighbor(t *testing.T) {
 	s, pool := triggered(t, wf.Trigger{OnLanded: []string{"bigquery://acme-prod/bronze/*"}})
 	t0 := inUTC("2026-03-11T04:00:00Z")
 	mustCycle(t, s, t0)

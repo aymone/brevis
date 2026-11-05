@@ -13,10 +13,10 @@ import (
 	"brevis.sh/brevis/sdk/from"
 )
 
-// BenchmarkExtractTransform mede o caminho quente inteiro: decodificar a
+// BenchmarkExtractTransform measures the whole hot path: decoding the
 // response, apply the transformers and compose the ingestion_id -- which is
 // where a
-// fetcher passa o tempo dele.
+// fetcher spends its time.
 func BenchmarkExtractTransform(b *testing.B) {
 	var body strings.Builder
 	body.WriteString(`{"results":[`)
@@ -24,7 +24,7 @@ func BenchmarkExtractTransform(b *testing.B) {
 		if i > 0 {
 			body.WriteString(",")
 		}
-		fmt.Fprintf(&body, `{"id":%d,"nome":"registro %d","valor":%d.75,"ts":"2026-09-05T12:00:00Z"}`, i, i, i)
+		fmt.Fprintf(&body, `{"id":%d,"name":"record %d","value":%d.75,"ts":"2026-09-05T12:00:00Z"}`, i, i, i)
 	}
 	body.WriteString(`]}`)
 	payload := body.String()
@@ -50,9 +50,9 @@ func BenchmarkExtractTransform(b *testing.B) {
 			b.Fatal(err)
 		}
 		data = Transform(data,
-			Accept("id", "nome", "valor", "ts"),
+			Accept("id", "name", "value", "ts"),
 			Compute("provider", func(map[string]any) (any, error) { return "bench", nil }),
-			Compute("entity", func(map[string]any) (any, error) { return "registros", nil }),
+			Compute("entity", func(map[string]any) (any, error) { return "records", nil }),
 			Rename(map[string]string{"id": "source_key", "ts": "record_ts"}),
 			IngestionID(),
 			IngestionLoadedAt(),

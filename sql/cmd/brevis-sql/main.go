@@ -162,13 +162,13 @@ func run(args []string, out io.Writer) error {
 		// run in a pull request: every model parses, every edge resolves and
 		// the order exists, without a credential anywhere.
 		// The functions are counted too: a project whose `functions/`
-		// directory is misspelt compiles to the same model list, and the
+		// directory is misspelled compiles to the same model list, and the
 		// only way to see it is a count that says zero.
 		_, _ = fmt.Fprintf(out, "%d models, %d to build, %d function(s)\n",
 			len(p.Models), len(order), len(p.Functions))
 		for _, ref := range order {
 			m := p.Models[ref]
-			_, _ = fmt.Fprintf(out, "  %-34s %-11s %d test(s)\n", ref, m.Materialised, len(m.Tests))
+			_, _ = fmt.Fprintf(out, "  %-34s %-11s %d test(s)\n", ref, m.Materialized, len(m.Tests))
 		}
 		return nil
 	}

@@ -87,7 +87,7 @@ func (r *ReadRepo) Insights(ctx context.Context, from, to time.Time, env string)
 // the same rows twice.
 //
 // ::numeric::bigint and not ::bigint: JSON has one number type, so the SDK's
-// counters can arrive as 48213 or as 48213.0 depending on what serialised them,
+// counters can arrive as 48213 or as 48213.0 depending on what serialized them,
 // and the direct cast refuses the second.
 func (r *ReadRepo) volume(ctx context.Context, from, to time.Time,
 	into map[string]*notify.WorkflowInsight,

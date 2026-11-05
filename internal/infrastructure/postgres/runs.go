@@ -13,7 +13,7 @@ import (
 	dom "brevis.sh/brevis/internal/domain/run"
 )
 
-// RunRepo persiste Runs e TaskRuns.
+// RunRepo persists Runs and TaskRuns.
 type RunRepo struct{ pool *Pool }
 
 func NewRunRepo(p *Pool) *RunRepo { return &RunRepo{pool: p} }
@@ -23,7 +23,7 @@ func NewRunRepo(p *Pool) *RunRepo { return &RunRepo{pool: p} }
 // scheduler retry and a database failure.
 var ErrAlreadyExists = errors.New("a run with this idempotency key already exists")
 
-// Criar inserts the Run in CREATED.
+// Create inserts the Run in CREATED.
 //
 // A collision on the idempotency_key unique becomes ErrAlreadyExists, not a generic
 // error: it is section 29's case — the scheduler died after creating and tries
@@ -78,7 +78,7 @@ func (r *RunRepo) Transition(ctx context.Context, id uuid.UUID, to dom.Status) e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck // no-op depois do commit
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after the commit
 
 	var current dom.Status
 	if err := tx.QueryRow(ctx, `SELECT status FROM runs WHERE id = $1 FOR UPDATE`, id).Scan(&current); err != nil {
@@ -137,7 +137,7 @@ func (r *RunRepo) Attempt(ctx context.Context, id uuid.UUID, budget int,
 	if err != nil {
 		return 0, false, err
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck // no-op depois do commit
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after the commit
 
 	if err := tx.QueryRow(ctx,
 		// The attempt ends a wait on a drain too (#146): the next refusal
@@ -222,7 +222,7 @@ func (r *RunRepo) RequestCancel(ctx context.Context, id uuid.UUID, actor string)
 	if err != nil {
 		return CancelResult{}, err
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck // no-op depois do commit
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after the commit
 
 	var status dom.Status
 	var claimed *bool
@@ -303,7 +303,7 @@ func (r *RunRepo) Stranded(ctx context.Context, key string) (id uuid.UUID, statu
 	return id, status, err == nil, err
 }
 
-// Buscar le um Run.
+// Get reads a Run.
 func (r *RunRepo) Get(ctx context.Context, id uuid.UUID) (dom.Run, error) {
 	var run dom.Run
 	err := r.pool.QueryRow(ctx, `
@@ -339,7 +339,7 @@ func (r *RunRepo) RecordAuto(ctx context.Context, id uuid.UUID,
 	if err != nil {
 		return dom.AutoParams{}, err
 	}
-	defer tx.Rollback(ctx) //nolint:errcheck // no-op depois do commit
+	defer tx.Rollback(ctx) //nolint:errcheck // no-op after the commit
 
 	var run dom.Run
 	if err := tx.QueryRow(ctx, `

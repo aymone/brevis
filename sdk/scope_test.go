@@ -26,7 +26,7 @@ import (
 // Taken where the record leaves the source, no ordering can contaminate it.
 func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `{"id":"1","temperatura":19.5}`)
+		_, _ = fmt.Fprint(w, `{"id":"1","temperature":19.5}`)
 	}))
 	defer srv.Close()
 
@@ -38,7 +38,7 @@ func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 	}
 	// The chain writes AFTER the snapshot, and writes plenty.
 	data = sdk.Transform(data,
-		sdk.Compute("derivado", func(map[string]any) (any, error) { return "novo", nil }),
+		sdk.Compute("derived", func(map[string]any) (any, error) { return "new", nil }),
 		sdk.Rename(map[string]string{"id": "source_key"}),
 	)
 
@@ -54,7 +54,7 @@ func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 	if !ok {
 		t.Fatalf("no snapshot: %v", line)
 	}
-	if _, tainted := snapshot["derivado"]; tainted {
+	if _, tainted := snapshot["derived"]; tainted {
 		t.Errorf("the snapshot carries a field the chain wrote: %v", snapshot)
 	}
 	if snapshot["id"] != "1" {
@@ -70,7 +70,7 @@ func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 // that came from the source, in silence.
 func TestTheSnapshotRefusesToOverwriteWhatTheSourceSent(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `{"payload":"da fonte"}`)
+		_, _ = fmt.Fprint(w, `{"payload":"from the source"}`)
 	}))
 	defer srv.Close()
 
@@ -97,10 +97,10 @@ func TestTheSnapshotRefusesToOverwriteWhatTheSourceSent(t *testing.T) {
 // TestSkipWithoutDropsInsteadOfFailing: a row without the field that composes
 // the key has no stable identity and cannot go in -- but it is also no reason
 // to
-// derrubar a janela inteira.
+// take the whole window down.
 func TestSkipWithoutDropsInsteadOfFailing(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprint(w, `[{"id":"1"},{"id":null},{"outro":2},{"id":"4"}]`)
+		_, _ = fmt.Fprint(w, `[{"id":"1"},{"id":null},{"other":2},{"id":"4"}]`)
 	}))
 	defer srv.Close()
 
@@ -113,7 +113,7 @@ func TestSkipWithoutDropsInsteadOfFailing(t *testing.T) {
 	var ids []string
 	for env, err := range data.Records {
 		if err != nil {
-			t.Fatalf("SkipWithout derrubou a janela: %v", err)
+			t.Fatalf("SkipWithout took the window down: %v", err)
 		}
 		ids = append(ids, env.Payload.(map[string]any)["id"].(string))
 	}
@@ -124,11 +124,11 @@ func TestSkipWithoutDropsInsteadOfFailing(t *testing.T) {
 
 // TestTheNamespaceChangesTheID is item 1: the namespace belongs to whoever uses
 // it, not to the
-// biblioteca.
+// library.
 func TestTheNamespaceChangesTheID(t *testing.T) {
 	record := func() map[string]any {
 		return map[string]any{
-			"provider": "acme", "entity": "pedidos",
+			"provider": "acme", "entity": "orders",
 			"source_key": "1", "record_ts": "2026-09-05T12:00:00Z",
 		}
 	}
@@ -195,10 +195,10 @@ func TestAChosenNamespaceIsDeterministic(t *testing.T) {
 // countingTarget records every batch it receives.
 type countingTarget struct {
 	batches [][]int
-	failAt  int // > 0: a leva N falha
+	failAt  int // > 0: batch N fails
 }
 
-func (d *countingTarget) Describe() string { return "destino de teste" }
+func (d *countingTarget) Describe() string { return "test target" }
 
 func (d *countingTarget) Write(_ context.Context, envs []sdk.Envelope, _ sdk.WriteOptions) (*sdk.LoadResult, error) {
 	var ids []int
@@ -279,7 +279,7 @@ func dataOf(t *testing.T, n int) *sdk.Data {
 
 type sourceOfN struct{ n int }
 
-func (sourceOfN) Describe() string { return "fonte de teste" }
+func (sourceOfN) Describe() string { return "test source" }
 func (f sourceOfN) Read(context.Context, sdk.ReadOptions) (iter.Seq2[sdk.Envelope, error], error) {
 	return func(yield func(sdk.Envelope, error) bool) {
 		for i := 0; i < f.n; i++ {

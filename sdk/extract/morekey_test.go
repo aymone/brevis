@@ -47,7 +47,7 @@ func count(t *testing.T, s core.Source) int {
 	n := 0
 	for _, err := range seq {
 		if err != nil {
-			t.Fatalf("iterando: %v", err)
+			t.Fatalf("iterating: %v", err)
 		}
 		n++
 	}
@@ -102,7 +102,7 @@ func TestMoreKeyDoesNotReplaceTheSafetyNet(t *testing.T) {
 
 // TestAnAbsentMoreKeyIsNotTheEndOfPagination: treating absent as the end would
 // make pagination stop at the first page in silence, which is worse than not
-// having the optimisation.
+// having the optimization.
 func TestAnAbsentMoreKeyIsNotTheEndOfPagination(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, `{"results":[{"n":1}]}`)
@@ -126,8 +126,7 @@ func TestAnAbsentMoreKeyIsNotTheEndOfPagination(t *testing.T) {
 }
 
 // TestMoreKeyAtTheRoot: a path with no dot works too -- has_more is common at
-// the
-// raiz.
+// the root.
 func TestMoreKeyAtTheRoot(t *testing.T) {
 	var requested int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

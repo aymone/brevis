@@ -91,7 +91,7 @@ func TestTheLandingBackfillKeepsOnlyFinishedLoadsAndOnlyAsLegacy(t *testing.T) {
 			if _, err := pool.Exec(ctx, `TRUNCATE landings, task_runs, runs CASCADE`); err != nil {
 				t.Fatal(err)
 			}
-			runID := seedRunWithStages(t, pool, "vendas", c.stages)
+			runID := seedRunWithStages(t, pool, "sales", c.stages)
 			var created time.Time
 			if err := pool.QueryRow(ctx, `SELECT created_at FROM runs WHERE id = $1`, runID).Scan(&created); err != nil {
 				t.Fatal(err)
@@ -121,7 +121,7 @@ func TestTheLandingBackfillKeepsOnlyFinishedLoadsAndOnlyAsLegacy(t *testing.T) {
 			if !r.at.Equal(created) {
 				t.Errorf("loaded_at = %v, want the run's creation %v: nothing older says when the load ended", r.at, created)
 			}
-			if r.slug != "vendas" {
+			if r.slug != "sales" {
 				t.Errorf("workflow = %q", r.slug)
 			}
 		})
@@ -137,11 +137,11 @@ func TestTheLandingBackfillKeepsTheLastAttemptThatLanded(t *testing.T) {
 	if _, err := pool.Exec(ctx, `TRUNCATE landings, task_runs, runs CASCADE`); err != nil {
 		t.Fatal(err)
 	}
-	runID := seedRunWithStages(t, pool, "vendas",
+	runID := seedRunWithStages(t, pool, "sales",
 		`[{"indice":0,"nome":"load","estado":"done","em":"x","numeros":{"rows":40000,"detail":"bronze.clicks"}}]`)
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO task_runs (id, run_id, node_id, status, attempt, map_index, stages)
-		VALUES ($1, $2, 'carga', 'success', 1, -1, $3)`, uuid.New(), runID,
+		VALUES ($1, $2, 'load', 'success', 1, -1, $3)`, uuid.New(), runID,
 		`[{"indice":0,"nome":"load","estado":"done","em":"x","numeros":{"rows":48000,"detail":"bronze.clicks"}}]`); err != nil {
 		t.Fatal(err)
 	}
@@ -163,11 +163,11 @@ func TestTheLandingBackfillNeverOverwritesARealLanding(t *testing.T) {
 	if _, err := pool.Exec(ctx, `TRUNCATE landings, task_runs, runs CASCADE`); err != nil {
 		t.Fatal(err)
 	}
-	runID := seedRunWithStages(t, pool, "vendas",
+	runID := seedRunWithStages(t, pool, "sales",
 		`[{"indice":0,"nome":"load","estado":"done","em":"x","numeros":{"rows":1,"detail":"bronze.clicks"}}]`)
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO landings (run_id, node_id, map_index, target, workflow_slug, loaded_at, rows_written)
-		VALUES ($1, 'carga', -1, 'bronze.clicks', 'vendas', now(), 7)`, runID); err != nil {
+		VALUES ($1, 'load', -1, 'bronze.clicks', 'sales', now(), 7)`, runID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx, landingBackfillSQL(t)); err != nil {

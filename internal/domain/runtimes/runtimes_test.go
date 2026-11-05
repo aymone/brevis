@@ -305,7 +305,7 @@ func TestTheVocabularyAndTheRulesAgree(t *testing.T) {
 }
 
 // The ids reach three places outside this package: the label map the DAG draws
-// from, the colour tokens in the stylesheet, and the vocabulary table people
+// from, the color tokens in the stylesheet, and the vocabulary table people
 // read before writing YAML. Renaming or adding one breaks all three at once.
 //
 // This used to be a hard-coded string listing the ids, which meant it could
@@ -318,8 +318,8 @@ func TestTheIdsAreStableKeys(t *testing.T) {
 	documented := documentedVocabulary(t)
 
 	for _, id := range rt.Runtimes {
-		// A runtime carries its own colour. Without the token the chip renders
-		// in the muted grey every tool uses, which is not wrong enough to
+		// A runtime carries its own color. Without the token the chip renders
+		// in the muted gray every tool uses, which is not wrong enough to
 		// notice and not right enough to keep.
 		if !tokens[id] {
 			t.Errorf("runtime %q has no --color-lang-%s in web/assets/app.src.css", id, id)

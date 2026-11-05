@@ -132,7 +132,7 @@ type envelope struct {
 	record map[string]any
 }
 
-// open reads the envelope and refuses what it cannot honour.
+// open reads the envelope and refuses what it cannot honor.
 //
 // Every refusal here is per EVENT: the producer gets it in the response, at the
 // moment they can still fix it, and every well-formed event in the same request

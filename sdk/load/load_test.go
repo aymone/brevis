@@ -116,7 +116,7 @@ func TestStrategyForCountsBytesToo(t *testing.T) {
 		{"at the byte ceiling", 10, 32 << 20, 5000, 32 << 20, "inline"},
 		{"one byte past", 10, (32 << 20) + 1, 5000, 32 << 20, "gcs"},
 		// Off is off: without a byte ceiling the row count decides alone, and
-		// that is the behaviour every caller has today.
+		// that is the behavior every caller has today.
 		{"ceiling off", 10, 1 << 30, 5000, 0, "inline"},
 		// Either ceiling is enough on its own.
 		{"rows past, bytes fine", 5001, 1 << 10, 5000, 32 << 20, "gcs"},
@@ -336,7 +336,7 @@ func TestRowErrorsNilStatus(t *testing.T) {
 	}
 }
 
-func TestSanitiseLabel(t *testing.T) {
+func TestSanitizeLabel(t *testing.T) {
 	// BigQuery takes lowercase letters, digits, dashes and underscores, up to
 	// 63 characters, starting with a letter. Anything else is dropped rather
 	// than failing the create.
@@ -350,8 +350,8 @@ func TestSanitiseLabel(t *testing.T) {
 		strings.Repeat("a", 80): strings.Repeat("a", 63),
 	}
 	for in, want := range cases {
-		if got := sanitiseLabel(in); got != want {
-			t.Errorf("sanitiseLabel(%q) = %q, want %q", in, got, want)
+		if got := sanitizeLabel(in); got != want {
+			t.Errorf("sanitizeLabel(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -554,7 +554,7 @@ func TestLayoutOnTheJobIsOffWhenTheSDKCreatesTheTable(t *testing.T) {
 
 func TestTypedTableDeclaresTheMetadataColumnsNotNull(t *testing.T) {
 	inferred := bigquery.Schema{
-		{Name: "quantidade", Type: bigquery.IntegerFieldType},
+		{Name: "quantity", Type: bigquery.IntegerFieldType},
 		{Name: "ingestion_loaded_at", Type: bigquery.TimestampFieldType},
 		{Name: "sku", Type: bigquery.StringFieldType},
 		{Name: "ingestion_id", Type: bigquery.StringFieldType},
@@ -580,7 +580,7 @@ func TestTypedTableDeclaresTheMetadataColumnsNotNull(t *testing.T) {
 	}
 
 	// The caller's, untouched -- the SDK infers no type of its own.
-	for _, name := range []string{"quantidade", "sku"} {
+	for _, name := range []string{"quantity", "sku"} {
 		if f := byName[name]; f == nil || f.Required {
 			t.Errorf("the SDK changed the caller's column %q: %+v", name, f)
 		}
@@ -656,7 +656,7 @@ func TestStagedFileIsDeletedByDefault(t *testing.T) {
 func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 	_, err := resolveConfig(&core.LoadConfig{
 		ProjectID: "p", Dataset: "d", Table: "t", Format: "ndjson",
-		Dedup: core.DedupMerge, Columns: []string{"sku", "quantidade"},
+		Dedup: core.DedupMerge, Columns: []string{"sku", "quantity"},
 	})
 	if err == nil {
 		t.Fatal("the merge matches on ingestion_id; without the declared column there is no way")
@@ -667,7 +667,7 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 		}
 	}
 
-	// Declarada, passa.
+	// Declared, it passes.
 	if _, err := resolveConfig(&core.LoadConfig{
 		ProjectID: "p", Dataset: "d", Table: "t", Format: "ndjson",
 		Dedup: core.DedupMerge, Columns: []string{"ingestion_id", "sku"},
@@ -676,8 +676,7 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 	}
 
 	// And with no declaration at all there is nothing to check here -- the row
-	// is
-	// conferida na carga.
+	// is checked at load.
 	if _, err := resolveConfig(&core.LoadConfig{
 		ProjectID: "p", Dataset: "d", Table: "t", Format: "ndjson",
 		Dedup: core.DedupMerge,

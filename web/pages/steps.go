@@ -20,7 +20,7 @@ import (
 type StepOutput struct {
 	Node   string
 	Mapped bool
-	// Status is the worst of its instances' last attempts, the colour the
+	// Status is the worst of its instances' last attempts, the color the
 	// node has in the flow.
 	Status string
 	// Ok and Total count a mapped step's instances, the flow's "2/3".

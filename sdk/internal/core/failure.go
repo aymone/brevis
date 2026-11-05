@@ -25,7 +25,7 @@ type FailurePolicy int
 
 const (
 	// AbortOnError stops on the first failure. It is the default, and it stays
-	// the default: it is the behaviour the SDK always had, and changing it in
+	// the default: it is the behavior the SDK always had, and changing it in
 	// silence would make a run that fails today start "working" with half the
 	// data.
 	AbortOnError FailurePolicy = iota

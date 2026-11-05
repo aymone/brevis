@@ -22,7 +22,7 @@ func TestARunIsNeverSkipped(t *testing.T) {
 			t.Errorf("%s -> skipped was allowed; a run is never skipped", from)
 		}
 	}
-	// And the run's machine does not recognise the two step-only states at
+	// And the run's machine does not recognize the two step-only states at
 	// all, which is the stronger statement: they are not merely unreachable,
 	// they are not part of a run's vocabulary.
 	for _, s := range []Status{StatusPending, StatusSkipped} {

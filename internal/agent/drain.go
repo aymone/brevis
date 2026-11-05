@@ -63,8 +63,8 @@ func (a *Agent) isDraining() bool {
 // same id (#125). So the drain waits for somebody to read it: the engine's
 // resume, which is what the rollout that restarts it is about to send.
 //
-// A step that was cancelled, or abandoned before it spawned, is not waited
-// for: whoever cancelled already knows how it ends, and an abandoned start was
+// A step that was canceled, or abandoned before it spawned, is not waited
+// for: whoever canceled already knows how it ends, and an abandoned start was
 // answered with its refusal.
 func (a *Agent) Wait(ctx context.Context) error {
 	for {
@@ -108,7 +108,7 @@ func (a *Agent) pendingLocked() []string {
 }
 
 // settle marks an execution as no longer owed to anybody -- its exit read,
-// or it was cancelled or abandoned -- and wakes the drain.
+// or it was canceled or abandoned -- and wakes the drain.
 //
 // The execution's lock is let go BEFORE the agent's is taken: pendingLocked
 // holds the agent's and then takes the execution's, and taking them here in
@@ -135,7 +135,7 @@ func (a *Agent) reading(e *execution, after int64) io.ReadCloser {
 	return r
 }
 
-// How long the end of a shutdown is given: the cancelled steps to write their
+// How long the end of a shutdown is given: the canceled steps to write their
 // exits, then the server to close what is still open. Short, because by then
 // the drain is over and whatever bounds this process -- the orchestrator's
 // grace period -- is already running out.
@@ -149,7 +149,7 @@ const (
 const drainReportEvery = time.Minute
 
 // Serve runs srv on ln until stop closes, then drains, and returns when the
-// listener is closed -- with how many steps it gave up on: cancelled while
+// listener is closed -- with how many steps it gave up on: canceled while
 // running, or ended with an exit nobody read. main exits non-zero on any.
 //
 // HERE and not in main, for the reason Options.Check is: a shutdown that only
@@ -165,7 +165,7 @@ const drainReportEvery = time.Minute
 // The drain ends when every step running at stop has ended and been read
 // (Wait). A drainTimeout of zero is no limit, the orchestrator's grace period
 // being the real one; force closing -- a second signal -- ends it as the
-// timeout would. Either way what is left is cancelled, the whole process
+// timeout would. Either way what is left is canceled, the whole process
 // group as /cancel does: a step left behind by an agent that exited is out of
 // anybody's reach.
 func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan struct{},
@@ -206,7 +206,7 @@ func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan stru
 		}
 	}()
 
-	cancelled := 0
+	canceled := 0
 	if err := a.Wait(ctx); err != nil {
 		left := a.pending()
 		log.Warn("the drain did not finish; canceling what is left", "steps", left, "error", err)
@@ -226,7 +226,7 @@ func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan stru
 				log.Warn("step ended but its exit was never read; it is lost", "execution", id)
 			}
 		}
-		cancelled = len(left)
+		canceled = len(left)
 		a.idle(cancelGrace)
 	}
 
@@ -237,11 +237,11 @@ func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan stru
 		// anybody any more, so it is cut.
 		_ = srv.Close()
 	}
-	log.Info("drained", "canceled", cancelled)
-	return cancelled, nil
+	log.Info("drained", "canceled", canceled)
+	return canceled, nil
 }
 
-// idle waits, up to d, for no step to be running: the cancelled ones to have
+// idle waits, up to d, for no step to be running: the canceled ones to have
 // been waited for and their exits written, so the process does not leave
 // with a signal still in flight.
 func (a *Agent) idle(d time.Duration) {

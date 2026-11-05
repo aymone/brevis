@@ -20,7 +20,7 @@ import (
 // speakerThatFails prints its lines and then exits non-zero.
 type speakerThatFails struct{ lines []string }
 
-func (speakerThatFails) Name() string                         { return "falha" }
+func (speakerThatFails) Name() string                         { return "fail" }
 func (speakerThatFails) Cancel(context.Context, string) error { return nil }
 
 func (f speakerThatFails) Execute(context.Context, execution.TaskExec) (<-chan execution.Event, error) {
@@ -164,7 +164,7 @@ func TestALandingThatCouldNotBeRecordedIsLogged(t *testing.T) {
 	if n := strings.Count(out, "could not record"); n != 1 {
 		t.Fatalf("%d warnings, want one:\n%s", n, out)
 	}
-	for _, want := range []string{"level=WARN", r.RunID.String(), "workflow=clima", "step=collectOutput", "targets=2", "SQLSTATE 54000"} {
+	for _, want := range []string{"level=WARN", r.RunID.String(), "workflow=weather", "step=collectOutput", "targets=2", "SQLSTATE 54000"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the warning lacks %q:\n%s", want, out)
 		}

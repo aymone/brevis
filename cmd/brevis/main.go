@@ -71,7 +71,7 @@ func root() *cobra.Command {
 
 // Version is stamped at build time (-ldflags). "dev" is the value for whoever
 // built straight with `go build`, and telling that apart from a release
-// artifact matters when somebody reports odd behaviour.
+// artifact matters when somebody reports odd behavior.
 var (
 	Version   = "dev"
 	Commit    = ""
@@ -134,11 +134,11 @@ func inline(m map[string]string) string {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	partes := make([]string, len(keys))
+	parts := make([]string, len(keys))
 	for i, k := range keys {
-		partes[i] = k + "=" + m[k]
+		parts[i] = k + "=" + m[k]
 	}
-	return strings.Join(partes, " ")
+	return strings.Join(parts, " ")
 }
 
 // paramsFromFlags turns repeated `--param key=value` into a map.
@@ -161,7 +161,7 @@ func paramsFromFlags(entries []string) (map[string]string, error) {
 	return out, nil
 }
 
-// expandir resolves files and directories into a list of YAMLs, in a stable
+// expand resolves files and directories into a list of YAMLs, in a stable
 // order. The order matters: publishing the same folder twice has to produce the
 // same log, or the difference between two deploys becomes noise.
 func expand(targets []string) ([]string, error) {
@@ -247,8 +247,7 @@ func cmdValidate() *cobra.Command {
 	}
 }
 
-// readAll parses every file into workflows, as a set.
-// avisar prints what the decoder ignored, to STDERR.
+// warnAbout prints what the decoder ignored, to STDERR.
 //
 // stderr and not stdout because `validate`'s stdout is a report somebody
 // greps and redirects, and a warning that disappears into a pipe is a warning
@@ -260,6 +259,7 @@ func warnAbout(path string, content []byte) {
 	}
 }
 
+// readAll parses every file into workflows, as a set.
 func readAll(files []string) ([]wfdom.Workflow, error) {
 	out := make([]wfdom.Workflow, 0, len(files))
 	for _, a := range files {
@@ -444,7 +444,7 @@ func cmdRun() *cobra.Command {
 				// An empty Registry in `run`: Go tasks are registered by
 				// whoever compiles the binary, and the generic CLI knows none.
 				// An `action:` for an unregistered task fails naming the ones
-				// that exist, which is the useful behaviour here.
+				// that exist, which is the useful behavior here.
 				Go:          local.NewGoExecutor(execution.NewRegistry()),
 				MaxAttempts: attempts,
 				BackoffBase: time.Second,
@@ -504,7 +504,7 @@ func schedule(cron string) string {
 	return "  cron " + cron
 }
 
-// abrir builds the pool and the repositories. Repeated in three subcommands; a
+// open builds the pool and the repositories. Repeated in three subcommands; a
 // helper keeps them from diverging in how they handle an error.
 func open(ctx context.Context) (*postgres.Pool, config.Config, error) {
 	cfg, err := config.Load()
@@ -1408,9 +1408,9 @@ func serve(ctx context.Context) error {
 		queue.New(pool.Pool), log, scheduler.SchedulerOptions{})
 
 	// The visual identity is optional: with no file, the installation uses the
-	// default one. An error HERE is about content (an invalid colour, broken
+	// default one. An error HERE is about content (an invalid color, broken
 	// YAML) and does not stop the interface from starting — taking the API down
-	// over a colour would be worse than serving it with the default theme and a
+	// over a color would be worse than serving it with the default theme and a
 	// warning in the log.
 	brand, err := branding.Load(cfg.BrandFile)
 	if err != nil {
@@ -1509,7 +1509,7 @@ func serve(ctx context.Context) error {
 		log.Info("shutting down", "timeout", cfg.ShutdownTimeout.String())
 	}
 
-	// A context of its own: the one above is already cancelled by the signal,
+	// A context of its own: the one above is already canceled by the signal,
 	// and using it here would abort the shutdown the instant it starts.
 	ctxEnc, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()

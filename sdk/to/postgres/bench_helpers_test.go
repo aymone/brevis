@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func envOuPular(b *testing.B) string {
+func envOrSkip(b *testing.B) string {
 	b.Helper()
 	d := os.Getenv("BREVIS_IT_PG_DSN")
 	if d == "" {
@@ -34,7 +34,7 @@ func benchTable(b *testing.B, conn *pgx.Conn) string {
 	name := fmt.Sprintf("bench_%d", time.Now().UnixNano())
 	if _, err := conn.Exec(context.Background(), fmt.Sprintf(`CREATE TABLE %s (
 		ingestion_id TEXT NOT NULL, ingestion_loaded_at TIMESTAMPTZ NOT NULL,
-		provider TEXT, source_key TEXT, valor NUMERIC(18,2))`, name)); err != nil {
+		provider TEXT, source_key TEXT, value NUMERIC(18,2))`, name)); err != nil {
 		b.Fatal(err)
 	}
 	b.Cleanup(func() { _, _ = conn.Exec(context.Background(), "DROP TABLE IF EXISTS "+name) })

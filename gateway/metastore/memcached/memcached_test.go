@@ -65,7 +65,7 @@ func stalled(t *testing.T) string {
 // lock.
 //
 // `gomemcache.Add` takes no context, so this store discards the one it is
-// handed -- Redis honours it, this cannot. Before this was bounded, the only
+// handed -- Redis honors it, this cannot. Before this was bounded, the only
 // limit was the client's own 5s socket timeout, and `claimTimeout` was 500ms
 // of pure decoration: measured at a 2s backend, a Claim with a 500ms context
 // returned in 2s with no error, holding the pipe's mutex for all of it.
@@ -172,10 +172,10 @@ func slowly(t *testing.T, delay time.Duration) (string, *atomic.Int64) {
 //
 // The flush trigger is per routing key, so one window claims one key per
 // table. The client's default is TWO idle connections, shared by every claim
-// on every stream -- with a 500ms socket bound, a backend at 200ms serialises
+// on every stream -- with a 500ms socket bound, a backend at 200ms serializes
 // those claims two at a time and most of them time out rather than queue.
 //
-// This pins that nothing in this store serialises them, which is the
+// This pins that nothing in this store serializes them, which is the
 // property the fan-out is about to depend on.
 func TestTheClaimsCanRunInParallel(t *testing.T) {
 	const (

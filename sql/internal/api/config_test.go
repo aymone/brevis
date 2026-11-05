@@ -84,7 +84,7 @@ func TestAGoodFileLoads(t *testing.T) {
 
 // EVERY REFUSAL NAMES THE SETTING, because the person reading it is the one
 // who has to go and change it.
-func TestWhatCannotBeHonouredIsRefusedByName(t *testing.T) {
+func TestWhatCannotBeHonoredIsRefusedByName(t *testing.T) {
 	cases := map[string]struct{ file, says string }{
 		"unknown connection":             {strings.Replace(good, "connection: warehouse", "connection: nope", 1), "`connection` is \"nope\""},
 		"no connection":                  {strings.Replace(good, "connection: warehouse\n", "", 1), "`connection`"},

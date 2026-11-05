@@ -153,7 +153,7 @@ func TestFlattenOneLevelKeepsNull(t *testing.T) {
 
 // A collision is refused BY NAME, never resolved by whoever wins the map.
 //
-// Go's map iteration is randomised, so last-write-wins would give a different
+// Go's map iteration is randomized, so last-write-wins would give a different
 // answer per run: the same batch would produce a different table on Tuesday.
 func TestFlattenOneLevelRefusesACollision(t *testing.T) {
 	for _, c := range []struct {

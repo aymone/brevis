@@ -105,7 +105,7 @@ scheduler:
 #
 #   hosts:
 #     - name: tools
-#       url: http://brevis-agent-0.brevis-agent.dados.svc:9443
+#       url: http://brevis-agent-0.brevis-agent.data.svc:9443
 #
 # A step says `host: tools` and the command goes there instead of becoming a
 # pod. Empty means no step may use `host:`, and the refusal names this value.
@@ -195,7 +195,7 @@ slack:
   existingSecret: ""
 uiURL: ""
 
-# Title, subtitle, phrase and palette, as brand.yaml. The colours override CSS
+# Title, subtitle, phrase and palette, as brand.yaml. The colors override CSS
 # variables at runtime, so a theme change recompiles nothing.
 brand:
   enabled: false

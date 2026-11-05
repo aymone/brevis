@@ -110,7 +110,7 @@ func (nowhere) Write(context.Context, []sdk.Envelope) (int64, error) {
 // Write.
 //
 // This was a real poison batch and it is worth writing down how it looked. Four
-// events in one request, one of them carrying `meu-campo`:
+// events in one request, one of them carrying `my-field`:
 //
 //	{"accepted":4,"rejected":null}   ← all four told 202
 //
@@ -131,7 +131,7 @@ func TestAdmitRefusesAFieldThatCannotBeAColumn(t *testing.T) {
 
 	err := r.Admit(map[string]any{
 		FieldTable: "app_orders",
-		FieldData:  map[string]any{"id": "A-1", "meu-campo": "x"},
+		FieldData:  map[string]any{"id": "A-1", "my-field": "x"},
 	})
 	if err == nil {
 		t.Fatal("Admit took a record whose field cannot be a column; at write " +
@@ -149,10 +149,10 @@ func TestAdmitRefusesAFieldThatCannotBeAColumn(t *testing.T) {
 	})
 	if err := d.Admit(map[string]any{
 		FieldTable: "app_orders",
-		FieldData:  map[string]any{"id": "A-1", "meu-campo": "x"},
+		FieldData:  map[string]any{"id": "A-1", "my-field": "x"},
 	}); err != nil {
 		t.Errorf("document refused %q, and under that shape it is a key in a "+
-			"JSON document and never a column name: %v", "meu-campo", err)
+			"JSON document and never a column name: %v", "my-field", err)
 	}
 }
 
@@ -169,10 +169,10 @@ func TestAdmitCatchesWhatWriteWouldHaveRefused(t *testing.T) {
 	})
 
 	for _, record := range []map[string]any{
-		{"id": "A-1", "meu-campo": "x"}, // a hyphen
-		{"id": "A-1", "2fast": "x"},     // starts with a digit
-		{"id": "A-1", "com espaço": 1},  // a space
-		{"id": "A-1", "": 1},            // empty
+		{"id": "A-1", "my-field": "x"}, // a hyphen
+		{"id": "A-1", "2fast": "x"},    // starts with a digit
+		{"id": "A-1", "with space": 1}, // a space
+		{"id": "A-1", "": 1},           // empty
 	} {
 		e := map[string]any{FieldTable: "app_orders", FieldData: record}
 

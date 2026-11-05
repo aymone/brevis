@@ -7,7 +7,7 @@ export type SegItem = { key: string; label: string; icon?: ReactNode; count?: nu
 
 /**
  * ONE exclusive choice drawn as one control. A `radiogroup`: a single tab stop, arrows (and Home/End)
- * move AND choose, like native radios. The chosen segment is raised, bordered and bolder (never colour
+ * move AND choose, like native radios. The chosen segment is raised, bordered and bolder (never color
  * alone). On a bar too narrow for its words it shows a compact dropdown twin instead (CSS, see FilterBar). Counts sit in a reserved, tabular slot and ghost until `pending` clears, so they arrive in place.
  */
 export function Segmented({ label, items, value, onChange, pending = false }: { label: string; items: SegItem[]; value: string; onChange: (key: string) => void; pending?: boolean }) {

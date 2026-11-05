@@ -44,7 +44,7 @@ jobs:
           BREVIS_BENCH_HOLD: ${{ inputs.hold || '30s' }}
         run: ./bench/run.sh
 
-      # The report is the artefact. It is NOT committed from CI: a job that
+      # The report is the artifact. It is NOT committed from CI: a job that
       # writes to the branch it tests is a job that can turn a red benchmark
       # into a green commit, and the numbers from a shared runner should not
       # silently replace the ones somebody measured on known hardware.

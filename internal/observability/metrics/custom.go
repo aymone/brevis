@@ -84,7 +84,7 @@ func (m *Metrics) StepMetric(ctx context.Context, workflow, step, name, kind str
 
 // The two instrument caches. Both take the same lock: the maps are written on
 // the FIRST use of a name and read on every one after, and a step reporting a
-// number every second must not serialise on a mutex it does not need -- but a
+// number every second must not serialize on a mutex it does not need -- but a
 // hundred steps registering at once must not race either. First-use writes are
 // rare enough that one lock is the simple answer.
 func (m *Metrics) counter(name string, log *slog.Logger) api.Int64Counter {

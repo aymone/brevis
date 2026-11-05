@@ -1,7 +1,7 @@
 -- +goose Up
 -- Stores the stages an SDK step announces while it runs.
 --
--- Until now an SDK step was a grey box that turned green. Between "started" and
+-- Until now an SDK step was a gray box that turned green. Between "started" and
 -- "finished" there were forty minutes in which the screen could not tell
 -- "downloading page 300 of 4,803" from "stuck on Redshift's handshake".
 --

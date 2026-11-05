@@ -27,22 +27,22 @@ import (
 )
 
 func main() {
-	dir, err := os.MkdirTemp("", "brevis-arquivos-*")
+	dir, err := os.MkdirTemp("", "brevis-files-*")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() { _ = os.RemoveAll(dir) }()
 
-	inDir := filepath.Join(dir, "entrada")
-	outDir := filepath.Join(dir, "saida")
+	inDir := filepath.Join(dir, "input")
+	outDir := filepath.Join(dir, "output")
 	if err := os.MkdirAll(inDir, 0o750); err != nil {
 		log.Fatal(err)
 	}
 
 	// Two "extractions" that already existed on disk.
-	seed(inDir, "2026-09-03.ndjson", `{"sku":"W-1","quantidade":3,"lixo":"x"}
-{"sku":"W-2","quantidade":9,"lixo":"y"}`)
-	seed(inDir, "2026-09-04.ndjson", `{"sku":"W-3","quantidade":1,"lixo":"z"}`)
+	seed(inDir, "2026-09-03.ndjson", `{"sku":"W-1","quantity":3,"junk":"x"}
+{"sku":"W-2","quantity":9,"junk":"y"}`)
+	seed(inDir, "2026-09-04.ndjson", `{"sku":"W-3","quantity":1,"junk":"z"}`)
 
 	ctx := context.Background()
 
@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// What row it builds. "lixo" is not declared, so it does not come out.
-	data = sdk.Transform(data, sdk.Accept("sku", "quantidade"))
+	data = sdk.Transform(data, sdk.Accept("sku", "quantity"))
 
 	// Where it goes, and with which columns.
 	res, err := sdk.Load(ctx, data, sdk.Target{
@@ -67,7 +67,7 @@ func main() {
 			PartitionBy: "ingestion_loaded_at",
 			Compress:    true,
 		},
-		Columns: []string{"ingestion_id", "ingestion_loaded_at", "sku", "quantidade"},
+		Columns: []string{"ingestion_id", "ingestion_loaded_at", "sku", "quantity"},
 	})
 	if err != nil {
 		log.Fatalf("load: %v", err)

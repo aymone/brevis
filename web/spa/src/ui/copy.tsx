@@ -19,7 +19,7 @@ function useCopy(text: string) {
 }
 
 /**
- * Copy: the icon button of a block (no word) or, `primary`, the labelled verb
+ * Copy: the icon button of a block (no word) or, `primary`, the labeled verb
  * of a footer.
  */
 export function CopyButton({ text, label, primary }: { text: string; label: string; primary?: boolean }) {

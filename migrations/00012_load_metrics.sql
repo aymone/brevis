@@ -21,7 +21,7 @@
 -- reading nine numbers means touching all of it: 222 MB of table to answer a
 -- question whose answer is 81 MB. See docs/plan/2026-09-10-load-trend.md.
 --
--- DENORMALISED on purpose. `workflow_slug` and the timestamp both live on
+-- DENORMALIZED on purpose. `workflow_slug` and the timestamp both live on
 -- `runs`, and joining to get them is precisely what made the JSONB version
 -- slow: the index that answers this in one scan has to be on the table being
 -- scanned.

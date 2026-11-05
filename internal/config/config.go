@@ -407,7 +407,7 @@ func envInt(key string, fallback int) (int, error) {
 	return n, nil
 }
 
-// toleracoes reads "key=value:effect,other=value:effect".
+// graces reads "key=value:effect,other=value:effect".
 //
 // A malformed entry is IGNORED rather than becoming a boot error: a wrong
 // toleration leaves the pod Pending, which is visible; refusing the scheduler's
@@ -430,7 +430,7 @@ func graces(key string) []Grace {
 // Config.
 func TaskEnvFromEnvironment() []string { return list("BREVIS_TASK_ENV") }
 
-// lista splits on commas, ignoring empties — "a,,b" is a typo, and an empty
+// list splits on commas, ignoring empties — "a,,b" is a typo, and an empty
 // secret name would make the server refuse the whole pod.
 func list(key string) []string {
 	var out []string

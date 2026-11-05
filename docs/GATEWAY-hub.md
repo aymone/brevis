@@ -35,7 +35,7 @@ There is no `latest-slim`. `latest` is already a tag nobody should deploy.
 ## What it does
 
 **The file is the contract.** Streams, paths, formats, identity, retry,
-destination and dead letter — every field refused when it cannot be honoured. A
+destination and dead letter — every field refused when it cannot be honored. A
 gateway that starts on a config it half understood drops events for a reason
 nobody can see.
 

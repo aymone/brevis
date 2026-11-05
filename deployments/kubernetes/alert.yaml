@@ -12,7 +12,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: brevis-alert
-  namespace: dados
+  namespace: data
 spec:
   # ONE replica, and this one is not a placeholder for leader election.
   #

@@ -11,7 +11,7 @@ var _ core.Configured = Table{}
 // Configuration satisfies sdk.Configured: where the table is and how the load
 // treats it.
 //
-// The DSN is parsed and never dialled, and only its host, port and database
+// The DSN is parsed and never dialed, and only its host, port and database
 // are listed. Its user, its password and every other parameter stay out: the
 // description is read by everybody with a console login.
 func (t Table) Configuration() []core.Setting {

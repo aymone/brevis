@@ -1,4 +1,4 @@
-/* The Catalog list (the drawer's rules are in catalog.css). Colours are the server's tokens; every rule is prefixed ctl-. */
+/* The Catalog list (the drawer's rules are in catalog.css). Colors are the server's tokens; every rule is prefixed ctl-. */
 
 /* The row is one link: the destination's anchor is stretched over the row (one tab stop, Enter opens the
    drawer, ctrl-click works) and the row, not the anchor, draws the focus ring. */

@@ -170,7 +170,7 @@ func rewire(edges []domain.Edge, roots, leaves map[string][]string) []domain.Edg
 // edges with both ends prefixed.
 //
 // Every node comes out SELF-CONTAINED: the child workflow's `image:`, `env:`,
-// `secrets:` and `resources:` are materialised onto it. Without that the steps
+// `secrets:` and `resources:` are materialized onto it. Without that the steps
 // would land in the parent and start inheriting the PARENT's image -- the same
 // YAML producing a different container depending on who used it.
 func inline(host domain.Node, child domain.Workflow) ([]domain.Node, []domain.Edge) {

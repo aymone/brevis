@@ -29,7 +29,7 @@ func TestComputeIngestionIDAgainstPython(t *testing.T) {
 // The Envelope and the transformer have to land in the same place, because the
 // same row
 // can arrive through either path.
-func TestEnvelopeUsaAMesmaFormula(t *testing.T) {
+func TestEnvelopeUsesTheSameFormula(t *testing.T) {
 	env := Envelope{Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t"}
 	byEnvelope, err := env.IngestionID()
 	if err != nil {

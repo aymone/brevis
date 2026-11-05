@@ -43,7 +43,7 @@ type fakeAgent struct {
 
 	started   []remote.StartRequest
 	resumes   []remote.Resume
-	cancelled []string
+	canceled  []string
 	cancelErr error
 	conns     int
 }
@@ -75,7 +75,7 @@ func (f *fakeAgent) Resume(_ context.Context, _, _ string, r remote.Resume) (io.
 func (f *fakeAgent) Cancel(_ context.Context, _, execID string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.cancelled = append(f.cancelled, execID)
+	f.canceled = append(f.canceled, execID)
 	return f.cancelErr
 }
 
@@ -113,7 +113,7 @@ func exitLine(seq, code int) string {
 
 func task() execution.TaskExec {
 	return execution.TaskExec{
-		ExecutionID: "exec-1", NodeID: "extract", Workflow: "vendas",
+		ExecutionID: "exec-1", NodeID: "extract", Workflow: "sales",
 		RunID: "run-1", Command: "python pipelines/orders.py",
 	}
 }
@@ -504,13 +504,13 @@ func TestCancelReachesTheAgent(t *testing.T) {
 	if err := e.Cancel(context.Background(), "exec-1"); err != nil {
 		t.Fatalf("Cancel: %v", err)
 	}
-	if len(agent.cancelled) != 1 || agent.cancelled[0] != "exec-1" {
-		t.Errorf("canceled = %v", agent.cancelled)
+	if len(agent.canceled) != 1 || agent.canceled[0] != "exec-1" {
+		t.Errorf("canceled = %v", agent.canceled)
 	}
 }
 
 // An unreachable agent is a REAL STATE and the error names it: the step is
-// cancelled here and may still be running there. A spinner that never resolves
+// canceled here and may still be running there. A spinner that never resolves
 // is what this replaces.
 func TestAnUnreachableAgentSaysTheProcessMaySurvive(t *testing.T) {
 	agent := &fakeAgent{cancelErr: errors.New("connection refused")}
@@ -557,7 +557,7 @@ func TestAHostAndAnImageTogetherAreRefused(t *testing.T) {
 
 // quietAgent opens a stream that never produces a line and never ends, which is
 // what an agent whose host died looks like from here.
-type quietAgent struct{ cancelled bool }
+type quietAgent struct{ canceled bool }
 
 func (q *quietAgent) Start(ctx context.Context, _ remote.StartRequest) (remote.Session, error) {
 	return remote.Session{Stream: silence{ctx: ctx}}, nil
@@ -567,7 +567,7 @@ func (q *quietAgent) Resume(ctx context.Context, _, _ string, _ remote.Resume) (
 	return silence{ctx: ctx}, nil
 }
 
-func (q *quietAgent) Cancel(_ context.Context, _, _ string) error { q.cancelled = true; return nil }
+func (q *quietAgent) Cancel(_ context.Context, _, _ string) error { q.canceled = true; return nil }
 
 type silence struct{ ctx context.Context }
 
@@ -578,10 +578,10 @@ func (s silence) Close() error             { return nil }
 // recording every cancel it is asked for -- and whether the context it came
 // with could still reach anybody.
 type holdingAgent struct {
-	mu        sync.Mutex
-	cancels   []string // "instance/execID"
-	deadCtx   bool
-	cancelled chan struct{}
+	mu       sync.Mutex
+	cancels  []string // "instance/execID"
+	deadCtx  bool
+	canceled chan struct{}
 }
 
 func (h *holdingAgent) Start(ctx context.Context, _ remote.StartRequest) (remote.Session, error) {
@@ -598,17 +598,17 @@ func (h *holdingAgent) Cancel(ctx context.Context, instance, execID string) erro
 	h.cancels = append(h.cancels, instance+"/"+execID)
 	h.deadCtx = h.deadCtx || ctx.Err() != nil
 	if len(h.cancels) == 1 {
-		close(h.cancelled)
+		close(h.canceled)
 	}
 	return nil
 }
 
-// A run whose context is cancelled -- the scheduler shutting down, or the
+// A run whose context is canceled -- the scheduler shutting down, or the
 // claim lost to the sweep (#121) -- stops its process on the host, not only
 // the engine's reading of it. Until this, nothing called Agent.Cancel on that
 // path, and the process ran on undisturbed beside the run's next attempt.
-func TestACancelledRunCancelsItsProcessOnTheHost(t *testing.T) {
-	agent := &holdingAgent{cancelled: make(chan struct{})}
+func TestACanceledRunCancelsItsProcessOnTheHost(t *testing.T) {
+	agent := &holdingAgent{canceled: make(chan struct{})}
 	e := &remote.Executor{Agent: agent, Host: "dlt-runner-01", LeaseLimit: time.Minute}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -620,7 +620,7 @@ func TestACancelledRunCancelsItsProcessOnTheHost(t *testing.T) {
 	collect(t, ch)
 
 	select {
-	case <-agent.cancelled:
+	case <-agent.canceled:
 	case <-time.After(5 * time.Second):
 		t.Fatal("the run was canceled and the agent was never told")
 	}
@@ -634,10 +634,10 @@ func TestACancelledRunCancelsItsProcessOnTheHost(t *testing.T) {
 	}
 }
 
-// A step that FINISHED is not cancelled afterwards: its process is gone, and a
+// A step that FINISHED is not canceled afterwards: its process is gone, and a
 // cancel for it would be a request about nothing -- or, with a recycled
 // execution id, about something else.
-func TestAFinishedStepIsNotCancelledWhenItsContextEnds(t *testing.T) {
+func TestAFinishedStepIsNotCanceledWhenItsContextEnds(t *testing.T) {
 	agent := &fakeAgent{lines: []string{exitLine(1, 0)}}
 	e := &remote.Executor{Agent: agent, Host: "box"}
 
@@ -652,15 +652,15 @@ func TestAFinishedStepIsNotCancelledWhenItsContextEnds(t *testing.T) {
 
 	agent.mu.Lock()
 	defer agent.mu.Unlock()
-	if len(agent.cancelled) != 0 {
-		t.Errorf("a finished step was canceled: %v", agent.cancelled)
+	if len(agent.canceled) != 0 {
+		t.Errorf("a finished step was canceled: %v", agent.canceled)
 	}
 }
 
 // Cancel tells the agent itself, and the stream it ends must not tell it again:
 // one cancel asked for is one cancel sent.
 func TestAnExplicitCancelReachesTheAgentOnce(t *testing.T) {
-	agent := &holdingAgent{cancelled: make(chan struct{})}
+	agent := &holdingAgent{canceled: make(chan struct{})}
 	e := &remote.Executor{Agent: agent, Host: "dlt-runner-01", LeaseLimit: time.Minute}
 
 	ch, err := e.Execute(context.Background(), task())
@@ -684,7 +684,7 @@ func TestAnExplicitCancelReachesTheAgentOnce(t *testing.T) {
 // and returns what came out and what the agent was asked.
 func runAndEnd(t *testing.T, handOver bool, cause error) ([]execution.Event, []string) {
 	t.Helper()
-	agent := &holdingAgent{cancelled: make(chan struct{})}
+	agent := &holdingAgent{canceled: make(chan struct{})}
 	e := &remote.Executor{Agent: agent, Host: "dlt-runner-01", LeaseLimit: time.Minute, HandOver: handOver}
 
 	ctx, cancel := context.WithCancelCause(context.Background())

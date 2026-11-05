@@ -58,7 +58,7 @@ func New(pool *pgxpool.Pool) *Queue { return &Queue{pool: pool} }
 // the DATABASE's clock.
 //
 // `ON CONFLICT DO NOTHING` on run_id's unique: enqueueing the same run twice is
-// a no-op, not an error. That is the behaviour §29 asks for -- the operation
+// a no-op, not an error. That is the behavior §29 asks for -- the operation
 // tolerates repetition.
 //
 // The clock difference matters: the process's clock can be a few milliseconds

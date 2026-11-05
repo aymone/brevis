@@ -65,7 +65,7 @@ func RenderPreview(sample []any, budget int, st PreviewStats) string {
 // the order the destination writes -- and showing those alphabetically would
 // print a table that is not the table.
 //
-// A nil order keeps the sorted behaviour. Names in the order that no row
+// A nil order keeps the sorted behavior. Names in the order that no row
 // carries are still shown, as empty cells: a declared column the records lack
 // is precisely what somebody is looking for.
 func RenderPreviewIn(sample []any, budget int, st PreviewStats, order []string) string {

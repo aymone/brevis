@@ -110,7 +110,7 @@ type Options struct {
 	// service that is also pointed at a production DSN, and a switch cannot
 	// tell those apart.
 	//
-	// A NAME HERE STANDS DOWN EVERY LAYER AT ONCE -- the tokeniser, the
+	// A NAME HERE STANDS DOWN EVERY LAYER AT ONCE -- the tokenizer, the
 	// warehouse's verdict and the warehouse's enforcement -- so on a named
 	// connection this service is exactly as powerful as its credential. The
 	// row ceiling bounds a screen and the byte ceiling bounds MONEY; neither
@@ -151,7 +151,7 @@ type Service struct {
 	// ONCE PER CONNECTION AND NOT ONCE PER QUERY: the answer cannot change
 	// while an IAM policy does not, and a round trip per query buys nothing.
 	// Two first queries at once may both probe -- the probe is free and
-	// idempotent, and serialising them behind the lock would put a network
+	// idempotent, and serializing them behind the lock would put a network
 	// call inside it.
 	mu     sync.Mutex
 	probed map[string]bool

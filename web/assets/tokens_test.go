@@ -93,7 +93,7 @@ func root(src map[string]string, name string) string {
 //
 // `accent` is not on the list. The repository's `--color-accent` is the dim
 // gold a long-standing set of call sites paints with; the handoff's accent --
-// the one strong colour on a screen -- is what this file calls
+// the one strong color on a screen -- is what this file calls
 // `accent-strong`, and repainting `accent` to match a name would repaint every
 // screen at once.
 func TestTheDesignRolesArePaintedByTheBrand(t *testing.T) {

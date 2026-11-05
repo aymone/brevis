@@ -46,7 +46,7 @@ metrics:
 #
 # Off by default because `table` is a label the PRODUCER chooses -- with
 # auto_table one route becomes as many tables as they name, and every other
-# series here is labelled by what an operator wrote in this file. Nobody should
+# series here is labeled by what an operator wrote in this file. Nobody should
 # find a metrics bill because they upgraded.
 #
 # The same number is on every row as `brevis_received_bytes` either way. This

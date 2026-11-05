@@ -274,7 +274,7 @@ func (c *conn) Relations(ctx context.Context) ([]dialect.Relation, error) {
 // reasons the dialect's own ColumnsOf gives for choosing the other one. That
 // query is asked about a table THIS PROJECT BUILT; this one is asked about
 // anything a listing returned, and a listing comes from pg_class -- which
-// includes materialised views, invisible in information_schema. Answering
+// includes materialized views, invisible in information_schema. Answering
 // "no columns" for a relation the tree just drew would be the worst possible
 // answer, which is exactly the argument KindOf already makes.
 //

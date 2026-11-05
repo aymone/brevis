@@ -108,7 +108,7 @@ func TestAnAggregationIsDescribedWhole(t *testing.T) {
 		Stages: []Stage{
 			Map(upperName),
 			Aggregate(Reduce{By: GroupBy("area", "year"), Agg: map[string]Aggregator{
-				"total": Sum("valor"), "n": Count(), "top": MaxBy("valor", "id")}}),
+				"total": Sum("value"), "n": Count(), "top": MaxBy("value", "id")}}),
 		},
 		Target: Target{To: keepingTarget{received: new([]Envelope)}},
 	}
@@ -118,8 +118,8 @@ func TestAnAggregationIsDescribedWhole(t *testing.T) {
 	}
 	for path, want := range map[string]string{
 		"transform.2.aggregate.n":     "count",
-		"transform.2.aggregate.total": "sum(valor)",
-		"transform.2.aggregate.top":   "max_by(valor, id)",
+		"transform.2.aggregate.total": "sum(value)",
+		"transform.2.aggregate.top":   "max_by(value, id)",
 	} {
 		if f[path] != want {
 			t.Errorf("%s = %v, want %q", path, f[path], want)
@@ -208,7 +208,7 @@ func TestTheSDKsTransformersSayWhatTheyDo(t *testing.T) {
 	}
 }
 
-// Labelling is bounded: past the ceiling a transformer is named by its
+// Labeling is bounded: past the ceiling a transformer is named by its
 // function, the way one the SDK did not make always is.
 func TestLabelsStopAtTheirCeiling(t *testing.T) {
 	saved := labelCeiling

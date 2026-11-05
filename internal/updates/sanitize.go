@@ -21,7 +21,7 @@ var allowed = map[string]bool{
 }
 
 // Sanitize makes GitHub's rendered release notes safe to draw inside the
-// console. GitHub already sanitises them; this is the second wall, for the
+// console. GitHub already sanitizes them; this is the second wall, for the
 // day that stops being true: scripts, styles, images, events and
 // javascript: links cannot get through an allowlist.
 func Sanitize(in string) string {

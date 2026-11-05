@@ -23,7 +23,7 @@ func TestTheLayoutFollowsTheConfiguredPrefix(t *testing.T) {
 
 	if os.Getenv(marker) == "1" {
 		// Resolved with BREVIS_LANDING_PREFIX=_ACME_, which also exercises
-		// the normalisation end to end rather than in a table.
+		// the normalization end to end rather than in a table.
 		if LandingPrefix != "acme_" {
 			t.Fatalf("LandingPrefix = %q, want acme_", LandingPrefix)
 		}

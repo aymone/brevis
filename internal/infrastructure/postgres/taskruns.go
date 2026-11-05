@@ -380,7 +380,7 @@ type NodeState struct {
 	Err        string `json:"error,omitempty"`
 	DurationMs int64  `json:"duration_ms"`
 
-	// Etapas are the phases announced by an SDK step. Empty for a step that is
+	// Stages are the phases announced by an SDK step. Empty for a step that is
 	// not an SDK one -- and that step's screen stays exactly as it was.
 	Stages []Stage `json:"stages,omitempty"`
 
@@ -548,7 +548,7 @@ func (r *RunRepo) RunLogs(ctx context.Context, runID uuid.UUID) ([]StepLog, erro
 // stopped.
 //
 // Absence is not an error: a run that died before any step started (a missing
-// image, a cancelled queue) has no task_run at all, and the alert goes out
+// image, a canceled queue) has no task_run at all, and the alert goes out
 // without this part rather than not going out.
 // FailedSteps returns EVERY step of this run that ended failed, newest first,
 // with the end of its log.

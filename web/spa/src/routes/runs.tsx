@@ -85,7 +85,7 @@ function useEnterFromTop(list: RefObject<HTMLElement | null>, data: RunsData | u
     }
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
     for (const n of fresh) {
-      // token colours only: the highlight fades from a surface tone to the row's own background
+      // token colors only: the highlight fades from a surface tone to the row's own background
       n.animate({ backgroundColor: ["var(--color-surface-3)", "transparent"] }, { duration: 1500, easing: "ease-out" });
     }
     if (calm || !el.animate) return;

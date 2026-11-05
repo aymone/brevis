@@ -47,7 +47,7 @@ In practice:
 | a dbt step | 1.9 GB, 1Gi of RAM | 1.9 GB, 1Gi |
 | a Go fetcher next to it | **1.9 GB, 1Gi** | **12 MB, 32Mi** |
 | changing the dbt version | rebuild everything | one line in that workflow's YAML |
-| a step that leaks memory | takes the worker and its neighbours down | dies on its own |
+| a step that leaks memory | takes the worker and its neighbors down | dies on its own |
 
 The third item is the least obvious and the most expensive day to day: with a
 single image, moving dbt from 1.10 to 1.11 on one pipeline forces moving it on
@@ -131,7 +131,7 @@ the schedule, and fails at three in the morning on whichever executor won.
 
 An `image:` with no cluster degrades to a local process with a warning, because
 a container and a process are the same command in two wrappers. **A host does
-not.** It is where the licence lives, or the GPU, or the data, and quietly
+not.** It is where the license lives, or the GPU, or the data, and quietly
 running the command somewhere else is the worst of the three outcomes. An
 unknown host fails the step, naming what the installation actually offers.
 
@@ -158,7 +158,7 @@ brevis-agent \
 | `--ring` | lines kept for a reconnect. Beyond this a dropped connection fails the step rather than resuming with a hole |
 | `--keep-finished` | how long a step stays resumable **after it ends** (default `1h`), so a connection that dropped at the end — or a scheduler that was down while it ended — still reads its exit code, its published context and the end of its log. With `--state-dir` they are also written there, and survive a restart with the same retention; without it an agent restart loses them |
 | `--keep-finished-max` | at most this many finished steps kept (default `200`), each with its ring; past it the oldest goes first |
-| `--drain-timeout` | on SIGTERM, how long to wait for the running steps to end **and be read** before cancelling them. Default `0`: as long as it takes, the orchestrator's grace period being the bound — see [When the agent stops](#when-the-agent-stops) |
+| `--drain-timeout` | on SIGTERM, how long to wait for the running steps to end **and be read** before canceling them. Default `0`: as long as it takes, the orchestrator's grace period being the bound — see [When the agent stops](#when-the-agent-stops) |
 | `--advertise` | the address the engine comes back to for **this instance's** executions. Required behind a shared address, meaningless without one — see below |
 | `--insecure-no-token` | run with **no authentication at all**: anything that reaches the port runs any command. It has to be said, because an empty `--token-file` does not start |
 
@@ -222,11 +222,11 @@ steps may be running on it. It **drains**:
    enough: a step that ends while the engine is away has its exit only in the
    agent's memory, and an agent that left then would answer the returning engine
    "unknown execution" — which starts the step **again**. Read means the stream
-   reached the engine's socket to its last line; a step cancelled meanwhile is
+   reached the engine's socket to its last line; a step canceled meanwhile is
    not waited for.
 4. **Then it exits `0`.**
 
-Past `--drain-timeout`, or on a **second** SIGTERM, what is left is cancelled —
+Past `--drain-timeout`, or on a **second** SIGTERM, what is left is canceled —
 the whole process group, as a cancel does — logged by id, and the agent exits
 `1`. Every minute of a drain it logs what it is still waiting for.
 
@@ -253,7 +253,7 @@ one address behind a kept-alive connection. A draining agent answers a start
 `503` with `Brevis-Refusal: draining` and closes the connection; the engine
 then sends that start, and the next ones for 30 seconds, to the other
 replicas, and tries the draining one last. A step reaches a draining pod at
-most once per drain. An agent from 0.38, which sends no header, is recognised
+most once per drain. An agent from 0.38, which sends no header, is recognized
 by its message. Only an explicit draining refusal counts: a bare `503`, from a
 balancer with nobody behind it, is a host that is down.
 
@@ -384,7 +384,7 @@ why:
 A handover that could not be written down — the database gone at that moment —
 is not left running: the step is stopped, as with handover off.
 
-**`BREVIS_HOST_HANDOVER=off`** restores cancelling: every `host:` step is
+**`BREVIS_HOST_HANDOVER=off`** restores canceling: every `host:` step is
 stopped on a shutdown, and re-run by the next scheduler. On is the default.
 A **lost claim** always stops it, handover or not: another scheduler holds the
 run.
@@ -395,7 +395,7 @@ to 10s, a pod deletion up to 30s, and they overlap. Kubernetes' default
 neither is raised by this chart or `docker-compose.yml`. A process killed before
 it finishes leaves its runs to the orphan sweep, which reclaims them after
 `Visibility` (15 minutes) of silence — and a `host:` step it neither handed over
-nor cancelled may still be running on its agent. Raise the grace period if your
+nor canceled may still be running on its agent. Raise the grace period if your
 steps take long to stop.
 
 ## Decisions the implementation pins down
@@ -417,7 +417,7 @@ steps take long to stop.
 - **A successful pod is deleted; a failed one can stay**
   (`BREVIS_POD_KEEP_ON_FAILURE`). Thousands of `Completed` pods clutter the
   namespace and say nothing that Brevis's own history does not say better. A
-  pod whose run was **cancelled** is deleted even so: it has not finished, and
+  pod whose run was **canceled** is deleted even so: it has not finished, and
   keeping it would keep its step running.
 - **The cluster's `reason` goes into the failure message.** `OOMKilled` and
   `DeadlineExceeded` call for the opposite actions from "the code failed".
@@ -661,7 +661,7 @@ change what is already queued.
   database. The limit is read per run, so members disagreeing would let
   whichever run the claim numbered first decide.
 - **A full group accumulates runs**, as `concurrency: 1` always did for one
-  workflow. It changes the scale, not the behaviour.
+  workflow. It changes the scale, not the behavior.
 - **A waiting run says what holds it.** Its page names the group (or the
   workflow's own limit), the runs in the slots and how many are ahead of it.
   The page repeats the claim's arithmetic (`RunRepo.WaitingOn`), and shows
@@ -731,7 +731,7 @@ failure alert does exist (see below).
 ## Failure alerting
 
 ```bash
-kubectl -n dados create secret generic brevis-slack \
+kubectl -n data create secret generic brevis-slack \
   --from-literal=webhook='https://hooks.slack.com/services/...'
 ```
 
@@ -759,7 +759,7 @@ Four decisions:
 
 It is there because of where an alert is WRITTEN. Before it, the dispatcher
 called Slack directly and, when the call failed, logged and carried on — the
-right behaviour for a pipeline, and also how the alert was **lost**: no retry,
+right behavior for a pipeline, and also how the alert was **lost**: no retry,
 no record, and nothing on a screen to say anybody should have been told. A
 separate pod the dispatcher *called over HTTP* would have had exactly the same
 failure with more moving parts.
@@ -798,9 +798,9 @@ cluster already has a scheduler. And `--dry-run` prints what the message would
 have said, which is how somebody comes to trust a weekly summary:
 
 ```bash
-kubectl -n dados run brevis-report --rm -it --restart=Never \
+kubectl -n data run brevis-report --rm -it --restart=Never \
   --image=brevissh/brevis:0.2.1-worker \
-  --env=BREVIS_DATABASE_URL="$(kubectl -n dados get secret brevis-db -o jsonpath='{.data.url}' | base64 -d)" \
+  --env=BREVIS_DATABASE_URL="$(kubectl -n data get secret brevis-db -o jsonpath='{.data.url}' | base64 -d)" \
   -- report --window 168h --dry-run
 ```
 
@@ -820,10 +820,10 @@ is what guarantees the alert arrives.
 
 ```bash
 kubectl apply -f deployments/kubernetes/rbac.yaml
-kubectl -n dados create secret generic brevis-db --from-literal=url='postgres://...'
-kubectl -n dados create secret generic brevis-task-env \
+kubectl -n data create secret generic brevis-db --from-literal=url='postgres://...'
+kubectl -n data create secret generic brevis-task-env \
   --from-literal=STAGE=prod --from-literal=GOOGLE_PROJECT_ID=acme-...
-kubectl -n dados create configmap brevis-brand --from-file=brand.yaml
+kubectl -n data create configmap brevis-brand --from-file=brand.yaml
 kubectl apply -f deployments/kubernetes/api.yaml \
               -f deployments/kubernetes/scheduler.yaml \
               -f deployments/kubernetes/alert.yaml \

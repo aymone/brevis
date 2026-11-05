@@ -1,7 +1,7 @@
 // Package api is `brevis-sql-api`: declared, read-only SQL served over HTTP.
 //
 // THE FILE IS THE CONTRACT, as it is for the gateway: every endpoint, its
-// parameters and its SQL, refused at load when any of it cannot be honoured.
+// parameters and its SQL, refused at load when any of it cannot be honored.
 // A server that starts on a file it half understood answers a readiness probe
 // and then a caller's first request with something nobody declared.
 package api

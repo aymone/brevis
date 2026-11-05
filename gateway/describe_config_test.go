@@ -189,7 +189,7 @@ func TestNoStreamFieldLooksLikeASecret(t *testing.T) {
 // A comment is a note only when its author MARKS it one, with `#:`. Every
 // other comment stays in the file: a secret left in an ordinary comment --
 // a commented-out setting, or a password on the line after "the password
-// is" -- never leaves the gateway, and no pattern has to recognise it.
+// is" -- never leaves the gateway, and no pattern has to recognize it.
 func TestOnlyAMarkedCommentIsANote(t *testing.T) {
 	t.Setenv("BREVIS_CLICKS_DSN", "postgres://loader:s3cret@db.internal:5432/shop")
 	cfg, err := gateway.Load(filepath.Join("testdata", "describe", "commented-out.yaml"))

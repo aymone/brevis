@@ -230,7 +230,7 @@ func TestAnUnrelatedBranchKeepsGoing(t *testing.T) {
 }
 
 // A branch BELOW the failure still stops, which is the half of the old
-// behaviour that stays. `all_success` being local does not mean it is absent.
+// behavior that stays. `all_success` being local does not mean it is absent.
 func TestTheBranchBelowAFailureStillStops(t *testing.T) {
 	w := wf.Workflow{
 		Slug:  "w",

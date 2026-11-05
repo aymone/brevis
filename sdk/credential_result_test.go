@@ -23,7 +23,7 @@ func TestResultCarriesTheCredentialsExpiry(t *testing.T) {
 	mux.HandleFunc("/auth", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintf(w, `{"expires":%q}`, expires.Format(time.RFC3339))
 	})
-	mux.HandleFunc("/dados", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/data", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprint(w, `{"results":[{"id":"1"}]}`)
 	})
 	srv := httptest.NewServer(mux)
@@ -31,7 +31,7 @@ func TestResultCarriesTheCredentialsExpiry(t *testing.T) {
 
 	data, err := Extract(context.Background(), Source{
 		From: from.HTTP{
-			URL:     srv.URL + "/dados",
+			URL:     srv.URL + "/data",
 			DataKey: "results",
 			Auth: &from.Credential{
 				Value: func(context.Context) (string, error) { return "t", nil },

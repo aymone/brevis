@@ -252,7 +252,7 @@ type Runner struct {
 // carrying on after an error produced a partial result that looked complete,
 // and a pipeline ran 28 days late without anyone seeing it. What replaces that
 // protection is not nothing. The run still FAILS, with the same error; the
-// failed step is red and the skipped ones are their own colour; and the alert
+// failed step is red and the skipped ones are their own color; and the alert
 // still goes out. A partial result no longer looks complete because the run
 // says it is not.
 //
@@ -364,7 +364,7 @@ func (r Runner) Run(ctx context.Context, w wf.Workflow) error {
 
 	for i, level := range levels {
 		if ctx.Err() != nil {
-			// Cancelled. Marking the rest skipped would record a decision that
+			// Canceled. Marking the rest skipped would record a decision that
 			// was never made: those steps were not ruled out, the run was
 			// stopped.
 			stopped = true
@@ -756,7 +756,7 @@ func quotedKeys(values map[string]any) string {
 // handovers reads what a stopped scheduler left running in this run.
 //
 // A failed read is warned about and taken as "none", as alreadySucceeded does:
-// the steps then start again, which is #122's behaviour -- the price of a
+// the steps then start again, which is #122's behavior -- the price of a
 // database that did not answer, not a reason to fail a run.
 func (r Runner) handovers(ctx context.Context) map[run.StepKey]execution.Handover {
 	if r.History == nil || r.RunID == uuid.Nil {
@@ -903,9 +903,9 @@ func stepStatus(err error) string {
 	return "failed"
 }
 
-// ocupar takes a slot and returns the function that frees it.
+// acquire takes a slot and returns the function that frees it.
 //
-// It blocks until there is room, and that is the asked-for behaviour: with ten
+// It blocks until there is room, and that is the asked-for behavior: with ten
 // ready steps and five slots, five run and the rest wait, entering as slots
 // open. Refusing instead of waiting would turn an excess of work into a
 // failure, when it is only a queue.
@@ -944,7 +944,7 @@ func (r Runner) markStart(ctx context.Context, step run.StepKey, attempt int) {
 // It is SAID, though, once per attempt: this runs on every marked line, and a
 // warning per line would bury the log it means to be read in.
 //
-// It is only called after a marker has been recognised, which is what keeps an
+// It is only called after a marker has been recognized, which is what keeps an
 // ordinary step from paying a database round trip per log line. Checking again
 // here would be a verification that cannot fail.
 func (r Runner) markStages(ctx context.Context, step run.StepKey, attempt int, c *stageCollector) {
@@ -1150,7 +1150,7 @@ type StepError struct {
 	ExitCode int
 	Message  string
 
-	// Saida is the last few lines of stderr. Only the last ones, and not all of
+	// Output is the last few lines of stderr. Only the last ones, and not all of
 	// them, because a chatty process would fill the database's error column --
 	// and the cause is almost always at the end.
 	Output []string
@@ -1194,7 +1194,7 @@ func codeHint(c int) string {
 // screen.
 const contextLines = 5
 
-// tentar runs the step once and returns the complete output (capped) along with
+// tryNode runs the step once and returns the complete output (capped) along with
 // the outcome. The output comes back on success too: a step that finished fine
 // but produced very little is a signal, and it is only visible in the log.
 func (r Runner) tryNode(ctx context.Context, w wf.Workflow, n wf.Node, inst instance, attempt int,
@@ -1212,7 +1212,7 @@ func (r Runner) tryNode(ctx context.Context, w wf.Workflow, n wf.Node, inst inst
 		return "", nil
 	}
 
-	// Asked once per attempt, and not inside montar, because building a task
+	// Asked once per attempt, and not inside build, because building a task
 	// must not do I/O. A retry of the same run does not reopen the first
 	// execution: if attempt 1 wrote a row, StepHasSucceeded already answers
 	// yes; if it failed, this is still the first, which is right.
@@ -1351,7 +1351,7 @@ func (r Runner) tryNode(ctx context.Context, w wf.Workflow, n wf.Node, inst inst
 	r.markLandings(ctx, w.Slug, inst.key, &stages)
 
 	// A step succeeded only if its executor SAID so (#122). Reading the
-	// absence of a failure as success recorded a cancelled `host:` step as
+	// absence of a failure as success recorded a canceled `host:` step as
 	// done: the remote executor closes its channel with no verdict when its
 	// context ends, and nothing below could tell that from a clean exit.
 	//
@@ -1361,7 +1361,7 @@ func (r Runner) tryNode(ctx context.Context, w wf.Workflow, n wf.Node, inst inst
 	// Handed over: the step outlived this scheduler and goes on where it runs
 	// (#125). Written down first -- a handover nobody can find again is a step
 	// the next scheduler starts beside itself -- and when it cannot be, the
-	// step is stopped instead, which is #122's behaviour and never doubles it.
+	// step is stopped instead, which is #122's behavior and never doubles it.
 	if handover != nil && ctx.Err() != nil {
 		err := r.recordHandover(ctx, inst.key, attempt, *handover)
 		if err == nil {
@@ -1627,7 +1627,7 @@ func (r Runner) runContext(inst instance, first bool, attempt int) map[string]st
 		env[name] = value
 	}
 	if len(r.Params) > 0 {
-		// An impossible error: a map[string]string always serialises. Ignoring
+		// An impossible error: a map[string]string always serializes. Ignoring
 		// it here beats returning an error no caller could act on.
 		if b, err := json.Marshal(r.Params); err == nil {
 			env[envRunParams] = string(b)
@@ -1678,7 +1678,6 @@ func (r Runner) firstRun(ctx context.Context, slug, nodeID string) bool {
 	return !alreadyHad
 }
 
-// montar escolhe o executor e monta a task.
 // instanceSuffix is empty for an unmapped step, so every pod name and every
 // execution id in the system is byte for byte what it was.
 // executionID names ONE execution: this step, this instance, this run, these
@@ -1713,6 +1712,7 @@ func elementValue(raw json.RawMessage) string {
 	return string(raw)
 }
 
+// build chooses the executor and builds the task.
 func (r Runner) build(w wf.Workflow, n wf.Node, inst instance, attempt int, first bool) (execution.Executor, execution.TaskExec, error) {
 	image := w.ImageFor(n)
 	resources := w.ResourcesFor(n)
@@ -1801,7 +1801,7 @@ func (r Runner) build(w wf.Workflow, n wf.Node, inst instance, attempt int, firs
 	// command somewhere else because that machine is not configured is the
 	// worst of the three outcomes. `image:` degrades to local mode with a
 	// warning because a container and a process are the same command in two
-	// wrappers; a host is not -- it is where the licence lives, or the GPU, or
+	// wrappers; a host is not -- it is where the license lives, or the GPU, or
 	// the data.
 	if n.Host != "" {
 		host, known := r.Hosts[n.Host]

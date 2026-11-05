@@ -31,7 +31,7 @@ type following struct {
 	mu         sync.Mutex
 	reattached []execution.Handover
 	executed   []string
-	cancelled  []string
+	canceled   []string
 }
 
 func (*following) Name() string { return "following" }
@@ -39,7 +39,7 @@ func (*following) Name() string { return "following" }
 func (f *following) Cancel(_ context.Context, id string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.cancelled = append(f.cancelled, id)
+	f.canceled = append(f.canceled, id)
 	return nil
 }
 
@@ -155,8 +155,8 @@ func TestAStepTheAgentLostStartsAgain(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if len(exec.executed) != 1 || len(exec.cancelled) != 0 {
-		t.Errorf("executed %v, canceled %v; wanted one fresh start and nothing stopped", exec.executed, exec.cancelled)
+	if len(exec.executed) != 1 || len(exec.canceled) != 0 {
+		t.Errorf("executed %v, canceled %v; wanted one fresh start and nothing stopped", exec.executed, exec.canceled)
 	}
 	if rows.ended[1] != dom.StatusSuccess {
 		t.Errorf("attempts ended %v; wanted attempt 1 run again and succeeding", rows.ended)
@@ -171,8 +171,8 @@ func TestAStepThatCannotBeFollowedIsStoppedAndRetried(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if len(exec.cancelled) != 1 || exec.cancelled[0] != "daily:long:x:r0:a1" {
-		t.Errorf("canceled %v; wanted the handed-over execution stopped", exec.cancelled)
+	if len(exec.canceled) != 1 || exec.canceled[0] != "daily:long:x:r0:a1" {
+		t.Errorf("canceled %v; wanted the handed-over execution stopped", exec.canceled)
 	}
 	if rows.ended[1] != dom.StatusFailed || !strings.Contains(rows.msg[1], "could not be followed") {
 		t.Errorf("attempt 1 ended %v %q; wanted failed, saying it could not be followed", rows.ended[1], rows.msg[1])
@@ -190,8 +190,8 @@ func TestAnAgentThatCannotBeReachedFailsTheAttempt(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
-	if rows.ended[1] != dom.StatusFailed || len(exec.cancelled) != 0 {
-		t.Errorf("attempt 1 ended %v, canceled %v; wanted failed, nothing stopped", rows.ended[1], exec.cancelled)
+	if rows.ended[1] != dom.StatusFailed || len(exec.canceled) != 0 {
+		t.Errorf("attempt 1 ended %v, canceled %v; wanted failed, nothing stopped", rows.ended[1], exec.canceled)
 	}
 	if rows.ended[2] != dom.StatusSuccess {
 		t.Errorf("attempt 2 ended %v; wanted the retry", rows.ended[2])

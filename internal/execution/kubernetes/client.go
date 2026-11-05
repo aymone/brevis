@@ -47,10 +47,10 @@ type Client struct {
 	// tokens EXPIRE and the kubelet rewrites them in place; keeping the value
 	// from boot makes the process start getting 401s after an hour — a failure
 	// that shows up
-	// tarde e parece problema de RBAC.
+	// late and looks like an RBAC problem.
 	mu        sync.Mutex
 	token     string
-	tokenLido time.Time
+	tokenRead time.Time
 	tokenTTL  time.Duration
 	readFile  func(string) ([]byte, error)
 }
@@ -101,12 +101,12 @@ func (c *Client) Namespace() string { return c.namespace }
 func (c *Client) authorize(r *http.Request) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.token == "" || time.Since(c.tokenLido) > c.tokenTTL {
+	if c.token == "" || time.Since(c.tokenRead) > c.tokenTTL {
 		b, err := c.readFile(tokenFile)
 		if err != nil {
 			return fmt.Errorf("reading the service account token: %w", err)
 		}
-		c.token, c.tokenLido = strings.TrimSpace(string(b)), time.Now()
+		c.token, c.tokenRead = strings.TrimSpace(string(b)), time.Now()
 	}
 	r.Header.Set("Authorization", "Bearer "+c.token)
 	return nil

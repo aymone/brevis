@@ -28,7 +28,7 @@ func (c *collector) Event(e execution.Event) {
 	c.events = append(c.events, e)
 }
 
-// CRITERIO DE ACEITE DA PHASE 3 (secao 37):
+// ACCEPTANCE CRITERION OF PHASE 3 (section 37):
 //
 //	Task A -> (Task B + Task C) -> Task D, with parallelism.
 func TestAcceptanceCriterion_GoDAGWithParallelism(t *testing.T) {
@@ -95,7 +95,7 @@ func TestAcceptanceCriterion_GoDAGWithParallelism(t *testing.T) {
 	}
 	duration := time.Since(start)
 
-	// b e c rodaram JUNTAS: em serie o total passaria de 300ms
+	// b and c ran TOGETHER: in series the total would pass 300ms
 	if picoBC.Load() < 2 {
 		t.Errorf("concurrency peak = %d; b and c should run in parallel", picoBC.Load())
 	}
@@ -110,7 +110,7 @@ func TestAcceptanceCriterion_GoDAGWithParallelism(t *testing.T) {
 	if order[len(order)-1] != "task_d" {
 		t.Errorf("last = %q, wanted task_d", order[len(order)-1])
 	}
-	t.Logf("ordem: %v | duracao: %s | pico: %d", order, duration.Round(time.Millisecond), picoBC.Load())
+	t.Logf("order: %v | duration: %s | peak: %d", order, duration.Round(time.Millisecond), picoBC.Load())
 }
 
 // The retry is PER NODE: redoing the whole workflow because the last step failed
@@ -119,14 +119,14 @@ func TestRetryIsPerNode(t *testing.T) {
 	reg := execution.NewRegistry()
 	var attempts atomic.Int32
 
-	reg.MustRegister(execution.FuncTask{TaskName: "instavel", Fn: func(context.Context, execution.Input) error {
+	reg.MustRegister(execution.FuncTask{TaskName: "flaky", Fn: func(context.Context, execution.Input) error {
 		if attempts.Add(1) < 3 {
-			return fmt.Errorf("falha transitoria")
+			return fmt.Errorf("transient failure")
 		}
 		return nil
 	}})
 
-	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "instavel"}}}
+	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "flaky"}}}
 	r := app.Runner{
 		Go: local.NewGoExecutor(reg), Report: &collector{},
 		MaxAttempts: 3, BackoffBase: time.Millisecond,
@@ -142,12 +142,12 @@ func TestRetryIsPerNode(t *testing.T) {
 func TestRetryGivesUpAfterTheLimit(t *testing.T) {
 	reg := execution.NewRegistry()
 	var attempts atomic.Int32
-	reg.MustRegister(execution.FuncTask{TaskName: "sempre_falha", Fn: func(context.Context, execution.Input) error {
+	reg.MustRegister(execution.FuncTask{TaskName: "always_fails", Fn: func(context.Context, execution.Input) error {
 		attempts.Add(1)
-		return fmt.Errorf("falha permanente")
+		return fmt.Errorf("permanent failure")
 	}})
 
-	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "sempre_falha"}}}
+	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "always_fails"}}}
 	r := app.Runner{
 		Go: local.NewGoExecutor(reg), Report: &collector{},
 		MaxAttempts: 2, BackoffBase: time.Millisecond,
@@ -160,18 +160,18 @@ func TestRetryGivesUpAfterTheLimit(t *testing.T) {
 	}
 }
 
-// Cancelling the context stops the DAG and fires no retry -- retrying against a
-// cancelamento e desperdicio.
-func TestCancellingFiresNoRetry(t *testing.T) {
+// Canceling the context stops the DAG and fires no retry -- retrying against a
+// cancellation is waste.
+func TestCancelingFiresNoRetry(t *testing.T) {
 	reg := execution.NewRegistry()
 	var attempts atomic.Int32
-	reg.MustRegister(execution.FuncTask{TaskName: "lenta", Fn: func(ctx context.Context, _ execution.Input) error {
+	reg.MustRegister(execution.FuncTask{TaskName: "slow", Fn: func(ctx context.Context, _ execution.Input) error {
 		attempts.Add(1)
 		<-ctx.Done()
 		return ctx.Err()
 	}})
 
-	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "lenta"}}}
+	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "slow"}}}
 	r := app.Runner{
 		Go: local.NewGoExecutor(reg), Report: &collector{},
 		MaxAttempts: 5, BackoffBase: time.Millisecond,
@@ -189,7 +189,7 @@ func TestCancellingFiresNoRetry(t *testing.T) {
 // A step with no configured executor has to fail with a clear message, and not
 // be skipped in silence.
 func TestAStepWithNoExecutorFailsExplicitly(t *testing.T) {
-	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "qualquer"}}}
+	w := wf.Workflow{Slug: "w", Nodes: []wf.Node{{ID: "n", Action: "any"}}}
 	err := app.Runner{Report: &collector{}}.Run(context.Background(), w)
 	if err == nil {
 		t.Fatal("expected an error, not silence")
@@ -204,7 +204,7 @@ func TestAStepsErrorCarriesTheExitCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := wf.Workflow{Slug: "sai", Nodes: []wf.Node{{ID: "falha", Run: "sh -c 'exit 3'"}}}
+	w := wf.Workflow{Slug: "sai", Nodes: []wf.Node{{ID: "fail", Run: "sh -c 'exit 3'"}}}
 
 	failure := app.Runner{
 		Process: exec, Report: &collector{},
@@ -218,7 +218,7 @@ func TestAStepsErrorCarriesTheExitCode(t *testing.T) {
 	if !errors.As(failure, &step) {
 		t.Fatalf("error %T does not carry the exit code", failure)
 	}
-	if step.ExitCode != 3 || step.NodeID != "falha" {
+	if step.ExitCode != 3 || step.NodeID != "fail" {
 		t.Errorf("node=%q exit=%d, want a failure and 3", step.NodeID, step.ExitCode)
 	}
 }
@@ -231,8 +231,8 @@ func TestTheErrorCarriesStderrAndTheCodesHint(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := wf.Workflow{Slug: "ausente", Nodes: []wf.Node{
-		{ID: "fetch_data", Run: "sh -c 'comando_que_nao_existe_abc'"},
+	w := wf.Workflow{Slug: "missing", Nodes: []wf.Node{
+		{ID: "fetch_data", Run: "sh -c 'command_that_does_not_exist_abc'"},
 	}}
 
 	failure := app.Runner{
@@ -250,7 +250,7 @@ func TestTheErrorCarriesStderrAndTheCodesHint(t *testing.T) {
 	if !strings.Contains(msg, "command not found") {
 		t.Errorf("the message has no translation of the code: %q", msg)
 	}
-	if !strings.Contains(msg, "comando_que_nao_existe_abc") {
+	if !strings.Contains(msg, "command_that_does_not_exist_abc") {
 		t.Errorf("the message has no stderr line explaining the failure: %q", msg)
 	}
 
@@ -267,8 +267,8 @@ func TestStderrIsKeptAsTheLastLines(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := wf.Workflow{Slug: "verboso", Nodes: []wf.Node{
-		{ID: "ruido", Run: "sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do echo line $i >&2; done; exit 9'"},
+	w := wf.Workflow{Slug: "verbose", Nodes: []wf.Node{
+		{ID: "noise", Run: "sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do echo line $i >&2; done; exit 9'"},
 	}}
 
 	failure := app.Runner{
@@ -299,8 +299,8 @@ func TestStderrOnASucceedingStepIsNotAFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w := wf.Workflow{Slug: "avisos", Nodes: []wf.Node{
-		{ID: "ok", Run: "sh -c 'echo aviso >&2; exit 0'"},
+	w := wf.Workflow{Slug: "warnings", Nodes: []wf.Node{
+		{ID: "ok", Run: "sh -c 'echo warning >&2; exit 0'"},
 	}}
 	if failure := (app.Runner{
 		Process: exec, Report: &collector{},
@@ -310,7 +310,7 @@ func TestStderrOnASucceedingStepIsNotAFailure(t *testing.T) {
 	}
 }
 
-// O dbt imprime "Parsing Error" em STDOUT. Capturar so stderr deixava a falha
+// dbt prints "Parsing Error" on STDOUT. Capturing only stderr left the failure
 // as "exited with code 2", without the cause that was on the screen all along.
 func TestAFailureWithNoStderrUsesStdout(t *testing.T) {
 	exec, err := local.New("local")
@@ -338,7 +338,7 @@ func TestAFailureWithNoStderrUsesStdout(t *testing.T) {
 // error, and the normal output should not crowd the message out.
 func TestStderrTakesPrecedenceOverStdout(t *testing.T) {
 	exec, _ := local.New("local")
-	w := wf.Workflow{Slug: "misto", Nodes: []wf.Node{{
+	w := wf.Workflow{Slug: "mixed", Nodes: []wf.Node{{
 		ID:  "run",
 		Run: `sh -c 'echo "normal progress line"; echo "the real cause" >&2; exit 1'`,
 	}}}
@@ -367,7 +367,7 @@ func TestSlotsLimitSimultaneousSteps(t *testing.T) {
 
 	var inFlight, peak int64
 	reg := execution.NewRegistry()
-	reg.MustRegister(execution.FuncTask{TaskName: "ocupa", Fn: func(ctx context.Context, in execution.Input) error {
+	reg.MustRegister(execution.FuncTask{TaskName: "busy", Fn: func(ctx context.Context, in execution.Input) error {
 		current := atomic.AddInt64(&inFlight, 1)
 		for {
 			previous := atomic.LoadInt64(&peak)
@@ -382,9 +382,9 @@ func TestSlotsLimitSimultaneousSteps(t *testing.T) {
 
 	// All at the SAME level: with no dependency between them, the runner fires all
 	// ten at once if nothing holds it back.
-	w := wf.Workflow{Slug: "paralelo"}
+	w := wf.Workflow{Slug: "parallel"}
 	for i := 0; i < steps; i++ {
-		w.Nodes = append(w.Nodes, wf.Node{ID: fmt.Sprintf("p%d", i), Action: "ocupa"})
+		w.Nodes = append(w.Nodes, wf.Node{ID: fmt.Sprintf("p%d", i), Action: "busy"})
 	}
 
 	r := app.Runner{
@@ -410,7 +410,7 @@ func TestSlotsAreSharedBetweenRuns(t *testing.T) {
 
 	var inFlight, peak int64
 	reg := execution.NewRegistry()
-	reg.MustRegister(execution.FuncTask{TaskName: "ocupa", Fn: func(ctx context.Context, in execution.Input) error {
+	reg.MustRegister(execution.FuncTask{TaskName: "busy", Fn: func(ctx context.Context, in execution.Input) error {
 		current := atomic.AddInt64(&inFlight, 1)
 		for {
 			previous := atomic.LoadInt64(&peak)
@@ -427,7 +427,7 @@ func TestSlotsAreSharedBetweenRuns(t *testing.T) {
 	build := func(slug string) wf.Workflow {
 		w := wf.Workflow{Slug: slug}
 		for i := 0; i < 5; i++ {
-			w.Nodes = append(w.Nodes, wf.Node{ID: fmt.Sprintf("p%d", i), Action: "ocupa"})
+			w.Nodes = append(w.Nodes, wf.Node{ID: fmt.Sprintf("p%d", i), Action: "busy"})
 		}
 		return w
 	}
@@ -454,10 +454,10 @@ func TestSlotsAreSharedBetweenRuns(t *testing.T) {
 // gain a limit nobody asked for.
 func TestWithNoSlotsThereIsNoLimit(t *testing.T) {
 	reg := execution.NewRegistry()
-	reg.MustRegister(execution.FuncTask{TaskName: "nada", Fn: func(context.Context, execution.Input) error { return nil }})
+	reg.MustRegister(execution.FuncTask{TaskName: "noop", Fn: func(context.Context, execution.Input) error { return nil }})
 
 	w := wf.Workflow{Slug: "livre", Nodes: []wf.Node{
-		{ID: "a", Action: "nada"}, {ID: "b", Action: "nada"},
+		{ID: "a", Action: "noop"}, {ID: "b", Action: "noop"},
 	}}
 	if err := (app.Runner{Go: local.NewGoExecutor(reg), Report: &collector{}}).Run(context.Background(), w); err != nil {
 		t.Fatal(err)
@@ -482,7 +482,7 @@ func TestTheAttemptReachesTheTask(t *testing.T) {
 	}.Run(context.Background(), w)
 
 	if len(seen) != 3 {
-		t.Fatalf("attempts observadas: %v", seen)
+		t.Fatalf("attempts observed: %v", seen)
 	}
 	for i, n := range seen {
 		if n != i {
@@ -494,11 +494,11 @@ func TestTheAttemptReachesTheTask(t *testing.T) {
 // spyExecutor records what it received and always fails, to exercise the retry.
 type spyExecutor struct{ onExecute func(execution.TaskExec) }
 
-func (e *spyExecutor) Name() string { return "espiao" }
+func (e *spyExecutor) Name() string { return "spy" }
 func (e *spyExecutor) Execute(_ context.Context, t execution.TaskExec) (<-chan execution.Event, error) {
 	e.onExecute(t)
 	ch := make(chan execution.Event, 1)
-	ch <- execution.Event{Kind: execution.EventFailed, NodeID: t.NodeID, Message: "falhou"}
+	ch <- execution.Event{Kind: execution.EventFailed, NodeID: t.NodeID, Message: "failed"}
 	close(ch)
 	return ch, nil
 }

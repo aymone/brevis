@@ -143,14 +143,14 @@ func TestAFailingProjectsReadIsAJSON500(t *testing.T) {
 // stranger gets the brand and neither the engine's version nor the services; a
 // signed-in operator gets everything. Through the real Gate, not a stand-in.
 func TestTheConfigHidesTheInstallationFromAStranger(t *testing.T) {
-	hash, err := auth.GenerateHash("senha-de-teste-longa")
+	hash, err := auth.GenerateHash("long-test-password")
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	sessionUI(branding.Default()).Registrar(mux)
 	gate := &auth.Gate{
-		Cred: auth.Credential{User: "ana", Hash: hash, Secret: []byte("um-segredo-de-teste-com-mais-de-32-bytes")},
+		Cred: auth.Credential{User: "ana", Hash: hash, Secret: []byte("a-test-secret-with-more-than-32-bytes")},
 		Next: mux,
 	}
 	get := func(cookie *http.Cookie) map[string]any {
@@ -177,7 +177,7 @@ func TestTheConfigHidesTheInstallationFromAStranger(t *testing.T) {
 		t.Errorf("a stranger saw the installation: version %q sql %v", stranger["version"], stranger["sql"])
 	}
 	login := httptest.NewRecorder()
-	if !gate.SignIn(login, "ana", "senha-de-teste-longa") {
+	if !gate.SignIn(login, "ana", "long-test-password") {
 		t.Fatal("the right credential was refused")
 	}
 	if signedIn := get(login.Result().Cookies()[0]); signedIn["version"] != "1.2.3" {

@@ -21,7 +21,7 @@ func writeFile(t *testing.T, content string) string {
 // A missing file is the NORMAL case -- the default installation has none. Failing
 // here would take the container down over an optional customization.
 func TestAMissingFileUsesTheDefault(t *testing.T) {
-	m, err := branding.Load(filepath.Join(t.TempDir(), "nao-existe.yaml"))
+	m, err := branding.Load(filepath.Join(t.TempDir(), "does-not-exist.yaml"))
 	if err != nil {
 		t.Fatalf("an absence became an error: %v", err)
 	}
@@ -35,17 +35,17 @@ func TestAMissingFileUsesTheDefault(t *testing.T) {
 
 // A missing field inherits the default: a two-line file is a valid file.
 func TestMissingFieldsInheritTheDefault(t *testing.T) {
-	m, err := branding.Load(writeFile(t, "title: Acme Dados\n"))
+	m, err := branding.Load(writeFile(t, "title: Acme Data\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if m.Title != "Acme Dados" {
+	if m.Title != "Acme Data" {
 		t.Errorf("title = %q", m.Title)
 	}
 	if m.Subtitle != branding.Default().Subtitle {
 		t.Errorf("subtitle lost: %q", m.Subtitle)
 	}
-	// The colours are the product's own, and an empty one says so: the
+	// The colors are the product's own, and an empty one says so: the
 	// stylesheet carries them, and nothing is written for a file that sets none.
 	if m.Theme != (branding.Theme{}) {
 		t.Errorf("a file with no colors changed the theme: %+v", m.Theme)
@@ -55,11 +55,11 @@ func TestMissingFieldsInheritTheDefault(t *testing.T) {
 	}
 }
 
-// ONE COLOUR REPAINTS THAT COLOUR (issue #142). The console's default is the
+// ONE COLOR REPAINTS THAT COLOR (issue #142). The console's default is the
 // dark theme in the stylesheet; a file that sets only an accent used to write
 // all fifteen variables, fourteen of them from a palette the stylesheet no
 // longer had, and the console came up on parchment.
-func TestOneColourWritesOnlyThatColour(t *testing.T) {
+func TestOneColorWritesOnlyThatColor(t *testing.T) {
 	m, err := branding.Load(writeFile(t, "title: Acme\ntheme:\n  accent: \"#c02a2a\"\n"))
 	if err != nil {
 		t.Fatal(err)
@@ -78,9 +78,9 @@ func TestOneColourWritesOnlyThatColour(t *testing.T) {
 	}
 }
 
-// Every colour in the file reaches the page, the skipped state included: it
+// Every color in the file reaches the page, the skipped state included: it
 // is in the file's vocabulary and was never written.
-func TestEveryColourOfTheFileIsWritten(t *testing.T) {
+func TestEveryColorOfTheFileIsWritten(t *testing.T) {
 	m, err := branding.Load(writeFile(t, `
 title: Acme
 theme: {background: "#111111", background_soft: "#222222", surface: "#333333", ink: "#444444", muted: "#555555", accent: "#666666", accent_strong: "#777777", success: "#888888", failed: "#999999", running: "#aaaaaa", queued: "#bbbbbb", retrying: "#cccccc", canceled: "#dddddd", pending: "#eeeeee", skipped: "#123456"}
@@ -124,14 +124,14 @@ theme:
 }
 
 // The values go inside a <style>. A free string there could close the declaration
-// and inject CSS -- on an operations panel, enough to hide a state
-// de falha atras de um seletor.
-func TestAnInvalidColourIsRefused(t *testing.T) {
+// and inject CSS -- on an operations panel, enough to hide a failure
+// state behind a selector.
+func TestAnInvalidColorIsRefused(t *testing.T) {
 	poisons := []string{
 		`theme: {ink: "red"}`,
 		`theme: {ink: "#12345"}`,
 		`theme: {accent: "#fff;} body{display:none} .x{color:#fff"}`,
-		`theme: {success: "url(http://exemplo/x)"}`,
+		`theme: {success: "url(http://example/x)"}`,
 	}
 	for _, v := range poisons {
 		if _, err := branding.Load(writeFile(t, v)); err == nil {
@@ -159,16 +159,16 @@ func TestABrokenYamlFallsBackToTheDefault(t *testing.T) {
 // The line break is the author's: turning it into a space would change the text's
 // rhythm.
 func TestThePhrasePreservesTheLines(t *testing.T) {
-	m, err := branding.Load(writeFile(t, "phrase: |\n  Primeira\n  Segunda\n  Terceira\n"))
+	m, err := branding.Load(writeFile(t, "phrase: |\n  First\n  Second\n  Third\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	rows := m.Lines()
-	if len(rows) != 3 || rows[0] != "Primeira" || rows[2] != "Terceira" {
+	if len(rows) != 3 || rows[0] != "First" || rows[2] != "Third" {
 		t.Errorf("lines = %q", rows)
 	}
-	sem, _ := branding.Load(writeFile(t, `phrase: ""`))
-	if len(sem.Lines()) != 0 {
+	empty, _ := branding.Load(writeFile(t, `phrase: ""`))
+	if len(empty.Lines()) != 0 {
 		t.Error("an empty phrase should render no line at all")
 	}
 }
@@ -195,7 +195,7 @@ func TestTheAttributionDoesNotComeFromConfiguration(t *testing.T) {
 
 // A LIGHT THEME OF THE CLIENT'S OWN IS WRITTEN FOR THE LIGHT THEME ONLY.
 //
-// `theme:` has always been the console's colours, and the console was dark;
+// `theme:` has always been the console's colors, and the console was dark;
 // a client's dark ground written into the light theme would be dark text on
 // dark. So `theme_light:` is its own block, under the attribute the server
 // writes on <html>, and the dark one never reaches it.
@@ -251,7 +251,7 @@ theme:
 	}
 }
 
-func TestAnInvalidLightColourIsRefused(t *testing.T) {
+func TestAnInvalidLightColorIsRefused(t *testing.T) {
 	if _, err := branding.Load(writeFile(t, `theme_light: {ink: "#fff;} body{display:none"}`)); err == nil {
 		t.Error("an injected light color was accepted")
 	}

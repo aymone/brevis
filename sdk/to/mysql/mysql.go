@@ -70,7 +70,7 @@ var _ core.Locator = Table{}
 // Locate satisfies sdk.Locator: mysql://database/table.
 //
 // The database is the one Name qualifies, else the DSN's, parsed and never
-// dialled; user, host and port are read past and dropped. A pool handed in as
+// dialed; user, host and port are read past and dropped. A pool handed in as
 // DB names its database only if the server is asked, and Locate asks nothing:
 // with DB, qualify Name.
 func (t Table) Locate() string {

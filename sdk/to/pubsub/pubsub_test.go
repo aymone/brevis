@@ -279,7 +279,7 @@ func TestTheFailureListIsTruncatedButTheCountIsNot(t *testing.T) {
 	}
 }
 
-// Everything a topic cannot honour is REFUSED, not ignored.
+// Everything a topic cannot honor is REFUSED, not ignored.
 //
 // An ignored option is worse than an error: the author believes it is being
 // enforced and finds out from the data. `to.Files` set the precedent by

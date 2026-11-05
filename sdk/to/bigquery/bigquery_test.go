@@ -156,10 +156,10 @@ func TestConfigRefusesWithoutATable(t *testing.T) {
 // table anyone would grep for.
 func TestDescribeNamesTheTable(t *testing.T) {
 	t.Setenv(core.EnvDataset, "")
-	if got := (Table{Dataset: "bronze", Name: "pedidos"}).Describe(); got != "bronze.pedidos" {
+	if got := (Table{Dataset: "bronze", Name: "orders"}).Describe(); got != "bronze.orders" {
 		t.Errorf("Describe() = %q", got)
 	}
-	if got := (Table{Name: "pedidos"}).Describe(); got != "landing.pedidos" {
+	if got := (Table{Name: "orders"}).Describe(); got != "landing.orders" {
 		t.Errorf("Describe() with the default dataset = %q", got)
 	}
 }

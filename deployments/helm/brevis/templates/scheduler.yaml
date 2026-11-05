@@ -5,12 +5,12 @@ pod per step. It runs neither dbt nor Python -- the pod it creates does that.
 THERE IS NO `replicas` VALUE FOR THIS, and that is deliberate rather than an
 omission. The dispatcher claims work with `FOR UPDATE SKIP LOCKED`, so two
 replicas would not hand out the same queue item -- but they WOULD both
-materialise the same slots, and what protects against that is an idempotency
+materialize the same slots, and what protects against that is an idempotency
 key, not a lock. Until there is leader election, one replica is what keeps the
 behavior obvious, so the chart does not offer the value that would break it.
 
 `strategy: Recreate` for the same reason: with RollingUpdate the new pod starts
-materialising schedules before the old one leaves.
+materializing schedules before the old one leaves.
 */}}
 apiVersion: apps/v1
 kind: Deployment

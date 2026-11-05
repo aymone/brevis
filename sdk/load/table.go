@@ -356,7 +356,7 @@ func tableDescription(cfg *core.LoadConfig, prov provenance) string {
 func tableLabels(prov provenance) map[string]string {
 	labels := map[string]string{}
 	for key, raw := range map[string]string{"provider": prov.Provider, "entity": prov.Entity} {
-		if v := sanitiseLabel(raw); v != "" {
+		if v := sanitizeLabel(raw); v != "" {
 			labels[key] = v
 		}
 	}
@@ -365,7 +365,7 @@ func tableLabels(prov provenance) map[string]string {
 
 var labelAllowed = regexp.MustCompile(`[^a-z0-9_-]+`)
 
-func sanitiseLabel(v string) string {
+func sanitizeLabel(v string) string {
 	v = labelAllowed.ReplaceAllString(strings.ToLower(v), "_")
 	v = strings.Trim(v, "_-")
 	if len(v) > 63 {

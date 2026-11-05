@@ -31,7 +31,7 @@ import (
 // whoever is shaping it, because otherwise a producer forges a control field
 // -- and a forged brevis_received_at is worse than none, since it looks real.
 // It is configurable: BREVIS_LANDING_PREFIX replaces it for the whole
-// process. See core.EnvLandingPrefix for the normalisation and for why it is
+// process. See core.EnvLandingPrefix for the normalization and for why it is
 // a variable on the process rather than a field in a config -- and for the
 // one-way door, which is that changing it on a live table is not a rename.
 var LandingPrefix = core.LandingPrefix()
@@ -225,7 +225,7 @@ func LandingID(table, key string, record map[string]any) (string, error) {
 // LandingFingerprint is a sha256 over the record in CANONICAL form: keys
 // sorted at every level, arrays left in order, everything quoted.
 //
-// Canonical because Go's map iteration is randomised, so a plain json.Marshal
+// Canonical because Go's map iteration is randomized, so a plain json.Marshal
 // of a map produces a different byte string on every call -- and an id built
 // on that would differ between two deliveries of the same record, which is
 // the one thing it exists to prevent.

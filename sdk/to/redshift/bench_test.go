@@ -15,10 +15,10 @@ func BenchmarkEncodeNDJSON(b *testing.B) {
 	for i := range envelopes {
 		envelopes[i] = core.Envelope{Payload: map[string]any{
 			"ingestion_id": fmt.Sprintf("id-%d", i), "provider": "acme",
-			"valor": "10.50", "nome": "registro qualquer",
+			"value": "10.50", "name": "any record",
 		}}
 	}
-	columns := []string{"ingestion_id", "provider", "valor", "nome"}
+	columns := []string{"ingestion_id", "provider", "value", "name"}
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

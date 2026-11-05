@@ -32,7 +32,7 @@ Watching where Brevis sits, which is a question a document answers badly:
 
   ```yaml
   kind: Role                  # not ClusterRole
-    namespace: dados
+    namespace: data
     - resources: ["pods"]      verbs: [create, get, list, watch, delete]
     - resources: ["pods/log"]  verbs: [get]
   ```

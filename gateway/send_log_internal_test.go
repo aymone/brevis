@@ -121,7 +121,7 @@ func (k *keySink) Write(ctx context.Context, b []sdk.Envelope) (int64, error) {
 	return int64(len(b)), nil
 }
 
-// Issue #85: the retry must be recognisable as the SAME write, or BigQuery
+// Issue #85: the retry must be recognizable as the SAME write, or BigQuery
 // starts a second job for it. One key per batch, the same on every attempt.
 func TestEveryAttemptOfABatchCarriesOneKey(t *testing.T) {
 	sink := &keySink{fail: 2}

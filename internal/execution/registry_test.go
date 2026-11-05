@@ -36,7 +36,7 @@ func TestTheNamesComeSorted(t *testing.T) {
 	}
 	got := r.Names()
 	if len(got) != 3 || got[0] != "alfa" || got[2] != "zeta" {
-		t.Errorf("Nomes() = %v, wanted sorted", got)
+		t.Errorf("Names() = %v, wanted sorted", got)
 	}
 }
 
@@ -46,7 +46,7 @@ func TestTheTextInputValidatesTheParameter(t *testing.T) {
 	if v, err := in.Text("image"); err != nil || v != "acme:1.0" {
 		t.Errorf("Text(image) = %q, %v", v, err)
 	}
-	if _, err := in.Text("ausente"); err == nil {
+	if _, err := in.Text("missing"); err == nil {
 		t.Error("expected a missing-parameter error")
 	}
 	if _, err := in.Text("porta"); err == nil {

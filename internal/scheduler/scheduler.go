@@ -16,7 +16,7 @@ import (
 	"brevis.sh/brevis/internal/queue"
 )
 
-// Scheduler materialises slots into Runs and enqueues them.
+// Scheduler materializes slots into Runs and enqueues them.
 //
 // It CREATES runs and nothing else. Whoever executes is the Dispatcher, draining
 // the queue -- §37 is explicit about not mixing the two responsibilities. In
@@ -61,7 +61,7 @@ func NewScheduler(a *postgres.ScheduleRepo, w *postgres.WorkflowRepo, r *postgre
 	}
 }
 
-// Run evaluates the schedules periodically until the context is cancelled.
+// Run evaluates the schedules periodically until the context is canceled.
 func (s *Scheduler) Run(ctx context.Context) error {
 	tick := time.NewTicker(s.interval)
 	defer tick.Stop()
@@ -114,12 +114,12 @@ func (s *Scheduler) Cycle(ctx context.Context, now time.Time) (int, error) {
 }
 
 func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Time) (int, error) {
-	// A schedule that has never been materialised needs a marker before
+	// A schedule that has never been materialized needs a marker before
 	// anything else.
 	//
 	// Without one, `Slots` starts from `agora` itself, and cron's next time is
 	// always strictly in the future: the loop breaks on the first turn, nothing
-	// is materialised, and because nothing is materialised the marker never
+	// is materialized, and because nothing is materialized the marker never
 	// leaves NULL. The schedule stays stuck in that cycle forever -- which is
 	// what left 18 workflows registered in dev without ONE automatic run,
 	// including a `*/30`, with every run on the screen coming from a manual
@@ -178,7 +178,7 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 		}
 
 		// The marker advances at EVERY slot, and not at the end of the loop: if
-		// the process dies midway, the slots already materialised are not
+		// the process dies midway, the slots already materialized are not
 		// recreated.
 		if err := s.schedules.AdvanceSlot(ctx, a.WorkflowSlug, slot); err != nil {
 			return created, err
@@ -370,9 +370,9 @@ func slotBefore(c interface{ Next(time.Time) time.Time }, loc *time.Location, t 
 	return time.Time{}, false
 }
 
-// Backfill materialises the slots of a past interval.
+// Backfill materializes the slots of a past interval.
 //
-// It enters the queue like any other run, honouring concurrency and priority --
+// It enters the queue like any other run, honoring concurrency and priority --
 // §12 is explicit about that. The negative priority makes a backfill give way to
 // current work instead of competing with it.
 // Backfilled is what a backfill did, and it carries two numbers because one

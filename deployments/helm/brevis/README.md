@@ -55,7 +55,7 @@ render time instead:
 
 - **`scheduler.replicas`, at any value.** Two replicas would not claim the same
   queue item — the dispatcher uses `FOR UPDATE SKIP LOCKED` — but they would
-  both materialise the same slots, and what guards that is an idempotency key,
+  both materialize the same slots, and what guards that is an idempotency key,
   not a lock. The second replica creates the same scheduled run, one window gets
   built twice, nothing fails, and it surfaces as duplicated rows in a report
   weeks later. To scale reads, raise `api.replicas`; to run more at once, raise

@@ -50,7 +50,7 @@ type StageNumber struct {
 var StageHighlight = []string{"in", "out", "groups", "rows", "pages", "objects"}
 
 // StageStates maps a stage's recorded state to the run states' palette, as
-// dag.js's STAGE_STATE_COLOURS does. Anything else is pending.
+// dag.js's STAGE_STATE_COLORS does. Anything else is pending.
 var StageStates = map[string]string{"done": "success", "running": "running", "failed": "failed", "aborted": "canceled"}
 
 // StageNumbers picks a stage's two numbers, in StageHighlight's order. A whole

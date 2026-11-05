@@ -2,7 +2,7 @@
 #
 # The point is what you see while it runs:
 #
-#   make cluster-shell ARGS="-n dados get pods -w"
+#   make cluster-shell ARGS="-n data get pods -w"
 #
 # Two pods appear together, each with the image its step named and the limits
 # its step asked for, and both are gone when the run ends. Nothing waits for a

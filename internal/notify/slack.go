@@ -196,7 +196,7 @@ var technologyTags = map[string]bool{
 	"dbt": true, "python": true, "go": true, "sql": true, "spark": true,
 }
 
-// classificar derives domain and pipeline from the tags, with the slug as a
+// classify derives domain and pipeline from the tags, with the slug as a
 // fallback.
 //
 // The convention is the one the data repository uses: the first tag is the
@@ -221,8 +221,8 @@ func (s *Slack) classify(a Alert) (domain, pipeline string) {
 		}
 	}
 	if domain == "-" {
-		if partes := strings.SplitN(a.Workflow, "_", 2); len(partes) == 2 {
-			domain = partes[0]
+		if parts := strings.SplitN(a.Workflow, "_", 2); len(parts) == 2 {
+			domain = parts[0]
 		}
 	}
 	return domain, pipeline

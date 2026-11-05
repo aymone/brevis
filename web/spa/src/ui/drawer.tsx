@@ -4,7 +4,7 @@ import { useT } from "../i18n";
 import { Icon } from "./icon";
 
 /**
- * A drawer's open state lives in the URL hash (`#publicar`), as the server's
+ * A drawer's open state lives in the URL hash (`#publish`), as the server's
  * links did: a link opens it, the opener only sets the hash, and Back/close
  * clears it. The opener and the drawer each call this with the same id.
  */

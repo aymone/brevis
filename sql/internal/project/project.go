@@ -28,7 +28,7 @@ type Project struct {
 
 	// Functions are `functions/<schema>/<name>.sql`, in path order. They
 	// are run BEFORE the models and they are not models: no header, no
-	// materialisation, no tests, no place in the graph.
+	// materialization, no tests, no place in the graph.
 	Functions []Function
 }
 

@@ -50,7 +50,7 @@ func Example() {
 
 	// Where it goes, and with which columns.
 	if _, err := sdk.Load(ctx, data, sdk.Target{
-		To:      to.Files{Path: "./landing/temperatura/"},
+		To:      to.Files{Path: "./landing/temperature/"},
 		Columns: []string{"time", "temperature_2m"},
 	}); err != nil {
 		return
@@ -63,7 +63,7 @@ func ExamplePipeline() {
 	sdk.Run(sdk.Pipeline{
 		Source: sdk.Source{
 			From: from.HTTP{
-				URL: "https://api.exemplo.com/eventos",
+				URL: "https://api.example.com/events",
 				Records: func(r sdk.Response) ([]any, error) {
 					var events []any
 					return events, r.JSON(&events)
@@ -76,7 +76,7 @@ func ExamplePipeline() {
 			sdk.IngestionLoadedAt(),
 		},
 		Target: sdk.Target{
-			To:      to.Files{Path: "./landing/eventos/"},
+			To:      to.Files{Path: "./landing/events/"},
 			Columns: []string{"id", "created_at", "ingestion_id", "ingestion_loaded_at"},
 		},
 	})
@@ -116,7 +116,7 @@ func ExampleIngestionID() {
 // RejectIf refuses a 200 whose body carries {"error": true}.
 func ExampleRejectIf() {
 	_ = from.HTTP{
-		URL: "https://api.exemplo.com/eventos",
+		URL: "https://api.example.com/events",
 		Records: func(r sdk.Response) ([]any, error) {
 			if err := sdk.RejectIf("error")(r); err != nil {
 				return nil, err
@@ -135,7 +135,7 @@ func ExampleRejectIf() {
 func ExampleBool() {
 	_ = bigquery.Table{
 		Dataset:     "landing",
-		Name:        "temperatura",
+		Name:        "temperature",
 		CreateTable: sdk.Bool(false), // never, not even on a first run
 	}
 }
@@ -143,7 +143,7 @@ func ExampleBool() {
 // Source is the origin: the driver in From, plus what is true of all of them.
 func ExampleSource() {
 	_ = sdk.Source{
-		From:    from.HTTP{URL: "https://api.exemplo.com/v1/eventos"},
+		From:    from.HTTP{URL: "https://api.example.com/v1/events"},
 		Preview: 5,
 	}
 }
@@ -151,7 +151,7 @@ func ExampleSource() {
 // Target is the destination: the driver in To, plus the declared columns.
 func ExampleTarget() {
 	_ = sdk.Target{
-		To:      bigquery.Table{Dataset: "bronze", Name: "pedidos"},
+		To:      bigquery.Table{Dataset: "bronze", Name: "orders"},
 		Columns: []string{"ingestion_id", "ingestion_loaded_at", "payload"},
 	}
 }

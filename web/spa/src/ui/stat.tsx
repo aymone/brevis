@@ -4,10 +4,10 @@ export type StatProps = {
   label: string;
   /** A second label beside the first ("last 24 hours"). */
   sub?: string;
-  /** A token colour for the dot before the label, e.g. "var(--st-success)". */
+  /** A token color for the dot before the label, e.g. "var(--st-success)". */
   dot?: string;
   value?: ReactNode;
-  /** A token colour for the value. */
+  /** A token color for the value. */
   tone?: string;
   unit?: string;
   note?: ReactNode;
@@ -20,7 +20,7 @@ export type StatProps = {
 };
 
 // The numbers strip (components.Stats): one bordered band, hairlines are the gap
-// showing the line colour, cells of at least 150px and as many to a row as fit.
+// showing the line color, cells of at least 150px and as many to a row as fit.
 export function Stats({ items, label }: { items: StatProps[]; label?: string }) {
   const cols = items.length === 1 ? "grid-cols-1" : "grid-cols-[repeat(auto-fit,minmax(150px,1fr))]";
   return (

@@ -43,7 +43,7 @@ var FS embed.FS
 //
 // It exists as a string, and not only as a served file, because the symbol is
 // drawn in `currentColor`: inside an <img> the SVG is an isolated document and
-// inherits no colour from the page, so it would come out black under any theme.
+// inherits no color from the page, so it would come out black under any theme.
 // Inline, it follows the client's palette.
 var LogoSVG = func() string {
 	b, err := FS.ReadFile("logo.svg")

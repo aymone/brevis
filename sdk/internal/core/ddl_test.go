@@ -16,10 +16,10 @@ var sample = Schema{
 	{Name: "payload", Type: TypeJSON},
 }
 
-// A default on a TEXT, JSON or BLOB column is parenthesised for MySQL, and for
+// A default on a TEXT, JSON or BLOB column is parenthesized for MySQL, and for
 // nobody else. Error 1101 is what the plain form gets, and only a real server
 // says so.
-func TestMySQLParenthesisesTheDefaultsItHasTo(t *testing.T) {
+func TestMySQLParenthesizesTheDefaultsItHasTo(t *testing.T) {
 	for _, c := range []struct {
 		ct   ColumnType
 		want string
@@ -43,10 +43,10 @@ func TestMySQLParenthesisesTheDefaultsItHasTo(t *testing.T) {
 			t.Errorf("%s: missing %q in %s", c.ct, c.want, got)
 		}
 	}
-	// And Postgres does not parenthesise, because it has no reason to.
+	// And Postgres does not parenthesize, because it has no reason to.
 	got, _ := Schema{{Name: "c", Type: TypeString, Default: "x"}}.CreateTable(Postgres, "t")
 	if strings.Contains(got, "DEFAULT ('x')") {
-		t.Errorf("postgres parenthesised a default it does not need to: %s", got)
+		t.Errorf("postgres parenthesized a default it does not need to: %s", got)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestTheStatementSaysWhatWasDeclared(t *testing.T) {
 		{MySQL, []string{
 			"CREATE TABLE IF NOT EXISTS `bronze`.`orders`",
 			"`id` LONGTEXT NOT NULL",
-			// Parenthesised: MySQL refuses a plain DEFAULT on a TEXT column
+			// Parenthesized: MySQL refuses a plain DEFAULT on a TEXT column
 			// and accepts the same value as an expression default.
 			"`status` LONGTEXT DEFAULT ('pending')",
 			// TINYINT(1) takes 0 and 1, and writing what it STORES keeps

@@ -110,9 +110,9 @@ def test_two_calls_merge_rather_than_replace():
     after this one.
     """
     context.set(name="Daniel")
-    context.set(label="Nome")
+    context.set(label="Name")
 
-    assert context.published() == {"name": "Daniel", "label": "Nome"}
+    assert context.published() == {"name": "Daniel", "label": "Name"}
 
 
 def test_the_same_key_twice_keeps_the_last_write():
@@ -132,11 +132,11 @@ def test_it_writes_once_at_exit(tmp_path):
     context._reset_for_tests(str(out))
 
     context.set(name="Daniel")
-    context.set(label="Nome")
+    context.set(label="Name")
     assert not out.exists(), "nothing should reach the disk before the process ends"
 
     context._flush()
-    assert json.loads(out.read_text()) == {"label": "Nome", "name": "Daniel"}
+    assert json.loads(out.read_text()) == {"label": "Name", "name": "Daniel"}
 
 
 def test_writing_twice_is_refused():

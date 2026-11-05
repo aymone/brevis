@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-// THE LICENCE TRAVELS WITH THE PATHS. ISC asks for the notice to be kept
+// THE LICENSE TRAVELS WITH THE PATHS. ISC asks for the notice to be kept
 // with the copies, and the copies are in this package.
-func TestTheGlyphsCarryTheirLicence(t *testing.T) {
+func TestTheGlyphsCarryTheirLicense(t *testing.T) {
 	raw, err := os.ReadFile("LICENSE-lucide")
 	if err != nil {
 		t.Fatalf("the Lucide license is not beside the glyphs: %v", err)

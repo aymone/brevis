@@ -15,11 +15,11 @@ func TestColumnsRefusesAColumnTheTableLacks(t *testing.T) {
 	}
 
 	err := checkDeclaredAgainstTable(
-		[]string{"ingestion_id", "payload", "provider"}, schema, "bronze.pedidos")
+		[]string{"ingestion_id", "payload", "provider"}, schema, "bronze.orders")
 	if err == nil {
 		t.Fatal("a declared column that the table does not have is a load that does not work")
 	}
-	for _, want := range []string{"provider", "bronze.pedidos", "ingestion_id"} {
+	for _, want := range []string{"provider", "bronze.orders", "ingestion_id"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("the error does not mention %q (it must name both sides): %v", want, err)
 		}

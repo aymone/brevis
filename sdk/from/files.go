@@ -18,7 +18,7 @@ import (
 
 // Files reads records out of files, on disk or in object storage.
 //
-//	from.Files{Path: "./entrada/*.csv", Format: sdk.FormatCSV}
+//	from.Files{Path: "./input/*.csv", Format: sdk.FormatCSV}
 //	from.Files{Path: "s3://bucket/dia=2026-09-04/*.ndjson.gz", Store: s3.New(cfg)}
 //
 // The scheme in Path says which backend: none or file:// is the local

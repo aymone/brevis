@@ -8,7 +8,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: brevis-scheduler
-  namespace: dados
+  namespace: data
 spec:
   # ONE replica. The dispatcher uses `FOR UPDATE SKIP LOCKED`, so two would not
   # hand out the same item — but two would also MATERIALIZE the same slots, and

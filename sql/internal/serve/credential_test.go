@@ -315,7 +315,7 @@ func (p *planned) Plan(context.Context, string) (dialect.Plan, error) {
 	return dialect.Plan{Bytes: p.bytes, Kind: p.kind, Reads: p.reads}, nil
 }
 
-// THE WAREHOUSE OVERRULES THE TOKENISER, which is the only way this surface
+// THE WAREHOUSE OVERRULES THE TOKENIZER, which is the only way this surface
 // gets stronger rather than merely different.
 //
 // The statement here passes `ReadOnly` -- it is one SELECT and the classifier

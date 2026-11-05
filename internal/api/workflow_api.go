@@ -214,10 +214,10 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 // calendarOf is the year of runs as days plus the summary the page prints
-// (components.SummariseCalendar, so the numbers cannot differ), and how many of the
+// (components.SummarizeCalendar, so the numbers cannot differ), and how many of the
 // last kpiDays days ran and failed.
 func calendarOf(days []postgres.Day, now time.Time) (calendarView, int, int) {
-	sum := components.SummariseCalendar(days, now)
+	sum := components.SummarizeCalendar(days, now)
 	cv := calendarView{Days: make([]calendarDayView, 0, len(days)), RanDays: sum.RanDays, FailedDays: sum.FailedDays,
 		Streak: sum.Streak, LastFailure: dayString(sum.LastFailure), Since: dayString(sum.Since)}
 	ran, failed := 0, 0

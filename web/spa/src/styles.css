@@ -2,7 +2,7 @@
    console's tokens -- the --color-* names internal/branding writes, the IBM Plex
    faces, the dark and light themes on <html data-theme> -- so a client's brand.yaml
    repaints this app exactly as it repaints the server pages. The short names below
-   are the app's own vocabulary and only ever ALIAS those tokens: no colour is
+   are the app's own vocabulary and only ever ALIAS those tokens: no color is
    written twice. */
 :root {
   --bg: var(--color-canvas);

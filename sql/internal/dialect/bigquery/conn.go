@@ -261,7 +261,7 @@ func (c *conn) Estimate(ctx context.Context, query string) (int64, error) {
 // EXPORT DATA that writes to a bucket, a procedure CALL and anything
 // multi-statement each answer something else. A rule written the other way --
 // a list of kinds to refuse -- would classify the kind BigQuery adds next by
-// failing to recognise it, and would allow it.
+// failing to recognize it, and would allow it.
 const readsOnly = "SELECT"
 
 // Plan asks BigQuery what a statement would cost AND what it is, without
@@ -656,7 +656,7 @@ func queryParameters(args []dialect.Arg) ([]map[string]any, error) {
 
 // cancelJob asks BigQuery to stop a job whose caller gave up.
 //
-// FOUND IN REVIEW: a cancelled context stopped the polling and left the job
+// FOUND IN REVIEW: a canceled context stopped the polling and left the job
 // running and billing, so an API that answered 504 and freed its slot let
 // one tenant keep any number of jobs going. Best effort, on a context of its
 // own -- the caller's is already done -- and an error is dropped: the job

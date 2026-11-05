@@ -129,7 +129,7 @@ func TestTheEdgesReachTheRightEndsOfTheChild(t *testing.T) {
 
 // TestTheChildsStepsKeepTheChildsImage.
 //
-// They land in the parent, and without materialising the child workflow's own
+// They land in the parent, and without materializing the child workflow's own
 // defaults they would start inheriting the PARENT's image -- the same YAML
 // producing a different container depending on who used it.
 func TestTheChildsStepsKeepTheChildsImage(t *testing.T) {

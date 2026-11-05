@@ -252,7 +252,7 @@ The practical consequences:
 - an exported name that shipped is kept as a deprecated alias rather than
   deleted: a deletion breaks a consumer's build with an error that names a
   symbol and explains nothing. `from.CampoJSON`, `from/mysql.ComParseTime`,
-  `from/postgres.ParaJSON`, `load.ComoCriar` and their neighbours are alive for
+  `from/postgres.ParaJSON`, `load.ComoCriar` and their neighbors are alive for
   that reason, each held down by a test, and they go in `v1`.
 - `pkg.go.dev` renders the README **of the published version**, not of the
   branch. A README fix needs a tag before it shows.

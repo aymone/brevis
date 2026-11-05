@@ -40,7 +40,7 @@ async function signInAgain(res: Response, path: string): Promise<void> {
 
 // A read takes no AbortSignal, and the query functions must not even READ the one
 // React Query offers (`({ signal }) =>`): merely touching it tells the library the
-// request is cancellable, so when the last observer leaves it cancels and starts
+// request is cancelable, so when the last observer leaves it cancels and starts
 // over on the next mount. StrictMode (dev) mounts every screen twice and so sent
 // every request twice; a screen that is left mid-flight listed a red "(canceled)".
 // These reads are small and land in the cache, so they simply finish and the next

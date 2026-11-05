@@ -94,8 +94,8 @@ func TestAStartRefusedDuringSetupLeavesTheIdFree(t *testing.T) {
 // A cancel can now arrive while the step is set up -- the execution is
 // visible from the moment it is reserved, before any process exists. It must
 // neither race the setup (-race catches a read of the command while Start
-// writes it) nor leave the step running: cancelled during the setup the step
-// is never spawned, and cancelled after it the process is stopped.
+// writes it) nor leave the step running: canceled during the setup the step
+// is never spawned, and canceled after it the process is stopped.
 func TestACancelDuringTheSetupNeverLeavesTheStepRunning(t *testing.T) {
 	a := agent.New(agent.Options{Shell: []string{"/bin/sh", "-c"}})
 	for i := range 30 {
@@ -121,7 +121,7 @@ func TestACancelDuringTheSetupNeverLeavesTheStepRunning(t *testing.T) {
 		close(stop)
 		canceller.Wait()
 		if err != nil {
-			continue // cancelled during the setup: never spawned
+			continue // canceled during the setup: never spawned
 		}
 		ended := make(chan struct{})
 		go func() { _, _ = io.Copy(io.Discard, stream); close(ended) }()

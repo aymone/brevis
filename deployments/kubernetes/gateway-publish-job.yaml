@@ -16,7 +16,7 @@
 #
 # By hand, after the gateway's deploy:
 #
-#   kubectl -n dados delete job brevis-gateway-publish --ignore-not-found
+#   kubectl -n data delete job brevis-gateway-publish --ignore-not-found
 #   kubectl apply -f deployments/kubernetes/gateway-publish-job.yaml
 #
 # Under Argo CD, put it beside the gateway's Deployment with the two
@@ -28,7 +28,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: brevis-gateway-publish
-  namespace: dados
+  namespace: data
   # annotations:
   #   argocd.argoproj.io/hook: PostSync
   #   argocd.argoproj.io/hook-delete-policy: BeforeHookCreation

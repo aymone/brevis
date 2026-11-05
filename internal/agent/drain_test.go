@@ -264,8 +264,8 @@ func TestAResumeCutBeforeTheExitDoesNotEndTheDrain(t *testing.T) {
 	}
 }
 
-// Whoever cancelled already knows how it ends; nobody is coming to read it.
-func TestACancelledStepDoesNotHoldTheDrain(t *testing.T) {
+// Whoever canceled already knows how it ends; nobody is coming to read it.
+func TestACanceledStepDoesNotHoldTheDrain(t *testing.T) {
 	a := agent.New(agent.Options{Shell: []string{"/bin/sh", "-c"}})
 	srv := httptest.NewServer(a.Handler(quiet()))
 	t.Cleanup(srv.Close)
