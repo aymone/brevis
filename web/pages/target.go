@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"slices"
@@ -109,14 +108,15 @@ func BuildTarget(d postgres.TargetDetail, now time.Time) TargetView {
 	return v
 }
 
-// Reason is one sentence on why a writer stands where it does, in its own
-// schedule's timezone and the reader's language.
-func (w WriterView) Reason(ctx context.Context) string {
+// Reason is why a writer stands where it does, in its own schedule's
+// timezone: sentences for the app to say, one after the other; none for a
+// writer that stands where it should.
+func (w WriterView) Reason() i18n.Cat {
 	if g := w.Gateway; g != nil {
-		why := i18n.T(ctx, "catalog.why.gateway", "gateway", g.Name, "stream", g.Stream, "role", g.Role,
-			"at", i18n.Date(ctx, g.PublishedAt.UTC(), "brief")+" UTC")
+		why := i18n.Cat{i18n.M("catalog.why.gateway", "gateway", g.Name, "stream", g.Stream, "role", g.Role,
+			"at", stampIn(g.PublishedAt.UTC()))}
 		if g.Note != "" {
-			why += " " + i18n.T(ctx, "catalog.why.unnamed", "note", g.Note)
+			why = append(why, " ", i18n.M("catalog.why.unnamed", "note", g.Note))
 		}
 		return why
 	}
@@ -124,20 +124,25 @@ func (w WriterView) Reason(ctx context.Context) string {
 	if err != nil || w.Timezone == "" {
 		loc = time.UTC
 	}
-	stamp := func(t time.Time) string { return i18n.Date(ctx, t.In(loc), "brief") + " " + t.In(loc).Format("MST") }
 
 	switch w.Verdict.Status {
 	case catalog.Late, catalog.Stale:
 		grace := w.Verdict.Grace
-		return i18n.T(ctx, "catalog.why.missed", "workflow", w.Workflow, "slot", stamp(w.Verdict.Missed),
-			"by", stamp(w.Verdict.Missed.Add(grace)), "grace", components.Duration(&grace))
+		return i18n.Cat{i18n.M("catalog.why.missed", "workflow", w.Workflow, "slot", stampIn(w.Verdict.Missed.In(loc)),
+			"by", stampIn(w.Verdict.Missed.Add(grace).In(loc)), "grace", i18n.Dur(grace))}
 	case catalog.Paused:
-		return i18n.T(ctx, "catalog.why.paused")
+		return i18n.Cat{i18n.M("catalog.why.paused")}
 	case catalog.Unscheduled:
 		if w.HasSchedule {
-			return i18n.T(ctx, "catalog.why.unreadable")
+			return i18n.Cat{i18n.M("catalog.why.unreadable")}
 		}
-		return i18n.T(ctx, "catalog.why.manual")
+		return i18n.Cat{i18n.M("catalog.why.manual")}
 	}
-	return ""
+	return nil
+}
+
+// stampIn is an instant as a verdict says it: the date and time in its own
+// zone, and the zone's name beside it.
+func stampIn(t time.Time) i18n.Msg {
+	return i18n.M("catalog.why.at", "at", i18n.At{T: t, Layout: "brief"}, "zone", t.Format("MST"))
 }

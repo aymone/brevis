@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -27,8 +26,8 @@ type endpointRowView struct {
 	Freshness string       `json:"freshness"`
 	Reads     []string     `json:"reads"`
 	Rebuilt   *rebuiltView `json:"rebuilt"`
-	// TTL is the cache's time to live in words; "" with no cache on record.
-	TTL         string    `json:"ttl"`
+	// TTL is the cache's time to live, a string or an i18n.Msg (pages.DurationMsg); null with no cache on record.
+	TTL         i18n.Cat  `json:"ttl"`
 	Params      int       `json:"params"`
 	Required    int       `json:"required"`
 	PublishedAt time.Time `json:"publishedAt"`
@@ -46,13 +45,13 @@ type endpointsView struct {
 	Rows        []endpointRowView `json:"rows"`
 }
 
-func endpointRowOf(ctx context.Context, r pages.EndpointRow) endpointRowView {
+func endpointRowOf(r pages.EndpointRow) endpointRowView {
 	v := endpointRowView{
 		API: r.API, Name: r.Name, Path: r.Path, Keyed: r.Keyed, About: r.About, Freshness: r.Freshness,
 		Reads: append([]string{}, r.Reads...), Params: len(r.Params), Required: len(r.Required), PublishedAt: r.PublishedAt,
 	}
 	if r.TTL != "" {
-		v.TTL = epDuration(ctx, r.TTL)
+		v.TTL = pages.DurationCat(r.TTL)
 	}
 	if d := r.Read; d != nil && d.LastWhen != nil {
 		v.Rebuilt = &rebuiltView{At: *d.LastWhen, By: pages.WriterLine(*d)}
@@ -84,14 +83,13 @@ func (u *UI) apiEndpoints(w http.ResponseWriter, r *http.Request) {
 	}
 	now := time.Now()
 	s := pages.BuildEndpoints(all, entries, pages.ParseEndpointFilter(r.URL.Query()), now)
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
 	v := endpointsView{
 		Now: now, Total: s.Total, APIs: s.APIs, Fresh: s.Fresh, Stale: s.Stale,
 		Caches: append([]string{}, s.Caches...), Connections: append([]string{}, s.Connections...),
 		APINames: append([]string{}, s.APINames...), Rows: make([]endpointRowView, 0, len(s.Rows)),
 	}
 	for _, row := range s.Rows {
-		v.Rows = append(v.Rows, endpointRowOf(ctx, row))
+		v.Rows = append(v.Rows, endpointRowOf(row))
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, v)

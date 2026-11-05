@@ -73,7 +73,7 @@ func TestTheRunsJSONForgivesABadFilterAndNeverSendsNull(t *testing.T) {
 	var asked postgres.RunFilter
 	body := jsonRuns(t, runsReads{asked: &asked, listed: &asked}, "/api/runs?state=xpto&page=-4&from=yesterday&workflow=daily")
 	f := body["filter"].(map[string]any)
-	if f["state"] != "" || f["from"] != "" || f["period"] != "" || f["workflow"] != "daily" || body["page"] != 1.0 {
+	if f["state"] != "" || f["from"] != "" || f["to"] != "" || f["workflow"] != "daily" || body["page"] != 1.0 {
 		t.Errorf("filter = %v, page %v", f, body["page"])
 	}
 	if runs, ok := body["runs"].([]any); !ok || len(runs) != 0 {

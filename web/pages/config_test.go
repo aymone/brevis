@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"strings"
 	"testing"
 	"time"
@@ -42,7 +41,7 @@ func TestTheConfigurationIsLaidOutInTheFilesOrder(t *testing.T) {
 
 	var titles []string
 	for _, s := range v.Sections {
-		titles = append(titles, s.TitleIn(context.Background()))
+		titles = append(titles, saidEN(s.TitleMsg()))
 	}
 	if got := strings.Join(titles, ","); got != "Stream,Buffer,Sink,Dead letter" {
 		t.Fatalf("sections = %s", got)

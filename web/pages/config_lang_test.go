@@ -1,13 +1,12 @@
 package pages
 
 import (
-	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // richPipeline is an SDK pipeline that fills every part of the drawer's
@@ -35,25 +34,28 @@ func richPipeline() *postgres.WriterConfig {
 	}}
 }
 
-// THE SUMMARY IS ONE SENTENCE IN EACH LANGUAGE, a pipeline's and a stream's.
-func TestTheSummaryIsInEachLanguage(t *testing.T) {
+// THE SUMMARY IS SENT AS KEYS AND DATA, never as a sentence: the server has no language. The app puts the pieces
+// together and says them in the reader's language; saidEN reads them the way the app does in English.
+func TestTheSummaryIsSentAsKeysAndData(t *testing.T) {
 	stream := &postgres.WriterConfig{Fields: []catalog.ManifestField{
 		{Path: "format", Value: "json"}, {Path: "path", Value: "/v1/clicks"},
 		{Path: "sink.type", Value: "pubsub"}, {Path: "sink.project", Value: "acme"}, {Path: "sink.topic", Value: "clicks"},
 		{Path: "sink.write", Value: "merge"}, {Path: "buffer.flush.every", Value: "1m"}, {Path: "buffer.flush.records", Value: 2000.0},
 		{Path: "dead_letter.type", Value: "files"}, {Path: "dead_letter.path", Value: "./dl/"},
 	}}
-	for lang, want := range map[string][2]string{
-		"en":    {"Reads 3 sources, applies 1 transformation, groups by sku and writes to BigQuery table acme.bronze.orders, merged by ingestion id so a re-run changes nothing.", "JSON events posted to /v1/clicks are published to Pub/Sub topic acme/clicks, merged by ingestion id so a redelivery is ignored, in batches every 1 minute or 2,000 events; batches the destination refuses go to files at ./dl/."},
-		"pt-BR": {"Lê 3 origens, aplica 1 transformação, agrupa por sku e grava na tabela BigQuery acme.bronze.orders, mesclando pelo id de ingestão, então reexecutar não muda nada.", "Eventos JSON enviados para /v1/clicks são publicados no tópico Pub/Sub acme/clicks, mesclando pelo id de ingestão, então uma reentrega é ignorada, em lotes a cada 1 minuto ou 2.000 eventos; os lotes que o destino recusa vão para arquivos em ./dl/."},
-		"es":    {"Lee 3 orígenes, aplica 1 transformación, agrupa por sku y escribe en la tabla BigQuery acme.bronze.orders, fusionando por id de ingesta, así que reejecutar no cambia nada.", "Eventos JSON enviados a /v1/clicks se publican en el tópico Pub/Sub acme/clicks, fusionando por id de ingesta, así que una reentrega se ignora, en lotes cada 1 minuto o 2.000 eventos; los lotes que el destino rechaza van a archivos en ./dl/."},
-	} {
-		ctx := i18n.WithLang(context.Background(), lang)
-		if got := Summary(ctx, richPipeline()); got != want[0] {
-			t.Errorf("%s pipeline:\n got %s\nwant %s", lang, got, want[0])
-		}
-		if got := Summary(ctx, stream); got != want[1] {
-			t.Errorf("%s stream:\n got %s\nwant %s", lang, got, want[1])
-		}
+	raw, err := json.Marshal(Summary(stream))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{"$":"cat","v":[{"k":"summary.intake.json"}," ",{"k":"summary.stream.posted","a":{"path":"/v1/clicks"}},` +
+		`" ",{"k":"summary.stream.published","a":{"to":{"k":"summary.dest.topic","a":{"topic":"acme/clicks"}}}},` +
+		`", ",{"k":"summary.stream.merge"},", ",{"k":"summary.stream.batch.both","a":{"every":{"k":"summary.unit.minute","n":1},` +
+		`"records":{"k":"summary.events","n":2000,"a":{"n":{"$":"num","v":2000}}}}},` +
+		`"; ",{"k":"summary.stream.refused","a":{"to":{"k":"summary.dest.files","a":{"path":"./dl/"}}}},"."]}`
+	if string(raw) != want {
+		t.Errorf("stream summary:\n got %s\nwant %s", raw, want)
+	}
+	if got := saidEN(Summary(richPipeline())); got != "Reads 3 sources, applies 1 transformation, groups by sku and writes to BigQuery table acme.bronze.orders, merged by ingestion id so a re-run changes nothing." {
+		t.Errorf("pipeline summary = %s", got)
 	}
 }

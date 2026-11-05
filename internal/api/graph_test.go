@@ -674,7 +674,7 @@ func TestAMarkerSaysWhatItIs(t *testing.T) {
 	}
 	_, g := request(t, newUI(defsFake{w: w}, execsFake{}), "/api/workflows/markers/graph")
 	for _, n := range g.Nodes {
-		if n.ID == "start" && n.Data["acao"] != "marker" {
+		if m, _ := n.Data["acao"].(map[string]any); n.ID == "start" && m["k"] != "graph.marker" {
 			t.Errorf("the marker's subtitle is %v", n.Data["acao"])
 		}
 	}

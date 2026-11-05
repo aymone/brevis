@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"slices"
 	"time"
@@ -41,7 +40,7 @@ type calendarView struct {
 
 type stepView struct {
 	ID         string     `json:"id"`
-	Command    string     `json:"command"`
+	Command    i18n.Cat   `json:"command"`
 	Langs      []logoView `json:"langs"`
 	Uses       []logoView `json:"uses"`
 	Needs      []string   `json:"needs"`
@@ -75,11 +74,10 @@ type paramView struct {
 	Pattern string   `json:"pattern"`
 }
 
-// slotView is one past slot of the schedule, worded as the old Run dialog
-// worded it ("<when> · processes <from> -> <to> UTC").
+// slotView is one past slot of the schedule; the app says its label (when it was, and the window it processes).
 type slotView struct {
 	At    time.Time `json:"at"`
-	Label string    `json:"label"`
+	Label i18n.Msg  `json:"label"`
 }
 
 type workflowDetailView struct {
@@ -89,7 +87,7 @@ type workflowDetailView struct {
 	HasSchedule bool              `json:"hasSchedule"`
 	Active      bool              `json:"active"`
 	Cron        string            `json:"cron"`
-	Schedule    string            `json:"schedule"`
+	Schedule    *i18n.Msg         `json:"schedule"`
 	Timezone    string            `json:"timezone"`
 	NextRun     *time.Time        `json:"nextRun"`
 	Tags        []string          `json:"tags"`
@@ -122,8 +120,7 @@ func dayString(t *time.Time) *string {
 // definition is required: the history, statistics and summary each degrade to
 // empty rather than failing the screen.
 func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	r = r.WithContext(ctx)
+	ctx := r.Context()
 	slug := r.PathValue("slug")
 	def, err := u.defs.Definition(ctx, slug)
 	if err != nil {
@@ -135,7 +132,7 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 
 	out := workflowDetailView{
 		Slug: def.Slug, Description: def.Description, Cron: def.Schedule, Tags: nonNil(def.Tags),
-		Schedule: pages.CronTextIn(ctx, def.Schedule), Langs: logosOf(r, runsIn(def, 0)),
+		Schedule: pages.CronMsg(def.Schedule), Langs: logosOf(runsIn(def, 0)),
 		Edges: len(def.Edges), Steps: []stepView{}, Runs: []workflowRunView{}, Params: []paramView{},
 		Calendar: calendarView{Days: []calendarDayView{}}, Day: dayString(day), Now: now, Slots: []slotView{},
 	}
@@ -161,7 +158,7 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 	}
 	// 53 weeks and the days of this one: the calendar's whole grid.
 	if days, err := u.leitura.RunsPerDay(ctx, slug, 53*7); err == nil {
-		out.Calendar, out.Stats.RanDays, out.Stats.FailedDays = calendarOf(ctx, days, now)
+		out.Calendar, out.Stats.RanDays, out.Stats.FailedDays = calendarOf(days, now)
 	} else {
 		u.log.Warn("the workflow's calendar is unavailable", "workflow", slug, "error", err)
 	}
@@ -194,12 +191,12 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 	// The zone is the summary's, read above; without a summary the picker
 	// reads the cron in UTC, as the old page did.
 	for _, sl := range pages.RecentSlots(def.Schedule, out.Timezone, now, 14) {
-		out.Slots = append(out.Slots, slotView{At: sl.At, Label: pages.SlotLabel(ctx, sl, out.Timezone)})
+		out.Slots = append(out.Slots, slotView{At: sl.At, Label: pages.SlotLabel(sl, out.Timezone)})
 	}
 
 	if oneStep(def) {
 		if line := stepLineOf(def, nil); line != nil {
-			out.Steps = append(out.Steps, stepView{ID: line.Name, Command: line.Action, Langs: logosOf(r, runsIn(def, 0)),
+			out.Steps = append(out.Steps, stepView{ID: line.Name, Command: i18n.Cat{line.Action}, Langs: logosOf(runsIn(def, 0)),
 				Uses: []logoView{}, Needs: []string{}})
 		}
 		out.Stages = 1
@@ -208,7 +205,7 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 		u.stepsOf(ctx, def, &pg)
 		out.Stages = pg.Stages
 		for _, s := range pg.Steps {
-			out.Steps = append(out.Steps, stepView{ID: s.ID, Command: s.Command, Langs: logosOf(r, s.Langs), Uses: logosOf(r, s.Uses),
+			out.Steps = append(out.Steps, stepView{ID: s.ID, Command: s.Command, Langs: logosOf(s.Langs), Uses: logosOf(s.Uses),
 				Needs: nonNil(s.Needs), LastStatus: s.LastStatus, LastMs: s.LastMs})
 		}
 	}
@@ -217,10 +214,10 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 // calendarOf is the year of runs as days plus the summary the page prints
-// (components.Calendar's, so the numbers cannot differ), and how many of the
+// (components.SummariseCalendar, so the numbers cannot differ), and how many of the
 // last kpiDays days ran and failed.
-func calendarOf(ctx context.Context, days []postgres.Day, now time.Time) (calendarView, int, int) {
-	sum := components.Calendar(ctx, days, now, nil, nil).Summary
+func calendarOf(days []postgres.Day, now time.Time) (calendarView, int, int) {
+	sum := components.SummariseCalendar(days, now)
 	cv := calendarView{Days: make([]calendarDayView, 0, len(days)), RanDays: sum.RanDays, FailedDays: sum.FailedDays,
 		Streak: sum.Streak, LastFailure: dayString(sum.LastFailure), Since: dayString(sum.Since)}
 	ran, failed := 0, 0

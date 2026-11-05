@@ -94,7 +94,7 @@ async function mockEndpointsList(page: Page) {
             freshness: "fresh",
             reads: ["sales.orders"],
             rebuilt: null,
-            ttl: "6h",
+            ttl: { $: "cat", v: [{ k: "summary.unit.hour", n: 6 }] },
             params: 1,
             required: 0,
             publishedAt: new Date().toISOString(),

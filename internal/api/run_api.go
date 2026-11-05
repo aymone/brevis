@@ -10,7 +10,6 @@ import (
 
 	"brevis.sh/brevis/internal/auth"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 	"brevis.sh/brevis/web/pages"
 )
 
@@ -54,8 +53,7 @@ func (u *UI) runJSON(w http.ResponseWriter, r *http.Request) {
 	}
 	// A live run is read again and again: a proxy's copy would be a lie.
 	w.Header().Set("Cache-Control", "no-store")
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	writeJSON(w, http.StatusOK, pages.NewRunView(ctx, u.runPage(ctx, current), time.Now()))
+	writeJSON(w, http.StatusOK, pages.NewRunView(u.runPage(r.Context(), current), time.Now()))
 }
 
 type cancelView struct {

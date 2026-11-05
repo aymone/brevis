@@ -27,8 +27,8 @@ func catalogEntries() []postgres.CatalogEntry {
 func TestThePaletteFindsADestination(t *testing.T) {
 	_, _, items := palette(t, dataUI(catalogFake{entries: catalogEntries()}))
 	for _, it := range items {
-		if it.Group == "Catalog" && it.Label == "bigquery://acme/bronze/old" {
-			if it.Hint != "vendors · fetch" || it.Href != "/data/target?u=bigquery%3A%2F%2Facme%2Fbronze%2Fold" || it.GroupLabel != "Catalog" {
+		if it.Group == "Catalog" && said(it.Label) == "bigquery://acme/bronze/old" {
+			if it.Hint != "vendors · fetch" || it.Href != "/data/target?u=bigquery%3A%2F%2Facme%2Fbronze%2Fold" {
 				t.Errorf("the destination's entry = %+v", it)
 			}
 			return

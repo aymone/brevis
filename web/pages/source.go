@@ -1,8 +1,6 @@
 package pages
 
 import (
-	"context"
-
 	"brevis.sh/brevis/internal/infrastructure/postgres"
 	"brevis.sh/brevis/web/components"
 	"brevis.sh/brevis/web/i18n"
@@ -76,31 +74,33 @@ func AttachStepConfigs(entries []postgres.CatalogEntry, configs map[postgres.Ste
 	}
 }
 
-// originLabel is a source's kind as a row says it: the protocol, the files,
-// the database by its name, or somebody else's driver by its type.
-func originLabel(ctx context.Context, s Source) string {
+// originLabel is a source's kind as a row says it: the protocol or the files
+// (a Msg), the database by its own name or somebody else's driver by its type
+// (a string, the same in every language).
+func originLabel(s Source) (*i18n.Msg, string) {
 	switch s.Kind {
 	case "http":
-		return i18n.T(ctx, "loads.source.http")
+		return ptrMsg(i18n.M("loads.source.http")), ""
 	case "file":
-		return i18n.T(ctx, "loads.source.file")
+		return ptrMsg(i18n.M("loads.source.file")), ""
 	case "database":
-		return components.LogoTitle(ctx, s.Logo)
+		// A brand is its own name in every language.
+		return nil, components.LogoTitle(s.Logo)
 	}
-	return s.Driver
+	return nil, s.Driver
 }
 
 // sourceChoice is an origin as the filter offers it.
-func sourceChoice(ctx context.Context, key string) string {
+func sourceChoice(key string) i18n.Msg {
 	switch key {
 	case "http":
-		return i18n.T(ctx, "loads.source.http")
+		return i18n.M("loads.source.http")
 	case "file":
-		return i18n.T(ctx, "loads.source.file")
+		return i18n.M("loads.source.file")
 	case "database":
-		return i18n.T(ctx, "loads.source.database")
+		return i18n.M("loads.source.database")
 	case "other":
-		return i18n.T(ctx, "loads.source.other")
+		return i18n.M("loads.source.other")
 	}
-	return i18n.T(ctx, "loads.source.none.choice")
+	return i18n.M("loads.source.none.choice")
 }

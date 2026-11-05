@@ -44,5 +44,5 @@ func (u *UI) streamAPI(w http.ResponseWriter, r *http.Request) {
 		v.ReadBy = pages.ReadersOf(readers)
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, pages.StreamAsJSON(ingestCtx(r), v))
+	writeJSON(w, http.StatusOK, pages.StreamAsJSON(v))
 }

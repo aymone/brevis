@@ -283,12 +283,15 @@ func TestTheWorkflowJSONCarriesWhatTheRunDrawerNeeds(t *testing.T) {
 			Enum    []string
 			Pattern string
 		}
-		Slots []struct{ At, Label string }
+		Slots []struct {
+			At    string
+			Label struct{ K string }
+		}
 	}
 	if err := json.Unmarshal([]byte(body), &got); err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Slots) != 14 || !strings.Contains(got.Slots[0].Label, "processes") {
+	if len(got.Slots) != 14 || got.Slots[0].Label.K != "workflows.slot.option" {
 		t.Errorf("slots = %v", got.Slots)
 	}
 	if len(got.Params) != 6 || len(got.Params[0].Enum) != 2 || got.Params[1].Enum == nil {

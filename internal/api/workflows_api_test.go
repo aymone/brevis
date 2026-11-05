@@ -60,7 +60,7 @@ func TestTheWorkflowsListIsFilteredCountedAndPagedOnTheServer(t *testing.T) {
 		t.Errorf("filter = %v", f)
 	}
 	first := rows[0].(map[string]any)
-	if first["steps"] != float64(1) || len(first["recent"].([]any)) != 1 || first["schedule"] != "every day at 04:00" {
+	if first["steps"] != float64(1) || len(first["recent"].([]any)) != 1 || keyOf(first["schedule"]) != "cron.daily" {
 		t.Errorf("row = %v", first)
 	}
 	if langs := first["runsIn"].([]any); len(langs) != 1 || langs[0].(map[string]any)["key"] != "dbt" {
@@ -255,11 +255,11 @@ func TestTheWorkflowJSONCarriesTheLoadTrendWhenThereIsHistory(t *testing.T) {
 	_, body := getJSON(t, withLoad, "/api/workflows/solo", nil)
 	load, _ := body["load"].(map[string]any)
 	series, _ := load["series"].([]any)
-	if len(series) != 4 || load["window"] == "" {
+	if len(series) != 4 || load["from"] == "" || load["to"] == "" {
 		t.Fatalf("load = %v", body["load"])
 	}
 	first := series[0].(map[string]any)
-	if first["label"] != "Rows per run" || first["latest"] != "2.0k" || first["delta"] != "+100%" || len(first["points"].([]any)) != 2 {
+	if first["key"] != "rows" || first["unit"] != "count" || first["latest"] != 2000.0 || first["delta"] != "pct" || first["pct"] != 100.0 || len(first["points"].([]any)) != 2 {
 		t.Errorf("first series = %v", first)
 	}
 }
@@ -268,7 +268,7 @@ func TestAOneStepWorkflowIsOneStepInTheList(t *testing.T) {
 	def := wf.Workflow{Slug: "solo", Nodes: []wf.Node{{ID: "only", Run: "python x.py"}}}
 	_, body := getJSON(t, detailUI(def, nil), "/api/workflows/solo", nil)
 	steps := body["steps"].([]any)
-	if len(steps) != 1 || steps[0].(map[string]any)["command"] != "python x.py" {
+	if len(steps) != 1 || steps[0].(map[string]any)["command"].(map[string]any)["v"].([]any)[0] != "python x.py" {
 		t.Errorf("steps = %v", steps)
 	}
 }

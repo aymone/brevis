@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -25,12 +24,12 @@ type targetWriterView struct {
 	Workflow    string      `json:"workflow"`
 	Node        string      `json:"node"`
 	Status      string      `json:"status"`
-	Cron        string      `json:"cron"`
+	Cron        *i18n.Msg   `json:"cron"` // the schedule in words, for the app to say
 	RunInFlight *string     `json:"runInFlight"`
-	// Reason is why the writer stands where it does, in the reader's language
-	// and in the writer's own timezone.
-	Reason string `json:"reason"`
-	Href   string `json:"href"`
+	// Reason is why the writer stands where it does, in the writer's own
+	// timezone: sentences for the app to say, read as one passage.
+	Reason i18n.Cat `json:"reason"`
+	Href   string   `json:"href"`
 }
 
 type loadBarView struct {
@@ -86,22 +85,21 @@ func (u *UI) apiCatalogTarget(w http.ResponseWriter, r *http.Request) {
 		dataFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
 	v := targetDetailView{
 		Row: catalogRowOf(t.Row), Writers: make([]targetWriterView, 0, len(t.Row.Writers)),
 		Bars: make([]loadBarView, 0, len(t.Bars)), Missed: t.Missed, ReadBy: make([]readerView, 0, len(t.ReadBy)),
-		Configs: targetConfigs(ctx, t.Configs), SQL: t.Tabs,
+		Configs: targetConfigs(t.Configs), SQL: t.Tabs,
 	}
 	for _, wr := range t.Row.Writers {
 		tw := targetWriterView{
 			Name: catWriterName(wr.CatalogWriter), Workflow: wr.Workflow, Node: wr.Node,
-			Status: string(wr.Verdict.Status), RunInFlight: wr.RunInFlight, Reason: wr.Reason(ctx),
+			Status: string(wr.Verdict.Status), RunInFlight: wr.RunInFlight, Reason: wr.Reason(),
 		}
 		if g := wr.Gateway; g != nil {
 			tw.Gateway = &gatewayRef{Name: g.Name, Stream: g.Stream}
 			tw.Href = pages.Stream{Gateway: g.Name, Path: g.Stream}.Href()
 		} else {
-			tw.Cron = pages.CronTextIn(ctx, wr.Cron)
+			tw.Cron = pages.CronMsg(wr.Cron)
 			tw.Href = "/ingest/loads/" + url.PathEscape(wr.Workflow) + "/" + url.PathEscape(wr.Node)
 		}
 		v.Writers = append(v.Writers, tw)
@@ -140,17 +138,17 @@ func catNote(s string) *noteView {
 
 // flowNodeView is one box of a writer's flow. Kind is source, buffer,
 // destination or dead_letter: the app words the heading (flow.<kind>); Main
-// and Detail are the writer's own words.
+// and Detail are the writer's own words and the console's, for the app to say.
 type flowNodeView struct {
-	Kind   string `json:"kind"`
-	Main   string `json:"main"`
-	Detail string `json:"detail"`
+	Kind   string   `json:"kind"`
+	Main   i18n.Cat `json:"main"`
+	Detail i18n.Cat `json:"detail"`
 }
 
 type deadLetterView struct {
-	Where    string `json:"where"`
-	Readable bool   `json:"readable"`
-	Commands string `json:"commands"`
+	Where    i18n.Cat `json:"where"`
+	Readable bool     `json:"readable"`
+	Commands string   `json:"commands"`
 	// Write is append, merge or empty: which sentence on resending applies.
 	Write string `json:"write"`
 }
@@ -170,14 +168,15 @@ type configRowView struct {
 }
 
 type configSectionView struct {
-	Title string          `json:"title"`
+	Key   string          `json:"key"`
+	Title *i18n.Msg       `json:"title"` // null for a block nobody named: the app makes a heading of its key
 	Note  *noteView       `json:"note"`
 	Rows  []configRowView `json:"rows"`
 }
 
 type changeLineView struct {
-	Path string `json:"path"`
-	Text string `json:"text"`
+	Path string   `json:"path"`
+	Text i18n.Cat `json:"text"`
 }
 
 type configChangeView struct {
@@ -187,9 +186,9 @@ type configChangeView struct {
 	Lines []changeLineView `json:"lines"`
 }
 
-// writerConfigView is one writer's configuration with every sentence already in the
-// reader's language: the summary, the flow, the dead letter and the changes
-// are built from the writer's published fields on the server.
+// writerConfigView is one writer's configuration: the summary, the flow, the
+// dead letter and the changes are sentences the app says, built from the
+// writer's published fields.
 type writerConfigView struct {
 	Key         string              `json:"key"`
 	Gateway     string              `json:"gateway"`
@@ -199,7 +198,7 @@ type writerConfigView struct {
 	Workflow    string              `json:"workflow"`
 	Node        string              `json:"node"`
 	Described   bool                `json:"described"`
-	Summary     string              `json:"summary"`
+	Summary     i18n.Cat            `json:"summary"`
 	Flow        []flowNodeView      `json:"flow"`
 	FlowDead    *flowNodeView       `json:"flowDeadLetter"`
 	DeadLetter  *deadLetterView     `json:"deadLetter"`
@@ -208,7 +207,7 @@ type writerConfigView struct {
 	Changes     []configChangeView  `json:"changes"`
 }
 
-func targetConfigs(ctx context.Context, in []pages.WriterConfigView) []writerConfigView {
+func targetConfigs(in []pages.WriterConfigView) []writerConfigView {
 	out := make([]writerConfigView, 0, len(in))
 	for _, c := range in {
 		v := writerConfigView{
@@ -223,22 +222,23 @@ func targetConfigs(ctx context.Context, in []pages.WriterConfigView) []writerCon
 			out = append(out, v)
 			continue
 		}
-		v.Summary = c.Config.SummaryIn(ctx)
+		v.Summary = c.Config.SummaryOf()
 		if c.Flow != nil {
 			for _, n := range c.Flow.Nodes {
-				v.Flow = append(v.Flow, flowNodeView{Kind: n.Kind, Main: n.MainIn(ctx), Detail: n.DetailIn(ctx)})
+				v.Flow = append(v.Flow, flowNodeView(n))
 			}
 			if dl := c.Flow.DeadLetter; dl != nil {
-				v.FlowDead = &flowNodeView{Kind: dl.Kind, Main: dl.MainIn(ctx), Detail: dl.DetailIn(ctx)}
+				d := flowNodeView(*dl)
+				v.FlowDead = &d
 			}
 		}
 		// The dead-letter panel is a gateway stream's only.
 		if dl := c.Config.DeadLetter; c.Gateway != "" && dl != nil {
-			v.DeadLetter = &deadLetterView{Where: dl.WhereIn(ctx), Readable: dl.Readable, Commands: dl.Commands(), Write: dl.Write}
+			v.DeadLetter = &deadLetterView{Where: dl.Where, Readable: dl.Readable, Commands: dl.Commands(), Write: dl.Write}
 		}
 		v.Note = catNote(c.Config.Note)
 		for _, s := range c.Config.Sections {
-			sv := configSectionView{Title: s.TitleIn(ctx), Note: catNote(s.Note), Rows: make([]configRowView, 0, len(s.Rows))}
+			sv := configSectionView{Key: s.Key, Title: s.TitleMsg(), Note: catNote(s.Note), Rows: make([]configRowView, 0, len(s.Rows))}
 			for _, r := range s.Rows {
 				rv := configRowView{Path: r.Path, Label: r.Label, Value: r.Value, Default: r.Default, Note: catNote(r.Note), Before: []configBefore{}}
 				for _, b := range r.Before {
@@ -251,7 +251,7 @@ func targetConfigs(ctx context.Context, in []pages.WriterConfigView) []writerCon
 		for _, ch := range c.Config.Changes {
 			cv := configChangeView{At: ch.At, RunID: ch.RunID, First: ch.First, Lines: []changeLineView{}}
 			for _, l := range ch.Lines {
-				cv.Lines = append(cv.Lines, changeLineView{Path: l.Path, Text: l.TextIn(ctx)})
+				cv.Lines = append(cv.Lines, changeLineView{Path: l.Path, Text: l.ChangeText()})
 			}
 			v.Changes = append(v.Changes, cv)
 		}

@@ -1,10 +1,6 @@
 package api
 
-import (
-	"context"
-
-	"brevis.sh/brevis/web/i18n"
-)
+import "brevis.sh/brevis/web/i18n"
 
 // section is one place in the console, with the group it sits in: what the
 // command palette lists under Sections. Name and Group are in the reader's
@@ -15,15 +11,16 @@ import (
 // answers "no SQL service is configured" leads nowhere, and the palette, like
 // the sidebar, is where a reader trusts that what is listed exists.
 type section struct {
-	Group, Href, Name, Icon string
+	Group, Name i18n.Msg
+	Href, Icon  string
 }
 
-func sections(ctx context.Context, hasSQL bool) []section {
-	place := func(group, href, key, icon string) section {
-		return section{Group: group, Href: href, Name: i18n.T(ctx, "nav."+key), Icon: icon}
+func sections(hasSQL bool) []section {
+	place := func(group i18n.Msg, href, key, icon string) section {
+		return section{Group: group, Href: href, Name: i18n.M("nav." + key), Icon: icon}
 	}
-	monitor, orchestrate := i18n.T(ctx, "nav.group.monitor"), i18n.T(ctx, "nav.group.orchestrate")
-	ingest, data := i18n.T(ctx, "nav.group.ingest"), i18n.T(ctx, "nav.group.data")
+	monitor, orchestrate := i18n.M("nav.group.monitor"), i18n.M("nav.group.orchestrate")
+	ingest, data := i18n.M("nav.group.ingest"), i18n.M("nav.group.data")
 	out := []section{
 		place(monitor, "/", "overview", "layout-grid"),
 		place(monitor, "/runs", "runs", "history"),

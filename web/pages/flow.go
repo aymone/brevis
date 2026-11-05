@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"strings"
 
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -22,29 +21,20 @@ type Flow struct {
 }
 
 // FlowNode is one step of a Flow. Kind is "source", "buffer", "destination"
-// or "dead_letter"; Main is what it is, Detail how. Where either is words
-// rather than the data's own -- the buffer's triggers, the dead letter --
-// mainIn and detailIn write them in the reader's language when the page is
-// drawn (screen-streams T3), since the flow is built before.
+// or "dead_letter"; Main is what it is, Detail how. Both are words for the app
+// to put together (a string is the data's own, a Msg the console's): the
+// buffer's triggers, the dead letter.
 type FlowNode struct {
-	Kind, Main, Detail string
-	mainIn, detailIn   func(context.Context) string
+	Kind         string
+	Main, Detail i18n.Cat
 }
 
-// MainIn is what the step is, in the reader's language.
-func (n FlowNode) MainIn(ctx context.Context) string {
-	if n.mainIn != nil {
-		return n.mainIn(ctx)
+// plain is a value the data carries, as words; nil for none.
+func plain(s string) i18n.Cat {
+	if s == "" {
+		return nil
 	}
-	return n.Main
-}
-
-// DetailIn is how the step does it, in the reader's language.
-func (n FlowNode) DetailIn(ctx context.Context) string {
-	if n.detailIn != nil {
-		return n.detailIn(ctx)
-	}
-	return n.Detail
+	return i18n.Cat{s}
 }
 
 // FlowOf reads a writer's configuration into a Flow, or nil when it has none
@@ -73,10 +63,10 @@ func FlowOf(c *postgres.WriterConfig, target string) *Flow {
 
 	if driver := text("source.driver"); driver != "" {
 		return &Flow{Nodes: []FlowNode{
-			{Kind: "source", Main: driver,
-				Detail: joinWords(" ", text("source.method"), text("source.url"))},
-			{Kind: "destination", Main: target,
-				Detail: joinWords(" · ", text("target.driver"), text("target.dedup"))},
+			{Kind: "source", Main: plain(driver),
+				Detail: plain(joinWords(" ", text("source.method"), text("source.url")))},
+			{Kind: "destination", Main: plain(target),
+				Detail: plain(joinWords(" · ", text("target.driver"), text("target.dedup")))},
 		}}
 	}
 
@@ -85,14 +75,14 @@ func FlowOf(c *postgres.WriterConfig, target string) *Flow {
 		return nil
 	}
 	flow := &Flow{}
-	source := FlowNode{Kind: "source", Detail: text("format")}
+	source := FlowNode{Kind: "source", Detail: plain(text("format"))}
 	switch {
 	case text("path") != "":
-		source.Main = "POST " + text("path")
+		source.Main = plain("POST " + text("path"))
 	case text("name") != "":
-		source.Main = "stream " + text("name")
+		source.Main = plain("stream " + text("name"))
 	default:
-		source.Main = "events"
+		source.Main = plain("events")
 	}
 	flow.Nodes = append(flow.Nodes, source)
 
@@ -116,40 +106,50 @@ func FlowOf(c *postgres.WriterConfig, target string) *Flow {
 		others = append(others, key+" "+text(path))
 	}
 	if every != "" || records != "" || maxAge != "" || maxSize != "" || len(others) > 0 {
-		flow.Nodes = append(flow.Nodes, FlowNode{Kind: "buffer", Main: joinWords(" ", text("buffer.type")),
-			detailIn: func(ctx context.Context) string {
-				var b string
-				switch {
-				case every != "" && records != "":
-					b = i18n.T(ctx, "flow.buffer.both", "every", durationWords(ctx, every), "records", events(ctx, records))
-				case every != "":
-					b = i18n.T(ctx, "flow.buffer.every", "every", durationWords(ctx, every))
-				case records != "":
-					b = i18n.T(ctx, "flow.buffer.records", "records", events(ctx, records))
+		var d i18n.Cat
+		add := func(part ...any) {
+			if len(d) > 0 {
+				d = append(d, " · ")
+			}
+			d = append(d, part...)
+		}
+		switch {
+		case every != "" && records != "":
+			add(i18n.M("flow.buffer.both", "every", durationWords(every), "records", events(records)))
+		case every != "":
+			add(i18n.M("flow.buffer.every", "every", durationWords(every)))
+		case records != "":
+			add(i18n.M("flow.buffer.records", "records", events(records)))
+		}
+		if maxAge != "" || maxSize != "" {
+			var what i18n.Cat
+			if maxAge != "" {
+				what = append(what, durationWords(maxAge))
+			}
+			if maxSize != "" {
+				if len(what) > 0 {
+					what = append(what, " / ")
 				}
-				ceiling := ""
-				if maxAge != "" || maxSize != "" {
-					age := ""
-					if maxAge != "" {
-						age = durationWords(ctx, maxAge)
-					}
-					ceiling = i18n.T(ctx, "flow.buffer.max", "what", joinWords(" / ", age, maxSize))
-				}
-				return joinWords(" · ", append([]string{b, ceiling}, others...)...)
-			}})
+				what = append(what, maxSize)
+			}
+			add(i18n.M("flow.buffer.max", "what", what))
+		}
+		for _, o := range others {
+			add(o)
+		}
+		flow.Nodes = append(flow.Nodes, FlowNode{Kind: "buffer", Main: plain(joinWords(" ", text("buffer.type"))), Detail: d})
 	}
 
 	write := text("sink.write")
 	if sink == "auto_table" {
 		write = text("sink.into.write")
 	}
-	flow.Nodes = append(flow.Nodes, FlowNode{Kind: "destination", Main: target,
-		Detail: joinWords(" · ", sink, write)})
+	flow.Nodes = append(flow.Nodes, FlowNode{Kind: "destination", Main: plain(target),
+		Detail: plain(joinWords(" · ", sink, write))})
 
 	if text("dead_letter.type") != "" {
-		flow.DeadLetter = &FlowNode{Kind: "dead_letter", Main: text("dead_letter.path"),
-			mainIn:   func(ctx context.Context) string { return destination(ctx, text, "dead_letter", true) },
-			detailIn: func(ctx context.Context) string { return i18n.T(ctx, "flow.refused") }}
+		flow.DeadLetter = &FlowNode{Kind: "dead_letter", Main: i18n.Cat{destination(text, "dead_letter", true)},
+			Detail: i18n.Cat{i18n.M("flow.refused")}}
 	}
 	return flow
 }

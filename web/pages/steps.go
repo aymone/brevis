@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"bytes"
 	"encoding/json"
 	"sort"
@@ -25,7 +26,7 @@ type StepOutput struct {
 	// Ok and Total count a mapped step's instances, the flow's "2/3".
 	Ok, Total int
 	// Command is what the step runs, as the flow's node subtitles it.
-	Command string
+	Command i18n.Cat
 	Rows    []StepRow
 }
 
@@ -35,7 +36,7 @@ type StepRow struct {
 	// Item is what a mapped instance ran for -- the element of the list it
 	// maps over, as the step received it in BREVIS_MAP_VALUE.
 	Item    string
-	Command string
+	Command i18n.Cat
 }
 
 // StepOutputs groups a run's logs by step, in the graph's order.
@@ -85,7 +86,7 @@ func StepOutputs(r run.Run, logs []postgres.StepLog) []StepOutput {
 	})
 
 	items := mappedItems(def, logs)
-	commands := map[string]string{}
+	commands := map[string]i18n.Cat{}
 	for _, n := range def.Nodes {
 		commands[n.ID] = commandOf(n)
 	}
@@ -209,14 +210,16 @@ func worst(last map[int]string) string {
 
 // commandOf is what a step runs, as its node in the flow says it: the action,
 // the command line, or "marker" for a step that runs nothing.
-func commandOf(n wf.Node) string {
+func commandOf(n wf.Node) i18n.Cat {
 	switch {
 	case n.Marker:
-		return "marker"
+		return i18n.Cat{i18n.M("graph.marker")}
 	case n.Action != "":
-		return n.Action
+		return i18n.Cat{n.Action}
+	case n.Run == "":
+		return nil
 	}
-	return n.Run
+	return i18n.Cat{n.Run}
 }
 
 // ContextEntry is what one step -- one instance of a mapped one -- published

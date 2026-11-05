@@ -2,12 +2,13 @@ import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useData } from "../api/live";
-import type { Choice, LoadRow, Loads, Source } from "../api/ingest";
-import { useFormat, useT } from "../i18n";
+import type { LoadRow, Loads, Source } from "../api/ingest";
+import { cat, useFormat, useMsg, useT } from "../i18n";
 import { localStamp, useSince } from "../ui/format";
 import { Icon } from "../ui/icon";
 import { ButtonLink, Empty, Lead, PageHead, linkUnderline, Page } from "../ui/kit";
 import { Logo } from "../ui/logo";
+import { useSourceLabel } from "../ui/place";
 import { FilterBar, ResultCount, SearchField, ToggleFilter, useUrlSearch, type Chip, type FilterDef } from "../ui/filters";
 import { useSeen } from "../ui/seen";
 import { useStatusFilter } from "../ui/status-filter";
@@ -29,6 +30,7 @@ type Filter = ReturnType<typeof useFilter>;
 /** Where the load reads, as one quiet line under the destination: "HTTP API · api.example.com". A step the SDK did not describe says so. */
 function From({ s }: { s: Source }) {
   const { t } = useT();
+  const sourceLabel = useSourceLabel();
   if (s.kind === "")
     return (
       <p className="ldl-from ldl-none" title={t("loads.source.none.tip")}>
@@ -40,7 +42,7 @@ function From({ s }: { s: Source }) {
     <p className="ldl-from">
       <span className="sr-only">{t("loads.source")}: </span>
       <span aria-hidden="true">&larr; </span>
-      {s.label}
+      {sourceLabel(s)}
       {s.where && <span> &middot; {s.where}</span>}
     </p>
   );
@@ -76,15 +78,17 @@ function useRowHref(filter: Filter) {
 const PUSHED = { drawer: true };
 
 // The tooltip keeps what the line gave up: the full destination URI, its note, and where it is read from.
-function destTitle(r: LoadRow) {
+function destTitle(r: LoadRow, sourceLabel: (s: Source) => string) {
   const to = r.target.uri === "" ? r.target.note : r.target.note ? `${r.target.uri} \u2014 ${r.target.note}` : r.target.uri;
-  return r.source.kind === "" ? to : `${r.source.label}${r.source.where ? ` (${r.source.where})` : ""} \u2192 ${to}`;
+  return r.source.kind === "" ? to : `${sourceLabel(r.source)}${r.source.where ? ` (${r.source.where})` : ""} \u2192 ${to}`;
 }
 
 function Rows({ rows, filter }: { rows: LoadRow[]; filter: Filter }) {
   const href = useRowHref(filter);
   const { t, n } = useT();
   const { number } = useFormat();
+  const msg = useMsg();
+  const sourceLabel = useSourceLabel();
   const since = useSince();
   const navigate = useNavigate();
   return (
@@ -96,12 +100,12 @@ function Rows({ rows, filter }: { rows: LoadRow[]; filter: Filter }) {
               <span className="ldl-wf">{r.workflow}</span>
               <span className="ldl-step">{r.step}</span>
             </Link>
-            <p className="ldl-sub" title={r.schedule}>
-              {r.schedule}
+            <p className="ldl-sub" title={msg(r.schedule)}>
+              {msg(r.schedule)}
             </p>
           </Td>
           <Td cls="ldl-fill-dest">
-            <div title={destTitle(r)}>
+            <div title={destTitle(r, sourceLabel)}>
               <p className="ldl-to">
                 {r.target.kind !== "" && <Logo k={r.target.kind} />}
                 {r.target.uri === "" ? (
@@ -159,13 +163,13 @@ const GHOST_ROW: LoadRow = {
   workflow: "workflow_name",
   step: "load_step_name",
   href: "",
-  target: { uri: "", kind: "postgres", kindTitle: "", where: "postgres://warehouse/", what: "table_name", note: "" },
+  target: { uri: "", kind: "postgres", where: "postgres://warehouse/", what: "table_name", note: "" },
   legacy: false,
   status: "on_time",
   lastLoaded: "2000-01-01T00:00:00Z",
   rows: 1000,
-  schedule: "every hour",
-  source: { kind: "http", driver: "", label: "Source label", where: "api.example.com" },
+  schedule: cat("every hour"),
+  source: { kind: "http", driver: "", label: "Source label", labelMsg: null, where: "api.example.com" },
   recent: [1, 3, 2, 4],
   fixing: null,
 };
@@ -175,7 +179,7 @@ const ghostOf = (s: Shape): Loads => ({
   workflows: s.workflows,
   summary: s.summary,
   counts: s.counts,
-  sources: Array.from({ length: s.sources }, (_, i): Choice => ({ key: `source${i}`, label: "Source" })),
+  sources: Array.from({ length: s.sources }, (_, i) => ({ key: `source${i}`, label: { k: "loads.source.other" } })),
   hasLegacy: s.hasLegacy,
   filter: { status: "", source: "", q: "", legacy: false },
 });
@@ -203,6 +207,7 @@ function Summary({ v, ghost }: { v: Loads; ghost: boolean }) {
 // The bar (see ui/filters): drawn at once from the last shape seen; only the counts wait.
 function LoadsBar({ filter, v, ghost }: { filter: Filter; v: Loads; ghost: boolean }) {
   const { t, n } = useT();
+  const msg = useMsg();
   const { number } = useFormat();
   const navigate = useNavigate();
   const [text, setText] = useUrlSearch("q");
@@ -224,14 +229,14 @@ function LoadsBar({ filter, v, ghost }: { filter: Filter; v: Loads; ghost: boole
     ...(v.sources.length > 1
       ? [{
           id: "source", label: t("loads.source"), allLabel: t("loads.source.all"), pending: ghost,
-          options: v.sources.map((s) => ({ key: s.key, label: s.label, icon: sourceMark(s.key) })),
+          options: v.sources.map((s) => ({ key: s.key, label: msg(s.label), icon: sourceMark(s.key) })),
           value: source ? [source] : [], onChange: (x: string[]) => go({ source: x[0] ?? "" }),
         } satisfies FilterDef]
       : []),
   ];
   const chips: Chip[] = [
     ...st.chip,
-    ...(source ? [{ id: "source", group: t("loads.source"), value: v.sources.find((s) => s.key === source)?.label ?? source, onRemove: () => go({ source: "" }) }] : []),
+    ...(source ? [{ id: "source", group: t("loads.source"), value: msg(v.sources.find((s) => s.key === source)?.label) || source, onRemove: () => go({ source: "" }) }] : []),
   ];
   return (
     <FilterBar

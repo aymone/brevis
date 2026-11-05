@@ -60,7 +60,8 @@ var families = []string{"nav.group.", "nav.", "state.", "logo.", "palette.group.
 func TestEveryKeyUsedExistsAndEveryKeyIsUsed(t *testing.T) {
 	src := sources(t)
 	all := strings.Join(mapValues(src), "\n")
-	literal := regexp.MustCompile(`i18n\.[TN]\(ctx,\s*"([a-z_.]+)"`)
+	// The server asks by catalog key too, now only to NAME a sentence for the app to say: i18n.M("a.b", ...), i18n.MN("a.b", count).
+	literal := regexp.MustCompile(`i18n\.(?:[TN]\(ctx,|MN?\()\s*"([a-z_.]+)"`)
 	en := catalogs["en"]
 	// The React app asks through useT: t("a.b") and n("a.b", count) name a key
 	// whole; t(`a.${x}`) names a family by its prefix. The app's other keys sit in

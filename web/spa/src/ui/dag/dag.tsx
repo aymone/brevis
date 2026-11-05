@@ -7,7 +7,7 @@ import { useFallbackInterval, useLive } from "../../live/hooks";
 import { useFormat, useT } from "../../i18n";
 import { Skeleton } from "../skeleton";
 import { dagHeight, rememberDagHeight } from "./height";
-import { langLabel, NODE_TYPES, stageTone, tone, type NodeData } from "./nodes";
+import { langLabel, NODE_TYPES, stageTone, tone, useSourceWord, useWords, type NodeData } from "./nodes";
 import "./dag.css";
 import { useErrorText } from "../../api/errors";
 
@@ -99,26 +99,28 @@ function ties(edges: Edge[]) {
 
 function Inspector({ node, stages, close }: { node: GNode; stages: GNode[]; close: () => void }) {
   const { t } = useT();
+  const words = useWords();
+  const sourceWord = useSourceWord();
   const { duration } = useFormat();
   const d = node.data;
   const ctx = d.context ? Object.entries(d.context as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)) : [];
   const avail = d.available ? (Object.entries(d.available) as [string, Record<string, unknown>][]).sort(([a], [b]) => a.localeCompare(b)) : [];
   const rows: [string, string][] = [
-    ["step", node.id],
-    ["state", t(`state.${tone(d.status)}`)],
-    ...(d.acao ? [["command", d.acao] as [string, string]] : []),
-    ...(d.duracao_ms ? [["duration", duration(d.duracao_ms)] as [string, string]] : []),
-    ...(typeof d.tentativa === "number" ? [["attempt", String(d.tentativa + 1)] as [string, string]] : []),
-    ...(typeof d.exit_code === "number" ? [["exit code", String(d.exit_code)] as [string, string]] : []),
-    ...(d.runtime ? [["runtime", `${langLabel(d.runtime)} (${d.runtime_source ?? "?"})`] as [string, string]] : []),
-    ...(d.tools?.length ? [["tools", (d.tools as string[]).map(langLabel).join(", ")] as [string, string]] : []),
+    [t("graph.insp.step"), node.id],
+    [t("graph.insp.state"), t(`state.${tone(d.status)}`)],
+    ...(d.acao ? [[t("graph.insp.command"), words(d.acao)] as [string, string]] : []),
+    ...(d.duracao_ms ? [[t("graph.insp.duration"), duration(d.duracao_ms)] as [string, string]] : []),
+    ...(typeof d.tentativa === "number" ? [[t("graph.insp.attempt"), String(d.tentativa + 1)] as [string, string]] : []),
+    ...(typeof d.exit_code === "number" ? [[t("graph.insp.exit_code"), String(d.exit_code)] as [string, string]] : []),
+    ...(d.runtime ? [[t("graph.insp.runtime"), `${langLabel(d.runtime)} (${sourceWord(d.runtime_source)})`] as [string, string]] : []),
+    ...(d.tools?.length ? [[t("graph.insp.tools"), (d.tools as string[]).map(langLabel).join(", ")] as [string, string]] : []),
     // Values as they were written: a number stays a number.
     ...ctx.map(([k, v]) => [`context.${k}`, typeof v === "string" ? v : JSON.stringify(v)] as [string, string]),
     // What the steps above published and this one may read.
     ...avail.flatMap(([step, values]) =>
       Object.entries(values ?? {})
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => [`available ${step}.${k}`, `${typeof v === "string" ? v : JSON.stringify(v)}  \u2190 ${step}`] as [string, string]),
+        .map(([k, v]) => [t("graph.insp.available", { name: `${step}.${k}` }), `${typeof v === "string" ? v : JSON.stringify(v)}  \u2190 ${step}`] as [string, string]),
     ),
   ];
   return (
@@ -139,10 +141,10 @@ function Inspector({ node, stages, close }: { node: GNode; stages: GNode[]; clos
       </dl>
       {stages.length > 0 && (
         <div className="stages">
-          <h4>{d.sdk ? `Stages · SDK ${d.sdk}` : "Stages"}</h4>
+          <h4>{d.sdk ? t("graph.insp.stages_sdk", { sdk: d.sdk }) : t("graph.insp.stages")}</h4>
           {stages.map((s) => (
             <div key={s.id} className="stage-row" style={{ color: `var(--st-${stageTone(s.data.estado)})` }}>
-              <b>{s.data.rotulo || s.data.nome}</b>
+              <b>{words(s.data.rotulo || s.data.nome)}</b>
               <span className="muted">{s.data.ms !== null && s.data.ms !== undefined ? duration(s.data.ms) : "—"}</span>
               {Object.entries((s.data.numeros ?? {}) as Record<string, unknown>).map(([k, v]) => (
                 <span key={k} className="mono" style={{ color: "var(--fg)" }}>
@@ -201,6 +203,17 @@ export default function Dag({ src, runId, onPick }: Props) {
   const { t } = useT();
   const errText = useErrorText();
   const stageWord = t("graph.stage");
+  // React Flow's own screen-reader texts (the zoom buttons, what a focused step says): its English is the default.
+  const aria = useMemo(
+    () => ({
+      "controls.ariaLabel": t("graph.a11y.controls"),
+      "controls.zoomIn.ariaLabel": t("graph.a11y.zoom_in"),
+      "controls.zoomOut.ariaLabel": t("graph.a11y.zoom_out"),
+      "controls.fitView.ariaLabel": t("graph.a11y.fit"),
+      "node.a11yDescription.default": t("graph.a11y.node"),
+    }),
+    [t],
+  );
   const toggle = useCallback((id: string) => {
     setCollapsed((m) => {
       const { [id]: was, ...rest } = m;
@@ -247,9 +260,10 @@ export default function Dag({ src, runId, onPick }: Props) {
     const edges = (g.edges ?? [])
       .map((e) => ({ ...e, source: swallowed.get(e.source) ?? e.source, target: swallowed.get(e.target) ?? e.target }))
       .filter((e) => e.source !== e.target)
+      .map((e) => ({ ...e, ariaLabel: t("graph.edge", { from: e.source, to: e.target }) }))
       .map((e) => (!path || (path.has(e.source) && path.has(e.target)) ? e : { ...e, style: { ...e.style, opacity: 0.25 } }));
     return { nodes: [...nodes, ...labels], edges, sel, height: heightFor([...all, ...labels], width) };
-  }, [g, collapsed, selected, toggle, width, stageWord]);
+  }, [g, collapsed, selected, toggle, width, stageWord, t]);
 
   // Selecting by click or by keyboard (Enter/Space on a focused node) arrives as a change.
   const onNodesChange = useCallback((changes: NodeChange[]) => {
@@ -290,6 +304,7 @@ export default function Dag({ src, runId, onPick }: Props) {
               labelBgBorderRadius: 6,
             }}
             aria-label={t("run.tab.steps")}
+            ariaLabelConfig={aria}
           >
             <Background gap={22} size={1.4} color="var(--st-pending)" />
             <Controls showInteractive={false} />

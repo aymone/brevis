@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"brevis.sh/brevis/internal/auth"
-	"brevis.sh/brevis/web/components"
 	"brevis.sh/brevis/web/i18n"
 	"brevis.sh/brevis/web/pages"
 )
@@ -22,17 +21,16 @@ func (u *UI) registerWorkflowsAPI(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/workflows/{slug}/toggle", u.toggleJSON)
 }
 
-// logoView is a language, tool or connector: the logo key and its name in the
-// reader's language.
+// logoView is a language, tool or connector: the logo key. The app names it
+// (a brand is its own name; "file" and "gateway" are words it translates).
 type logoView struct {
-	Key  string `json:"key"`
-	Name string `json:"name"`
+	Key string `json:"key"`
 }
 
-func logosOf(r *http.Request, keys []string) []logoView {
+func logosOf(keys []string) []logoView {
 	out := make([]logoView, 0, len(keys))
 	for _, k := range keys {
-		out = append(out, logoView{Key: k, Name: components.LogoTitle(r.Context(), k)})
+		out = append(out, logoView{Key: k})
 	}
 	return out
 }
@@ -57,7 +55,7 @@ type workflowRowView struct {
 	HasSchedule bool         `json:"hasSchedule"`
 	Active      bool         `json:"active"`
 	Cron        string       `json:"cron"`
-	Schedule    string       `json:"schedule"` // the cron in words, in the reader's language
+	Schedule    *i18n.Msg    `json:"schedule"` // the cron in words, for the app to say
 	Timezone    string       `json:"timezone"`
 	Catchup     bool         `json:"catchup"`
 	NextRun     *time.Time   `json:"nextRun"`
@@ -98,8 +96,7 @@ type workflowsView struct {
 // workflowsJSON is the list's data: the same filtering, sorting, counting and
 // paging the page does (filtrar, sortBy, contar, recortar), already applied.
 func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	r = r.WithContext(ctx)
+	ctx := r.Context()
 	all, err := u.leitura.Workflows(ctx)
 	if err != nil {
 		u.log.Error("listing the workflows", "error", err)
@@ -156,13 +153,13 @@ func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 		Filtered: len(filtered),
 	}
 	for _, l := range langChoices(all, f, facts) {
-		out.Langs = append(out.Langs, langCountView{logoView{Key: l.Key, Name: components.LogoTitle(ctx, l.Key)}, l.Count})
+		out.Langs = append(out.Langs, langCountView{logoView{Key: l.Key}, l.Count})
 	}
 	for _, s := range rows {
 		row := workflowRowView{
 			Slug: s.Slug, Project: s.Project, Failing: screen.Failing[s.Slug], InFlight: inFlightStatus(s.LastStatus),
-			HasParams: screen.Params[s.Slug], RunsIn: logosOf(r, screen.RunsIn[s.Slug]), Connects: logosOf(r, screen.Connects[s.Slug]),
-			HasSchedule: s.HasSchedule, Active: s.Active, Cron: s.Cron, Schedule: pages.CronTextIn(ctx, s.Cron),
+			HasParams: screen.Params[s.Slug], RunsIn: logosOf(screen.RunsIn[s.Slug]), Connects: logosOf(screen.Connects[s.Slug]),
+			HasSchedule: s.HasSchedule, Active: s.Active, Cron: s.Cron, Schedule: pages.CronMsg(s.Cron),
 			Timezone: s.Timezone, Catchup: s.Catchup, NextRun: s.NextRun, LastRunAt: s.LastRunAt, TotalRuns: s.TotalRuns,
 			Recent: []recentView{}, Tags: nonNil(s.Tags),
 		}

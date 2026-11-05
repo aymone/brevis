@@ -9,7 +9,7 @@ vi.mock("../live/connection", () => ({ subscribe: () => () => {}, isUp: () => tr
 
 const row = (slug: string): WorkflowRow => ({
   slug, project: "p", steps: 2, failing: false, inFlight: false, hasParams: false, runsIn: [], connects: [], hasSchedule: false, active: true,
-  cron: "", schedule: "", timezone: "UTC", catchup: false, nextRun: null, lastRunAt: null, totalRuns: 1, recent: [], tags: [],
+  cron: "", schedule: null, timezone: "UTC", catchup: false, nextRun: null, lastRunAt: null, totalRuns: 1, recent: [], tags: [],
 });
 const list = (rows: WorkflowRow[], q = ""): WorkflowsList => ({
   filter: { q, state: "", active: "", lang: "", tags: [], project: "", sort: "", dir: "asc", page: 1, perPage: 25 },

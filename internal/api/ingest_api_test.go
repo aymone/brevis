@@ -76,7 +76,7 @@ func TestTheLoadsListCarriesTheRowsAndTheirVerdict(t *testing.T) {
 		t.Fatal("no report row")
 	}
 	if report["workflow"] != "daily_sales" || report["href"] != "/ingest/loads/daily_sales/report" ||
-		report["status"] != "on_time" || report["schedule"] != "every day at 04:00" || report["rows"] != float64(4) {
+		report["status"] != "on_time" || keyOf(report["schedule"]) != "cron.daily" || report["rows"] != float64(4) {
 		t.Errorf("report = %v", report)
 	}
 	if _, err := time.Parse(time.RFC3339, report["lastLoaded"].(string)); err != nil {
@@ -134,7 +134,7 @@ func TestALoadIsOneStepOnOneDestination(t *testing.T) {
 	if d == nil || body["choosing"] != false {
 		t.Fatalf("no detail: %v", body)
 	}
-	if d["status"] != "on_time" || d["when"] != "every day at 04:00" || d["described"] != false || d["config"] != nil {
+	if d["status"] != "on_time" || keyOf(d["when"]) != "cron.daily" || d["described"] != false || d["config"] != nil {
 		t.Errorf("detail = %v", d)
 	}
 	if tg := d["target"].(map[string]any); tg["uri"] != "file:///data/reports/" {
@@ -240,7 +240,7 @@ func TestTheStreamsListCarriesTheBatchAndTheDeadLetter(t *testing.T) {
 		t.Fatalf("no rows: %v", body)
 	}
 	row := rows[0].(map[string]any)
-	if row["gateway"] != "edge" || row["path"] != "/v1/clicks" || row["href"] != "/ingest/streams/edge/v1/clicks" || row["batch"] != "1 minute" {
+	if row["gateway"] != "edge" || row["path"] != "/v1/clicks" || row["href"] != "/ingest/streams/edge/v1/clicks" || keyOf(row["batch"]) != "summary.unit.minute" {
 		t.Errorf("row = %v", row)
 	}
 	if row["sink"].(map[string]any)["uri"] == "" {
@@ -281,4 +281,20 @@ func TestAStreamCarriesItsFlowSettingsAndDeadLetter(t *testing.T) {
 	if code, b := ingestJSON(t, ui, "/api/ingest/streams/edge/v1/nothing"); code != http.StatusNotFound || b["error"] == nil {
 		t.Errorf("an unknown stream answered %d %v; want a JSON 404", code, b)
 	}
+}
+
+// keyOf is the catalog key of the first message in a value the server sent for the app to say: a message, or a
+// "cat" of messages and strings. The server sends keys and data, never a sentence.
+func keyOf(v any) string {
+	m, _ := v.(map[string]any)
+	if parts, ok := m["v"].([]any); ok {
+		for _, p := range parts {
+			if k := keyOf(p); k != "" {
+				return k
+			}
+		}
+		return ""
+	}
+	k, _ := m["k"].(string)
+	return k
 }

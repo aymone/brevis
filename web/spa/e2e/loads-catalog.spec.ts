@@ -3,15 +3,15 @@ import { expect, test } from "./support";
 // The Loads and Catalog lists answer a few questions per row (which load or destination, where it goes, is it
 // healthy), the whole row is one link, and on a phone each row is a card. Both answers are mocked: the demo stack
 // has few loads and destinations.
-const place = (kind: string, where: string, what: string) => ({ uri: where + what, kind, kindTitle: "", where, what, note: "" });
+const place = (kind: string, where: string, what: string) => ({ uri: where + what, kind, where, what, note: "" });
 const load = (i: number, fixing: boolean) => ({
   workflow: "orders", step: `load_${i}`, href: `/ingest/loads/orders/load_${i}`, target: place("postgres", "postgres://warehouse/public.", `orders_${i}`), legacy: false,
-  status: "on_time", lastLoaded: "2026-11-01T10:00:00Z", rows: 1200, schedule: "every hour",
-  source: { kind: "http", driver: "", label: "HTTP API", where: "api.example.com" }, recent: [1, 2, 3, 2], fixing: fixing ? "run1" : null,
+  status: "on_time", lastLoaded: "2026-11-01T10:00:00Z", rows: 1200, schedule: { $: "cat", v: ["every hour"] },
+  source: { kind: "http", driver: "", label: "HTTP API", labelMsg: null, where: "api.example.com" }, recent: [1, 2, 3, 2], fixing: fixing ? "run1" : null,
 });
 const loadsAnswer = {
   rows: [load(0, false), load(1, false), load(2, true)], total: 3, workflows: 1, summary: { on_time: 3 }, counts: { "": 3, on_time: 3 },
-  sources: [{ key: "http", label: "HTTP API" }], hasLegacy: false, filter: { status: "", source: "", q: "", legacy: false },
+  sources: [{ key: "http", label: { k: "loads.source.http" } }], hasLegacy: false, filter: { status: "", source: "", q: "", legacy: false },
 };
 const dest = (i: number) => ({
   target: `postgres://warehouse/public.orders_${i}`, kind: "postgres", legacy: false, status: "on_time", where: "postgres://warehouse/public.", what: `orders_${i}`,

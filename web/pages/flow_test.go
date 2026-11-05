@@ -1,11 +1,8 @@
 package pages
 
 import (
-	"context"
 	"strings"
 	"testing"
-
-	"brevis.sh/brevis/web/i18n"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -45,20 +42,16 @@ func TestAGatewayStreamFlowsFromItsPathToItsDestination(t *testing.T) {
 	if got := kinds(f); got != "source buffer destination +dead_letter" {
 		t.Fatalf("the flow is %q", got)
 	}
-	// The words are the reader's, made when the page is drawn
-	// (screen-streams T3).
-	en, pt := context.Background(), i18n.WithLang(context.Background(), "pt-BR")
+	// The words are the app's to say: a string is the data's, a Msg the console's.
 	for _, want := range []struct{ node, text string }{
-		{f.Nodes[0].MainIn(en), "POST /v1/orders"},
-		{f.Nodes[0].DetailIn(en), "json"},
-		{f.Nodes[1].DetailIn(en), "every 2 minutes"},
-		{f.Nodes[1].DetailIn(pt), "a cada 2 minutos"},
-		{f.Nodes[1].DetailIn(pt), "máx. 6 minutos / 8MiB"},
-		{f.Nodes[2].MainIn(en), "bigquery://acme/landing/orders"},
-		{f.Nodes[2].DetailIn(en), "append"},
-		{f.DeadLetter.MainIn(en), "./dead-letter/orders/"},
-		{f.DeadLetter.MainIn(pt), "arquivos em ./dead-letter/orders/"},
-		{f.DeadLetter.DetailIn(pt), "lotes recusados"},
+		{saidEN(f.Nodes[0].Main), "POST /v1/orders"},
+		{saidEN(f.Nodes[0].Detail), "json"},
+		{saidEN(f.Nodes[1].Detail), "every 2 minutes"},
+		{saidEN(f.Nodes[1].Detail), "at most 6 minutes / 8MiB"},
+		{saidEN(f.Nodes[2].Main), "bigquery://acme/landing/orders"},
+		{saidEN(f.Nodes[2].Detail), "append"},
+		{saidEN(f.DeadLetter.Main), "files at ./dead-letter/orders/"},
+		{saidEN(f.DeadLetter.Detail), "refused batches"},
 	} {
 		if !strings.Contains(want.node, want.text) {
 			t.Errorf("%q does not say %q", want.node, want.text)
@@ -93,10 +86,10 @@ func TestAnSDKPipelineFlowsFromItsSourceToItsTarget(t *testing.T) {
 	if got := kinds(f); got != "source destination" {
 		t.Fatalf("the flow is %q", got)
 	}
-	if f.Nodes[0].Main != "from.HTTP" || !strings.Contains(f.Nodes[0].Detail, "api.example.com") {
+	if saidEN(f.Nodes[0].Main) != "from.HTTP" || !strings.Contains(saidEN(f.Nodes[0].Detail), "api.example.com") {
 		t.Errorf("the source is %+v", f.Nodes[0])
 	}
-	if f.Nodes[1].Main != "bigquery://acme/landing/items" || !strings.Contains(f.Nodes[1].Detail, "merge") {
+	if saidEN(f.Nodes[1].Main) != "bigquery://acme/landing/items" || !strings.Contains(saidEN(f.Nodes[1].Detail), "merge") {
 		t.Errorf("the destination is %+v", f.Nodes[1])
 	}
 }

@@ -5,6 +5,7 @@ import "./bar.css";
 import { FilterBar, Segmented, SearchField } from "./filters";
 import { Icon } from "./icon";
 import { Skeleton } from "./skeleton";
+import { useStatusWord } from "./status";
 
 type Props = {
   /** Undefined while the run is on its way: the tools stay, the lines are a skeleton. */
@@ -57,6 +58,7 @@ function LinesSkeleton() {
  */
 export function LogView({ log, live, downloadHref, gotoCause = 0 }: Props) {
   const { t, n } = useT();
+  const word = useStatusWord();
   const { number } = useFormat();
   const [q, setQ] = useState("");
   const [level, setLevel] = useState<Level>("all");
@@ -167,7 +169,7 @@ export function LogView({ log, live, downloadHref, gotoCause = 0 }: Props) {
               <Fragment key={`${b.step}#${b.attempt}`}>
                 <div className="sticky top-0 border-b border-line-soft bg-surface-2 px-3 py-1 text-[11.5px] text-muted">
                   {b.step} · {t("run.log.attempt", { n: b.attempt })}
-                  {b.status && <> · {b.statusLabel}</>}
+                  {b.status && <> · {word(b.status)}</>}
                   {b.exitCode !== null && <> · {t("run.log.exit", { code: b.exitCode })}</>}
                 </div>
                 {b.running && <div className="px-3 py-1 font-sans text-faint">{t("run.log.running", { step: b.step })}</div>}

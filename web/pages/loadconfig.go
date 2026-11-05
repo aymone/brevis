@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"slices"
 	"strconv"
 	"strings"
@@ -252,20 +251,24 @@ func schemaExtra(rows []ConfigRow) []ConfigRow {
 	return out
 }
 
-// schemaRole is a column's roles in the reader's language: "partition,
-// cluster".
-func schemaRole(ctx context.Context, role string) string {
+// schemaRole is a column's roles for the app to say: "partition, cluster".
+func schemaRole(role string) i18n.Cat {
 	if role == "" {
-		return ""
+		return nil
 	}
-	parts := strings.Split(role, ", ")
-	for i, r := range parts {
+	var c i18n.Cat
+	for i, r := range strings.Split(role, ", ") {
+		if i > 0 {
+			c = append(c, ", ")
+		}
 		switch r {
 		case "partition":
-			parts[i] = i18n.T(ctx, "config.role.partition")
+			c = append(c, i18n.M("config.role.partition"))
 		case "cluster":
-			parts[i] = i18n.T(ctx, "config.role.cluster")
+			c = append(c, i18n.M("config.role.cluster"))
+		default:
+			c = append(c, r)
 		}
 	}
-	return strings.Join(parts, ", ")
+	return c
 }

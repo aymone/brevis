@@ -1,7 +1,7 @@
 package components
 
 import (
-	"strings"
+	"math"
 	"testing"
 	"time"
 
@@ -32,11 +32,11 @@ func TestVolumeIsPerRunAndNotPerDay(t *testing.T) {
 		loadDay(2, 4, 4000, 0, 0, 0), // four runs, same size each
 	})
 	rows := series[0]
-	if rows.Label != "Rows per run" {
-		t.Fatalf("the first series is %q", rows.Label)
+	if rows.Key != "rows" || rows.Unit != "count" {
+		t.Fatalf("the first series is %q (%s)", rows.Key, rows.Unit)
 	}
-	if rows.Latest != "1.0k" {
-		t.Errorf("latest = %q; four runs of 1,000 is still 1,000 a run", rows.Latest)
+	if rows.Latest != 1000 {
+		t.Errorf("latest = %v; four runs of 1,000 is still 1,000 a run", rows.Latest)
 	}
 	if rows.Delta != "steady" {
 		t.Errorf("delta = %q; nothing about the pipeline changed", rows.Delta)
@@ -58,11 +58,11 @@ func TestTheDeltaIsAcrossTheWindowAndNotAgainstYesterday(t *testing.T) {
 		loadDay(4, 1, 0, 0, 0, 17000),
 	})
 	load := series[3]
-	if load.Label != "Load" {
-		t.Fatalf("the fourth series is %q", load.Label)
+	if load.Key != "load" {
+		t.Fatalf("the fourth series is %q", load.Key)
 	}
-	if load.Delta != "+70%" {
-		t.Errorf("delta = %q, wanted +70%% (10s to 17s across the window)", load.Delta)
+	if load.Delta != "pct" || load.Pct != 70 {
+		t.Errorf("delta = %q %d, wanted +70%% (10s to 17s across the window)", load.Delta, load.Pct)
 	}
 	// And a load taking longer is unambiguously worse, so it is painted so.
 	if load.Hue != "text-state-failed" {
@@ -81,8 +81,8 @@ func TestGrowingVolumeIsNotPaintedAsAFailure(t *testing.T) {
 		loadDay(2, 1, 5000, 0, 0, 0),
 	})
 	rows := series[0]
-	if rows.Delta != "+400%" {
-		t.Fatalf("delta = %q", rows.Delta)
+	if rows.Delta != "pct" || rows.Pct != 400 {
+		t.Fatalf("delta = %q %d", rows.Delta, rows.Pct)
 	}
 	if rows.Hue == "text-state-failed" {
 		t.Error("a pipeline loading more rows was painted as a failure")
@@ -97,14 +97,14 @@ func TestBytesPerRowCatchesASchemaThatGrew(t *testing.T) {
 		loadDay(2, 1, 1000, 200_000, 0, 0), // 200 B a row, same rows
 	})
 	bpr := series[1]
-	if bpr.Label != "Bytes per row" {
-		t.Fatalf("the second series is %q", bpr.Label)
+	if bpr.Key != "bytes" || bpr.Unit != "size" {
+		t.Fatalf("the second series is %q (%s)", bpr.Key, bpr.Unit)
 	}
-	if bpr.Latest != "200 B" {
-		t.Errorf("latest = %q", bpr.Latest)
+	if bpr.Latest != 200 {
+		t.Errorf("latest = %v", bpr.Latest)
 	}
-	if bpr.Delta != "+100%" {
-		t.Errorf("delta = %q; the rows did not change and the bytes doubled", bpr.Delta)
+	if bpr.Delta != "pct" || bpr.Pct != 100 {
+		t.Errorf("delta = %q %d; the rows did not change and the bytes doubled", bpr.Delta, bpr.Pct)
 	}
 }
 
@@ -113,13 +113,13 @@ func TestBytesPerRowCatchesASchemaThatGrew(t *testing.T) {
 func TestOneDayDrawsNoLine(t *testing.T) {
 	for _, s := range Trend([]postgres.LoadDay{loadDay(1, 1, 1000, 100, 5000, 5000)}) {
 		if !s.Flat {
-			t.Errorf("%s drew a trend from a single day", s.Label)
+			t.Errorf("%s drew a trend from a single day", s.Key)
 		}
 		if s.Path != "" {
-			t.Errorf("%s drew a line from a single day: %q", s.Label, s.Path)
+			t.Errorf("%s drew a line from a single day: %q", s.Key, s.Path)
 		}
-		if s.Latest == "" || s.Latest == "--" {
-			t.Errorf("%s has one day of data and shows no value", s.Label)
+		if len(s.Points) != 0 {
+			t.Errorf("%s has points for a single day", s.Key)
 		}
 	}
 }
@@ -132,12 +132,12 @@ func TestNothingIsDividedByZero(t *testing.T) {
 		loadDay(2, 0, 0, 500, 0, 0),
 	})
 	for _, s := range series {
-		if strings.Contains(s.Latest, "Inf") || strings.Contains(s.Latest, "NaN") {
-			t.Errorf("%s = %q", s.Label, s.Latest)
+		if math.IsInf(s.Latest, 0) || math.IsNaN(s.Latest) {
+			t.Errorf("%s = %v", s.Key, s.Latest)
 		}
 		for _, p := range s.Points {
-			if strings.Contains(p.Tooltip, "Inf") || strings.Contains(p.Tooltip, "NaN") {
-				t.Errorf("%s tooltip: %q", s.Label, p.Tooltip)
+			if math.IsInf(p.Value, 0) || math.IsNaN(p.Value) {
+				t.Errorf("%s point: %v", s.Key, p.Value)
 			}
 		}
 	}
@@ -149,24 +149,21 @@ func TestNothingIsDividedByZero(t *testing.T) {
 func TestNoHistoryIsEmptyAndNotZero(t *testing.T) {
 	for _, s := range Trend(nil) {
 		if !s.Empty {
-			t.Errorf("%s claims to have data", s.Label)
+			t.Errorf("%s claims to have data", s.Key)
 		}
 		if s.Path != "" {
-			t.Errorf("%s drew a line out of nothing", s.Label)
+			t.Errorf("%s drew a line out of nothing", s.Key)
 		}
 	}
-	if got := TrendWindow(nil); got != "" {
-		t.Errorf("TrendWindow(nil) = %q", got)
+	if from, to := TrendWindow(nil); from != "" || to != "" {
+		t.Errorf("TrendWindow(nil) = %q, %q", from, to)
 	}
 }
 
 // The caption names the range the reader is looking at.
 func TestTheWindowIsNamed(t *testing.T) {
-	got := TrendWindow([]postgres.LoadDay{loadDay(1, 1, 0, 0, 0, 0), loadDay(28, 1, 0, 0, 0, 0)})
-	if got != "1 Mar to 28 Mar 2026" {
-		t.Errorf("TrendWindow = %q", got)
-	}
-	if got := TrendWindow([]postgres.LoadDay{loadDay(9, 1, 0, 0, 0, 0)}); got != "9 Mar" {
-		t.Errorf("a single day reads %q", got)
+	from, to := TrendWindow([]postgres.LoadDay{loadDay(1, 1, 0, 0, 0, 0), loadDay(28, 1, 0, 0, 0, 0)})
+	if from != "2026-03-01" || to != "2026-03-28" {
+		t.Errorf("TrendWindow = %q, %q", from, to)
 	}
 }

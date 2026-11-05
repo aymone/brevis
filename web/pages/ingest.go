@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"sort"
@@ -359,14 +358,11 @@ func BuildLoads(entries []postgres.CatalogEntry, f DataFilter, now time.Time) Lo
 
 // loadSchedule is when a step runs, as its row says it: in words where they
 // are sure, the expression otherwise, "by hand" with none.
-func loadSchedule(ctx context.Context, t LoadTarget) string {
+func loadSchedule(t LoadTarget) i18n.Cat {
 	if !t.HasSchedule {
-		return i18n.T(ctx, "loads.manual")
+		return i18n.Cat{i18n.M("loads.manual")}
 	}
-	if words := CronTextIn(ctx, t.Cron); words != "" {
-		return words + zoneSuffix(t.Timezone)
-	}
-	return t.Cron
+	return cronWords(t.Cron, t.Timezone)
 }
 
 func containsString(list []string, s string) bool {
@@ -538,21 +534,21 @@ func BuildStreamsWith(entries []postgres.CatalogEntry, f StreamFilter, health fu
 
 // BatchIn is how a stream batches, as a row says it: "2 minutes or 2,000",
 // "30 seconds", "up to 500"; "" with no buffer declared.
-func (s Stream) BatchIn(ctx context.Context) string {
+func (s Stream) BatchIn() i18n.Cat {
 	every, records := s.Field("buffer.flush.every"), s.Field("buffer.flush.records")
-	count := ""
+	var count any = ""
 	if n, err := strconv.ParseInt(records, 10, 64); err == nil {
-		count = i18n.Number(ctx, n)
+		count = i18n.Num(n)
 	}
 	switch {
 	case every != "" && count != "":
-		return i18n.T(ctx, "streams.batch.both", "every", durationWords(ctx, every), "records", count)
+		return i18n.Cat{i18n.M("streams.batch.both", "every", durationWords(every), "records", count)}
 	case every != "":
-		return durationWords(ctx, every)
+		return i18n.Cat{durationWords(every)}
 	case count != "":
-		return i18n.T(ctx, "streams.batch.records", "records", count)
+		return i18n.Cat{i18n.M("streams.batch.records", "records", count)}
 	}
-	return ""
+	return nil
 }
 
 // DeadLetterShown is the dead letter as a row draws it: the catalog's, or --
@@ -599,28 +595,28 @@ func streamFlow(s Stream) *Flow {
 	f := FlowOf(s.Config, s.Sink.URI)
 	if f == nil {
 		f = &Flow{Nodes: []FlowNode{
-			{Kind: "source", Main: "POST " + s.Path},
-			{Kind: "destination", Main: s.Sink.URI, Detail: joinWords(" · ", s.Sink.Kind, s.Sink.Note),
-				mainIn: func(ctx context.Context) string { return placeName(ctx, s.Sink) }},
+			{Kind: "source", Main: plain("POST " + s.Path)},
+			{Kind: "destination", Main: placeWords(s.Sink), Detail: plain(joinWords(" · ", s.Sink.Kind, s.Sink.Note))},
 		}}
 	}
 	if dl := s.DeadLetterShown(); dl != nil {
 		place := *dl
-		f.DeadLetter = &FlowNode{Kind: "dead_letter", Main: place.URI,
-			mainIn: func(ctx context.Context) string { return placeName(ctx, place) },
-			detailIn: func(ctx context.Context) string {
-				return joinWords(" · ", i18n.T(ctx, "flow.refused"), place.Note)
-			}}
+		detail := i18n.Cat{i18n.M("flow.refused")}
+		if place.Note != "" {
+			detail = append(detail, " · ", place.Note)
+		}
+		f.DeadLetter = &FlowNode{Kind: "dead_letter", Main: placeWords(place), Detail: detail}
 	}
 	return f
 }
 
-// placeName is a destination's URI, or that its manifest could not name it.
-func placeName(ctx context.Context, p Place) string {
+// placeWords is a destination's URI, or that its manifest could not name it,
+// for the app to say.
+func placeWords(p Place) i18n.Cat {
 	if p.URI == "" {
-		return i18n.T(ctx, "streams.unidentified")
+		return i18n.Cat{i18n.M("streams.unidentified")}
 	}
-	return p.URI
+	return i18n.Cat{p.URI}
 }
 
 // StreamView is one stream's page.
@@ -685,45 +681,55 @@ func (v StreamView) Queryable() bool {
 func (v StreamView) QueryHref() string { return "/sql?target=" + url.QueryEscape(v.Sink.URI) }
 
 // Summary is one paragraph on what the stream does, from what it declares.
-func (v StreamView) Summary(ctx context.Context) string {
+func (v StreamView) Summary() i18n.Cat {
 	if v.Config != nil {
-		return Summary(ctx, v.Config)
+		return Summary(v.Config)
 	}
-	return i18n.T(ctx, "streams.page.summary.v1", "path", v.Path, "sink", placeName(ctx, v.Sink))
+	return i18n.Cat{i18n.M("streams.page.summary.v1", "path", v.Path, "sink", placeWords(v.Sink))}
 }
 
 // changeSaid is one publish in the history line: the first, or what it
 // changed.
-func changeSaid(ctx context.Context, ch ConfigChange) string {
+func changeSaid(ch ConfigChange) i18n.Msg {
 	switch {
 	case ch.First:
-		return i18n.T(ctx, "streamcfg.history.first")
+		return i18n.M("streamcfg.history.first")
 	case len(ch.Lines) == 0:
-		return i18n.T(ctx, "config.earlier")
+		return i18n.M("config.earlier")
 	}
 	paths := make([]string, len(ch.Lines))
 	for i, l := range ch.Lines {
 		paths[i] = l.Path
 	}
-	return i18n.T(ctx, "streamcfg.history.changed", "paths", strings.Join(paths, ", "))
+	return i18n.M("streamcfg.history.changed", "paths", strings.Join(paths, ", "))
 }
 
 // Lede is the page's one sentence under its name: what comes in, where it
 // goes, and that refusals are kept -- three pieces, so it does not repeat the
 // overview's sentence.
-func (v StreamView) Lede(ctx context.Context) string {
-	dest := components.LogoTitle(ctx, kindLogo(v.Sink.Kind))
-	if v.Sink.Kind == "" {
-		dest = i18n.T(ctx, "streams.page.dest_unknown")
+func (v StreamView) Lede() i18n.Cat {
+	var dest any = i18n.M("streams.page.dest_unknown")
+	if v.Sink.Kind != "" {
+		dest = kindName(v.Sink.Kind)
 	}
-	lede := i18n.T(ctx, "streams.page.lede", "dest", dest)
+	lede := i18n.Cat{i18n.M("streams.page.lede", "dest", dest)}
 	if f := v.Field("format"); f != "" {
-		lede = i18n.T(ctx, "streams.page.lede.format", "format", f, "dest", dest)
+		lede[0] = i18n.M("streams.page.lede.format", "format", f, "dest", dest)
 	}
 	if v.DeadLetter != nil {
-		lede += " " + i18n.T(ctx, "streams.page.lede.dead_letter")
+		lede = append(lede, " ", i18n.M("streams.page.lede.dead_letter"))
 	}
 	return lede
+}
+
+// kindName is a destination kind's name, as its logo is read: a brand is its
+// own name in every language; the two that are words are sentences the app says.
+func kindName(kind string) any {
+	key := kindLogo(kind)
+	if key == "file" || key == "gateway" {
+		return i18n.M("logo." + key)
+	}
+	return components.LogoTitle(key)
 }
 
 // Tables are the sink's tables for an auto_table, by the prefixes it
@@ -894,21 +900,16 @@ func wholeNumber(v any) (int64, bool) {
 
 // loadsCount says how many loads the bars draw, and that it is the last
 // loadsShown when the read was cut there: a count at the LIMIT is a floor.
-func loadsCount(ctx context.Context, n int) string {
+func loadsCount(n int) i18n.Msg {
 	if n >= loadsShown {
-		return i18n.T(ctx, "loads.drawer.recent.last", "n", fmt.Sprint(loadsShown))
+		return i18n.M("loads.drawer.recent.last", "n", fmt.Sprint(loadsShown))
 	}
-	return i18n.N(ctx, "loads.drawer.recent.count", n)
+	return i18n.MN("loads.drawer.recent.count", n)
 }
 
 // loadWhen is when a step runs, in words where they are sure and the
 // expression otherwise; the drawer writes the expression beside it anyway.
-func loadWhen(ctx context.Context, w *WriterView) string {
-	if words := CronTextIn(ctx, w.Cron); words != "" {
-		return words + zoneSuffix(w.Timezone)
-	}
-	return w.Cron
-}
+func loadWhen(w *WriterView) i18n.Cat { return cronWords(w.Cron, w.Timezone) }
 
 // ReadNothing is a last load that wrote nothing out of something read: a
 // merge that found every row already there, or a filter that kept none --

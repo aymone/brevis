@@ -21,7 +21,8 @@ export type RunRow = {
   logos: string[];
 };
 
-function useTrigger() {
+/** How a run was made, in words ("schedule" is "Schedule"); a kind this version does not know is shown as the engine wrote it. */
+export function useTrigger() {
   const { t } = useT();
   return (kind: string) => {
     const key = `trigger.${kind}`;

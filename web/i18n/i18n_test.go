@@ -1,67 +1,22 @@
 package i18n
 
 import (
-	"context"
 	"regexp"
 	"sort"
 	"testing"
 )
 
-// fixture is a catalog written for the test, so the behaviour of T and N is
-// pinned without depending on what the real catalogs happen to say.
-func fixture(t *testing.T) map[string]catalog {
-	t.Helper()
-	out := map[string]catalog{}
-	for lang, raw := range map[string]string{
-		"en":    `{"_review": "ignored", "hello": "Hello, {name}", "runs": {"one": "{count} run", "other": "{count} runs"}, "only_en": "English only"}`,
-		"pt-BR": `{"hello": "Olá, {name}", "runs": {"one": "{count} execução", "other": "{count} execuções"}}`,
-	} {
-		c, err := parse([]byte(raw))
-		if err != nil {
-			t.Fatalf("%s: %v", lang, err)
-		}
-		out[lang] = c
+// A FIELD STARTING WITH _ IS A NOTE TO WHOEVER EDITS THE FILE (_review), NOT A MESSAGE.
+func TestANoteInACatalogIsNotAMessage(t *testing.T) {
+	c, err := parse([]byte(`{"_review": "ignored", "hello": "Hello, {name}", "runs": {"one": "{count} run", "other": "{count} runs"}}`))
+	if err != nil {
+		t.Fatal(err)
 	}
-	return out
-}
-
-func TestTFillsNamedPlaceholdersInTheContextsLanguage(t *testing.T) {
-	cats := fixture(t)
-	pt := WithLang(context.Background(), "pt-BR")
-	if got := translate(cats, pt, "hello", "name", "Ana"); got != "Olá, Ana" {
-		t.Errorf("pt: %q", got)
-	}
-	if got := translate(cats, context.Background(), "hello", "name", "Ana"); got != "Hello, Ana" {
-		t.Errorf("no language is English: %q", got)
-	}
-}
-
-// ONE IS ONLY ONE. Portuguese, English and Spanish agree: 0 and 2 take the
-// plural, 1 the singular.
-func TestNChoosesOneOrOther(t *testing.T) {
-	cats := fixture(t)
-	pt := WithLang(context.Background(), "pt-BR")
-	for n, want := range map[int]string{0: "0 execuções", 1: "1 execução", 2: "2 execuções"} {
-		if got := plural(cats, pt, "runs", n); got != want {
-			t.Errorf("N(%d) = %q, want %q", n, got, want)
-		}
-	}
-}
-
-// A MISSING KEY FALLS BACK TO ENGLISH, AND A KEY ENGLISH LACKS SHOWS ITSELF.
-// A screen half in Portuguese and half in English is better than a blank;
-// a bracketed key on the screen is a bug nobody can miss.
-func TestAMissingKeyFallsBackToEnglishThenShowsItself(t *testing.T) {
-	cats := fixture(t)
-	pt := WithLang(context.Background(), "pt-BR")
-	if got := translate(cats, pt, "only_en"); got != "English only" {
-		t.Errorf("fallback = %q", got)
-	}
-	if got := translate(cats, pt, "nowhere"); got != "[nowhere]" {
-		t.Errorf("a key nobody has = %q", got)
-	}
-	if _, ok := cats["en"]["_review"]; ok {
+	if _, ok := c["_review"]; ok {
 		t.Error("a field starting with _ was loaded as a message")
+	}
+	if len(c) != 2 {
+		t.Errorf("%d messages, want 2", len(c))
 	}
 }
 

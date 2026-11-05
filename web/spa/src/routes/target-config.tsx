@@ -1,13 +1,13 @@
 import { Link } from "react-router";
 import type { CfgRow } from "../api/ingest";
-import { useT } from "../i18n";
+import { useMsg, useT, type Cat, type Msg } from "../i18n";
 import { stamp, useBrief } from "../ui/format";
-import { ConfigNote, CfgRows, DeadLetterPanel } from "../ui/cfg";
+import { ConfigNote, CfgRows, DeadLetterPanel, useSectionTitle } from "../ui/cfg";
 import { FlowDiagram } from "../ui/flow";
 import { linkUnderline } from "../ui/kit";
 
 type Note = { head: string; rest: string };
-type Node = { kind: string; main: string; detail: string };
+type Node = { kind: string; main: Cat | null; detail: Cat | null };
 type Row = { path: string; label: string; value: string; default: boolean; note: Note | null; before: { label: string; note: Note }[] };
 export type WriterConfig = {
   key: string;
@@ -18,13 +18,13 @@ export type WriterConfig = {
   workflow: string;
   node: string;
   described: boolean;
-  summary: string;
+  summary: Cat | null;
   flow: Node[];
   flowDeadLetter: Node | null;
-  deadLetter: { where: string; readable: boolean; commands: string; write: string } | null;
+  deadLetter: { where: Cat | null; readable: boolean; commands: string; write: string } | null;
   note: Note | null;
-  sections: { title: string; note: Note | null; rows: Row[] }[];
-  changes: { at: string; runId: string; first: boolean; lines: { path: string; text: string }[] }[];
+  sections: { key: string; title: Msg | null; note: Note | null; rows: Row[] }[];
+  changes: { at: string; runId: string; first: boolean; lines: { path: string; text: Cat }[] }[];
 };
 
 const whole = (n: Note) => (n.rest ? `${n.head}\n${n.rest}` : n.head);
@@ -34,6 +34,8 @@ const asRows = (rows: Row[]): CfgRow[] =>
 
 function One({ c }: { c: WriterConfig }) {
   const { t } = useT();
+  const msg = useMsg();
+  const sectionTitle = useSectionTitle();
   const brief = useBrief();
   return (
     <section className="mb-3" data-config={c.key}>
@@ -66,7 +68,7 @@ function One({ c }: { c: WriterConfig }) {
         </p>
       ) : (
         <div className="divide-y divide-line-soft rounded-card border border-line bg-surface shadow-warm-sm">
-          <p className="px-4 py-3 text-sm text-ink sm:px-6">{c.summary}</p>
+          <p className="px-4 py-3 text-sm text-ink sm:px-6">{msg(c.summary)}</p>
           {c.flow.length > 0 && <FlowDiagram flow={{ nodes: c.flow, deadLetter: c.flowDeadLetter }} />}
           {c.gateway && c.deadLetter && <DeadLetterPanel dl={c.deadLetter} />}
           {c.note && (
@@ -75,8 +77,8 @@ function One({ c }: { c: WriterConfig }) {
             </div>
           )}
           {c.sections.map((s) => (
-            <div key={s.title} className="px-4 py-3 sm:px-6">
-              <h4 className="text-xs font-semibold text-ink">{s.title}</h4>
+            <div key={s.key} className="px-4 py-3 sm:px-6">
+              <h4 className="text-xs font-semibold text-ink">{sectionTitle(s)}</h4>
               {s.note && (
                 <div className="mt-1">
                   <ConfigNote text={whole(s.note)} />
@@ -109,7 +111,7 @@ function One({ c }: { c: WriterConfig }) {
                         {ch.lines.map((l) => (
                           <li key={l.path}>
                             <span className="font-mono text-muted">{l.path}</span>{" "}
-                            <span className="ml-2 font-mono break-all text-ink">{l.text}</span>
+                            <span className="ml-2 font-mono break-all text-ink">{msg(l.text)}</span>
                           </li>
                         ))}
                       </ul>

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Cat, Msg } from "../i18n";
 import { postJSON } from "./client";
 
-export type Logo = { key: string; name: string };
+/** A language, tool or connector by its logo key; the app names it (useLogoTitle). */
+export type Logo = { key: string };
 export type Recent = { id: string; status: string; at: string };
 
 export type WorkflowRow = {
@@ -17,7 +19,8 @@ export type WorkflowRow = {
   hasSchedule: boolean;
   active: boolean;
   cron: string;
-  schedule: string;
+  /** The cron in words, a sentence the app says; null when it has no plain reading. */
+  schedule: Msg | null;
   timezone: string;
   catchup: boolean;
   nextRun: string | null;
@@ -50,7 +53,7 @@ export type WorkflowsList = {
 
 export type Step = {
   id: string;
-  command: string;
+  command: Cat | null;
   langs: Logo[];
   uses: Logo[];
   needs: string[];
@@ -65,7 +68,7 @@ export type WorkflowDetail = {
   hasSchedule: boolean;
   active: boolean;
   cron: string;
-  schedule: string;
+  schedule: Msg | null;
   timezone: string;
   nextRun: string | null;
   tags: string[];
@@ -81,19 +84,23 @@ export type WorkflowDetail = {
     lastFailure: string | null;
     since: string | null;
   };
-  /** The "What it loads" series (null without load history); the server draws their numbers and lines. */
+  /** The "What it loads" series (null without load history): numbers and codes, the lines already drawn; the app says the rest. */
   load: {
-    window: string;
+    /** The first and last day of the window, YYYY-MM-DD. */
+    from: string;
+    to: string;
     series: {
-      label: string;
-      latest: string;
-      delta: string;
+      key: "rows" | "bytes" | "extract" | "load";
+      unit: "count" | "size" | "seconds";
+      latest: number;
+      /** "" (nothing to say), "new", "steady" or "pct" (pct is the change in percent). */
+      delta: "" | "new" | "steady" | "pct";
+      pct: number;
       hue: string;
-      note: string;
       path: string;
       area: string;
       flat: boolean;
-      points: { x: number; y: number; tooltip: string }[];
+      points: { x: number; y: number; date: string; value: number }[];
     }[];
   } | null;
   steps: Step[];
@@ -109,8 +116,8 @@ export type WorkflowDetail = {
   }[];
   day: string | null;
   params: { name: string; type: string; default: string; title: string; description: string; warn: string; group: string; uses: string; enum: string[]; pattern: string }[];
-  /** The schedule's last slots, newest first, worded by the server. */
-  slots: { at: string; label: string }[];
+  /** The schedule's last slots, newest first; the app says each label. */
+  slots: { at: string; label: Msg }[];
   yaml: string;
   now: string;
 };

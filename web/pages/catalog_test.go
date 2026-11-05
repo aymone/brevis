@@ -1,8 +1,9 @@
 package pages
 
 import (
-	"context"
+	"encoding/json"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -131,29 +132,44 @@ func TestADestinationIsDrawnUpToItsTable(t *testing.T) {
 	}
 }
 
-// A WRITER'S REASON IS IN THE READER'S LANGUAGE (screen-catalog T3), for each
-// status that has one; on time and continuous need none.
-func TestAWritersReasonSpeaksEachLanguage(t *testing.T) {
+// A WRITER'S REASON IS A SENTENCE FOR THE APP TO SAY (screen-catalog T3), for
+// each status that has one; on time and continuous need none. The server sends
+// the key and the values, never the words.
+func TestAWritersReasonNamesItsSentence(t *testing.T) {
 	missed := WriterView{CatalogWriter: postgres.CatalogWriter{Workflow: "vendors", Node: "fetch", HasSchedule: true, Timezone: "UTC"},
 		Verdict: catalog.Verdict{Status: catalog.Stale, Missed: clock(9, 0), Grace: 15 * time.Minute}}
 	paused := WriterView{Verdict: catalog.Verdict{Status: catalog.Paused}}
 	manual := WriterView{Verdict: catalog.Verdict{Status: catalog.Unscheduled}}
 	unreadable := WriterView{CatalogWriter: postgres.CatalogWriter{HasSchedule: true}, Verdict: catalog.Verdict{Status: catalog.Unscheduled}}
-	gateway := WriterView{CatalogWriter: postgres.CatalogWriter{Gateway: &postgres.GatewayWriter{Name: "edge", Stream: "/v1/clicks", Role: "sink", PublishedAt: clock(8, 0)}},
+	gateway := WriterView{CatalogWriter: postgres.CatalogWriter{Gateway: &postgres.GatewayWriter{Name: "edge", Stream: "/v1/clicks", Role: "sink", PublishedAt: clock(8, 0), Note: "pending"}},
 		Verdict: catalog.Verdict{Status: catalog.Continuous}}
-	for lang, want := range map[string][5]string{
-		"en":    {"vendors missed its", "Its schedule is paused", "It runs by hand", "cannot be read", "Published from gateway edge"},
-		"pt-BR": {"vendors perdeu a execução", "A agenda está pausada", "Roda à mão", "não pode ser lida", "Publicado pelo gateway edge"},
-		"es":    {"vendors perdió su ejecución", "Su programación está pausada", "Se ejecuta a mano", "no se puede leer", "Publicado por el gateway edge"},
+	for i, want := range [][]string{
+		{"catalog.why.missed"}, {"catalog.why.paused"}, {"catalog.why.manual"}, {"catalog.why.unreadable"},
+		{"catalog.why.gateway", "catalog.why.unnamed"},
 	} {
-		ctx := i18n.WithLang(context.Background(), lang)
-		for i, w := range []WriterView{missed, paused, manual, unreadable, gateway} {
-			if got := w.Reason(ctx); !strings.Contains(got, want[i]) {
-				t.Errorf("%s: reason %d = %q, want %q in it", lang, i, got, want[i])
+		got := []WriterView{missed, paused, manual, unreadable, gateway}[i].Reason()
+		var keys []string
+		for _, m := range got {
+			if msg, ok := m.(i18n.Msg); ok {
+				keys = append(keys, msg.K)
 			}
 		}
-		if got := (WriterView{Verdict: catalog.Verdict{Status: catalog.OnTime}}).Reason(ctx); got != "" {
-			t.Errorf("%s: on time has a reason: %q", lang, got)
+		if !reflect.DeepEqual(keys, want) {
+			t.Errorf("reason %d says %v, want %v", i, keys, want)
 		}
+	}
+	if got := (WriterView{Verdict: catalog.Verdict{Status: catalog.OnTime}}).Reason(); got != nil {
+		t.Errorf("on time has a reason: %v", got)
+	}
+
+	// The slot and the instant it was due by, each in the schedule's own zone, and the grace as a duration.
+	raw, err := json.Marshal(missed.Reason()[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{"k":"catalog.why.missed","a":{"by":{"k":"catalog.why.at","a":{"at":{"$":"at","layout":"brief","v":"2026-10-30T09:15:00Z","zone":"UTC"},"zone":"UTC"}},` +
+		`"grace":{"$":"dur","ms":900000},"slot":{"k":"catalog.why.at","a":{"at":{"$":"at","layout":"brief","v":"2026-10-30T09:00:00Z","zone":"UTC"},"zone":"UTC"}},"workflow":"vendors"}}`
+	if string(raw) != want {
+		t.Errorf("the missed slot is\n%s\nwant\n%s", raw, want)
 	}
 }

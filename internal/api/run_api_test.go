@@ -58,7 +58,7 @@ func TestTheRunComesAsOneFinishedJSON(t *testing.T) {
 	if rec.Code != http.StatusOK || rec.Header().Get("Cache-Control") != "no-store" {
 		t.Fatalf("%d, cache %q", rec.Code, rec.Header().Get("Cache-Control"))
 	}
-	if v.Workflow != "daily_sales" || v.StatusLabel != "failed" || v.Trigger == "" {
+	if v.Workflow != "daily_sales" || v.Status != "failed" || v.Trigger == "" {
 		t.Errorf("head = %+v", v)
 	}
 	if v.DurationMs == nil || *v.DurationMs != 90_000 || v.Terminal || v.InFlight {
@@ -67,7 +67,7 @@ func TestTheRunComesAsOneFinishedJSON(t *testing.T) {
 	if len(v.Phases) != 4 || v.Phases[3].State != "failed" {
 		t.Errorf("phases = %+v", v.Phases)
 	}
-	if v.Why == nil || !strings.Contains(v.Why.Title, "load") {
+	if v.Why == nil || v.Why.Title.K != "run.why.step_exit" || v.Why.Title.A["step"] != "load" {
 		t.Errorf("why = %+v", v.Why)
 	}
 	if len(v.Params) != 2 || v.Params[0].Key != "a" {

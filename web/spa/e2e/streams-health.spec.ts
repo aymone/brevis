@@ -3,10 +3,10 @@ import { expect, test } from "./support";
 // The server holds a stream's configuration and no traffic, so its health is "unknown" and says why. The list
 // and the page must say "no data" and the reason, never "continuous" (that is how a stream writes, not whether
 // it works). Mocked: the demo stack has one reason only, and an older server has none.
-const place = (uri: string) => ({ uri, kind: "postgres", kindTitle: "", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
+const place = (uri: string) => ({ uri, kind: "postgres", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
 const row = (i: number, health?: { state: string; reason: string }) => ({
   gateway: "events_gateway", path: `/v1/stream_${i}`, href: `/ingest/streams/events_gateway/v1/stream_${i}`, note: "A stream.",
-  sink: place(`postgres://warehouse/sales.events_${i}`), batch: "1 second or 500", batchEvery: "1s", batchRecords: 500, deadLetter: null,
+  sink: place(`postgres://warehouse/sales.events_${i}`), batch: { $: "cat", v: ["1 second or 500"] }, batchEvery: "1s", batchRecords: 500, deadLetter: null,
   ...(health ? { health } : {}),
 });
 const NOT_REPORTED = { state: "unknown", reason: "not_reported" };
@@ -17,7 +17,7 @@ const list = {
 };
 const detail = (health: { state: string; reason: string }) => ({
   gateway: "events_gateway", path: "/v1/stream_0", health, sink: place("postgres://warehouse/sales.events_0"), deadLetter: null,
-  publishedAt: "2026-11-01T10:00:00Z", format: "json", lede: "Takes events.", summary: "Events land.", flow: null, tables: [],
+  publishedAt: "2026-11-01T10:00:00Z", format: "json", lede: { $: "cat", v: [{ k: "streams.page.lede", a: { dest: "PostgreSQL" } }] }, summary: { $: "cat", v: ["Events land."] }, flow: null, tables: [],
   catalogHref: "", query: "", readBy: [], hasConfig: false, cards: [], yaml: "", changes: [], deadLetterPanel: null, buriedMetric: "",
   testEvent: { format: "json", body: "{}", curlHead: "", lands: "", table: "", allow: [], dataset: "" },
 });

@@ -1,13 +1,11 @@
 package pages
 
 import (
-	"context"
 	"strings"
 	"testing"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // publishedStream is a stream as a gateway publishes it, with its notes and one
@@ -43,15 +41,14 @@ func TestAStreamsConfigurationIsExplained(t *testing.T) {
 	if strings.Join(got, " ") != "intake buffer destination retry identity dead_letter other" {
 		t.Fatalf("cards = %v", got)
 	}
-	ctx := i18n.WithLang(context.Background(), "pt-BR")
 	buffer := cards[1]
-	if r := buffer.Rows[1]; r.Path != "buffer.flush.every" || r.LabelIn(ctx) != "Grava a cada" || r.Value != "1s" {
-		t.Errorf("buffer's second row = %+v (%s)", r, r.LabelIn(ctx))
+	if r := buffer.Rows[1]; r.Path != "buffer.flush.every" || saidEN(r.LabelMsg()) != "Writes every" || r.Value != "1s" {
+		t.Errorf("buffer's second row = %+v (%s)", r, saidEN(r.LabelMsg()))
 	}
 	if !buffer.Rows[0].Default {
 		t.Error("a value the gateway filled in is not marked")
 	}
-	if other := cards[6]; len(other.Rows) != 1 || other.Rows[0].Path != "sink.brand_new" || other.Rows[0].LabelIn(ctx) != "sink.brand_new" {
+	if other := cards[6]; len(other.Rows) != 1 || other.Rows[0].Path != "sink.brand_new" || other.Rows[0].LabelMsg() != nil {
 		t.Errorf("others = %+v", other.Rows)
 	}
 	if cards[3].Rows[0].Note != "Then the dead letter." {

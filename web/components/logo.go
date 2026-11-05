@@ -1,10 +1,7 @@
 package components
 
 import (
-	"context"
 	"unicode"
-
-	"brevis.sh/brevis/web/i18n"
 )
 
 // logoPaint is how a mark is coloured.
@@ -84,18 +81,9 @@ func lookLogo(key string) logo {
 	return logo{title: key, monogram: string(letters)}
 }
 
-// logoTitle is a mark's name for a screen reader. A brand is its own name
-// in every language; the two monograms that are words are translated.
-// LogoTitle is the name a key's logo is read by, in the request's language:
-// what a filter writes beside the mark.
-func LogoTitle(ctx context.Context, key string) string {
-	return logoTitle(ctx, key, lookLogo(key))
-}
-
-func logoTitle(ctx context.Context, key string, l logo) string {
-	switch key {
-	case "file", "gateway":
-		return i18n.T(ctx, "logo."+key)
-	}
-	return l.title
+// LogoTitle is the name a key's brand is read by: a brand is its own name in
+// every language. The two keys that are words ("file", "gateway") are
+// sentences the app says (logo.file, logo.gateway), never this.
+func LogoTitle(key string) string {
+	return lookLogo(key).title
 }

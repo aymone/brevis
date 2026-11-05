@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,13 +30,13 @@ type ExplainedRow struct {
 	label             string // the catalog key; "" for a setting with no words here
 }
 
-// LabelIn is the setting in the reader's words, or its key when this console
-// has none for it.
-func (r ExplainedRow) LabelIn(ctx context.Context) string {
+// LabelMsg is the setting in the reader's words, or nil when this console has
+// none for it: the app shows its key.
+func (r ExplainedRow) LabelMsg() *i18n.Msg {
 	if r.label == "" {
-		return r.Path
+		return nil
 	}
-	return i18n.T(ctx, r.label)
+	return ptrMsg(i18n.M(r.label))
 }
 
 // cardOrder is the cards, in the order the page draws them; "other" holds
@@ -103,23 +102,23 @@ var streamLabels = []struct{ path, card, label string }{
 	{"oversize.archive.path", "dead_letter", "streamcfg.oversize.archive_path"},
 }
 
-// cardTitle is a card's heading in the reader's language.
-func cardTitle(ctx context.Context, key string) string {
+// cardTitle is a card's heading.
+func cardTitle(key string) i18n.Msg {
 	switch key {
 	case "intake":
-		return i18n.T(ctx, "streamcfg.card.intake")
+		return i18n.M("streamcfg.card.intake")
 	case "buffer":
-		return i18n.T(ctx, "streamcfg.card.buffer")
+		return i18n.M("streamcfg.card.buffer")
 	case "destination":
-		return i18n.T(ctx, "streamcfg.card.destination")
+		return i18n.M("streamcfg.card.destination")
 	case "retry":
-		return i18n.T(ctx, "streamcfg.card.retry")
+		return i18n.M("streamcfg.card.retry")
 	case "identity":
-		return i18n.T(ctx, "streamcfg.card.identity")
+		return i18n.M("streamcfg.card.identity")
 	case "dead_letter":
-		return i18n.T(ctx, "streamcfg.card.dead_letter")
+		return i18n.M("streamcfg.card.dead_letter")
 	}
-	return i18n.T(ctx, "streamcfg.card.other")
+	return i18n.M("streamcfg.card.other")
 }
 
 // ExplainConfig lays a stream's settings out in cards. A card with nothing

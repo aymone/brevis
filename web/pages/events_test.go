@@ -1,24 +1,20 @@
 package pages
 
 import (
-	"context"
-	"strings"
 	"testing"
 
 	evkind "brevis.sh/brevis/internal/domain/events"
-	"brevis.sh/brevis/web/i18n"
 )
 
-// EVERY KIND THE FEED KNOWS IS A SENTENCE, in every language, with a place
-// for what it is about -- a kind with no sentence would draw its key.
+// EVERY KIND THE FEED KNOWS IS A SENTENCE the app says, and a source the app
+// names -- a kind with no sentence would draw nothing.
 func TestEveryEventKindIsASentence(t *testing.T) {
-	for _, lang := range []string{"en", "pt-BR", "es"} {
-		ctx := i18n.WithLang(context.Background(), lang)
-		for _, k := range evkind.Kinds {
-			before, after := eventSentence(ctx, k)
-			if strings.Contains(before+after, "[") || before+after == "" {
-				t.Errorf("%s: %s reads %q · %q", lang, k, before, after)
-			}
+	for _, k := range evkind.Kinds {
+		if m := eventSentence(k); m.K == "" {
+			t.Errorf("%s has no sentence", k)
+		}
+		if source, ok := evkind.SourceOf(k); !ok || sourceCode(source) == "" {
+			t.Errorf("%s has no source", k)
 		}
 	}
 }

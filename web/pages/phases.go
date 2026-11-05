@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strconv"
@@ -16,9 +15,31 @@ import (
 
 // Phase is one step of a run's life on the run page's strip: how it was made,
 // when it started, how long it ran, how it ended. State is "done", "current",
-// "pending" or "failed".
+// "pending" or "failed". Label is a sentence the app says; Detail is data the
+// app writes (nil when there is nothing to say).
 type Phase struct {
-	Key, Label, Detail, State string
+	Key    string       `json:"key"`
+	Label  i18n.Msg     `json:"label"`
+	Detail *PhaseDetail `json:"detail"`
+	State  string       `json:"state"`
+}
+
+// PhaseDetail is what a phase has to say, as data. Kind is "at" (when it was
+// made), "slot" (the slot it represents), "late" (how long after its slot or
+// trigger it started), "waiting" (how long it has waited), "ran" (how long it
+// ran) or "ended" (how it ended: State is the run's status).
+type PhaseDetail struct {
+	Kind  string     `json:"kind"`
+	At    *time.Time `json:"at,omitempty"`
+	Ms    *int64     `json:"ms,omitempty"`
+	State string     `json:"state,omitempty"`
+}
+
+func detailAt(kind string, t time.Time) *PhaseDetail { return &PhaseDetail{Kind: kind, At: &t} }
+
+func detailFor(kind string, d time.Duration) *PhaseDetail {
+	ms := d.Milliseconds()
+	return &PhaseDetail{Kind: kind, Ms: &ms}
 }
 
 // PhasesOf reads a run's phases from its own times. The STATUS says which
@@ -26,15 +47,14 @@ type Phase struct {
 // is running, a finished one is over -- and the times fill in the details:
 // the slot, how late it started, the time running (as of now, so the live
 // region's refresh moves it), and how it ended.
-func PhasesOf(ctx context.Context, r run.Run, now time.Time) []Phase {
-	made := Phase{Key: "scheduled", Label: i18n.T(ctx, "run.phase.triggered"), State: "done",
-		Detail: components.UTCStamp(&r.CreatedAt)}
+func PhasesOf(r run.Run, now time.Time) []Phase {
+	made := Phase{Key: "scheduled", Label: i18n.M("run.phase.triggered"), State: "done", Detail: detailAt("at", r.CreatedAt)}
 	if r.LogicalDate != nil {
-		made.Label, made.Detail = i18n.T(ctx, "run.phase.scheduled"), "slot "+components.UTCStamp(r.LogicalDate)
+		made.Label, made.Detail = i18n.M("run.phase.scheduled"), detailAt("slot", *r.LogicalDate)
 	}
-	started := Phase{Key: "started", Label: i18n.T(ctx, "run.phase.started"), State: "pending"}
-	running := Phase{Key: "running", Label: i18n.T(ctx, "run.phase.running"), State: "pending"}
-	finished := Phase{Key: "finished", Label: i18n.T(ctx, "run.phase.finished"), State: "pending"}
+	started := Phase{Key: "started", Label: i18n.M("run.phase.started"), State: "pending"}
+	running := Phase{Key: "running", Label: i18n.M("run.phase.running"), State: "pending"}
+	finished := Phase{Key: "finished", Label: i18n.M("run.phase.finished"), State: "pending"}
 
 	// How late it started: after its SLOT for a scheduled run -- the same
 	// number as its `delay` auto param, so the page does not show two delays
@@ -44,58 +64,64 @@ func PhasesOf(ctx context.Context, r run.Run, now time.Time) []Phase {
 		from = *r.LogicalDate
 	}
 	if r.StartedAt != nil {
-		wait := r.StartedAt.Sub(from)
-		started.Detail = "+" + i18n.Elapsed(ctx, wait)
+		started.Detail = detailFor("late", r.StartedAt.Sub(from))
 	}
 
 	switch r.Status {
 	case run.StatusCreated, run.StatusQueued, run.StatusPending:
 		started.State = "current"
-		waited := now.Sub(from)
-		started.Detail = i18n.T(ctx, "run.phase.waiting", "span", i18n.Elapsed(ctx, waited))
+		started.Detail = detailFor("waiting", now.Sub(from))
 	case run.StatusRunning, run.StatusRetrying:
 		started.State, running.State = "done", "current"
 		if r.StartedAt != nil {
-			ran := now.Sub(*r.StartedAt)
-			running.Detail = i18n.Elapsed(ctx, ran)
+			running.Detail = detailFor("ran", now.Sub(*r.StartedAt))
 		}
 	case run.StatusSuccess, run.StatusFailed, run.StatusCanceled:
 		started.State, running.State = "done", "done"
 		if r.StartedAt != nil && r.FinishedAt != nil {
-			ran := r.FinishedAt.Sub(*r.StartedAt)
-			running.Detail = i18n.Elapsed(ctx, ran)
+			running.Detail = detailFor("ran", r.FinishedAt.Sub(*r.StartedAt))
 		}
-		finished.State, finished.Detail = "done", i18n.T(ctx, "run.phase.succeeded")
+		finished.State = "done"
 		if r.Status != run.StatusSuccess {
-			finished.State, finished.Detail = "failed", components.StateWord(ctx, string(r.Status))
+			finished.State = "failed"
 		}
-		if r.FinishedAt != nil {
-			finished.Detail += " · " + components.UTCStamp(r.FinishedAt)
-		}
+		finished.Detail = &PhaseDetail{Kind: "ended", State: string(r.Status), At: r.FinishedAt}
 	}
 	return []Phase{made, started, running, finished}
 }
 
-// autoItems are a run's auto params as the grid shows them, in the order and
-// with the words the cards had; an absent one is left out, as before.
-func autoItems(ctx context.Context, r run.Run) []components.KVItem {
+// AutoItem is one auto param as the grid shows it: its key, what it means
+// (a sentence the app says) and its value as data -- an instant, a lateness in
+// seconds, or a plain Value.
+type AutoItem struct {
+	Key          string     `json:"key"`
+	Note         i18n.Msg   `json:"note"`
+	Value        string     `json:"value"`
+	At           *time.Time `json:"at"`
+	DelaySeconds *int       `json:"delaySeconds"`
+}
+
+// autoItems are a run's auto params as the grid shows them, in the order the
+// cards had; an absent one is left out, as before.
+func autoItems(r run.Run) []AutoItem {
 	a := r.Auto
-	items := []components.KVItem{
-		{Key: "adjusted_at", Value: components.UTCStamp(&a.AdjustedAt), Note: i18n.T(ctx, "auto.adjusted_at")},
-		{Key: "date", Value: a.Date, Note: i18n.T(ctx, "auto.date")},
-		{Key: "delay", Value: lateness(a.DelaySeconds), Note: i18n.T(ctx, "auto.delay")},
+	adjusted := a.AdjustedAt
+	items := []AutoItem{
+		{Key: "adjusted_at", Note: i18n.M("auto.adjusted_at"), At: &adjusted},
+		{Key: "date", Note: i18n.M("auto.date"), Value: a.Date},
+		{Key: "delay", Note: i18n.M("auto.delay"), DelaySeconds: &a.DelaySeconds},
 	}
-	add := func(key string, t *time.Time, note string) {
+	add := func(key string, t *time.Time, note i18n.Msg) {
 		if t != nil {
-			items = append(items, components.KVItem{Key: key, Value: components.UTCStamp(t), Note: note})
+			items = append(items, AutoItem{Key: key, Note: note, At: t})
 		}
 	}
-	add("scheduled_at", a.ScheduledAt, i18n.T(ctx, "auto.scheduled_at"))
-	add("started_at", a.StartedAt, i18n.T(ctx, "auto.started_at"))
-	add("interval_start", a.IntervalStart, i18n.T(ctx, "auto.interval_start"))
-	add("interval_end", a.IntervalEnd, i18n.T(ctx, "auto.interval_end"))
-	items = append(items, components.KVItem{Key: "previous_error", Value: fmt.Sprint(a.PreviousError), Note: i18n.T(ctx, "auto.previous_error")})
-	add("previous_success_at", a.PreviousSuccessAt, i18n.T(ctx, "auto.previous_success_at"))
+	add("scheduled_at", a.ScheduledAt, i18n.M("auto.scheduled_at"))
+	add("started_at", a.StartedAt, i18n.M("auto.started_at"))
+	add("interval_start", a.IntervalStart, i18n.M("auto.interval_start"))
+	add("interval_end", a.IntervalEnd, i18n.M("auto.interval_end"))
+	items = append(items, AutoItem{Key: "previous_error", Note: i18n.M("auto.previous_error"), Value: fmt.Sprint(a.PreviousError)})
+	add("previous_success_at", a.PreviousSuccessAt, i18n.M("auto.previous_success_at"))
 	return items
 }
 
@@ -121,18 +147,18 @@ func showsWhy(p RunPage) bool {
 
 // whyTitle names what stopped the run: its step, and how the step exited
 // when it did; "The run failed" when it died before any step.
-func whyTitle(ctx context.Context, c *diagnosis.Cause) string {
+func whyTitle(c *diagnosis.Cause) i18n.Msg {
 	if c.Step == "" {
-		return i18n.T(ctx, "run.why.run")
+		return i18n.M("run.why.run")
 	}
 	step := c.Step
 	if c.MapIndex != run.Unmapped {
 		step += "[" + strconv.Itoa(c.MapIndex) + "]"
 	}
 	if c.ExitCode != nil {
-		return i18n.T(ctx, "run.why.step_exit", "step", step, "code", *c.ExitCode)
+		return i18n.M("run.why.step_exit", "step", step, "code", *c.ExitCode)
 	}
-	return i18n.T(ctx, "run.why.step", "step", step)
+	return i18n.M("run.why.step", "step", step)
 }
 
 // whyExcerpt is the lines before the cause and the cause, or the cause alone.
@@ -144,12 +170,12 @@ func whyExcerpt(c *diagnosis.Cause) string {
 }
 
 // contextState says why a step has no published context.
-func contextState(ctx context.Context, state string) string {
+func contextState(state string) i18n.Msg {
 	switch state {
 	case "running":
-		return i18n.T(ctx, "run.context.running")
+		return i18n.M("run.context.running")
 	case "failed":
-		return i18n.T(ctx, "run.context.failed")
+		return i18n.M("run.context.failed")
 	}
-	return i18n.T(ctx, "run.context.none")
+	return i18n.M("run.context.none")
 }

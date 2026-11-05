@@ -1,6 +1,7 @@
 package api
 
 import (
+	"brevis.sh/brevis/web/i18n"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -119,7 +120,7 @@ const (
 // every card is what put a phase on top of a status line.
 func cardHeight(data map[string]any) int {
 	h := 2*cardPadding + headerRow + statusRow
-	if v, ok := data["acao"].(string); ok && v != "" {
+	if v := data["acao"]; v != nil && v != "" {
 		h += commandRow
 	}
 	if _, ok := data["runtime"]; ok {
@@ -242,7 +243,9 @@ func (u *UI) stepsOf(ctx context.Context, def wf.Workflow, page *pages.WorkflowP
 	}
 	for _, n := range steps {
 		row := pages.StepItem{ID: n.ID, Needs: needs[n.ID]}
-		row.Command, _ = n.Data["acao"].(string)
+		if v := n.Data["acao"]; v != nil && v != "" {
+			row.Command = i18n.Cat{v}
+		}
 		if rt, _ := n.Data["runtime"].(string); rt != "" {
 			row.Langs = append(row.Langs, rt)
 		}
@@ -772,12 +775,12 @@ func (g *grouping) nodes() []flowNode {
 // The wire keeps `extract` and `load` because renaming them would make an
 // already-published engine stop drawing an older fetcher's phases. The screen is
 // free to say what they mean.
-func stageLabel(name string) string {
+func stageLabel(name string) any {
 	switch name {
 	case "extract":
-		return "source"
+		return i18n.M("graph.stage.source")
 	case "load":
-		return "target"
+		return i18n.M("graph.stage.target")
 	}
 	return name
 }
@@ -792,12 +795,12 @@ func findNode(nodes []wf.Node, id string) wf.Node {
 }
 
 // actionLabel is the card's second line: what the node does, not what it is called.
-func actionLabel(n wf.Node) string {
+func actionLabel(n wf.Node) any {
 	// A marker runs nothing, and an empty subtitle would make it look like a
 	// step whose command failed to load. Saying what it is costs one line and
 	// stops somebody from opening the YAML to find out why it is blank.
 	if n.Marker {
-		return "marker"
+		return i18n.M("graph.marker")
 	}
 	if n.Action != "" {
 		return n.Action
@@ -849,7 +852,7 @@ func stepLineOf(def wf.Workflow, states map[string]postgres.NodeState) *pages.St
 			line.DurationMs, _ = n.Data["duracao_ms"].(int64)
 		case n.ParentID == step.ID && n.Type == "etapa":
 			cell := pages.StageCell{}
-			cell.Label, _ = n.Data["rotulo"].(string)
+			cell.Label = i18n.Cat{n.Data["rotulo"]}
 			cell.State, _ = n.Data["estado"].(string)
 			cell.Ms, _ = n.Data["ms"].(*int64)
 			if nums, ok := n.Data["numeros"].(map[string]any); ok {

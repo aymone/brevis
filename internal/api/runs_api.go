@@ -47,10 +47,9 @@ type runsFilterView struct {
 	// page picks: running while anything is in flight, else all.
 	State    string `json:"state"`
 	Workflow string `json:"workflow"`
-	From     string `json:"from"`
-	To       string `json:"to"`
-	// Period says the from/to window in words, "" with none.
-	Period string `json:"period"`
+	// From and To are the window's instants (RFC 3339), "" with none; the app says the period.
+	From string `json:"from"`
+	To   string `json:"to"`
 }
 
 type runsCountsView struct {
@@ -117,7 +116,7 @@ func (u *UI) runsAPI(w http.ResponseWriter, r *http.Request) {
 	out := runsView{
 		Runs: runViews(runs, u.runsLogos(r.Context(), runs)), Total: total, Page: f.Page, PerPage: f.PerPage,
 		Pages:   max(1, (total+f.PerPage-1)/f.PerPage),
-		Filter:  runsFilterView{State: f.State, Workflow: f.Workflow, From: f.De, To: f.Ate, Period: periodLabel(de, ate)},
+		Filter:  runsFilterView{State: f.State, Workflow: f.Workflow, From: f.De, To: f.Ate},
 		Counts:  runsCountsView{Going: inFlight(counts), Failed: counts["failed"]},
 		ByState: map[string]int{},
 	}

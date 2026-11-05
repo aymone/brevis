@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, getJSON } from "../api/client";
 import { cancelRun, type Run } from "../api/run";
 import { useFallbackInterval, useLive } from "../live/hooks";
-import { useFormat, useT } from "../i18n";
+import { useFormat, useMsg, useT } from "../i18n";
 import { buttonClass } from "../ui/buttons";
 import { CopyIcon } from "../ui/copy";
 import { Icon } from "../ui/icon";
@@ -15,6 +15,8 @@ import { Tabs } from "../ui/tabs";
 import { useCrumb } from "../shell/nav";
 import "../ui/bar.css";
 import { Logos } from "../ui/logo";
+import { usePhaseDetail } from "../ui/format";
+import { useTrigger } from "../ui/runs-table";
 import { ContextPanel, ParamsPanel, StepsPanel } from "./run-panels";
 import { useQuickRun, useRunDrawer } from "./run-now";
 import { ErrorText } from "../api/errors";
@@ -27,6 +29,7 @@ const BAR: Record<string, string> = { done: "bg-state-success", current: "bg-sta
 
 function Why({ run, onGoto }: { run: Run; onGoto: () => void }) {
   const { t, n } = useT();
+  const say = useMsg();
   if (run.why) {
     return (
       <section aria-label={t("run.error.title")} className="mb-3 rounded-card border border-state-failed/40 bg-state-failed/5 px-4 py-3">
@@ -34,7 +37,7 @@ function Why({ run, onGoto }: { run: Run; onGoto: () => void }) {
           <Icon name="triangle-alert" className="mt-0.5 h-4 w-4 text-state-failed" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-              <h3 className="text-[14px] font-medium text-ink">{run.why.title}</h3>
+              <h3 className="text-[14px] font-medium text-ink">{say(run.why.title)}</h3>
               {run.why.hasLine && (
                 <button type="button" onClick={onGoto} className={buttonClass("secondary", "small")}>
                   {t("run.why.goto")}
@@ -65,8 +68,10 @@ function Why({ run, onGoto }: { run: Run; onGoto: () => void }) {
 
 function Phases({ run }: { run: Run | undefined }) {
   const { t } = useT();
+  const say = useMsg();
+  const detail = usePhaseDetail();
   // The four steps are the run's own words and values: they wait for it, in the strip's own shape.
-  const ps = run?.phases ?? [0, 1, 2, 3].map((i) => ({ key: String(i), label: "", detail: "", state: "" }));
+  const ps = run?.phases ?? [0, 1, 2, 3].map((i) => ({ key: String(i), label: { k: "" }, detail: null, state: "" }));
   return (
     <ol aria-label={t("run.timeline")} aria-busy={!run} className="mb-3 grid grid-cols-2 overflow-hidden rounded-card border border-line bg-surface @2xl:grid-cols-4">
       {ps.map((p) => (
@@ -74,9 +79,9 @@ function Phases({ run }: { run: Run | undefined }) {
           <span aria-hidden="true" className={`absolute top-0 right-0 left-0 h-[2px] ${BAR[p.state] ?? "bg-line-strong"}`} />
           {run ? (
             <>
-              <p className={p.state === "current" ? "text-[11.5px] font-medium text-ink" : "text-[11.5px] text-muted"}>{p.label}</p>
-              <p title={p.detail} className="mt-px truncate font-mono text-[12.5px] text-ink-2 tabular-nums">
-                {p.detail || <span className="text-faint">—</span>}
+              <p className={p.state === "current" ? "text-[11.5px] font-medium text-ink" : "text-[11.5px] text-muted"}>{say(p.label)}</p>
+              <p title={detail(p.detail)} className="mt-px truncate font-mono text-[12.5px] text-ink-2 tabular-nums">
+                {detail(p.detail) || <span className="text-faint">—</span>}
               </p>
             </>
           ) : (
@@ -122,6 +127,7 @@ function Wait({ run }: { run: Run }) {
 function RunHead({ id, run, onGoto }: { id: string; run: Run | undefined; onGoto: () => void }) {
   const { t } = useT();
   const { utc, duration } = useFormat();
+  const trigger = useTrigger();
   const qc = useQueryClient();
   const cancel = useMutation({
     mutationFn: () => cancelRun(id),
@@ -214,7 +220,7 @@ function RunHead({ id, run, onGoto }: { id: string; run: Run | undefined; onGoto
       <dl className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px]">
         <div className="flex items-baseline gap-1.5">
           <dt className="text-muted">{t("run.trigger")}</dt>
-          <dd className="text-ink">{run ? run.trigger : <Ghost>000000</Ghost>}</dd>
+          <dd className="text-ink">{run ? trigger(run.trigger) : <Ghost>000000</Ghost>}</dd>
         </div>
         {run?.slot && (
           <div className="flex items-baseline gap-1.5">

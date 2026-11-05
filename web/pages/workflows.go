@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"time"
 
 	wf "brevis.sh/brevis/internal/domain/workflow"
@@ -123,20 +122,22 @@ type RunNow struct {
 }
 
 // slotLabel is a slot as the Run dialog lists it: when, in the schedule's
-// zone, and the window it processes, in UTC like every auto param.
-func slotLabel(ctx context.Context, s Slot, zone string) string {
+// zone, and the window it processes, in UTC like every auto param. The app
+// says it (workflows.slot.option) and writes the instants itself.
+func slotLabel(s Slot, zone string) i18n.Msg {
 	at := s.At
 	if loc, err := time.LoadLocation(zone); err == nil && zone != "" {
 		at = at.In(loc)
 	}
-	return i18n.T(ctx, "workflows.slot.option",
-		"slot", i18n.Date(ctx, at, "brief"),
-		"from", i18n.Date(ctx, s.From, "brief"), "to", i18n.Date(ctx, s.At, "brief"))
+	return i18n.M("workflows.slot.option",
+		"slot", i18n.At{T: at, Layout: "brief"},
+		"from", i18n.At{T: s.From, Layout: "brief"}, "to", i18n.At{T: s.At, Layout: "brief"})
 }
 
 // StepItem is one step of the Steps card's list.
 type StepItem struct {
-	ID, Command string
+	ID      string
+	Command i18n.Cat
 	// Langs is what it runs, language first; Uses what it wrote, as logo keys;
 	// Needs the steps it depends on.
 	Langs, Uses, Needs []string

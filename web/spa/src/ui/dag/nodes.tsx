@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { useFormat, useT } from "../../i18n";
+import { useFormat, useMsg, useT, type Msg } from "../../i18n";
 import { langLabel } from "../lang";
 import { Logo, hasMark } from "../logo";
 
@@ -16,6 +16,16 @@ const known = new Set(["success", "failed", "running", "retrying", "queued", "ca
 export const tone = (s: string | undefined) => (s && known.has(s) ? s : "pending");
 // A stage's state reuses the steps' palette: `done` is the same green as `success`.
 const STAGE_TONE: Record<string, string> = { done: "success", running: "running", failed: "failed", aborted: "canceled" };
+/** A name the data owns (a string) or a sentence the app says (the marker, a stage). */
+export const useWords = () => {
+  const msg = useMsg();
+  return (v: string | Msg | null | undefined) => (typeof v === "string" ? v : msg(v));
+};
+/** Where a step's runtime came from, in words ("declared" by the step, "inferred" from its command); a source this version does not know is shown as written. */
+export const useSourceWord = () => {
+  const { t } = useT();
+  return (src: unknown) => (src === "declared" ? t("graph.source.declared") : src === "inferred" ? t("graph.source.inferred") : String(src ?? "?"));
+};
 export const stageTone = (s: string | undefined) => STAGE_TONE[s ?? ""] ?? "pending";
 // A language's own token; the chip falls back to the muted ink where the sheet has none.
 const tint = (id: string) => ({ "--t": `var(--color-lang-${id}, var(--muted))` }) as CSSProperties;
@@ -28,6 +38,8 @@ const HIGHLIGHT = ["in", "out", "groups", "rows", "pages", "objects"];
 
 export function StepCard({ data: d }: P) {
   const { t, n } = useT();
+  const words = useWords();
+  const sourceWord = useSourceWord();
   const { duration, number } = useFormat();
   // A workflow's graph draws no run: its cards are pending and say how the step went last time.
   const last = d.status === "pending" && d.last_status;
@@ -67,11 +79,11 @@ export function StepCard({ data: d }: P) {
           </button>
         )}
       </div>
-      {d.acao && <div className="dag-cmd">{d.acao}</div>}
+      {d.acao && <div className="dag-cmd">{words(d.acao)}</div>}
       {(d.runtime || tools.length > 0) && (
         <div className="dag-chips">
           {d.runtime && (
-            <span className={`dag-chip strong${inferred ? " inferred" : ""}`} style={tint(d.runtime)} title={`${langLabel(d.runtime)} — ${inferred ? t("graph.inferred") : d.runtime_source}`}>
+            <span className={`dag-chip strong${inferred ? " inferred" : ""}`} style={tint(d.runtime)} title={`${langLabel(d.runtime)} — ${inferred ? t("graph.inferred") : sourceWord(d.runtime_source)}`}>
               {langLabel(d.runtime)}
             </span>
           )}
@@ -102,6 +114,7 @@ export function StepCard({ data: d }: P) {
 /** A phase inside an SDK step: the source, each stage in the order it runs, the target. */
 export function StageBox({ data: d }: P) {
   const { number, duration } = useFormat();
+  const words = useWords();
   const nums = HIGHLIGHT.flatMap((k) => {
     const v = d.numeros?.[k];
     return v === null || v === undefined || v === "" ? [] : [{ k, v: typeof v === "number" ? number(v) : String(v) }];
@@ -110,7 +123,7 @@ export function StageBox({ data: d }: P) {
   return (
     <div className="dag-stage" style={colour(stageTone(d.estado))} data-state={d.estado} title={detail ?? ""}>
       <span className="d" />
-      <b>{d.rotulo || d.nome}</b>
+      <b>{words(d.rotulo || d.nome)}</b>
       <span className="detail">{detail}</span>
       <span className="nums">
         {nums.map((n) => (

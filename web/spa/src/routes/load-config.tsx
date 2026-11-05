@@ -1,6 +1,6 @@
 import type { CfgRow, StepConfig } from "../api/ingest";
-import { useT } from "../i18n";
-import { CfgRows, ConfigNote } from "../ui/cfg";
+import { useMsg, useT } from "../i18n";
+import { CfgRows, ConfigNote, useSectionTitle } from "../ui/cfg";
 import { FlowDiagram } from "../ui/flow";
 import { HashTabs, type HashTab } from "../ui/hash-tabs";
 import { DefinitionList } from "../ui/kit";
@@ -55,6 +55,8 @@ function Cell({ r }: { r: CfgRow }) {
 /** A step's configuration in tabs: Summary and Destination always, the others when they have something. */
 export function StepConfigPanel({ c }: { c: StepConfig }) {
   const { t } = useT();
+  const msg = useMsg();
+  const sectionTitle = useSectionTitle();
   const tabs: HashTab[] = [
     {
       key: "summary",
@@ -62,7 +64,7 @@ export function StepConfigPanel({ c }: { c: StepConfig }) {
       panel: (
         <>
           <h3 className={h3}>{t("config.tab.summary")}</h3>
-          <p className="px-3.5 py-3 text-[12.5px] text-ink">{c.summary}</p>
+          <p className="px-3.5 py-3 text-[12.5px] text-ink">{msg(c.summary)}</p>
           <Stage c={c.stage} />
           {c.flow && (
             <div className="border-t border-line-soft">
@@ -75,8 +77,8 @@ export function StepConfigPanel({ c }: { c: StepConfig }) {
             </div>
           )}
           {c.other.map((s) => (
-            <div key={s.title} className="border-t border-line-soft">
-              <h4 className="px-3.5 pt-2.5 text-[12px] font-semibold text-ink">{s.title}</h4>
+            <div key={s.key} className="border-t border-line-soft">
+              <h4 className="px-3.5 pt-2.5 text-[12px] font-semibold text-ink">{sectionTitle(s)}</h4>
               <CfgRows rows={s.rows} />
             </div>
           ))}
@@ -213,7 +215,7 @@ export function StepConfigPanel({ c }: { c: StepConfig }) {
                     <tr key={col.name}>
                       <td className="px-3 pl-3.5 font-mono text-ink">{col.name}</td>
                       <td className="px-3 font-mono text-[12px] text-muted">{col.type}</td>
-                      <td className="px-3 pr-3.5 text-muted">{col.role}</td>
+                      <td className="px-3 pr-3.5 text-muted">{msg(col.role)}</td>
                     </tr>
                   ))}
                 </tbody>

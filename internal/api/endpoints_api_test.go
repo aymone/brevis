@@ -84,7 +84,7 @@ func TestTheEndpointsJSONListsAreArrays(t *testing.T) {
 	}
 }
 
-// AN ENDPOINT'S DATA is its contract, in words where the server writes them:
+// AN ENDPOINT'S DATA is its contract, with sentences as keys and values where the server would write them:
 // parameters with what they accept, limits, the tables it reads with the
 // catalog's verdict, the stale warning with the writer's reason.
 func TestTheEndpointJSONIsItsContractAndItsLineage(t *testing.T) {
@@ -98,24 +98,24 @@ func TestTheEndpointJSONIsItsContractAndItsLineage(t *testing.T) {
 		t.Fatalf("%d %v", code, body)
 	}
 	stale := body["stale"].(map[string]any)
-	if !strings.Contains(stale["reason"].(string), "missed its") || stale["target"] != "bigquery://acme/bronze/old" {
+	if first(stale["reason"])["k"] != "catalog.why.missed" || stale["target"] != "bigquery://acme/bronze/old" {
 		t.Errorf("stale = %v", stale)
 	}
 	l := body["lineage"].([]any)[0].(map[string]any)
 	if l["known"] != true || l["status"] != "stale" || l["what"] != "old" || l["kind"] != "bigquery" ||
-		l["writer"].(map[string]any)["href"] != "/ingest/loads/vendors/fetch" || l["cacheTtl"] != "6 hours" {
+		l["writer"].(map[string]any)["href"] != "/ingest/loads/vendors/fetch" || first(l["cacheTtl"])["k"] != "summary.unit.hour" {
 		t.Errorf("lineage = %v", l)
 	}
 	c := body["cache"].(map[string]any)
-	if c["state"] != "set" || c["ttl"] != "6 hours" || c["type"] != "Redis" || !strings.Contains(c["bump"].(string), "bronze.old") {
+	if c["state"] != "set" || first(c["ttl"])["n"] != float64(6) || c["type"] != "Redis" || !strings.Contains(c["bump"].(string), "bronze.old") {
 		t.Errorf("cache = %v", c)
 	}
 	p := body["params"].([]any)
-	if len(p) != 2 || p[1].(map[string]any)["accepts"] != "asc, desc" || p[1].(map[string]any)["note"] != "Newest first by default." {
+	if len(p) != 2 || first(p[1].(map[string]any)["accepts"]) != nil && first(p[1].(map[string]any)["accepts"])["k"] != nil || p[1].(map[string]any)["accepts"].(map[string]any)["v"].([]any)[0] != "asc, desc" || p[1].(map[string]any)["note"] != "Newest first by default." {
 		t.Errorf("params = %v", p)
 	}
 	lim := body["limits"].(map[string]any)
-	if lim["timeout"] != "10 seconds" || lim["maxRows"] != float64(500) || lim["maxBytes"] != float64(1<<30) {
+	if first(lim["timeout"])["k"] != "summary.unit.second" || lim["maxRows"] != float64(500) || lim["maxBytes"] != float64(1<<30) {
 		t.Errorf("limits = %v", lim)
 	}
 	if body["canRun"] != false || len(body["form"].([]any)) != 0 || body["keyed"] != true {
@@ -216,3 +216,9 @@ func TestTheCallKeepsThePagesRefusals(t *testing.T) {
 }
 
 func auth0() auth.Credential { return auth.Credential{} }
+
+// first is the first piece of a Cat on the wire ({"$": "cat", "v": [...]}), a message as a map.
+func first(v any) map[string]any {
+	m, _ := v.(map[string]any)["v"].([]any)[0].(map[string]any)
+	return m
+}

@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import type { CfgRow } from "../api/ingest";
-import { useT } from "../i18n";
+import { useMsg, useT, type Cat, type Msg } from "../i18n";
 
 /** A comment from the config file, in its author's line breaks: one line whole, a longer one folded to its first line. */
 export function ConfigNote({ text }: { text: string }) {
@@ -54,15 +54,26 @@ export function CfgRows({ rows, wide }: { rows: CfgRow[]; wide?: boolean }) {
   );
 }
 
-type DeadLetter = { where: string; commands: string; readable: boolean; write: string };
+/** A block's heading: the console's words where it has them, else its key made a heading ("dead_letter" -> "Dead letter"). */
+export function useSectionTitle() {
+  const msg = useMsg();
+  return (s: { key: string; title: Msg | null }) => {
+    if (s.title) return msg(s.title);
+    const words = s.key.replaceAll("_", " ");
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  };
+}
+
+type DeadLetter = { where: Cat | null; commands: string; readable: boolean; write: string };
 
 /** Where a stream's refused batches go and how to get them back; the console runs nothing. */
 export function DeadLetterPanel({ dl }: { dl: DeadLetter }) {
   const { t } = useT();
+  const msg = useMsg();
   return (
     <div className="px-4 py-3 sm:px-6">
       <h4 className="text-xs font-semibold text-ink">{t("deadletter.commands.title")}</h4>
-      <p className="mt-1 text-xs text-muted">{t("deadletter.goes", { where: dl.where })}</p>
+      <p className="mt-1 text-xs text-muted">{t("deadletter.goes", { where: msg(dl.where) })}</p>
       {dl.readable ? (
         <>
           <p className="mt-2 text-xs text-muted">{t("deadletter.commands.where")}</p>

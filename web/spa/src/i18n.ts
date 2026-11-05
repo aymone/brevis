@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { getJSON } from "./api/client";
 import { useSession } from "./api/session";
+import { fixed } from "./fixed";
 import { category } from "./plural";
 
 type Message = string | { one: string; other: string; few?: string; many?: string };
@@ -63,12 +64,14 @@ export function useFormat() {
     /** 1.5s, 2m 05s, 1h 04m: a duration in milliseconds, as the server's Elapsed writes it. */
     duration: (ms: number) => {
       if (ms < 1000) return `${Math.round(ms)}ms`;
-      if (ms < 60_000) return `${new Intl.NumberFormat(lang, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(ms / 1000)}s`;
+      if (ms < 60_000) return `${fixed(lang, ms / 1000, 1)}s`;
       const s = Math.floor(ms / 1000);
       const two = (v: number) => String(v).padStart(2, "0");
       if (ms < 3_600_000) return `${Math.floor(s / 60)}m ${two(s % 60)}s`;
       return `${Math.floor(s / 3600)}h ${two(Math.floor(s / 60) % 60)}m`;
     },
+    /** An instant in one of the console's shapes, 24-hour: short "Oct 02 09:05", brief "Oct 2 09:05", day, month, weekday. */
+    stamp: (iso: string, layout: string, zone = "UTC") => stamp(lang, iso, layout, zone),
     since: (iso: string, now = Date.now()) => {
       const s = Math.round((new Date(iso).getTime() - now) / 1000);
       const rtf = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
@@ -78,5 +81,87 @@ export function useFormat() {
       if (abs < 86400) return rtf.format(Math.round(s / 3600), "hour");
       return rtf.format(Math.round(s / 86400), "day");
     },
+  };
+}
+
+const STAMPS: Record<string, Intl.DateTimeFormatOptions> = {
+  short: { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" },
+  brief: { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" },
+  day: { weekday: "short", month: "short", day: "numeric", year: "numeric" },
+  month: { month: "short" },
+  weekday: { weekday: "short" },
+};
+
+function stamp(lang: string, iso: string, layout: string, zone: string): string {
+  const opts = STAMPS[layout];
+  if (!opts) return iso;
+  const say = (timeZone: string) => new Intl.DateTimeFormat(lang, { ...opts, timeZone }).format(new Date(iso));
+  let out: string;
+  try {
+    out = say(zone);
+  } catch {
+    out = say("UTC");
+  }
+  // English wrote "Oct 02 09:05", not "Oct 02, 09:05": the comma Intl adds before the time is not the console's.
+  return lang.startsWith("en") && opts.hour ? out.replace(",", "") : out;
+}
+
+// A MESSAGE FROM THE SERVER. The server has no language (web/i18n/msg.go): it sends the catalog key of a sentence and
+// the data that fills it, and the app says it. A value is a string, a number, another message, or a typed value the
+// app formats the way it formats everything else (number, duration, instant).
+export type Msg = { k: string; n?: number; a?: Record<string, MsgArg> };
+export type MsgArg =
+  | string
+  | number
+  | boolean
+  | null
+  | Msg
+  | { $: "num"; v: number }
+  | { $: "dur"; ms: number }
+  | { $: "at"; v: string; layout: string; zone: string }
+  | Cat;
+
+/** Words put together by the app: messages and plain strings (data, a separator), said one after the other. */
+export type Cat = { $: "cat"; v: (string | Msg)[] };
+
+type Say = {
+  t: (key: string, vars?: Vars) => string;
+  n: (key: string, count: number, vars?: Vars) => string;
+  fmt: Pick<ReturnType<typeof useFormat>, "number" | "duration" | "stamp">;
+};
+
+const isMsg = (v: MsgArg): v is Msg => typeof v === "object" && v !== null && "k" in v;
+
+/** A Cat of plain strings: placeholder data for a screen drawn before its data arrives. */
+export const cat = (...v: (string | Msg)[]): Cat => ({ $: "cat", v });
+
+/** Says a Cat: each message in turn, each string as it is. */
+export function renderCat(c: Cat, say: Say): string {
+  return c.v.map((p) => (typeof p === "string" ? p : renderMsg(p, say))).join("");
+}
+
+/** Says a message: pure, so the rule is tested without a component. */
+export function renderMsg(m: Msg, say: Say): string {
+  const vars: Vars = {};
+  for (const [name, v] of Object.entries(m.a ?? {})) {
+    if (v === null || v === undefined) vars[name] = "";
+    else if (typeof v === "string" || typeof v === "number") vars[name] = v;
+    else if (typeof v === "boolean") vars[name] = String(v);
+    else if (isMsg(v)) vars[name] = renderMsg(v, say);
+    else if (v.$ === "num") vars[name] = say.fmt.number(v.v);
+    else if (v.$ === "dur") vars[name] = say.fmt.duration(v.ms);
+    else if (v.$ === "at") vars[name] = say.fmt.stamp(v.v, v.layout, v.zone);
+    else if (v.$ === "cat") vars[name] = renderCat(v, say);
+  }
+  return m.n === undefined ? say.t(m.k, vars) : say.n(m.k, m.n, vars);
+}
+
+/** useMsg()(m): a message from the server, said in the reader's language ("" for none). */
+export function useMsg() {
+  const { t, n } = useT();
+  const fmt = useFormat();
+  return (m: Msg | Cat | null | undefined): string => {
+    if (!m) return "";
+    return "$" in m ? renderCat(m, { t, n, fmt }) : renderMsg(m, { t, n, fmt });
   };
 }

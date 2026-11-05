@@ -421,26 +421,24 @@ const (
 	statementCeiling = 64 << 10
 )
 
-// paletteItem is one thing the command palette can go to. Text is what a
-// search looks in, lower-cased here -- the list filter's contract -- so what
-// matches is decided in one place.
+// paletteItem is one thing the command palette can go to. Label and Hint are a string (a name the data
+// owns) or an i18n.Msg (a sentence the app says); the app builds what a search looks in from what it says.
 type paletteItem struct {
 	// Action, when set, is what the island does instead of following Href.
 	Action string `json:"action,omitempty"`
-	// Group is the group's id, the same in every language: the island orders
-	// and filters by it. GroupLabel is what it shows.
-	Group      string `json:"group"`
-	GroupLabel string `json:"groupLabel"`
-	Label      string `json:"label"`
-	Hint       string `json:"hint,omitempty"`
-	Href       string `json:"href"`
-	Icon       string `json:"icon"`
-	Text       string `json:"text"`
+	// Group is the group's id: the island orders and filters by it and says its name.
+	Group string `json:"group"`
+	Label any    `json:"label"`
+	Hint  any    `json:"hint,omitempty"`
+	Href  string `json:"href"`
+	Icon  string `json:"icon"`
 }
 
-func paletteEntry(group, label, hint, href, icon string) paletteItem {
-	return paletteItem{Group: group, Label: label, Hint: hint, Href: href, Icon: icon,
-		Text: strings.ToLower(label + "\n" + hint)}
+func paletteEntry(group string, label, hint any, href, icon string) paletteItem {
+	if hint == "" {
+		hint = nil
+	}
+	return paletteItem{Group: group, Label: label, Hint: hint, Href: href, Icon: icon}
 }
 
 // palette is the command palette's index: the sections, then the workflows,
@@ -454,19 +452,18 @@ func paletteEntry(group, label, hint, href, icon string) paletteItem {
 // NO-STORE. It names everything this login can see, and it is fetched fresh
 // with each page that opens the palette.
 func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
-	// In the reader's language, like the page that asked for it.
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
+	ctx := r.Context()
 	items := []paletteItem{}
-	for _, s := range sections(ctx, u.preview.Configured()) {
+	for _, s := range sections(u.preview.Configured()) {
 		items = append(items, paletteEntry("Sections", s.Name, s.Group, s.Href, s.Icon))
 	}
 	// Actions do something here rather than go somewhere. The theme is the
 	// console's own; the rest arrive with the screens that own them.
-	theme := paletteEntry("Actions", "Toggle theme", "dark or light", "#", "sun")
+	theme := paletteEntry("Actions", i18n.M("palette.theme"), i18n.M("palette.theme.hint"), "#", "sun")
 	theme.Action = "toggle-theme"
 	items = append(items, theme)
 	for _, lang := range i18n.Langs {
-		it := paletteEntry("Actions", i18n.T(ctx, "palette.lang", "name", i18n.Names[lang]), i18n.Codes[lang], "#", "globe")
+		it := paletteEntry("Actions", i18n.M("palette.lang", "name", i18n.Names[lang]), i18n.Codes[lang], "#", "globe")
 		it.Action = "set-lang:" + lang
 		items = append(items, it)
 	}
@@ -485,7 +482,7 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		for _, p := range projects {
-			items = append(items, paletteEntry("Projects", p.Name, fmt.Sprintf("%d workflows", p.Workflows),
+			items = append(items, paletteEntry("Projects", p.Name, i18n.MN("loads.summary.workflows", p.Workflows),
 				"/workflows?project="+url.QueryEscape(p.Slug), "folder"))
 		}
 	}
@@ -521,9 +518,6 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 		for _, row := range pages.BuildEndpoints(all, nil, pages.EndpointFilter{}, time.Now()).Rows {
 			items = append(items, paletteEntry("Endpoints", row.Path, row.API, row.Href(), "plug"))
 		}
-	}
-	for i := range items {
-		items[i].GroupLabel = i18n.T(ctx, "palette.group."+strings.ToLower(items[i].Group))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
@@ -634,25 +628,6 @@ func instant(s string) *time.Time {
 		return nil
 	}
 	return &t
-}
-
-// periodLabel describes the window in the reader's own timezone. Without it
-// the filter chip would show "2026-09-01T02:00:00Z", which is not the time the
-// person saw on the chart.
-func periodLabel(de, ate *time.Time) string {
-	switch {
-	case de != nil && ate != nil:
-		l := de.Local()
-		if ate.Sub(*de) == time.Hour {
-			return l.Format("02/01 15h") + "–" + ate.Local().Format("15h")
-		}
-		return l.Format("Jan 02 15:04") + " → " + ate.Local().Format("Jan 02 15:04")
-	case de != nil:
-		return "from " + de.Local().Format("Jan 02 15:04")
-	case ate != nil:
-		return "until " + ate.Local().Format("Jan 02 15:04")
-	}
-	return ""
 }
 
 // contar is how many workflows each state would show: the same filter with

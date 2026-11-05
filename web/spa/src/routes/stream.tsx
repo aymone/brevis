@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useData } from "../api/live";
 import type { Stream } from "../api/ingest";
-import { useT } from "../i18n";
+import { cat, useMsg, useT } from "../i18n";
 import { useBrief } from "../ui/format";
 import { useCrumb } from "../shell/nav";
 import { ConfigNote, DeadLetterPanel } from "../ui/cfg";
@@ -36,15 +36,15 @@ const GHOST: Stream = {
   deadLetter: { ...GHOST_PLACE, kind: "file", uri: "file:///var/dead-letter/stream/" },
   publishedAt: "2000-01-01T00:00:00Z",
   format: "json",
-  lede: "Takes json events over HTTP, batches them and writes them to PostgreSQL. What the destination refuses goes to the dead letter.",
-  summary: "JSON events posted to the path land in a Postgres table, merged by ingestion id so a redelivery is ignored, in batches of 100 events; batches the destination refuses go to files.",
+  lede: cat("Takes json events over HTTP, batches them and writes them to PostgreSQL. What the destination refuses goes to the dead letter."),
+  summary: cat("JSON events posted to the path land in a Postgres table, merged by ingestion id so a redelivery is ignored, in batches of 100 events; batches the destination refuses go to files."),
   flow: {
     nodes: [
-      { kind: "source", main: "POST /v1/stream", detail: "json" },
-      { kind: "buffer", main: "", detail: "every 1 second or 100 events" },
-      { kind: "destination", main: "postgres://warehouse/schema/table_name", detail: "postgres · merge" },
+      { kind: "source", main: cat("POST /v1/stream"), detail: cat("json") },
+      { kind: "buffer", main: null, detail: cat("every 1 second or 100 events") },
+      { kind: "destination", main: cat("postgres://warehouse/schema/table_name"), detail: cat("postgres · merge") },
     ],
-    deadLetter: { kind: "dead_letter", main: "file:///var/dead-letter/stream/", detail: "refused batches" },
+    deadLetter: { kind: "dead_letter", main: cat("file:///var/dead-letter/stream/"), detail: cat("refused batches") },
   },
   tables: [],
   catalogHref: "",
@@ -52,8 +52,8 @@ const GHOST: Stream = {
   readBy: [],
   hasConfig: true,
   cards: [
-    { key: "intake", title: "Intake", rows: [{ path: "name", label: "Name", value: "stream", default: false, note: "" }, { path: "path", label: "Path", value: "/v1/stream", default: false, note: "" }] },
-    { key: "buffer", title: "Buffer", rows: [{ path: "buffer.flush.every", label: "Flush every", value: "1s", default: true, note: "" }] },
+    { key: "intake", title: { k: "streamcfg.card.intake" }, rows: [{ path: "name", label: { k: "streamcfg.name" }, value: "stream", default: false, note: "" }, { path: "path", label: { k: "streamcfg.path" }, value: "/v1/stream", default: false, note: "" }] },
+    { key: "buffer", title: { k: "streamcfg.card.buffer" }, rows: [{ path: "buffer.flush.every", label: { k: "streamcfg.buffer.every" }, value: "1s", default: true, note: "" }] },
   ],
   yaml: "",
   changes: [],
@@ -111,6 +111,7 @@ function Strip({ gateway, v, ghost }: { gateway: string; v: Stream; ghost: boole
 
 function Overview({ path, v, ghost }: { path: string; v: Stream; ghost: boolean }) {
   const { t } = useT();
+  const msg = useMsg();
   return (
     <section className="mb-3">
       <h2 className={h2}>{t("streams.tab.overview")}</h2>
@@ -118,7 +119,7 @@ function Overview({ path, v, ghost }: { path: string; v: Stream; ghost: boolean 
       <div className="mt-3 grid grid-cols-1 gap-3 min-[1180px]:grid-cols-[minmax(0,1fr)_360px]">
         <Card title={t("streams.page.sentence")}>
           <div className="px-4 py-3">
-            <p aria-hidden={ghost || undefined} className={`text-[13.5px] text-ink ${gh(ghost)}`}>{v.summary}</p>
+            <p aria-hidden={ghost || undefined} className={`text-[13.5px] text-ink ${gh(ghost)}`}>{msg(v.summary)}</p>
             <p className="mt-3 border-t border-line-soft pt-3 text-[12px] text-muted">{t("streams.page.metrics")}</p>
           </div>
         </Card>
@@ -172,6 +173,7 @@ function Overview({ path, v, ghost }: { path: string; v: Stream; ghost: boolean 
 
 function Config({ v, ghost }: { v: Stream; ghost: boolean }) {
   const { t } = useT();
+  const msg = useMsg();
   const brief = useBrief();
   const [view, setView] = useState<"explained" | "yaml">("explained");
   const toggle = (k: "explained" | "yaml", label: string) => (
@@ -201,12 +203,12 @@ function Config({ v, ghost }: { v: Stream; ghost: boolean }) {
           {view === "explained" ? (
             <div className="grid grid-cols-1 gap-3 min-[900px]:grid-cols-2">
               {v.cards.map((c) => (
-                <Card key={c.key} title={c.title}>
+                <Card key={c.key} title={msg(c.title)}>
                   <dl className="divide-y divide-line-soft">
                     {c.rows.map((r) => (
                       <div key={r.path} data-explained={r.path} className="grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)] gap-x-4 px-4 py-2.5 text-[12.5px]">
                         <dt>
-                          <span className="text-ink-2">{r.label}</span>
+                          <span className="text-ink-2">{r.label ? msg(r.label) : r.path}</span>
                           <span className="mt-0.5 block font-mono text-[11px] text-faint">{r.path}</span>
                         </dt>
                         <dd className="min-w-0">
@@ -246,7 +248,7 @@ function Config({ v, ghost }: { v: Stream; ghost: boolean }) {
               {v.changes.map((c, i) => (
                 <span key={c.at}>
                   {i > 0 && <span className="text-faint"> · </span>}
-                  {brief(c.at)} UTC — {c.text}
+                  {brief(c.at)} UTC — {msg(c.text)}
                 </span>
               ))}
             </p>
@@ -354,6 +356,7 @@ function TestEvent({ path, v, ghost }: { path: string; v: Stream; ghost: boolean
 
 export default function StreamRoute() {
   const { t } = useT();
+  const msg = useMsg();
   // The stream's path is the tail of the address: /ingest/streams/<gateway>/<path...>.
   const { gateway = "", "*": rest = "" } = useParams();
   const path = `/${rest}`;
@@ -405,7 +408,7 @@ export default function StreamRoute() {
           <ErrorText error={q.error} />
         </p>
       )}
-      <div aria-hidden={ghost || undefined} className={`mb-4 max-w-3xl text-[13.5px] text-muted ${gh(ghost)}`}>{v.lede}</div>
+      <div aria-hidden={ghost || undefined} className={`mb-4 max-w-3xl text-[13.5px] text-muted ${gh(ghost)}`}>{msg(v.lede)}</div>
       <Strip gateway={gateway} v={v} ghost={ghost} />
       <div className="mb-4">
         <StreamPanel gateway={gateway} path={path} />

@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useData } from "../api/live";
-import type { Choice, Place, Streams, StreamRow } from "../api/ingest";
-import { useFormat, useT } from "../i18n";
+import type { Place, Streams, StreamRow } from "../api/ingest";
+import { cat, useFormat, useMsg, useT } from "../i18n";
 import { useDrawer } from "../ui/drawer";
 import { HowDrawer, HowSteps } from "../ui/how";
 import { Icon } from "../ui/icon";
@@ -92,15 +92,17 @@ function Destination({ p }: { p: Place }) {
 // "2m · 2,000": the declared values read the same in every language; the sentence stays as the tooltip and the spoken label.
 function useCompactBatch() {
   const { number } = useFormat();
+  const msg = useMsg();
   return (s: StreamRow) => {
     const count = s.batchRecords == null ? "" : number(s.batchRecords);
-    if (s.batchEvery === undefined) return s.batch;
+    if (s.batchEvery === undefined) return msg(s.batch);
     return s.batchEvery && count ? `${s.batchEvery} · ${count}` : s.batchEvery || (count ? `≤ ${count}` : "");
   };
 }
 
 function Rows({ rows, gateway }: { rows: StreamRow[]; gateway: boolean }) {
   const { t } = useT();
+  const msg = useMsg();
   const navigate = useNavigate();
   const kindName = useLogoTitle();
   const compact = useCompactBatch();
@@ -133,9 +135,9 @@ function Rows({ rows, gateway }: { rows: StreamRow[]; gateway: boolean }) {
             </Td>
             <Td>
               {batch ? (
-                <span className="stl-batch" title={s.batch}>
+                <span className="stl-batch" title={msg(s.batch)}>
                   <span aria-hidden="true">{batch}</span>
-                  <span className="sr-only">{s.batch}</span>
+                  <span className="sr-only">{msg(s.batch)}</span>
                 </span>
               ) : (
                 <span className="text-faint">—</span>
@@ -168,13 +170,13 @@ type Shape = { n: number; total: number; gateways: number; withDeadLetter: numbe
 const FIRST: Shape = { n: 2, total: 2, gateways: 1, withDeadLetter: 1, kinds: 2 };
 const shapeOf = (v: Streams): Shape => ({ n: v.rows.length, total: v.total, gateways: v.gateways, withDeadLetter: v.withDeadLetter, kinds: v.kinds.length });
 const PLACE = { uri: "", kind: "postgres", kindTitle: "", where: "postgres://warehouse/", what: "table_name", note: "" };
-const GHOST_ROW: StreamRow = { gateway: "events_gateway", path: "/v1/stream_path", href: "", note: "What this stream is for", sink: PLACE, batch: "1 second or 500", batchEvery: "1s", batchRecords: 500, deadLetter: PLACE };
+const GHOST_ROW: StreamRow = { gateway: "events_gateway", path: "/v1/stream_path", href: "", note: "What this stream is for", sink: PLACE, batch: cat("1 second or 500"), batchEvery: "1s", batchRecords: 500, deadLetter: PLACE };
 const ghostOf = (s: Shape): Streams => ({
   rows: Array.from({ length: s.n }, (_, i) => ({ ...GHOST_ROW, href: `#${i}` })),
   total: s.total,
   gateways: s.gateways,
   withDeadLetter: s.withDeadLetter,
-  kinds: Array.from({ length: s.kinds }, (_, i): Choice => ({ key: `kind${i}`, label: "Kind" })),
+  kinds: Array.from({ length: s.kinds }, (_, i) => `kind${i}`),
   filter: { kind: "", q: "" },
 });
 
@@ -211,8 +213,11 @@ function useOrdered(rows: StreamRow[]) {
 }
 
 // The bar (see ui/filters): a search and the destination kinds, drawn at once from the last shape seen.
+const kindLogo = (kind: string) => (kind === "gs" ? "gcs" : kind); // the logo a destination's kind is drawn with
+
 function StreamsBar({ filter, v, ghost }: { filter: Filter; v: Streams; ghost: boolean }) {
   const { t, n } = useT();
+  const kindName = useLogoTitle();
   const { number } = useFormat();
   const navigate = useNavigate();
   const [text, setText] = useUrlSearch("q");
@@ -222,11 +227,11 @@ function StreamsBar({ filter, v, ghost }: { filter: Filter; v: Streams; ghost: b
   const filters: FilterDef[] = v.kinds.length > 1
     ? [{
         id: "kind", label: t("streams.kind"), allLabel: t("streams.kind.all"), pending: ghost,
-        options: v.kinds.map((k) => ({ key: k.key, label: k.label, icon: <Logo k={k.key} /> })),
+        options: v.kinds.map((k) => ({ key: k, label: kindName(kindLogo(k)), icon: <Logo k={k} /> })),
         value: kind ? [kind] : [], onChange: (x) => go({ kind: x[0] ?? "" }),
       }]
     : [];
-  const chips: Chip[] = kind ? [{ id: "kind", group: t("streams.kind"), value: v.kinds.find((k) => k.key === kind)?.label ?? kind, onRemove: () => go({ kind: "" }) }] : [];
+  const chips: Chip[] = kind ? [{ id: "kind", group: t("streams.kind"), value: v.kinds.includes(kind) ? kindName(kindLogo(kind)) : kind, onRemove: () => go({ kind: "" }) }] : [];
   return (
     <FilterBar
       search={<SearchField value={text} onChange={setText} label={t("streams.search")} />}

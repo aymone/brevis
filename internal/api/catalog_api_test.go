@@ -130,8 +130,8 @@ func TestAnUnnamedDestinationPointsAtItsStream(t *testing.T) {
 	t.Error("no unnamed row")
 }
 
-// THE DRAWER: the writer and why it stands there (the server's sentence, in
-// its timezone), the last loads each opening its run, who reads it.
+// THE DRAWER: the writer and why it stands there (the sentence's key and values,
+// in its timezone), the last loads each opening its run, who reads it.
 func TestTheTargetJSONSaysWhyAndWhoReadsIt(t *testing.T) {
 	code, body := dataJSON(t, drawerUI(), "GET", "/api/catalog/target?u="+url.QueryEscape("bigquery://acme/bronze/old"), "", "")
 	if code != http.StatusOK {
@@ -141,7 +141,7 @@ func TestTheTargetJSONSaysWhyAndWhoReadsIt(t *testing.T) {
 		t.Errorf("row = %v", body["row"])
 	}
 	w := body["writers"].([]any)[0].(map[string]any)
-	if w["name"] != "vendors · fetch" || w["status"] != "stale" || !strings.Contains(w["reason"].(string), "missed its") ||
+	if w["name"] != "vendors · fetch" || w["status"] != "stale" || first(w["reason"])["k"] != "catalog.why.missed" ||
 		w["href"] != "/ingest/loads/vendors/fetch" || w["cron"] == "" {
 		t.Errorf("writer = %v", w)
 	}

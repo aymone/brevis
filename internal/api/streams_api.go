@@ -34,7 +34,7 @@ func (u *UI) streamsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	v := pages.BuildStreamsWith(entries, pages.ParseStreamFilter(r.URL.Query()), u.streamHealth(u.scrape.Snapshot(metrics.Gateway, metrics.Retention, nil)))
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, pages.StreamsAsJSON(ingestCtx(r), v))
+	writeJSON(w, http.StatusOK, pages.StreamsAsJSON(v))
 }
 
 // streamHealth says a stream's health from a snapshot of its gateway's

@@ -6,19 +6,12 @@ import (
 	"time"
 
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 	"brevis.sh/brevis/web/pages"
 )
 
 // The Ingest screens' JSON (loads.go and streams.go in the React app). Each
 // handler reuses the read its page handler makes; the words are written here in
 // the reader's language, and a failure is {"error": "<code>"} with a status, never HTML.
-
-// ingestCtx is the request's context in the reader's language, for the
-// sentences the server finishes.
-func ingestCtx(r *http.Request) context.Context {
-	return i18n.WithLang(r.Context(), i18n.Negotiate(r))
-}
 
 func (u *UI) ingestFail(w http.ResponseWriter, what string, err error) {
 	u.log.Error("reading "+what, "error", err)
@@ -60,7 +53,7 @@ func (u *UI) loadsAPI(w http.ResponseWriter, r *http.Request) {
 	f.Path = "/ingest/loads"
 	v := pages.BuildLoads(entries, f, time.Now())
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, pages.LoadsAsJSON(ingestCtx(r), v))
+	writeJSON(w, http.StatusOK, pages.LoadsAsJSON(v))
 }
 
 // registerIngestAPI wires the Ingest screens' JSON.

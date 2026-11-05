@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getJSON } from "../api/client";
 import { useSession } from "../api/session";
-import { useFormat, useT } from "../i18n";
+import { useFormat, useMsg, useT, type Msg } from "../i18n";
 import { FilterBar, Segmented } from "../ui/filters";
 import { Empty, Panel, linkClass } from "../ui/card";
 import { until, useNumbers } from "../ui/format";
@@ -23,8 +23,12 @@ import { RunsChart, type Bucket } from "./overview-chart";
 const WINDOWS = ["24h", "7d", "30d"] as const;
 type WindowKey = (typeof WINDOWS)[number];
 
-type NextRun = { workflow: string; cron: string; cronText: string; timezone: string; when: string; logos: string[] };
-type EventRow = { at: string; source: string; before: string; subject: string; after: string; actor: string; href: string; state: string };
+type NextRun = { workflow: string; cron: string; cronText: Msg | null; timezone: string; when: string; logos: string[] };
+/** An event: where it comes from ("workflow", "stream", "endpoint"), the sentence around its subject, and who did it. */
+type EventRow = { at: string; source: string; what: Msg; subject: string; actor: string; href: string; state: string };
+
+// Stands for the subject inside the sentence, so the catalog puts it where its language wants it and the log can draw it as code.
+const SUBJECT = "\u0001";
 type Overview = {
   window: WindowKey;
   grain: "hour" | "day";
@@ -115,6 +119,7 @@ function Kpis({ window, o }: { window: WindowKey; o?: Overview }) {
 
 function NextTriggers({ o }: { o?: Overview }) {
   const { t } = useT();
+  const say = useMsg();
   return (
     <section data-next-triggers>
       <Panel title={t("overview.next.title")} action={<Link to="/workflows" className={linkClass}>{t("overview.next.all")} →</Link>}>
@@ -155,7 +160,7 @@ function NextTriggers({ o }: { o?: Overview }) {
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-baseline justify-between gap-3 text-[12px]">
-                    <span className="min-w-0 truncate text-muted">{p.cronText}</span>
+                    <span className="min-w-0 truncate text-muted">{say(p.cronText)}</span>
                     <span className="shrink-0 font-mono text-[11.5px] text-faint">{p.cron}</span>
                   </div>
                 </li>
@@ -212,6 +217,7 @@ function RecentRuns({ runs }: { runs?: RunRow[] }) {
 
 function EventLog({ events }: { events?: EventRow[] }) {
   const { t } = useT();
+  const say = useMsg();
   const { lang } = useSession();
   const clock = new Intl.DateTimeFormat(lang, { hour: "2-digit", minute: "2-digit", hour12: false });
   const [ghosts] = useState(() => recalled("overview.events", 50));
@@ -219,16 +225,17 @@ function EventLog({ events }: { events?: EventRow[] }) {
     if (events) remember("overview.events", events.length);
   }, [events]);
   // Without the events the log draws the real rows with placeholder values (a ghost).
-  const rows: EventRow[] = events ?? Array.from({ length: ghosts }, () => ({ at: "2026-01-01T00:00:00Z", source: "source", before: "", subject: "subject name", after: "", actor: "", href: "", state: "success" }));
+  const rows: EventRow[] = events ?? Array.from({ length: ghosts }, () => ({ at: "2026-01-01T00:00:00Z", source: "workflow", what: { k: "event.run.started" }, subject: "subject name", actor: "", href: "", state: "success" }));
   if (events?.length === 0) return <p className="px-3.5 py-4 text-[12.5px] text-muted">{t("overview.events.none")}</p>;
   return (
     <ol className={`divide-y divide-line-soft border-t border-line-soft ${events ? "" : "sk-ghost"}`} aria-hidden={events ? undefined : true}>
       {rows.map((e, i) => {
+        const [before, after] = say({ k: e.what.k, a: { subject: SUBJECT } }).split(SUBJECT);
         const subject = (
           <>
-            {e.before}
+            {before}
             <code className="font-mono text-[12px] text-ink">{e.subject}</code>
-            {e.after}
+            {after}
           </>
         );
         return (
@@ -238,7 +245,7 @@ function EventLog({ events }: { events?: EventRow[] }) {
             className="grid grid-cols-[auto_6.5rem_minmax(0,1fr)_auto] items-center gap-x-3 px-3.5 py-2 text-[12.5px] max-[640px]:grid-cols-[auto_minmax(0,1fr)]"
           >
             <time dateTime={e.at} title={new Date(e.at).toISOString()} className="font-mono text-[12px] text-muted tabular-nums">{clock.format(new Date(e.at))}</time>
-            <span className="text-muted max-[640px]:hidden">{e.source}</span>
+            <span className="text-muted max-[640px]:hidden">{t(`event.source.${e.source}`)}</span>
             <span className="min-w-0 truncate text-ink-2">
               {e.href ? <Link to={e.href} className="hover:underline">{subject}</Link> : subject}
               {e.actor && <span className="text-muted"> · {t("overview.events.by", { actor: e.actor })}</span>}

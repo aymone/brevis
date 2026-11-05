@@ -47,18 +47,19 @@ type bucketView struct {
 type nextRunView struct {
 	Workflow string    `json:"workflow"`
 	Cron     string    `json:"cron"`
-	CronText string    `json:"cronText"`
+	CronText *i18n.Msg `json:"cronText"`
 	Timezone string    `json:"timezone"`
 	When     time.Time `json:"when"`
 	Logos    []string  `json:"logos"`
 }
 
+// eventView is one line of the event log. Source is "workflow", "stream" or "endpoint"; What is the
+// sentence around the subject, which the app writes in code style where its language puts it.
 type eventView struct {
 	At      time.Time `json:"at"`
 	Source  string    `json:"source"`
-	Before  string    `json:"before"`
+	What    i18n.Msg  `json:"what"`
 	Subject string    `json:"subject"`
-	After   string    `json:"after"`
 	Actor   string    `json:"actor"`
 	Href    string    `json:"href"`
 	State   string    `json:"state"`
@@ -83,7 +84,7 @@ type overviewView struct {
 // and event log. "Needs your attention" is its own endpoint: it follows
 // itself on a faster clock than the rest.
 func (u *UI) overviewAPI(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
+	ctx := r.Context()
 	window := pages.ParseWindow(r.URL.Query().Get("window"))
 	fail := func(what string, err error) {
 		u.log.Error("reading the overview", "what", what, "error", err)
@@ -139,14 +140,14 @@ func (u *UI) overviewAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, n := range u.withLogos(ctx, nextRuns(schedules, now, 8, u.log)) {
 		out.Next = append(out.Next, nextRunView{
-			Workflow: n.Workflow, Cron: n.Cron, CronText: pages.CronTextIn(ctx, n.Cron),
+			Workflow: n.Workflow, Cron: n.Cron, CronText: pages.CronMsg(n.Cron),
 			Timezone: n.Timezone, When: n.When, Logos: orEmpty(n.Logos),
 		})
 	}
 	out.Recent = runViews(recent, u.runsLogos(ctx, recent))
-	for _, l := range pages.FeedOf(ctx, u.eventLog(ctx)) {
+	for _, l := range pages.FeedOf(u.eventLog(ctx)) {
 		out.Events = append(out.Events, eventView{
-			At: l.At, Source: l.Source, Before: l.Before, Subject: l.Subject, After: l.After,
+			At: l.At, Source: l.Source, What: l.What, Subject: l.Subject,
 			Actor: l.Actor, Href: l.Href, State: l.State,
 		})
 	}

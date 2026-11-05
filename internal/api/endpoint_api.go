@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -21,13 +20,15 @@ type paramRowView struct {
 	Type     string `json:"type"`
 	Required bool   `json:"required"`
 	Note     string `json:"note"`
-	Accepts  string `json:"accepts"`
-	Default  string `json:"default"`
+	// Accepts is the values it lists, or what its type takes.
+	Accepts i18n.Cat `json:"accepts"`
+	Default string   `json:"default"`
 }
 
+// originView is where a table's data starts: Main and Sub are said by the app.
 type originView struct {
-	Main string `json:"main"`
-	Sub  string `json:"sub"`
+	Main i18n.Cat `json:"main"`
+	Sub  i18n.Cat `json:"sub"`
 }
 
 type lineageWriterView struct {
@@ -36,29 +37,30 @@ type lineageWriterView struct {
 }
 
 type lineageView struct {
-	Target   string             `json:"target"`
-	Where    string             `json:"where"`
-	What     string             `json:"what"`
-	Kind     string             `json:"kind"`
-	Known    bool               `json:"known"`
-	Status   string             `json:"status"`
-	LastAt   *time.Time         `json:"lastAt"`
-	Origin   *originView        `json:"origin"`
-	Writer   *lineageWriterView `json:"writer"`
-	SQL      bool               `json:"sql"`
-	CacheTTL string             `json:"cacheTtl"`
+	Target string             `json:"target"`
+	Where  string             `json:"where"`
+	What   string             `json:"what"`
+	Kind   string             `json:"kind"`
+	Known  bool               `json:"known"`
+	Status string             `json:"status"`
+	LastAt *time.Time         `json:"lastAt"`
+	Origin *originView        `json:"origin"`
+	Writer *lineageWriterView `json:"writer"`
+	SQL    bool               `json:"sql"`
+	// CacheTTL is the cache's time to live, null with no cache.
+	CacheTTL i18n.Cat `json:"cacheTtl"`
 }
 
 type staleView struct {
-	Reason string `json:"reason"`
-	Target string `json:"target"`
+	Reason i18n.Cat `json:"reason"`
+	Target string   `json:"target"`
 }
 
 type cacheView struct {
 	// State is "set" (a cache is on record), "none" (the API has no cache) or
 	// "unknown" (its API was published before its settings were kept).
 	State    string   `json:"state"`
-	TTL      string   `json:"ttl"`
+	TTL      i18n.Cat `json:"ttl"`
 	Type     string   `json:"type"`
 	AddrFrom string   `json:"addrFrom"`
 	Reads    []string `json:"reads"`
@@ -66,8 +68,8 @@ type cacheView struct {
 }
 
 type limitsView struct {
-	Timeout string `json:"timeout"`
-	MaxRows int    `json:"maxRows"`
+	Timeout i18n.Cat `json:"timeout"`
+	MaxRows int      `json:"maxRows"`
 	// MaxBytes is the byte ceiling; 0 is no ceiling.
 	MaxBytes int64 `json:"maxBytes"`
 }
@@ -104,62 +106,43 @@ type endpointDetailView struct {
 	CurlBase string          `json:"curlBase"`
 }
 
-// epDuration is a Go duration in words ("6 hours"), the reader's language.
-func epDuration(ctx context.Context, s string) string {
-	d, err := time.ParseDuration(s)
-	if err != nil || d <= 0 {
-		return s
-	}
-	switch {
-	case d%time.Hour == 0:
-		return i18n.N(ctx, "summary.unit.hour", int(d/time.Hour))
-	case d%time.Minute == 0:
-		return i18n.N(ctx, "summary.unit.minute", int(d/time.Minute))
-	case d%time.Second == 0:
-		return i18n.N(ctx, "summary.unit.second", int(d/time.Second))
-	case d%time.Millisecond == 0:
-		return i18n.N(ctx, "summary.unit.millisecond", int(d/time.Millisecond))
-	}
-	return s
-}
-
-// epAccepts is what a parameter accepts, in the reader's words.
-func epAccepts(ctx context.Context, p pages.ParamView) string {
+// epAccepts is what a parameter accepts: the values it lists, or a sentence for the app to say.
+func epAccepts(p pages.ParamView) i18n.Cat {
 	switch {
 	case p.Accepts != "":
-		return p.Accepts
+		return i18n.Cat{p.Accepts}
 	case p.Type == "string" && p.MaxLen > 0:
-		return i18n.T(ctx, "endpoint.accepts.text", "n", i18n.Number(ctx, int64(p.MaxLen)))
+		return i18n.Cat{i18n.M("endpoint.accepts.text", "n", i18n.Num(p.MaxLen))}
 	case p.Type == "int" && p.Min != nil && p.Max != nil:
-		return i18n.T(ctx, "endpoint.accepts.range", "min", i18n.Number(ctx, *p.Min), "max", i18n.Number(ctx, *p.Max))
+		return i18n.Cat{i18n.M("endpoint.accepts.range", "min", i18n.Num(*p.Min), "max", i18n.Num(*p.Max))}
 	case p.Type == "int" && p.Min != nil:
-		return i18n.T(ctx, "endpoint.accepts.min", "min", i18n.Number(ctx, *p.Min))
+		return i18n.Cat{i18n.M("endpoint.accepts.min", "min", i18n.Num(*p.Min))}
 	case p.Type == "int" && p.Max != nil:
-		return i18n.T(ctx, "endpoint.accepts.max", "max", i18n.Number(ctx, *p.Max))
+		return i18n.Cat{i18n.M("endpoint.accepts.max", "max", i18n.Num(*p.Max))}
 	case p.Type == "bool":
-		return i18n.T(ctx, "endpoint.accepts.bool")
+		return i18n.Cat{i18n.M("endpoint.accepts.bool")}
 	}
-	return ""
+	return nil
 }
 
 // epOrigin is where a table's data starts, as a writer declared it.
-func epOrigin(ctx context.Context, l pages.LineageRow) *originView {
+func epOrigin(l pages.LineageRow) *originView {
 	if l.Writer != nil && l.Writer.Gateway != nil {
-		return &originView{Main: "POST " + l.Writer.Gateway.Stream, Sub: i18n.T(ctx, "loads.source.http")}
+		return &originView{Main: i18n.Cat{"POST " + l.Writer.Gateway.Stream}, Sub: i18n.Cat{i18n.M("loads.source.http")}}
 	}
 	if l.Source.Kind == "" {
 		return nil
 	}
-	main := l.Source.Driver
+	var main any = l.Source.Driver
 	switch l.Source.Kind {
 	case "http":
-		main = i18n.T(ctx, "loads.source.http")
+		main = i18n.M("loads.source.http")
 	case "file":
-		main = i18n.T(ctx, "loads.source.file")
+		main = i18n.M("loads.source.file")
 	case "database":
-		main = components.LogoTitle(ctx, l.Source.Logo)
+		main = components.LogoTitle(l.Source.Logo)
 	}
-	return &originView{Main: main, Sub: l.Source.Where}
+	return &originView{Main: i18n.Cat{main}, Sub: i18n.Cat{l.Source.Where}}
 }
 
 // loadEndpoint reads what one endpoint's page needs, as the page did: the
@@ -197,20 +180,19 @@ func (u *UI) apiEndpoint(w http.ResponseWriter, r *http.Request) {
 		dataFail(w, status, msg)
 		return
 	}
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
 	v := pages.BuildEndpoint(e, entries, time.Now())
 	out := endpointDetailView{
 		API: v.Row.API, Name: v.Row.Name, Path: v.Row.Path, About: v.About, Keyed: v.Row.Keyed,
 		Freshness: v.Row.Freshness, PublishedAt: v.Row.PublishedAt,
 		Lineage: make([]lineageView, 0, len(v.Lineage)), Params: make([]paramRowView, 0, len(v.Params)),
 		ParamCount: len(v.Row.Params), Required: len(v.Row.Required), Form: []formFieldView{},
-		Limits:   limitsView{Timeout: epDuration(ctx, v.Limits.Timeout), MaxRows: v.Limits.MaxRows, MaxBytes: v.Limits.MaxBytesBilled},
+		Limits:   limitsView{Timeout: pages.DurationCat(v.Limits.Timeout), MaxRows: v.Limits.MaxRows, MaxBytes: v.Limits.MaxBytesBilled},
 		CurlHead: pages.CurlHead, CurlBase: v.CurlBase(), CanRun: u.canRun(e.API),
 	}
 	if l := v.StaleLine(); l != nil {
 		s := &staleView{Target: l.Target}
 		if l.Writer != nil {
-			s.Reason = l.Writer.Reason(ctx)
+			s.Reason = l.Writer.Reason()
 		}
 		out.Stale = s
 	}
@@ -219,7 +201,7 @@ func (u *UI) apiEndpoint(w http.ResponseWriter, r *http.Request) {
 		where, what := catSplit(l.Target)
 		lv := lineageView{
 			Target: l.Target, Where: where, What: what, Known: l.Known, Status: string(l.Status), LastAt: l.LastWhen,
-			Origin: epOrigin(ctx, l), SQL: sql,
+			Origin: epOrigin(l), SQL: sql,
 		}
 		if scheme, _, ok := strings.Cut(l.Target, "://"); ok {
 			lv.Kind = scheme
@@ -231,13 +213,13 @@ func (u *UI) apiEndpoint(w http.ResponseWriter, r *http.Request) {
 			lv.Writer = &lineageWriterView{Name: catWriterName(l.Writer.CatalogWriter), Href: l.WriterHref()}
 		}
 		if c := v.Manifest.Cache; c != nil {
-			lv.CacheTTL = epDuration(ctx, c.TTL)
+			lv.CacheTTL = pages.DurationCat(c.TTL)
 		}
 		out.Lineage = append(out.Lineage, lv)
 	}
 	switch c := v.Manifest.Cache; {
 	case c != nil:
-		out.Cache = cacheView{State: "set", TTL: epDuration(ctx, c.TTL), Type: c.Type, AddrFrom: c.AddrFrom,
+		out.Cache = cacheView{State: "set", TTL: pages.DurationCat(c.TTL), Type: c.Type, AddrFrom: c.AddrFrom,
 			Reads: append([]string{}, v.Row.Reads...), Bump: v.BumpCommand()}
 		if c.Type == "redis" {
 			out.Cache.Type = "Redis"
@@ -249,7 +231,7 @@ func (u *UI) apiEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, p := range v.Params {
 		out.Params = append(out.Params, paramRowView{Name: p.Name, Type: p.Type, Required: p.Required, Note: p.Note,
-			Accepts: epAccepts(ctx, p), Default: p.Default})
+			Accepts: epAccepts(p), Default: p.Default})
 	}
 	if out.CanRun {
 		for _, f := range pages.TryForm(e.Endpoint.Params, nil) {

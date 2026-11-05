@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
-import type { Place as PlaceData } from "../api/ingest";
-import { useT } from "../i18n";
+import type { Place as PlaceData, Source } from "../api/ingest";
+import { useMsg, useT } from "../i18n";
 import { Logo, useLogoTitle } from "./logo";
+
+/** A source's origin as a row says it: the console's words for http and files, else its own name (a database, a driver). */
+export function useSourceLabel() {
+  const msg = useMsg();
+  return (s: Source) => (s.labelMsg ? msg(s.labelMsg) : s.label);
+}
 
 /**
  * Where something lives: a mark and its name, and under it the place, the

@@ -7,7 +7,7 @@ import { useFallbackInterval, useLive } from "../live/hooks";
 import { useFormat, useT } from "../i18n";
 import { segGroup, segOff, segOn } from "../ui/button";
 import { Empty } from "../ui/card";
-import { useAgo, useNumbers } from "../ui/format";
+import { useAgo, useNumbers, usePeriod } from "../ui/format";
 import { Icon } from "../ui/icon";
 import { Logos } from "../ui/logo";
 import { LoadError } from "../ui/query-boundary";
@@ -21,7 +21,7 @@ type RunsData = {
   page: number;
   perPage: number;
   pages: number;
-  filter: { state: string; workflow: string; from: string; to: string; period: string };
+  filter: { state: string; workflow: string; from: string; to: string };
   counts: { all: number; going: number; failed: number };
   byState: Record<string, number>;
 };
@@ -207,6 +207,7 @@ function Filters({ params, data }: { params: URLSearchParams; data?: RunsData })
     { key: "all", label: t("runs.all"), count: data?.counts.all, current: state === "" },
   ];
   const stateWord = state ? t(`state.${state}`) : "";
+  const period = usePeriod(f?.from, f?.to);
   return (
     <>
       <div role="group" aria-label={t("runs.state")} className={segGroup}>
@@ -220,7 +221,7 @@ function Filters({ params, data }: { params: URLSearchParams; data?: RunsData })
         ))}
       </div>
       {!offered && <Chip label={t("runs.state")} value={stateWord.startsWith("[") ? state : stateWord} remove={withParam(params, "state", "")} />}
-      {f?.period && <Chip label={t("runs.period")} value={f.period} remove={withParam(new URLSearchParams(withParam(params, "from", "")), "to", "")} />}
+      {period && <Chip label={t("runs.period")} value={period} remove={withParam(new URLSearchParams(withParam(params, "from", "")), "to", "")} />}
     </>
   );
 }

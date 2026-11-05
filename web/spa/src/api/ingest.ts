@@ -1,8 +1,12 @@
 // The Ingest endpoints' shapes (internal/api/*_api.go, web/pages/ingest_json.go).
 // Lists are always arrays; a missing value is null; times are RFC 3339.
+// Words are never sentences: a Msg is a catalog key and its values, a Cat messages and strings put together; the app
+// says them with useMsg().
+import type { Cat, Msg } from "../i18n";
 
-export type Place = { uri: string; kind: string; kindTitle: string; where: string; what: string; note: string };
-export type Source = { kind: string; driver: string; label: string; where: string };
+export type Place = { uri: string; kind: string; where: string; what: string; note: string };
+/** `label` is the origin's own name (a database, a driver); `labelMsg` says it where the console has words (http, files). */
+export type Source = { kind: string; driver: string; label: string; labelMsg: Msg | null; where: string };
 export type Choice = { key: string; label: string };
 
 export type LoadRow = {
@@ -14,7 +18,7 @@ export type LoadRow = {
   status: string;
   lastLoaded: string | null;
   rows: number | null;
-  schedule: string;
+  schedule: Cat | null;
   source: Source;
   recent: (number | null)[];
   fixing: string | null;
@@ -26,7 +30,7 @@ export type Loads = {
   workflows: number;
   summary: Record<string, number>;
   counts: Record<string, number>;
-  sources: Choice[];
+  sources: { key: string; label: Msg }[];
   hasLegacy: boolean;
   filter: { status: string; source: string; q: string; legacy: boolean };
 };
@@ -41,7 +45,7 @@ export type CfgRow = {
   before: { label: string; text: string }[];
 };
 
-export type FlowNode = { kind: string; main: string; detail: string };
+export type FlowNode = { kind: string; main: Cat | null; detail: Cat | null };
 export type Flow = { nodes: FlowNode[]; deadLetter: FlowNode | null };
 
 export type Change = {
@@ -49,11 +53,11 @@ export type Change = {
   runId: string;
   first: boolean;
   earlier: boolean;
-  lines: { path: string; text: string }[];
+  lines: { path: string; text: Cat }[];
 };
 
 export type StepConfig = {
-  summary: string;
+  summary: Cat | null;
   note: string;
   flow: Flow | null;
   stage: {
@@ -65,7 +69,7 @@ export type StepConfig = {
     targetDriver: string;
     dedup: string;
   };
-  other: { title: string; rows: CfgRow[] }[];
+  other: { key: string; title: Msg | null; rows: CfgRow[] }[];
   sourceHead: CfgRow[];
   sourceCount: number;
   common: CfgRow[];
@@ -74,7 +78,7 @@ export type StepConfig = {
   transform: { index: string; rows: CfgRow[] }[];
   identity: { kind: string; legacy: boolean; where: string; object: string };
   destination: CfgRow[];
-  schema: { name: string; type: string; role: string }[];
+  schema: { name: string; type: string; role: Cat | null }[];
   schemaExtra: CfgRow[];
   hasSchema: boolean;
 };
@@ -83,11 +87,12 @@ export type Reader = { api: string; name: string; path: string; href: string };
 
 export type LoadDetail = {
   status: string;
-  reason: string;
+  /** Why the writer stands where it does (null when it is where it should be). */
+  reason: Cat | null;
   source: Source;
   target: Place;
   hasSchedule: boolean;
-  when: string;
+  when: Cat | null;
   cron: string;
   timezone: string;
   manual: boolean;
@@ -100,7 +105,7 @@ export type LoadDetail = {
   bars: { runId: string; rows: number | null; title: string }[];
   missed: number;
   loads: { loadedAt: string; rows: number | null; bytes: number | null; runId: string }[];
-  loadsCount: string;
+  loadsCount: Msg;
   described: boolean;
   config: StepConfig | null;
   changes: Change[];
@@ -146,7 +151,7 @@ export type StreamRow = {
   href: string;
   note: string;
   sink: Place;
-  batch: string;
+  batch: Cat | null;
   // The declared values behind `batch` ("2m", 2000): optional so an older server still draws the sentence.
   batchEvery?: string;
   batchRecords?: number | null;
@@ -161,7 +166,7 @@ export type Streams = {
   gateways: number;
   withDeadLetter: number;
   healthCounts?: Record<string, number>;
-  kinds: Choice[];
+  kinds: string[];
   filter: { kind: string; q: string };
 };
 
@@ -173,18 +178,18 @@ export type Stream = {
   deadLetter: Place | null;
   publishedAt: string | null;
   format: string;
-  lede: string;
-  summary: string;
+  lede: Cat | null;
+  summary: Cat | null;
   flow: Flow | null;
   tables: string[];
   catalogHref: string;
   query: string;
   readBy: Reader[];
   hasConfig: boolean;
-  cards: { key: string; title: string; rows: { path: string; label: string; value: string; default: boolean; note: string }[] }[];
+  cards: { key: string; title: Msg; rows: { path: string; label: Msg | null; value: string; default: boolean; note: string }[] }[];
   yaml: string;
-  changes: { at: string; text: string }[];
-  deadLetterPanel: { where: string; commands: string; readable: boolean; write: string } | null;
+  changes: { at: string; text: Msg }[];
+  deadLetterPanel: { where: Cat | null; commands: string; readable: boolean; write: string } | null;
   buriedMetric: string;
   testEvent: { format: string; body: string; curlHead: string; lands: string; table: string; allow: string[]; dataset: string };
 };

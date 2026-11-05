@@ -7,10 +7,10 @@ import type { Page } from "@playwright/test";
 // stream so the spec decides when "a scrape finished".
 
 type Health = Record<string, unknown> & { state: string; reason: string };
-const place = (uri: string) => ({ uri, kind: "postgres", kindTitle: "", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
+const place = (uri: string) => ({ uri, kind: "postgres", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
 const row = (i: number, health: Health) => ({
   gateway: "events_gateway", path: `/v1/stream_${i}`, href: `/ingest/streams/events_gateway/v1/stream_${i}`, note: "A stream.",
-  sink: place(`postgres://warehouse/sales.events_${i}`), batch: "1 second or 500", batchEvery: "1s", batchRecords: 500, deadLetter: null, health,
+  sink: place(`postgres://warehouse/sales.events_${i}`), batch: { $: "cat", v: ["1 second or 500"] }, batchEvery: "1s", batchRecords: 500, deadLetter: null, health,
 });
 const counts = (hs: Health[]) => hs.reduce<Record<string, number>>((a, h) => ({ ...a, [h.state]: (a[h.state] ?? 0) + 1 }), {});
 const list = (hs: Health[]) => ({
@@ -18,7 +18,7 @@ const list = (hs: Health[]) => ({
 });
 const detail = (health: Health) => ({
   gateway: "events_gateway", path: "/v1/stream_0", health, sink: place("postgres://warehouse/sales.events_0"), deadLetter: null,
-  publishedAt: "2026-11-01T10:00:00Z", format: "json", lede: "Takes events.", summary: "Events land.", flow: null, tables: [],
+  publishedAt: "2026-11-01T10:00:00Z", format: "json", lede: { $: "cat", v: [{ k: "streams.page.lede", a: { dest: "PostgreSQL" } }] }, summary: { $: "cat", v: ["Events land."] }, flow: null, tables: [],
   catalogHref: "", query: "", readBy: [], hasConfig: false, cards: [], yaml: "", changes: [], deadLetterPanel: null, buriedMetric: "",
   testEvent: { format: "json", body: "{}", curlHead: "", lands: "", table: "", allow: [], dataset: "" },
 });

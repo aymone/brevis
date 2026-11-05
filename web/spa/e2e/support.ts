@@ -105,10 +105,10 @@ export async function quiet(request: APIRequestContext) {
 /** The Streams list with two published streams: the band and the "how streams work" box only exist when there is
  *  something listed, and a clean database (CI, a fresh checkout) has no published stream. */
 export async function mockStreamsList(page: Page) {
-  const place = (uri: string) => ({ uri, kind: "postgres", kindTitle: "", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
+  const place = (uri: string) => ({ uri, kind: "postgres", where: uri.slice(0, 20), what: uri.slice(20), note: "" });
   const row = (i: number) => ({
     gateway: "events_gateway", path: `/v1/${i ? "orders" : "clicks"}`, href: `/ingest/streams/events_gateway/v1/${i ? "orders" : "clicks"}`, note: "A stream.",
-    sink: place(`postgres://warehouse/sales.events_${i}`), batch: "1 second or 500", batchEvery: "1s", batchRecords: 500, deadLetter: null,
+    sink: place(`postgres://warehouse/sales.events_${i}`), batch: { $: "cat", v: ["1 second or 500"] }, batchEvery: "1s", batchRecords: 500, deadLetter: null,
   });
   await page.route(/\/api\/ingest\/streams(\?.*)?$/, (r) =>
     r.fulfill({ json: { rows: [row(0), row(1)], total: 2, gateways: 1, withDeadLetter: 0, healthCounts: { unknown: 2 }, kinds: [], filter: { kind: "", q: "" } } }),

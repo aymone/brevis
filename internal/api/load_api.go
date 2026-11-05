@@ -70,5 +70,5 @@ func (u *UI) loadAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, pages.LoadAsJSON(ingestCtx(r), *load))
+	writeJSON(w, http.StatusOK, pages.LoadAsJSON(*load))
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { getJSON } from "../api/client";
-import { useT } from "../i18n";
+import { useMsg, useT, type Msg } from "../i18n";
 import { Icon } from "../ui/icon";
 import { openDialog, useOpenDialog } from "./dialogs";
 import { Kbd } from "./kbd";
@@ -11,6 +11,9 @@ import { chooseLang, toggleTheme } from "./prefs";
 // The command palette: a native <dialog> opened on Cmd/Ctrl-K, filled from
 // GET /api/palette (fetched on the first open, filtered here). Ranked, not
 // fuzzy: the label starting with the query, then a word in it, then anywhere.
+// The server sends what each entry is (a name, or a sentence as a message); what a search looks in is built here from
+// what is said, in the reader's language.
+type Wire = { action?: string; group: string; label: string | Msg; hint?: string | Msg; href: string; icon: string };
 type Item = { action?: string; group: string; groupLabel: string; label: string; hint?: string; href: string; icon: string; text: string };
 
 const ORDER = ["Runs", "Sections", "Workflows", "Destinations", "Endpoints", "Projects"];
@@ -55,12 +58,24 @@ export function Palette() {
     enabled: open,
     staleTime: 60_000,
     retry: false,
-    queryFn: async () => (await getJSON<{ items: Item[] }>("/api/palette")).items,
+    queryFn: async () => (await getJSON<{ items: Wire[] }>("/api/palette")).items,
   });
 
+  const msg = useMsg();
+  const say = (v: string | Msg | undefined) => (typeof v === "string" ? v : msg(v));
+  const items = useMemo(
+    () =>
+      index.data?.map((w): Item => {
+        const label = say(w.label);
+        const hint = say(w.hint);
+        return { ...w, label, hint, groupLabel: t(`palette.group.${w.group.toLowerCase()}`), text: `${label}\n${hint}`.toLowerCase() };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [index.data, t],
+  );
   const shown = useMemo(
     () =>
-      search(index.data, q, (id) => ({
+      search(items, q, (id) => ({
         group: "Runs",
         groupLabel: t("palette.group.runs"),
         label: t("palette.open_run", { id: id.slice(0, 8) }),
@@ -69,7 +84,7 @@ export function Palette() {
         icon: "history",
         text: id,
       })),
-    [index.data, q, t],
+    [items, q, t],
   );
   const cur = shown.length ? Math.min(active, shown.length - 1) : 0;
 

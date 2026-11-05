@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,8 +16,7 @@ import (
 // writer's own note, then its settings in sections, in the order the
 // writer declared them.
 type ConfigView struct {
-	// config is what the summary is written from, in the reader's language
-	// when the page is drawn (SummaryIn).
+	// config is what the summary is written from (SummaryOf).
 	config *postgres.WriterConfig
 
 	// Note is the comment on the writer as a whole -- for a gateway, the one
@@ -35,13 +33,13 @@ type ConfigView struct {
 	DeadLetter *DeadLetterView
 }
 
-// SummaryIn is the configuration in one sentence, in the reader's language.
-// See Summary.
-func (v ConfigView) SummaryIn(ctx context.Context) string {
+// SummaryOf is the configuration in one sentence, for the app to say. See
+// Summary.
+func (v ConfigView) SummaryOf() i18n.Cat {
 	if v.config == nil {
-		return ""
+		return nil
 	}
-	return Summary(ctx, v.config)
+	return Summary(v.config)
 }
 
 // DeadLetterView is the dead-letter panel of a gateway stream (#86): where the
@@ -49,9 +47,9 @@ func (v ConfigView) SummaryIn(ctx context.Context) string {
 // run where the destination's credentials are. The console reads nothing of
 // the dead letter itself and calls nothing: it only knows what was published.
 type DeadLetterView struct {
-	// where is the dead letter in the summary's words, "files at gs://…", in
-	// the reader's language when the page is drawn (WhereIn).
-	where func(context.Context) string
+	// Where is the dead letter in the summary's words, "files at gs://…", for
+	// the app to say.
+	Where i18n.Cat
 	// Stream is the stream's NAME, which --stream takes; the page's own key
 	// is the stream's path.
 	Stream string
@@ -75,9 +73,6 @@ func (d DeadLetterView) Commands() string {
 		"gateway deadletter resend <gateway.yaml> <batch> --dry-run"
 }
 
-// WhereIn is where the dead letter is, in the reader's language.
-func (d DeadLetterView) WhereIn(ctx context.Context) string { return d.where(ctx) }
-
 // deadLetterOf builds the panel from the published fields, or nil.
 func deadLetterOf(c *postgres.WriterConfig) *DeadLetterView {
 	f := map[string]any{}
@@ -99,7 +94,7 @@ func deadLetterOf(c *postgres.WriterConfig) *DeadLetterView {
 		write = text("sink.into.write")
 	}
 	return &DeadLetterView{
-		where:    func(ctx context.Context) string { return destination(ctx, text, "dead_letter", true) },
+		Where:    i18n.Cat{destination(text, "dead_letter", true)},
 		Stream:   text("name"),
 		Readable: kind == "files",
 		Write:    write,
@@ -125,9 +120,6 @@ type ChangeLine struct {
 	Path   string
 	change catalog.Change
 }
-
-// TextIn is the change as a person reads it, in the reader's language.
-func (l ChangeLine) TextIn(ctx context.Context) string { return changeText(ctx, l.change) }
 
 // ConfigSection is one block of settings: `buffer`, `sink`. Settings with no
 // block of their own -- name, path, format -- are the "Stream" section.
@@ -263,43 +255,43 @@ func buildChanges(h []postgres.ConfigVersion) []ConfigChange {
 	return out
 }
 
-// changeText is one change as a person reads it.
-func changeText(ctx context.Context, c catalog.Change) string {
+// ChangeText is one change as a person reads it, for the app to say.
+func (l ChangeLine) ChangeText() i18n.Cat {
+	c := l.change
 	switch c.Kind {
 	case catalog.Added:
-		return i18n.T(ctx, "config.change.added", "value", valueText(c.After))
+		return i18n.Cat{i18n.M("config.change.added", "value", valueText(c.After))}
 	case catalog.Removed:
-		return i18n.T(ctx, "config.change.removed", "value", valueText(c.Before))
+		return i18n.Cat{i18n.M("config.change.removed", "value", valueText(c.Before))}
 	case catalog.NowWritten:
-		return i18n.T(ctx, "config.change.written", "value", valueText(c.After))
+		return i18n.Cat{i18n.M("config.change.written", "value", valueText(c.After))}
 	case catalog.NowDefault:
-		return i18n.T(ctx, "config.change.default", "value", valueText(c.After))
+		return i18n.Cat{i18n.M("config.change.default", "value", valueText(c.After))}
 	}
-	return valueText(c.Before) + " → " + valueText(c.After)
+	return i18n.Cat{valueText(c.Before), " → ", valueText(c.After)}
 }
 
-// TitleIn is a block's key as a heading, in the reader's language for the
-// blocks every writer has: `dead_letter` is "Dead letter". A block somebody
-// adds tomorrow is its own key, made a heading.
-func (s ConfigSection) TitleIn(ctx context.Context) string {
+// TitleMsg is a block's key as a heading for the blocks every writer has:
+// `dead_letter` is "Dead letter". A block somebody adds tomorrow has none, and
+// the app makes a heading of its key.
+func (s ConfigSection) TitleMsg() *i18n.Msg {
 	switch s.Key {
 	case "":
-		return i18n.T(ctx, "config.section.stream")
+		return ptrMsg(i18n.M("config.section.stream"))
 	case "source":
-		return i18n.T(ctx, "config.section.source")
+		return ptrMsg(i18n.M("config.section.source"))
 	case "transform":
-		return i18n.T(ctx, "config.section.transform")
+		return ptrMsg(i18n.M("config.section.transform"))
 	case "target":
-		return i18n.T(ctx, "config.section.target")
+		return ptrMsg(i18n.M("config.section.target"))
 	case "sink":
-		return i18n.T(ctx, "config.section.sink")
+		return ptrMsg(i18n.M("config.section.sink"))
 	case "buffer":
-		return i18n.T(ctx, "config.section.buffer")
+		return ptrMsg(i18n.M("config.section.buffer"))
 	case "dead_letter":
-		return i18n.T(ctx, "config.section.dead_letter")
+		return ptrMsg(i18n.M("config.section.dead_letter"))
 	}
-	t := strings.ReplaceAll(s.Key, "_", " ")
-	return strings.ToUpper(t[:1]) + t[1:]
+	return nil
 }
 
 // valueText is a setting as the file would write it. A number that JSON

@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"strconv"
 	"strings"
 	"time"
@@ -20,8 +19,7 @@ import (
 // filled from a field the gateway published, so the sentence is wrong only
 // when the configuration is -- and a setting it has no words for is left out
 // rather than guessed at. The full list is right below it.
-func Summary(ctx context.Context, c *postgres.WriterConfig) string {
-	tr := func(key string, args ...any) string { return i18n.T(ctx, key, args...) }
+func Summary(c *postgres.WriterConfig) i18n.Cat {
 	f := map[string]any{}
 	for _, fl := range c.Fields {
 		f[fl.Path] = fl.Value
@@ -34,42 +32,41 @@ func Summary(ctx context.Context, c *postgres.WriterConfig) string {
 	}
 
 	if text("source.driver") != "" {
-		return pipelineSummary(ctx, c.Fields, text)
+		return pipelineSummary(c.Fields, text)
 	}
 
 	sink := text("sink.type")
 	if sink == "" {
-		return tr("summary.stream.nowhere")
+		return i18n.Cat{i18n.M("summary.stream.nowhere")}
 	}
 
-	var b strings.Builder
-	b.WriteString(intake(ctx, text("format")))
+	b := i18n.Cat{intake(text("format"))}
 	if p := text("path"); p != "" {
-		b.WriteString(" " + tr("summary.stream.posted", "path", p))
+		b = append(b, " ", i18n.M("summary.stream.posted", "path", p))
 	}
 
 	switch sink {
 	case "auto_table":
-		tables := tr("summary.stream.tables.each")
+		var tables any = i18n.M("summary.stream.tables.each")
 		if allow, ok := f["sink.naming.allow"].([]any); ok && len(allow) > 0 {
 			names := make([]string, len(allow))
 			for i, a := range allow {
 				names[i] = valueText(a) + "*"
 			}
-			tables = tr("summary.stream.tables.named", "names", orList(ctx, names))
+			tables = i18n.M("summary.stream.tables.named", "names", orList(names))
 		}
-		b.WriteString(" " + tr("summary.stream.become", "tables", tables))
-		if into := destination(ctx, text, "sink.into", false); into != "" {
-			b.WriteString(" " + tr("summary.stream.in", "into", into))
+		b = append(b, " ", i18n.M("summary.stream.become", "tables", tables))
+		if into := destination(text, "sink.into", false); into != nil {
+			b = append(b, " ", i18n.M("summary.stream.in", "into", into))
 		}
 	case "pubsub":
-		b.WriteString(" " + tr("summary.stream.published", "to", destination(ctx, text, "sink", true)))
+		b = append(b, " ", i18n.M("summary.stream.published", "to", destination(text, "sink", true)))
 	case "files":
-		b.WriteString(" " + tr("summary.stream.written", "to", destination(ctx, text, "sink", true)))
+		b = append(b, " ", i18n.M("summary.stream.written", "to", destination(text, "sink", true)))
 	case "bigquery", "postgres", "mysql", "redshift", "iceberg":
-		b.WriteString(" " + tr("summary.stream.land", "to", destination(ctx, text, "sink", true)))
+		b = append(b, " ", i18n.M("summary.stream.land", "to", destination(text, "sink", true)))
 	default:
-		b.WriteString(" " + tr("summary.stream.sink", "sink", sink))
+		b = append(b, " ", i18n.M("summary.stream.sink", "sink", sink))
 	}
 
 	write := text("sink.write")
@@ -78,139 +75,152 @@ func Summary(ctx context.Context, c *postgres.WriterConfig) string {
 	}
 	switch write {
 	case "append":
-		b.WriteString(", " + tr("summary.stream.append"))
+		b = append(b, ", ", i18n.M("summary.stream.append"))
 	case "merge":
-		b.WriteString(", " + tr("summary.stream.merge"))
+		b = append(b, ", ", i18n.M("summary.stream.merge"))
 	}
 
 	every, records := text("buffer.flush.every"), text("buffer.flush.records")
 	switch {
 	case every != "" && records != "":
-		b.WriteString(", " + tr("summary.stream.batch.both", "every", durationWords(ctx, every), "records", events(ctx, records)))
+		b = append(b, ", ", i18n.M("summary.stream.batch.both", "every", durationWords(every), "records", events(records)))
 	case every != "":
-		b.WriteString(", " + tr("summary.stream.batch.every", "every", durationWords(ctx, every)))
+		b = append(b, ", ", i18n.M("summary.stream.batch.every", "every", durationWords(every)))
 	case records != "":
-		b.WriteString(", " + tr("summary.stream.batch.records", "records", events(ctx, records)))
+		b = append(b, ", ", i18n.M("summary.stream.batch.records", "records", events(records)))
 	}
 
-	if dl := destination(ctx, text, "dead_letter", true); dl != "" {
-		b.WriteString("; " + tr("summary.stream.refused", "to", dl))
+	if dl := destination(text, "dead_letter", true); dl != nil {
+		b = append(b, "; ", i18n.M("summary.stream.refused", "to", dl))
 	}
-	b.WriteString(".")
-	return b.String()
+	return append(b, ".")
 }
 
 // intake is what a stream accepts, by its declared format.
-func intake(ctx context.Context, format string) string {
+func intake(format string) i18n.Msg {
 	switch format {
 	case "json":
-		return i18n.T(ctx, "summary.intake.json")
+		return i18n.M("summary.intake.json")
 	case "array":
-		return i18n.T(ctx, "summary.intake.array")
+		return i18n.M("summary.intake.array")
 	case "ndjson":
-		return i18n.T(ctx, "summary.intake.ndjson")
+		return i18n.M("summary.intake.ndjson")
 	}
-	return i18n.T(ctx, "summary.intake.events")
+	return i18n.M("summary.intake.events")
 }
 
 // destination names a sink in words: "BigQuery table p.d.t", "Pub/Sub topic
 // p/t", "files at ./dead-letter/". withTable says whether a table is part of
-// it -- auto_table's `into` names where tables go, not one of them.
-func destination(ctx context.Context, text func(string) string, at string, withTable bool) string {
+// it -- auto_table's `into` names where tables go, not one of them. It is a
+// Msg, or the engine's own name (a string), or nil for none.
+func destination(text func(string) string, at string, withTable bool) any {
 	get := func(k string) string { return text(at + "." + k) }
 	table := ""
 	if withTable {
 		table = get("table")
 	}
-	tr := func(key string, args ...any) string { return strings.TrimSpace(i18n.T(ctx, key, args...)) }
 	switch t := get("type"); t {
 	case "":
-		return ""
+		return nil
 	case "bigquery":
 		where := joinWords(".", get("project"), get("dataset"), table)
 		if table != "" {
-			return tr("summary.dest.bigquery.table", "where", where)
+			return i18n.M("summary.dest.bigquery.table", "where", where)
 		}
-		return tr("summary.dest.bigquery", "where", where)
+		return i18n.M("summary.dest.bigquery", "where", where)
 	case "postgres", "mysql", "redshift":
 		name := map[string]string{"postgres": "Postgres", "mysql": "MySQL", "redshift": "Redshift"}[t]
 		if table != "" {
-			return tr("summary.dest.table", "engine", name, "table", table)
+			return i18n.M("summary.dest.table", "engine", name, "table", table)
 		}
 		return name
 	case "iceberg":
 		// The catalog's name qualifies the table, the way a project qualifies
 		// a BigQuery dataset: the same bronze.events can live in two catalogs.
 		if table != "" {
-			return tr("summary.dest.table", "engine", "Iceberg", "table", joinWords(".", get("catalog"), table))
+			return i18n.M("summary.dest.table", "engine", "Iceberg", "table", joinWords(".", get("catalog"), table))
 		}
 		return "Iceberg"
 	case "pubsub":
-		return tr("summary.dest.topic", "topic", joinWords("/", get("project"), get("topic")))
+		return i18n.M("summary.dest.topic", "topic", joinWords("/", get("project"), get("topic")))
 	case "files":
-		return tr("summary.dest.files", "path", get("path"))
+		return i18n.M("summary.dest.files", "path", get("path"))
 	default:
-		return tr("summary.dest.other", "type", t)
+		return i18n.M("summary.dest.other", "type", t)
 	}
 }
 
-// orList is "a", "a or b", "a, b or c".
-func orList(ctx context.Context, items []string) string {
-	if len(items) <= 1 {
-		return strings.Join(items, "")
+// orList is "a", "a or b", "a, b or c": the pieces, for the app to say.
+func orList(items []string) i18n.Cat {
+	var c i18n.Cat
+	for i, it := range items {
+		switch {
+		case i == 0:
+		case i == len(items)-1:
+			c = append(c, " ", i18n.M("summary.or"), " ")
+		default:
+			c = append(c, ", ")
+		}
+		c = append(c, it)
 	}
-	return strings.Join(items[:len(items)-1], ", ") + " " + i18n.T(ctx, "summary.or") + " " + items[len(items)-1]
+	return c
 }
 
-// durationWords is a duration a person says: "1 minute", "500 milliseconds".
-// Anything that is not one whole unit stays as written.
-func durationWords(ctx context.Context, s string) string {
+// durationWords is a duration a person says: "1 minute", "500 milliseconds" (a
+// Msg). Anything that is not one whole unit stays as written (a string).
+// DurationCat is durationWords for the API: the duration said, or the raw string, as a Cat (null for none).
+func DurationCat(s string) i18n.Cat {
+	if s == "" {
+		return nil
+	}
+	return i18n.Cat{durationWords(s)}
+}
+
+func durationWords(s string) any {
 	d, err := time.ParseDuration(s)
 	if err != nil || d <= 0 {
 		return s
 	}
 	switch {
 	case d%time.Hour == 0:
-		return i18n.N(ctx, "summary.unit.hour", int(d/time.Hour))
+		return i18n.MN("summary.unit.hour", int(d/time.Hour))
 	case d%time.Minute == 0:
-		return i18n.N(ctx, "summary.unit.minute", int(d/time.Minute))
+		return i18n.MN("summary.unit.minute", int(d/time.Minute))
 	case d%time.Second == 0:
-		return i18n.N(ctx, "summary.unit.second", int(d/time.Second))
+		return i18n.MN("summary.unit.second", int(d/time.Second))
 	case d%time.Millisecond == 0:
-		return i18n.N(ctx, "summary.unit.millisecond", int(d/time.Millisecond))
+		return i18n.MN("summary.unit.millisecond", int(d/time.Millisecond))
 	}
 	return s
 }
 
-// events is a count of events, "1 event" or "2,000 events", the thousands
-// separated the reader's way.
-func events(ctx context.Context, n string) string {
+// events is a count of events, "1 event" or "2,000 events" (a Msg; the app
+// separates the thousands the reader's way), or the text as written.
+func events(n string) any {
 	v, err := strconv.ParseInt(n, 10, 64)
 	if err != nil {
 		return n
 	}
-	return i18n.N(ctx, "summary.events", int(v), "n", i18n.Number(ctx, v))
+	return i18n.MN("summary.events", int(v), "n", i18n.Num(v))
 }
 
 // pipelineSummary is an SDK pipeline in one sentence: what it reads, what it
 // does to the records, where it writes, and how.
-func pipelineSummary(ctx context.Context, fields []catalog.ManifestField, text func(string) string) string {
-	tr := func(key string, args ...any) string { return strings.TrimSpace(i18n.T(ctx, key, args...)) }
-
-	var b strings.Builder
+func pipelineSummary(fields []catalog.ManifestField, text func(string) string) i18n.Cat {
+	var b i18n.Cat
 	switch driver := text("source.driver"); driver {
 	case "from.HTTP":
-		b.WriteString(tr("summary.read.http", "what", joinWords(" ", text("source.method"), text("source.url"))))
+		b = append(b, i18n.M("summary.read.http", "what", joinWords(" ", text("source.method"), text("source.url"))))
 	case "from.Files":
-		b.WriteString(tr("summary.read.files", "path", text("source.path")))
+		b = append(b, i18n.M("summary.read.files", "path", text("source.path")))
 	case "postgres.Query", "mysql.Query":
 		engine := map[string]string{"postgres.Query": "Postgres", "mysql.Query": "MySQL"}[driver]
-		b.WriteString(tr("summary.read.query", "engine", engine))
+		b = append(b, i18n.M("summary.read.query", "engine", engine))
 		if db := text("source.database"); db != "" {
-			b.WriteString(" " + tr("summary.read.database", "db", db))
+			b = append(b, " ", i18n.M("summary.read.database", "db", db))
 		}
 		if host := text("source.host"); host != "" {
-			b.WriteString(" " + tr("summary.read.host", "host", host))
+			b = append(b, " ", i18n.M("summary.read.host", "host", host))
 		}
 	case "from.Many":
 		n := 0
@@ -219,9 +229,9 @@ func pipelineSummary(ctx context.Context, fields []catalog.ManifestField, text f
 				n++
 			}
 		}
-		b.WriteString(i18n.N(ctx, "summary.read.many", n))
+		b = append(b, i18n.MN("summary.read.many", n))
 	default:
-		b.WriteString(tr("summary.read.other", "driver", driver))
+		b = append(b, i18n.M("summary.read.other", "driver", driver))
 	}
 
 	transformers := 0
@@ -233,32 +243,32 @@ func pipelineSummary(ctx context.Context, fields []catalog.ManifestField, text f
 		}
 	}
 	if transformers > 0 {
-		b.WriteString(", " + i18n.N(ctx, "summary.applies", transformers))
+		b = append(b, ", ", i18n.MN("summary.applies", transformers))
 	}
 	for _, f := range fields {
 		if strings.HasPrefix(f.Path, "transform.") && strings.HasSuffix(f.Path, ".aggregate.by") {
-			b.WriteString(", " + tr("summary.groups", "by", valueText(f.Value)))
+			b = append(b, ", ", i18n.M("summary.groups", "by", valueText(f.Value)))
 		}
 	}
 
 	target := text("target.driver")
-	b.WriteString(" ")
+	b = append(b, " ")
 	switch target {
 	case "bigquery.Table":
-		b.WriteString(tr("summary.write.bigquery", "table", joinWords(".", text("target.project"), text("target.dataset"), text("target.table"))))
+		b = append(b, i18n.M("summary.write.bigquery", "table", joinWords(".", text("target.project"), text("target.dataset"), text("target.table"))))
 	case "postgres.Table", "redshift.Table":
 		engine := map[string]string{"postgres.Table": "Postgres", "redshift.Table": "Redshift"}[target]
-		b.WriteString(tr("summary.write.table", "engine", engine, "table", joinWords(".", text("target.schema"), text("target.table"))))
+		b = append(b, i18n.M("summary.write.table", "engine", engine, "table", joinWords(".", text("target.schema"), text("target.table"))))
 	case "mysql.Table":
-		b.WriteString(tr("summary.write.table", "engine", "MySQL", "table", joinWords(".", text("target.database"), text("target.table"))))
+		b = append(b, i18n.M("summary.write.table", "engine", "MySQL", "table", joinWords(".", text("target.database"), text("target.table"))))
 	case "pubsub.Topic":
-		b.WriteString(tr("summary.write.topic", "topic", joinWords("/", text("target.project"), text("target.topic"))))
+		b = append(b, i18n.M("summary.write.topic", "topic", joinWords("/", text("target.project"), text("target.topic"))))
 	case "to.Files":
-		b.WriteString(tr("summary.write.files", "path", text("target.path")))
+		b = append(b, i18n.M("summary.write.files", "path", text("target.path")))
 	default:
-		b.WriteString(tr("summary.write.other", "driver", target))
+		b = append(b, i18n.M("summary.write.other", "driver", target))
 		if t := text("target.target"); t != "" {
-			b.WriteString(" (" + t + ")")
+			b = append(b, " ("+t+")")
 		}
 	}
 
@@ -266,10 +276,9 @@ func pipelineSummary(ctx context.Context, fields []catalog.ManifestField, text f
 	case target == "pubsub.Topic":
 		// A message is published, not written into a table: neither word fits.
 	case text("target.dedup") == "merge":
-		b.WriteString(", " + tr("summary.pipeline.merge"))
+		b = append(b, ", ", i18n.M("summary.pipeline.merge"))
 	default:
-		b.WriteString(", " + tr("summary.pipeline.append"))
+		b = append(b, ", ", i18n.M("summary.pipeline.append"))
 	}
-	b.WriteString(".")
-	return b.String()
+	return append(b, ".")
 }

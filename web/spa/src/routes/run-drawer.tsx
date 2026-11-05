@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { ApiError, getJSON } from "../api/client";
 import { fieldErrors, fieldText, triggerRun, type FieldError, type TriggerBody } from "../api/trigger";
 import type { WorkflowDetail } from "../api/workflows";
-import { useFormat, useT } from "../i18n";
+import { useFormat, useMsg, useT } from "../i18n";
 import { toast } from "../shell/toast";
 import { buttonClass } from "../ui/button";
 import { Icon } from "../ui/icon";
@@ -184,6 +184,7 @@ function SlotPicker({ d, when, setWhen, sel, setSel, at, setAt, problem }: {
   at: string; setAt: (v: string) => void; problem?: string;
 }) {
   const { t } = useT();
+  const say = useMsg();
   const err = useId();
   return (
     <fieldset className="space-y-2">
@@ -199,7 +200,7 @@ function SlotPicker({ d, when, setWhen, sel, setSel, at, setAt, problem }: {
       {when === "slot" && (
         <div className="space-y-2">
           <select value={sel} aria-label={t("workflows.run_now.slot")} aria-invalid={!!problem || undefined} aria-describedby={problem ? err : undefined} onChange={(e) => setSel(e.target.value)} className="h-8 w-full rounded-card border border-line bg-surface px-2.5 text-[0.82rem] text-ink">
-            {d.slots.map((s) => <option key={s.at} value={s.at}>{s.label}</option>)}
+            {d.slots.map((s) => <option key={s.at} value={s.at}>{say(s.label)}</option>)}
             <option value="other">{t("workflows.run_now.another")}</option>
           </select>
           {sel === "other" && (

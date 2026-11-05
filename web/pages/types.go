@@ -1,12 +1,10 @@
 package pages
 
 import (
-	"context"
 	"time"
 
 	"brevis.sh/brevis/internal/alerts"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/components"
 	"brevis.sh/brevis/web/i18n"
 )
 
@@ -85,18 +83,18 @@ func alertTone(state string) string {
 // "sending" on its own is ambiguous in the way that matters: it is also what a
 // row looks like when nothing is draining the outbox, so it says which process
 // is supposed to.
-func alertWording(ctx context.Context, a alerts.Record) string {
-	subject := i18n.T(ctx, "run.alert.run")
+func alertWording(a alerts.Record) i18n.Msg {
+	subject := i18n.M("run.alert.run")
 	if a.Kind == alerts.KindStep && a.NodeID != "" {
-		subject = i18n.T(ctx, "run.alert.step", "step", a.NodeID)
+		subject = i18n.M("run.alert.step", "step", a.NodeID)
 	}
 	switch a.State() {
 	case "delivered":
-		return i18n.T(ctx, "run.alert.delivered", "subject", subject)
+		return i18n.M("run.alert.delivered", "subject", subject)
 	case "undelivered":
-		return i18n.T(ctx, "run.alert.undelivered", "subject", subject)
+		return i18n.M("run.alert.undelivered", "subject", subject)
 	}
-	return i18n.T(ctx, "run.alert.waiting", "subject", subject)
+	return i18n.M("run.alert.waiting", "subject", subject)
 }
 
 // firstHolders is the three a line has room for, oldest first.
@@ -105,16 +103,6 @@ func firstHolders(hs []postgres.Holder) []postgres.Holder {
 		return hs[:3]
 	}
 	return hs
-}
-
-// lateness reads as a duration rather than as a count of seconds. "2220" is a
-// number somebody converts; "37m" is an answer.
-func lateness(seconds int) string {
-	if seconds <= 0 {
-		return "on time"
-	}
-	d := time.Duration(seconds) * time.Second
-	return components.Duration(&d)
 }
 
 // DefaultPerPage is the lists' page size. Twenty-five fits a laptop screen

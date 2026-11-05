@@ -4,14 +4,15 @@ import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-quer
 import { ApiError, getJSON } from "../api/client";
 import { useFallbackInterval, useLive } from "../live/hooks";
 import { useScheduleToggle, type WorkflowDetail, type WorkflowsList } from "../api/workflows";
-import { useFormat, useT } from "../i18n";
+import { useFormat, useMsg, useT } from "../i18n";
 import { useCrumb } from "../shell/nav";
 import { buttonClass } from "../ui/button";
 import { linkClass } from "../ui/card";
 import { until, useAgo, useBrief, useNumbers } from "../ui/format";
 import { Segmented } from "../ui/filters";
 import { Icon } from "../ui/icon";
-import { Logo } from "../ui/logo";
+import { Logo, useLogoTitle } from "../ui/logo";
+import { useTrend } from "../ui/trend";
 import { PageFrame } from "../ui/page-frame";
 import { Panel } from "../ui/panel";
 import { useRunDrawer } from "./run-now";
@@ -51,14 +52,16 @@ const META_MIN = { minHeight: 23 };
 // What the line holds for a typical workflow, drawn hidden while the real one loads: it wraps the way the loaded
 // line does at this width. Only the fields Meta reads are filled in.
 const META_PLACEHOLDER = {
-  hasSchedule: true, active: true, project: "project", cron: "0 0 * * *", schedule: "every day at 00:00", timezone: "UTC",
-  steps: [0, 1], edges: 1, langs: [{ key: "go", name: "Go" }], tags: ["example", "tag"],
+  hasSchedule: true, active: true, project: "project", cron: "0 0 * * *", schedule: { k: "cron.daily", a: { at: "00:00" } }, timezone: "UTC",
+  steps: [0, 1], edges: 1, langs: [{ key: "go" }], tags: ["example", "tag"],
 } as unknown as WorkflowDetail;
 
 // ---- the line under the title: whether the schedule runs, project, cron, size, tags ----
 
 function Meta({ d }: { d?: WorkflowDetail }) {
   const { t, n } = useT();
+  const say = useMsg();
+  const logoTitle = useLogoTitle();
   // The line is as tall as one that carries a tag chip or a language logo (the usual case), with or without them:
   // a workflow with neither would otherwise sit 4px higher than the skeleton and shift everything below.
   if (!d) return <div aria-hidden="true" className={`mb-3 ${SK_REAL}`}><Meta d={META_PLACEHOLDER} /></div>;
@@ -85,7 +88,7 @@ function Meta({ d }: { d?: WorkflowDetail }) {
         <span>{t("workflows.manual_only")}</span>
       ) : (
         <>
-          {d.schedule && <span className="text-ink">{d.schedule}{zone}</span>}
+          {d.schedule && <span className="text-ink">{say(d.schedule)}{zone}</span>}
           <span className="font-mono text-[12px] text-faint">{d.cron}</span>
         </>
       )}
@@ -95,7 +98,7 @@ function Meta({ d }: { d?: WorkflowDetail }) {
         <>
           <span className="text-faint">·</span>
           {d.langs.map((l) => (
-            <span key={l.key} className="inline-flex items-center gap-1 text-ink-2"><Logo k={l.key} />{l.name}</span>
+            <span key={l.key} className="inline-flex items-center gap-1 text-ink-2"><Logo k={l.key} />{logoTitle(l.key)}</span>
           ))}
         </>
       )}
@@ -169,6 +172,8 @@ function WorkflowStats({ d }: { d?: WorkflowDetail }) {
 
 function StepsList({ d, ghostRows = 4 }: { d?: WorkflowDetail; ghostRows?: number }) {
   const { t } = useT();
+  const say = useMsg();
+  const logoTitle = useLogoTitle();
   const { elapsed } = useNumbers();
   return (
     <div className="overflow-x-auto">
@@ -195,12 +200,12 @@ function StepsList({ d, ghostRows = 4 }: { d?: WorkflowDetail; ghostRows?: numbe
                 <td className={cell}>
                   <span className="inline-flex items-center gap-1.5 text-xs text-ink-2">
                     {s.langs.map((l) => <Logo key={l.key} k={l.key} />)}
-                    {s.langs[0]?.name}
+                    {s.langs[0] && logoTitle(s.langs[0].key)}
                   </span>
                 </td>
                 <td className={cell}><span className="inline-flex items-center gap-1">{s.uses.map((l) => <Logo key={l.key} k={l.key} />)}</span></td>
                 <td className={`${cell} font-mono text-xs text-muted`}>{s.needs.join(", ")}</td>
-                <td className={`${cell} max-w-[22rem] truncate font-mono text-xs text-muted`} title={s.command}>{s.command}</td>
+                <td className={`${cell} max-w-[22rem] truncate font-mono text-xs text-muted`} title={say(s.command)}>{say(s.command)}</td>
                 <td className={`${cell} pr-4 text-right text-xs text-muted tabular-nums`}>{s.lastStatus ? elapsed(s.lastMs) : "—"}</td>
               </tr>
             ))
@@ -496,35 +501,37 @@ function Actions({ slug, d, toggler, onRun }: { slug: string; d?: WorkflowDetail
 
 function WhatItLoads({ load }: { load: NonNullable<WorkflowDetail["load"]> }) {
   const { t } = useT();
+  const trend = useTrend();
+  const window = trend.window(load.from, load.to);
   return (
     <section className="mt-3">
       <Panel title={t("workflow.load.title")}>
         <div className="px-3.5 py-3">
           <p className="mb-3 text-[12.5px] text-muted">
-            {load.window}. {t("workflow.load.lead")}
+            {window}. {t("workflow.load.lead")}
           </p>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {load.series.map((s) => (
-              <div key={s.label}>
+              <div key={s.key}>
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-[11.5px] text-muted">{s.label}</p>
-                  {s.delta && <span className={`text-[0.7rem] font-medium ${s.hue}`}>{s.delta}</span>}
+                  <p className="text-[11.5px] text-muted">{trend.label(s.key)}</p>
+                  {s.delta && <span className={`text-[0.7rem] font-medium ${s.hue}`}>{trend.delta(s.delta, s.pct)}</span>}
                 </div>
-                <p className="mt-1 font-serif text-2xl text-ink tabular-nums">{s.latest}</p>
+                <p className="mt-1 font-serif text-2xl text-ink tabular-nums">{trend.value(s.unit, s.latest)}</p>
                 {s.flat ? (
                   <p className="mt-1 text-xs text-muted">{t("workflow.trend.flat")}</p>
                 ) : (
-                  <svg viewBox="0 0 300 56" className="mt-2 h-[56px] w-full" preserveAspectRatio="none" role="img" aria-label={t("workflow.trend.aria", { label: s.label, window: load.window })}>
+                  <svg viewBox="0 0 300 56" className="mt-2 h-[56px] w-full" preserveAspectRatio="none" role="img" aria-label={t("workflow.trend.aria", { label: trend.label(s.key), window })}>
                     <polyline points={s.area} className="fill-ink/10" stroke="none" />
                     <polyline points={s.path} className="stroke-ink-2" fill="none" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                     {s.points.map((p) => (
                       <circle key={p.x} cx={p.x} cy={p.y} r="4" fill="transparent">
-                        <title>{p.tooltip}</title>
+                        <title>{`${trend.day(p.date)} — ${trend.value(s.unit, p.value)}`}</title>
                       </circle>
                     ))}
                   </svg>
                 )}
-                <p className="mt-1 text-xs text-muted">{s.note}</p>
+                <p className="mt-1 text-xs text-muted">{trend.note(s.key)}</p>
               </div>
             ))}
           </div>
