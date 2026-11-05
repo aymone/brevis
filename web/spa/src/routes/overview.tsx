@@ -6,7 +6,7 @@ import { useSession } from "../api/session";
 import { useFormat, useMsg, useT, type Msg } from "../i18n";
 import { FilterBar, Segmented } from "../ui/filters";
 import { Empty, Panel, linkClass } from "../ui/card";
-import { until, useNumbers } from "../ui/format";
+import { useUntil, useNumbers } from "../ui/format";
 import { Logos } from "../ui/logo";
 import { PageFrame } from "../ui/page-frame";
 import { LoadError } from "../ui/query-boundary";
@@ -68,6 +68,7 @@ function WindowToggle({ current }: { current: WindowKey }) {
 
 // The four numbers: how much passed, what failed, what runs and waits, what fires next.
 function Kpis({ window, o }: { window: WindowKey; o?: Overview }) {
+  const until = useUntil();
   const { t, n } = useT();
   const f = useFormat();
   const { percent, elapsed } = useNumbers();
@@ -118,6 +119,7 @@ function Kpis({ window, o }: { window: WindowKey; o?: Overview }) {
 }
 
 function NextTriggers({ o }: { o?: Overview }) {
+  const until = useUntil();
   const { t } = useT();
   const say = useMsg();
   return (

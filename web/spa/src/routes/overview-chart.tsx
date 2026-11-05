@@ -50,7 +50,9 @@ export function RunsChart({ buckets, grain }: { buckets?: Bucket[]; grain: "hour
   const top = ceiling(Math.max(...buckets.map((b) => b.succeeded + b.failed + b.running + b.queued)));
   const step = (W - LEFT) / buckets.length;
   const width = Math.max(2, Math.floor(step * 0.62));
-  const hour = (iso: string) => `${String(new Date(iso).getHours()).padStart(2, "0")}h`;
+  // English writes the hour as "22h"; the other languages the way their clock labels one ("22 h", "22時", "22시").
+  const hourOf = new Intl.DateTimeFormat(lang, { hour: "2-digit", hourCycle: "h23" });
+  const hour = (iso: string) => (lang.startsWith("en") ? `${String(new Date(iso).getHours()).padStart(2, "0")}h` : hourOf.format(new Date(iso)));
   const label = (iso: string) => (day ? new Date(iso).toLocaleDateString(lang, { month: "short", day: "numeric", timeZone: "UTC" }) : hour(iso));
   const tip = (b: Bucket) => {
     const slice = day ? label(b.start) : `${hour(b.start)}–${hour(new Date(new Date(b.start).getTime() + span).toISOString())}`;

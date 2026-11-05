@@ -1,21 +1,14 @@
 import { useSession } from "../api/session";
 import type { Auto, PhaseDetail } from "../api/run";
 import { useFormat, useT } from "../i18n";
-import { fixed } from "../fixed";
+import { formatDuration, formatSpan, formatUntil } from "./duration";
 import { runKind, useStatusWord } from "./status";
 
-/** A wait rounded to what a person plans by (the server's untilText): "<1m", "9h 28m", "3d". */
-export function until(ms: number): string {
-  const min = Math.floor(ms / 60_000);
-  if (ms < 60_000) return "<1m";
-  if (ms < 3_600_000) return `${min}m`;
-  if (ms < 48 * 3_600_000) {
-    const h = Math.floor(min / 60);
-    return min % 60 > 0 ? `${h}h ${min % 60}m` : `${h}h`;
-  }
-  return `${Math.floor(ms / 86_400_000)}d`;
+/** A wait rounded to what a person plans by: "<1m", "9h 28m", "3d", its units in the reader's language. */
+export function useUntil() {
+  const { lang } = useSession();
+  return (ms: number) => formatUntil(lang, ms);
 }
-
 /** Number, percentage and duration formatters in the reader's language. */
 export function useNumbers() {
   const { lang } = useSession();
@@ -23,24 +16,19 @@ export function useNumbers() {
   return {
     /** part of whole as "87.5%" */
     percent: (part: number, whole: number) => `${one.format((100 * part) / whole)}%`,
-    /** A duration as the server's Elapsed writes it: 340ms, 1.5s, 2m 05s, 1h 02m. */
-    elapsed: (ms: number) => {
-      if (ms < 1000) return `${Math.round(ms)}ms`;
-      if (ms < 60_000) return `${fixed(lang, ms / 1000, 1)}s`;
-      const s = Math.floor(ms / 1000);
-      if (ms < 3_600_000) return `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, "0")}s`;
-      return `${Math.floor(s / 3600)}h ${String(Math.floor(s / 60) % 60).padStart(2, "0")}m`;
-    },
+    /** A duration: 340ms, 1.5s, 2m 05s, 1h 02m, its units in the reader's language. */
+    elapsed: (ms: number) => formatDuration(lang, ms),
   };
 }
 
 /** "3 min ago" up to a day, the date after that (the server's i18n.Since). */
 export function useAgo() {
   const { t } = useT();
+  const { lang } = useSession();
   const f = useFormat();
   return (iso: string, now = Date.now()) => {
     const d = now - new Date(iso).getTime();
-    const span = (ms: number) => (ms < 3_600_000 ? `${Math.floor(ms / 60_000)} min` : ms < 86_400_000 ? `${Math.floor(ms / 3_600_000)}h` : `${Math.floor(ms / 86_400_000)}d`);
+    const span = (ms: number) => formatSpan(lang, ms);
     if (d < 0) return t("time.in", { span: span(-d) });
     if (d < 60_000) return t("time.now");
     if (d < 86_400_000) return t("time.ago", { span: span(d) });
@@ -72,7 +60,7 @@ export function useSince() {
   return (iso: string, now: string | number = Date.now()) => {
     const at = new Date(iso);
     const d = new Date(now).getTime() - at.getTime();
-    const span = (ms: number) => (ms < 3_600_000 ? `${Math.floor(ms / 60_000)} min` : ms < 86_400_000 ? `${Math.floor(ms / 3_600_000)}h` : `${Math.floor(ms / 86_400_000)}d`);
+    const span = (ms: number) => formatSpan(lang, ms);
     if (d < 0) return t("time.in", { span: span(-d) });
     if (d < 60_000) return t("time.now");
     if (d < 86_400_000) return t("time.ago", { span: span(d) });

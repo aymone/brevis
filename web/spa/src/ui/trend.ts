@@ -1,11 +1,12 @@
 import { useSession } from "../api/session";
-import { fixed } from "../fixed";
+import { fixed, roundEven } from "../fixed";
+import { formatUnit } from "./duration";
 import { useT } from "../i18n";
 
 // THE "WHAT IT LOADS" PANEL'S WORDS AND NUMBERS. The server sends numbers and codes (web/components/trend.go); the
 // reader's language writes them: the decimal mark, the month, the labels and the delta.
 
-/** A value in its unit: counts as 1.5k / 2.0M, sizes as 1.2 MB / 200 B, seconds as 0.4s / 12s / 2m 05s. */
+/** A value in its unit: counts as 1.5k / 2.0M, sizes as 1.2 MB / 200 B, seconds as 0.4s / 12s / 2m 5s (the unit in the reader's language). */
 export function trendValue(lang: string, unit: string, v: number): string {
   const one = (x: number) => fixed(lang, x, 1);
   const whole = (x: number) => fixed(lang, x, 0);
@@ -21,9 +22,10 @@ export function trendValue(lang: string, unit: string, v: number): string {
     if (v >= 2 ** 10) return `${one(v / 2 ** 10)} kB`;
     return `${whole(v)} B`;
   }
-  if (v >= 60) return `${Math.floor(v / 60)}m ${Math.floor(v) % 60}s`;
-  if (v > 0 && v < 1) return `${one(v)}s`;
-  return `${whole(v)}s`;
+  // Seconds, the unit written the reader's way (a panel of small numbers: 12s, 0.4s, 2m 5s in English).
+  if (v >= 60) return `${formatUnit(lang, "minute", Math.floor(v / 60))} ${formatUnit(lang, "second", Math.floor(v) % 60)}`;
+  if (v > 0 && v < 1) return formatUnit(lang, "second", Number(roundEven(v, 1)), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return formatUnit(lang, "second", Number(roundEven(v, 0)));
 }
 
 /** A UTC day as "2 Jan" (English keeps the day first, as the panel always wrote it), with its year when asked. */

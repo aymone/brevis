@@ -380,6 +380,7 @@ const answerBox = "rounded-card border border-line bg-canvas-subtle px-3 py-2.5 
 
 function AnswerView({ a }: { a: Answer }) {
   const { t, n } = useT();
+  const f = useFormat();
   const cache = a.cache === "hit" || a.cache === "miss" || a.cache === "bypass" ? t(`endpoint.try.cache.${a.cache}`) : "";
   const total = a.truncated ? `${a.received}+` : String(a.received);
   return (
@@ -389,7 +390,7 @@ function AnswerView({ a }: { a: Answer }) {
           {a.status} {a.statusText}
         </span>
         {a.cache && <span className="rounded-card border border-line px-1.5 py-px font-mono text-[0.7rem] font-semibold text-ink">{a.cache.toUpperCase()}</span>}
-        <span className="tabular-nums">{a.millis} ms</span>
+        <span className="tabular-nums">{f.duration(a.millis)}</span>
         {a.status === 200 && <span className="tabular-nums">{n("endpoint.try.rows", a.received, { n: total })}</span>}
       </div>
       {cache && <p className="mb-2 text-[0.72rem] text-muted">{cache}</p>}

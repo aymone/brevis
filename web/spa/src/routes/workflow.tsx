@@ -8,7 +8,7 @@ import { useFormat, useMsg, useT } from "../i18n";
 import { useCrumb } from "../shell/nav";
 import { buttonClass } from "../ui/button";
 import { linkClass } from "../ui/card";
-import { until, useAgo, useBrief, useNumbers } from "../ui/format";
+import { useUntil, useAgo, useBrief, useNumbers } from "../ui/format";
 import { Segmented } from "../ui/filters";
 import { Icon } from "../ui/icon";
 import { Logo, useLogoTitle } from "../ui/logo";
@@ -112,6 +112,7 @@ function Meta({ d }: { d?: WorkflowDetail }) {
 // ---- the five numbers: days without failure, days with, mean, in progress, next run ----
 
 function WorkflowStats({ d }: { d?: WorkflowDetail }) {
+  const until = useUntil();
   const { t, n } = useT();
   const { number } = useFormat();
   const { percent, elapsed } = useNumbers();

@@ -321,7 +321,7 @@ function Workbench({ state }: { state: State | undefined }) {
     staleTime: 60_000,
   });
   const writable = tree.data?.writable ?? false;
-  const costOf = useCallback((r: Result) => `${t("sql.result.read", { bytes: bytes(r.bytes) })} · ${f.number(r.ms)} ms`, [t, bytes, f]);
+  const costOf = useCallback((r: Result) => `${t("sql.result.read", { bytes: bytes(r.bytes) })} · ${f.duration(r.ms)}`, [t, bytes, f]);
 
   const record = (text: string, outcome: Entry["outcome"], cost: string) =>
     setHistory((h) => {
