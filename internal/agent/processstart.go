@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -31,7 +32,11 @@ func processStart(pid int) (time.Time, error) {
 	if pid <= 0 {
 		return time.Time{}, fmt.Errorf("pid %d is not a process", pid)
 	}
-	out, err := exec.Command("ps", "-o", "lstart=", "-p", fmt.Sprint(pid)).Output() // #nosec G204 -- ps with a pid that is an int
+	cmd := exec.Command("ps", "-o", "lstart=", "-p", fmt.Sprint(pid)) // #nosec G204 -- ps with a pid that is an int
+	// The C locale, because `ps` prints lstart in the machine's: macOS under en_NZ or pt_BR puts the day
+	// before the month ("Tue  3 Nov 17:12:51 2026"), which the layout below cannot read.
+	cmd.Env = append(os.Environ(), "LC_ALL=C")
+	out, err := cmd.Output()
 	if err != nil {
 		// `ps` exits non-zero when the pid is gone, which is not an error to
 		// report: a process that no longer exists gives a cancel exactly what
@@ -43,7 +48,7 @@ func processStart(pid int) (time.Time, error) {
 		return time.Time{}, nil
 	}
 
-	// "Thu Sep 10 22:26:04 2026", in the machine's local zone. Parsed in Local
+	// "Thu Sep 10 22:26:04 2026" (the C locale's), in the machine's local zone. Parsed in Local
 	// because that is what `ps` prints -- reading it as UTC would put every
 	// comparison hours out and make every pid look recycled.
 	started, err := time.ParseInLocation("Mon Jan _2 15:04:05 2006", text, time.Local)
