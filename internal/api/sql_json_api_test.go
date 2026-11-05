@@ -86,23 +86,23 @@ func TestSQLRunReturnsTheGridAndCarriesTheLimit(t *testing.T) {
 	}
 }
 
-func TestSQLRunFailuresAreJSONWithAKind(t *testing.T) {
+func TestSQLRunFailuresAreJSONWithACode(t *testing.T) {
 	w, ui := browsing(t)
 	body := `{"target":"` + probeTarget + `","q":"DELETE FROM t"}`
 
 	w.status["/v1/query"], w.query = 400, `{"error":"this service only reads"}`
-	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 422 || got["kind"] != "refused" || got["error"] != "this service only reads" {
+	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 422 || got["error"] != "refused" || got["detail"] != "this service only reads" {
 		t.Errorf("refused: %d %v", code, got)
 	}
 	w.query = `{"error":"x","code":"no-connection"}`
-	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 422 || got["kind"] != "no_connection" || got["connection"] != "acme-prod" {
+	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 422 || got["error"] != "no_connection" || got["connection"] != "acme-prod" {
 		t.Errorf("no connection: %d %v", code, got)
 	}
 	w.status["/v1/query"] = 500
-	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 502 || got["kind"] != "failed" {
+	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", body); code != 502 || got["error"] != "run_failed" || got["detail"] == nil {
 		t.Errorf("failed: %d %v", code, got)
 	}
-	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", `{"target":"`+probeTarget+`","q":"  "}`); code != 400 || got["kind"] != "empty" {
+	if code, got := sqlJSON(t, ui, "POST", "/api/sql/run", `{"target":"`+probeTarget+`","q":"  "}`); code != 400 || got["error"] != "statement_empty" {
 		t.Errorf("empty: %d %v", code, got)
 	}
 	if code, _ := sqlJSON(t, ui, "POST", "/api/sql/run", `{"target":"`+probeTarget+`","q":"`+strings.Repeat("a", 70<<10)+`"}`); code != 400 {

@@ -115,18 +115,18 @@ export type WorkflowDetail = {
   now: string;
 };
 
-type Toggled = { active: boolean; message: string };
+type Toggled = { active: boolean };
 
-// useScheduleToggle pauses or resumes a schedule and keeps the server's
-// sentence for the page to say (and to undo from). Every cached list and page
+// useScheduleToggle pauses or resumes a schedule and keeps what happened (the
+// page says it, in the reader's language, and undoes from it). Every cached list and page
 // is refreshed, so the switch, the pill and the count agree.
 export function useScheduleToggle() {
   const qc = useQueryClient();
-  const [note, setNote] = useState<{ slug: string; message: string } | null>(null);
+  const [note, setNote] = useState<{ slug: string; active: boolean } | null>(null);
   const m = useMutation({
     mutationFn: (slug: string) => postJSON<Toggled>(`/api/workflows/${encodeURIComponent(slug)}/toggle`),
     onSuccess: (r, slug) => {
-      if (r) setNote({ slug, message: r.message });
+      if (r) setNote({ slug, active: r.active });
       void qc.invalidateQueries({ queryKey: ["workflows"] });
       void qc.invalidateQueries({ queryKey: ["workflow", slug] });
     },

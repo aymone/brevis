@@ -19,6 +19,7 @@ import { Logo, useLogoTitle } from "../ui/logo";
 import { HealthStatus, useHealthReason, useHealthSince } from "../ui/health";
 import { TOPIC_STREAMS } from "../ui/metrics/hooks";
 import "./streams.css";
+import { ErrorText } from "../api/errors";
 
 const pill = "inline-flex items-center gap-1.5 rounded-card border border-line px-2 py-0.5 text-ink-2";
 // The tab names the panel; the server hides this heading when the tabs are there.
@@ -401,7 +402,7 @@ export default function StreamRoute() {
       />
       {q.isError && (
         <p role="alert" className="mb-3 rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
-          {(q.error as Error).message}
+          <ErrorText error={q.error} />
         </p>
       )}
       <div aria-hidden={ghost || undefined} className={`mb-4 max-w-3xl text-[13.5px] text-muted ${gh(ghost)}`}>{v.lede}</div>

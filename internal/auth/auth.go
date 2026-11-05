@@ -47,6 +47,10 @@ const keySize = 32
 // enough not to ask for a password in the middle of an investigation.
 const SessionLifetime = 12 * time.Hour
 
+// CodeSignInRequired is the error code of every 401 the gate answers: a session is missing or has expired.
+// The server speaks codes and never sentences; the app says it in the reader's language and goes to its login.
+const CodeSignInRequired = "sign_in_required"
+
 // CookieName is the session cookie's name.
 const CookieName = "brevis_sessao"
 
@@ -288,14 +292,16 @@ func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(`{"error":"sign in"}` + "\n"))
+		_, _ = w.Write([]byte(`{"error":"` + CodeSignInRequired + `"}` + "\n"))
 		return
 	}
 	// A POST without a session does not become a redirect to the login: the
 	// browser would lose the body and the operator would resend blindly after
 	// signing in. A 401 tells the truth about what happened.
 	if r.Method != http.MethodGet {
-		http.Error(w, "session expired; sign in again", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"` + CodeSignInRequired + `"}` + "\n"))
 		return
 	}
 	// `next` is the SAME name the login screen reads, and that is the whole

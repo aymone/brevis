@@ -12,8 +12,8 @@ import (
 
 	"github.com/google/uuid"
 
+	sch "brevis.sh/brevis/internal/domain/schedule"
 	wf "brevis.sh/brevis/internal/domain/workflow"
-	"brevis.sh/brevis/web/i18n"
 )
 
 func (u *UI) registerTriggerAPI(mux *http.ServeMux) {
@@ -35,7 +35,7 @@ type triggerBody struct {
 
 // paramString is a JSON param value as the string every param travels as: a
 // list joins its non-empty items with commas, exactly what paramsFromForm does
-// with the old form's boxes.
+// with the old form's boxes. A refusal is a *wf.ParamError.
 func paramString(v any) (string, error) {
 	switch x := v.(type) {
 	case nil:
@@ -50,7 +50,7 @@ func paramString(v any) (string, error) {
 		items := make([]string, 0, len(x))
 		for _, e := range x {
 			if _, nested := e.([]any); nested {
-				return "", fmt.Errorf("a list holds values, not lists")
+				return "", &wf.ParamError{Code: wf.ParamNestedList}
 			}
 			s, err := paramString(e)
 			if err != nil {
@@ -62,15 +62,63 @@ func paramString(v any) (string, error) {
 		}
 		return strings.Join(items, ","), nil
 	}
-	return "", fmt.Errorf("a param is a string, number, boolean or list")
+	return "", &wf.ParamError{Code: wf.ParamBadValueType}
+}
+
+// slotParseError is a slot that is not a time: Value is what was sent.
+type slotParseError struct{ Value string }
+
+func (e *slotParseError) Error() string {
+	return fmt.Sprintf("slot %q is not a time: use 2026-10-27T04:00:00Z, or 2026-10-27T04:00 in the schedule's zone", e.Value)
+}
+
+// fieldCode is one field's refusal on the wire: {"code", ...data}, the data only when it exists. The
+// SPA writes the sentence (web/spa/src/api/trigger.ts); the English of Error() is for the CLI and the logs.
+func fieldCode(err error) map[string]any {
+	var pe *wf.ParamError
+	var se *sch.SlotError
+	var pse *slotParseError
+	switch {
+	case errors.As(err, &pe):
+		f := map[string]any{"code": string(pe.Code)}
+		switch pe.Code {
+		case wf.ParamNotBoolean, wf.ParamNotInteger, wf.ParamNotOneOf, wf.ParamNoMatch, wf.ParamUnsafeChars, wf.ParamItemDuplicate, wf.ParamUndeclared:
+			f["value"] = pe.Value
+		}
+		if pe.Item > 0 {
+			f["item"] = pe.Item
+		}
+		if pe.Code == wf.ParamNotOneOf {
+			f["allowed"] = pe.Allowed
+		}
+		if pe.Code == wf.ParamNoMatch {
+			f["pattern"] = pe.Pattern
+		}
+		return f
+	case errors.As(err, &se):
+		f := map[string]any{"code": string(se.Code)}
+		if se.Code != sch.SlotNoSchedule {
+			f["slot"] = se.Slot.UTC().Format(time.RFC3339)
+		}
+		if se.Code == sch.SlotNotOnCron {
+			f["cron"], f["zone"] = se.Cron, se.Zone
+			if !se.Nearest.IsZero() {
+				f["nearest"] = se.Nearest.UTC().Format(time.RFC3339)
+			}
+		}
+		return f
+	case errors.As(err, &pse):
+		return map[string]any{"code": "slot_not_a_time", "value": pse.Value}
+	}
+	return map[string]any{"code": "invalid"}
 }
 
 // checkParams is the trigger form's validation, field by field: what
 // Workflow.Resolver refuses as one sentence, said where it belongs. The rules
 // are the definition's own (Param.Accepts), plus the drawer's "required": a
 // param with no default and nothing typed.
-func checkParams(r *http.Request, def wf.Workflow, given map[string]string) map[string]string {
-	fields := map[string]string{}
+func checkParams(def wf.Workflow, given map[string]string) map[string]map[string]any {
+	fields := map[string]map[string]any{}
 	declared := map[string]bool{}
 	for _, p := range def.Params {
 		declared[p.Name] = true
@@ -79,35 +127,30 @@ func checkParams(r *http.Request, def wf.Workflow, given map[string]string) map[
 			value = p.Default
 		}
 		if value == "" && p.Default == "" && !p.Type.IsList() {
-			fields[p.Name] = i18n.T(r.Context(), "drawer.check.required")
+			fields[p.Name] = fieldCode(&wf.ParamError{Code: wf.ParamRequired})
 		} else if err := p.Accepts(value); err != nil {
-			fields[p.Name] = err.Error()
+			fields[p.Name] = fieldCode(err)
 		}
 	}
 	for name := range given {
 		if !declared[name] {
-			fields[name] = fmt.Sprintf("workflow %q does not declare the param %q", def.Slug, name)
+			fields[name] = fieldCode(&wf.ParamError{Code: wf.ParamUndeclared, Value: name})
 		}
 	}
 	return fields
 }
 
-func refuse(w http.ResponseWriter, msg string, fields map[string]string) {
-	writeJSON(w, http.StatusUnprocessableEntity, map[string]any{"error": msg, "fields": fields})
-}
-
 // triggerJSON runs a workflow now, or one of its past slots: handler
 // `disparar`'s effect (the same slot reading, the same scheduler call) answered
-// as JSON. 201 {runId, href}; 422 {error, fields} for a value or slot the
-// operator can fix; 409 when the idempotency key folded this click into one
-// already made.
+// as JSON. 201 {runId, href}; 422 {error: "invalid_params", fields} for a value
+// or slot the operator can fix; 409 when the idempotency key folded this click
+// into one already made.
 func (u *UI) triggerJSON(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	r = r.WithContext(ctx)
+	ctx := r.Context()
 	slug := r.PathValue("slug")
 	def, err := u.defs.Definition(ctx, slug)
 	if err != nil {
-		jsonError(w, http.StatusNotFound, "no such workflow")
+		fail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 
@@ -116,55 +159,62 @@ func (u *UI) triggerJSON(w http.ResponseWriter, r *http.Request) {
 	var body triggerBody
 	// An empty body is a run with the defaults, as an empty form is.
 	if err := dec.Decode(&body); err != nil && !errors.Is(err, io.EOF) {
-		jsonError(w, http.StatusBadRequest, "invalid JSON body")
+		fail(w, http.StatusBadRequest, codeInvalidRequest)
 		return
 	}
 	var fromRun uuid.UUID
 	if body.FromRun != "" {
 		if fromRun, err = uuid.Parse(body.FromRun); err != nil {
-			jsonError(w, http.StatusBadRequest, "from_run is not a run id")
+			fail(w, http.StatusBadRequest, codeInvalidRequest)
 			return
 		}
 	}
 
-	params, fields := map[string]string{}, map[string]string{}
+	params, fields := map[string]string{}, map[string]map[string]any{}
 	for name, v := range body.Params {
 		s, err := paramString(v)
 		if err != nil {
-			fields[name] = err.Error()
+			fields[name] = fieldCode(err)
 			continue
 		}
 		params[name] = s
 	}
-	for name, msg := range checkParams(r, def, params) {
+	for name, f := range checkParams(def, params) {
 		if _, bad := fields[name]; !bad {
-			fields[name] = msg
+			fields[name] = f
 		}
 	}
 	slot, err := u.slotFromForm(ctx, slug, strings.TrimSpace(body.Slot))
 	if err != nil {
-		fields["slot"] = err.Error()
+		var pse *slotParseError
+		if !errors.As(err, &pse) {
+			u.log.Warn("trigger: reading the schedule failed", "workflow", slug, "error", err)
+			fail(w, http.StatusInternalServerError, codeUnavailable)
+			return
+		}
+		fields["slot"] = fieldCode(err)
 	}
 	if len(fields) > 0 {
-		refuse(w, i18n.N(ctx, "drawer.status.invalid", len(fields), "n", len(fields)), fields)
+		fail(w, http.StatusUnprocessableEntity, codeInvalidParams, "fields", fields)
 		return
 	}
 
 	id, err := u.actions.Disparar(ctx, slug, time.Now(), params, slot)
 	if err != nil {
 		u.log.Warn("trigger refused", "workflow", slug, "error", err)
-		// What is left is the scheduler refusing the slot (not on the cron, in
-		// the future): its sentence names the nearest valid one.
-		if slot != nil {
-			refuse(w, err.Error(), map[string]string{"slot": err.Error()})
+		// The scheduler refusing the slot (not on the cron, in the future) is the slot field's; any other
+		// failure is the server's, and its text stays in the log.
+		var se *sch.SlotError
+		if errors.As(err, &se) {
+			fail(w, http.StatusUnprocessableEntity, codeInvalidParams, "fields", map[string]any{"slot": fieldCode(err)})
 			return
 		}
-		refuse(w, err.Error(), map[string]string{})
+		fail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	if id == uuid.Nil {
 		u.log.Info("trigger ignored by idempotency", "workflow", slug)
-		jsonError(w, http.StatusConflict, "a run of this workflow was just started; follow it in Runs")
+		fail(w, http.StatusConflict, codeRunJustStarted)
 		return
 	}
 	u.log.Info("manual run created", "workflow", slug, "run", id, "from_run", fromRun)

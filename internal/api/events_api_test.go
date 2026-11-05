@@ -131,7 +131,7 @@ func TestEventsRefusals(t *testing.T) {
 	}
 	body, _ := io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
-	if resp.StatusCode != 503 || strings.TrimSpace(string(body)) != `{"error":"too many live connections"}` {
+	if resp.StatusCode != 503 || strings.TrimSpace(string(body)) != `{"error":"busy"}` {
 		t.Errorf("over the cap: %d %q", resp.StatusCode, body)
 	}
 }

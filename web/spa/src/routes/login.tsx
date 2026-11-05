@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { getJSON } from "../api/client";
-import { safeNext, signIn } from "../api/login";
+import { loginMessageKey, safeNext, signIn } from "../api/login";
 import { useConfig, useSession, type Config, type Session } from "../api/session";
 import { bindOperator } from "../ui/seen";
 import { useT } from "../i18n";
@@ -92,7 +92,7 @@ export default function LoginRoute() {
     if (passwordRef.current) passwordRef.current.value = "";
     if (!res.ok) {
       setBusy(false);
-      setError(res.error || t("login.failed"));
+      setError(t(loginMessageKey(res.code)));
       setRetry(0);
       if (res.status === 429 && res.retryAfter) {
         setRetry(res.retryAfter);

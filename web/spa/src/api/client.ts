@@ -1,17 +1,27 @@
 // ApiError carries the HTTP status, so a screen can tell a 401 (go to login)
 // from a 500 (show the retry) without parsing a message.
+//
+// The server speaks codes, never sentences (internal/api/apierror.go): `code` is its
+// {"error"} and `body` the rest of it (data such as `connection` or `retryAfter`, and
+// `detail`, the words of a service downstream). The sentence is the screen's, in the
+// reader's language: see errors.ts. `message` is the code, or "<path>: HTTP <status>"
+// when the server said nothing, and is for logs, never for a reader.
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
-    /** The parsed JSON error body ({"error", "kind", ...}), when the server sent one. */
-    readonly body?: Record<string, string>,
+    /** The parsed JSON error body ({"error": "<code>", ...data}), when the server sent one. */
+    readonly body?: Record<string, unknown>,
   ) {
     super(message);
   }
+  /** The server's error code, "" when it sent none. */
+  get code(): string {
+    return typeof this.body?.error === "string" ? this.body.error : "";
+  }
 }
 
-// The Gate answers an /api/* request without a session with 401 {"error":"sign in"}
+// The Gate answers an /api/* request without a session with 401 {"error":"sign_in_required"}
 // (a redirect is for pages). The way back is the app's own login screen, which
 // returns here afterwards through `next`. replace(), not assign(): the screen
 // that lost its session should not be one Back away. Only the Gate's own body
@@ -21,7 +31,7 @@ export class ApiError extends Error {
 async function signInAgain(res: Response, path: string): Promise<void> {
   if (res.status !== 401) return;
   const body = (await res.clone().json().catch(() => null)) as { error?: string } | null;
-  if (body?.error !== "sign in") return;
+  if (body?.error !== "sign_in_required") return;
   if (location.pathname !== "/login") {
     location.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
   }
@@ -40,16 +50,17 @@ export async function getJSON<T>(path: string): Promise<T> {
   const res = await fetch(path, { headers: { Accept: "application/json" } });
   await signInAgain(res, path);
   if (!res.ok) {
-    // The API answers a failure as {"error": "..."}; say that when it did.
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw new ApiError(res.status, body?.error ?? `${path}: HTTP ${res.status}`);
+    // The API answers a failure as {"error": "<code>", ...}; say that when it did.
+    const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    const code = typeof body?.error === "string" ? body.error : "";
+    throw new ApiError(res.status, code || `${path}: HTTP ${res.status}`, body ?? undefined);
   }
   // A 204 is "nothing there" (no release known): no body to read.
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
-/** POST a JSON body; resolves undefined on 204. A failure carries the server's {"error"} as the message. */
+/** POST a JSON body; resolves undefined on 204. A failure is an ApiError with the server's {"error"} code. */
 export async function postJSON<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T | undefined> {
   const res = await fetch(path, {
     method: "POST",
@@ -60,8 +71,9 @@ export async function postJSON<T>(path: string, body?: unknown, signal?: AbortSi
   await signInAgain(res, path);
   if (res.status === 204) return undefined;
   if (!res.ok) {
-    const parsed = (await res.json().catch(() => undefined)) as Record<string, string> | undefined;
-    throw new ApiError(res.status, parsed?.error ?? `${path}: HTTP ${res.status}`, parsed);
+    const parsed = (await res.json().catch(() => undefined)) as Record<string, unknown> | undefined;
+    const code = typeof parsed?.error === "string" ? parsed.error : "";
+    throw new ApiError(res.status, code || `${path}: HTTP ${res.status}`, parsed);
   }
   return (await res.json()) as T;
 }

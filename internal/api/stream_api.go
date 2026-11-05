@@ -18,7 +18,7 @@ func (u *UI) streamAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	s := pages.FindStream(pages.StreamsOf(entries), r.PathValue("gateway"), "/"+r.PathValue("path"))
 	if s == nil {
-		ingestMissing(w, "that stream")
+		ingestMissing(w)
 		return
 	}
 	var detail *postgres.TargetDetail

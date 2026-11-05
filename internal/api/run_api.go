@@ -21,15 +21,15 @@ func (u *UI) registerRunAPI(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/runs/{id}/cancel", u.cancelJSON)
 }
 
-func runFail(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
+func runFail(w http.ResponseWriter, status int, code apiCode) {
+	fail(w, status, code)
 }
 
 // runIDOf reads the {id} of the route; false has already answered.
 func (u *UI) runIDOf(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil || u.execs == nil {
-		runFail(w, http.StatusNotFound, "run not found")
+		runFail(w, http.StatusNotFound, codeNotFound)
 		return id, false
 	}
 	return id, true
@@ -44,12 +44,12 @@ func (u *UI) runJSON(w http.ResponseWriter, r *http.Request) {
 	}
 	current, err := u.execs.Get(r.Context(), id)
 	if errors.Is(err, pgx.ErrNoRows) {
-		runFail(w, http.StatusNotFound, "run not found")
+		runFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	if err != nil {
 		u.log.Error("reading the run", "run", id, "error", err)
-		runFail(w, http.StatusInternalServerError, "the run is unavailable")
+		runFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	// A live run is read again and again: a proxy's copy would be a lie.
@@ -73,17 +73,17 @@ func (u *UI) cancelJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if u.actions == nil {
-		runFail(w, http.StatusNotFound, "run not found")
+		runFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	got, err := u.actions.Cancel(r.Context(), id, auth.De(r.Context()))
 	if errors.Is(err, postgres.ErrRunNotFound) {
-		runFail(w, http.StatusNotFound, "run not found")
+		runFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	if err != nil {
 		u.log.Error("canceling the run", "run", id, "error", err)
-		runFail(w, http.StatusInternalServerError, "the run could not be canceled")
+		runFail(w, http.StatusInternalServerError, codeCancelFailed)
 		return
 	}
 	u.log.Info("run cancel asked", "run", id, "outcome", got.Outcome, "status", got.Status)

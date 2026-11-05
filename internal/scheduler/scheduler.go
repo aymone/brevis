@@ -334,29 +334,24 @@ func (s *Scheduler) checkSlot(ctx context.Context, slug string, slot, now time.T
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("workflow %q has no schedule: a slot is one of its schedule's runs", slug)
+		return &sch.SlotError{Code: sch.SlotNoSchedule, Workflow: slug}
 	}
 	cronSched, loc, err := a.Parse()
 	if err != nil {
 		return err
 	}
 	if slot.After(now) {
-		return fmt.Errorf("slot %s is in the future", slot.UTC().Format(slotLayout+" UTC"))
+		return &sch.SlotError{Code: sch.SlotInFuture, Slot: slot}
 	}
 	if cronSched.Next(slot.In(loc).Add(-time.Second)).Equal(slot) {
 		return nil
 	}
-	msg := fmt.Sprintf("%s is not a slot of %q", slot.UTC().Format(slotLayout+" UTC"), a.Cron)
+	e := &sch.SlotError{Code: sch.SlotNotOnCron, Slot: slot, Cron: a.Cron, Zone: loc.String()}
 	if prev, found := slotBefore(cronSched, loc, slot); found {
-		msg += "; the nearest before it is " + prev.UTC().Format(slotLayout+" UTC")
-		if loc != time.UTC {
-			msg += " (" + prev.In(loc).Format(slotLayout) + " " + loc.String() + ")"
-		}
+		e.Nearest = prev
 	}
-	return errors.New(msg)
+	return e
 }
-
-const slotLayout = "2006-01-02 15:04"
 
 // slotBefore is the cron's last fire before `t`. A cron only says what comes
 // next, so it walks forward from a window behind `t`, widening the window

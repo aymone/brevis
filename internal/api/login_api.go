@@ -65,11 +65,11 @@ func sameOrigin(r *http.Request) bool {
 func guardSession(w http.ResponseWriter, r *http.Request) bool {
 	w.Header().Set("Cache-Control", "no-store")
 	if !sameOrigin(r) {
-		writeJSON(w, http.StatusForbidden, map[string]string{"error": "cross-site request refused"})
+		fail(w, http.StatusForbidden, codeCrossSiteRefused)
 		return false
 	}
 	if !jsonOnly(r) {
-		writeJSON(w, http.StatusUnsupportedMediaType, map[string]string{"error": "send application/json"})
+		fail(w, http.StatusUnsupportedMediaType, codeJSONRequired)
 		return false
 	}
 	return true
@@ -92,13 +92,13 @@ func (u *UI) RegistrarLoginAPI(mux *http.ServeMux, gate *auth.Gate) {
 		dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxLoginBody))
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&req); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
+			fail(w, http.StatusBadRequest, codeMalformedRequest)
 			return
 		}
 		// Exactly one JSON value: trailing bytes are a malformed body, not
 		// something to ignore.
 		if _, err := dec.Token(); !errors.Is(err, io.EOF) {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "malformed request"})
+			fail(w, http.StatusBadRequest, codeMalformedRequest)
 			return
 		}
 
@@ -120,19 +120,16 @@ func (u *UI) RegistrarLoginAPI(mux *http.ServeMux, gate *auth.Gate) {
 			secs := int(retry.Seconds()) + 1
 			u.log.Warn("login throttled", "origin", origin)
 			w.Header().Set("Retry-After", strconv.Itoa(secs))
-			writeJSON(w, http.StatusTooManyRequests, map[string]any{
-				"error":      "Too many attempts. Try again in a moment.",
-				"retryAfter": secs,
-			})
+			fail(w, http.StatusTooManyRequests, codeTooManyAttempts, "retryAfter", secs)
 		case auth.Signed:
 			u.log.Info("login", "user", req.User)
 			writeJSON(w, http.StatusOK, map[string]string{"next": next})
 		default:
-			// One sentence for a wrong user and a wrong password alike; neither
+			// One code for a wrong user and a wrong password alike; neither
 			// the username nor the password enters the log (a password typed
 			// in the wrong box would land there).
 			u.log.Warn("login refused", "origin", origin)
-			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid username or password."})
+			fail(w, http.StatusUnauthorized, codeInvalidCredentials)
 		}
 	})
 

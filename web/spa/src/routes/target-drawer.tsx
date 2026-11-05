@@ -11,6 +11,7 @@ import { LoadBars } from "../ui/sparkline";
 import { Freshness, FreshnessMark } from "../ui/status";
 import type { CatalogRow } from "./catalog";
 import { Configurations, type WriterConfig } from "./target-config";
+import { ErrorText } from "../api/errors";
 
 type Writer = {
   name: string;
@@ -152,7 +153,7 @@ export default function TargetDrawer({ u, query, closeTo }: { u: string; query: 
       {query.isError ? (
         <div className="dialog-body">
           <p role="alert" className="text-sm text-muted">
-            {(query.error as Error).message}
+            <ErrorText error={query.error} />
           </p>
         </div>
       ) : (

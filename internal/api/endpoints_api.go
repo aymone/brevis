@@ -69,7 +69,7 @@ func (u *UI) apiEndpoints(w http.ResponseWriter, r *http.Request) {
 		var err error
 		if all, err = u.endpoints.List(r.Context()); err != nil {
 			u.log.Error("listing the endpoints", "error", err)
-			dataFail(w, http.StatusInternalServerError, "the endpoints are unavailable")
+			dataFail(w, http.StatusInternalServerError, codeUnavailable)
 			return
 		}
 	}
@@ -78,7 +78,7 @@ func (u *UI) apiEndpoints(w http.ResponseWriter, r *http.Request) {
 		var err error
 		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
 			u.log.Error("reading the catalog for the endpoints", "error", err)
-			dataFail(w, http.StatusInternalServerError, "the endpoints are unavailable")
+			dataFail(w, http.StatusInternalServerError, codeUnavailable)
 			return
 		}
 	}

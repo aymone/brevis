@@ -1117,7 +1117,7 @@ func (u *UI) slotFromForm(ctx context.Context, slug, v string) (*time.Time, erro
 			return &t, nil
 		}
 	}
-	return nil, fmt.Errorf("slot %q is not a time: use 2026-10-27T04:00:00Z, or 2026-10-27T04:00 in the schedule's zone", v)
+	return nil, &slotParseError{Value: v}
 }
 
 // backTo is the page the request came from, on this site, or the Workflows

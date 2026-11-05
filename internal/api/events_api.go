@@ -43,7 +43,7 @@ func (u *UI) eventsHandler(keepalive time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		topics, err := events.ParseTopics(r.URL.Query().Get("topics"))
 		if err != nil {
-			eventsError(w, http.StatusBadRequest, err)
+			eventsError(w, http.StatusBadRequest, codeInvalidTopics)
 			return
 		}
 		rc := http.NewResponseController(w)
@@ -51,9 +51,9 @@ func (u *UI) eventsHandler(keepalive time.Duration) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, events.ErrFull) {
 				w.Header().Set("Retry-After", "5")
-				eventsError(w, http.StatusServiceUnavailable, err)
+				eventsError(w, http.StatusServiceUnavailable, codeBusy)
 			} else if r.Context().Err() == nil {
-				eventsError(w, http.StatusServiceUnavailable, err)
+				eventsError(w, http.StatusServiceUnavailable, codeUnavailable)
 			}
 			return
 		}
@@ -106,11 +106,8 @@ func (u *UI) eventsHandler(keepalive time.Duration) http.HandlerFunc {
 	}
 }
 
-func eventsError(w http.ResponseWriter, code int, err error) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	msg := strings.TrimPrefix(err.Error(), events.ErrTopics.Error()+": ")
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
+func eventsError(w http.ResponseWriter, status int, code apiCode) {
+	fail(w, status, code)
 }
 
 // NewFingerprints is the hub's factory over the database: one detector per

@@ -71,7 +71,7 @@ func TestTheShellLinksTheConsolesStylesheet(t *testing.T) {
 func TestAnUnknownAPIPathIsAJSON404(t *testing.T) {
 	w := get(t, "/api/nope")
 	if w.Code != http.StatusNotFound || !strings.HasPrefix(w.Header().Get("Content-Type"), "application/json") ||
-		strings.TrimSpace(w.Body.String()) != `{"error":"not found"}` {
+		strings.TrimSpace(w.Body.String()) != `{"error":"not_found"}` {
 		t.Errorf("/api/nope: %d %q %q", w.Code, w.Header().Get("Content-Type"), w.Body)
 	}
 }

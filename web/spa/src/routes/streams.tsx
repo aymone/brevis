@@ -17,6 +17,7 @@ import { Status, useStatusWord } from "../ui/status";
 import { Row, Table, Td, Th } from "../ui/table";
 import { useFilter } from "../ui/use-filter";
 import "./streams.css";
+import { ErrorText } from "../api/errors";
 
 const FIELDS = ["kind", "q"] as const;
 type Filter = ReturnType<typeof useFilter>;
@@ -281,7 +282,7 @@ function StreamsData({ filter }: { filter: Filter }) {
       >
         {q.isError ? (
           <p role="alert" className="rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
-            {(q.error as Error).message}
+            <ErrorText error={q.error} />
           </p>
         ) : v.rows.length === 0 ? (
           <div aria-hidden={ghost || undefined} className={ghost ? "sk-ghost" : undefined}>

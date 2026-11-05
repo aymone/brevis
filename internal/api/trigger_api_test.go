@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 	"brevis.sh/brevis/internal/api"
 	"brevis.sh/brevis/internal/branding"
+	sch "brevis.sh/brevis/internal/domain/schedule"
 	wf "brevis.sh/brevis/internal/domain/workflow"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
@@ -68,7 +70,7 @@ func triggerPost(t *testing.T, ui *api.UI, slug, body string) *httptest.Response
 
 type refusal struct {
 	Error  string
-	Fields map[string]string
+	Fields map[string]map[string]any
 }
 
 func refusalOf(t *testing.T, rec *httptest.ResponseRecorder) refusal {
@@ -118,35 +120,60 @@ func TestTheTriggerAPIRunsWithDefaults(t *testing.T) {
 	}
 }
 
-// EVERY REFUSED VALUE IS SAID BESIDE ITS FIELD, in the definition's own words,
-// and nothing is triggered.
+// EVERY REFUSED VALUE IS A CODE BESIDE ITS FIELD, with the data that makes
+// the sentence, and nothing is triggered. The server says no sentence at all.
 func TestTheTriggerAPISaysWhichFieldsAreWrong(t *testing.T) {
 	spy := &triggerSpy{}
 	rec := triggerPost(t, triggerAPIUI(spy), "tuned",
 		`{"params":{"region":"mars","limit":"ten","full":"maybe","layers":["raw","raw"],"tables":["a b;"],"ghost":1}}`)
 	got := refusalOf(t, rec)
-	for field, want := range map[string]string{
-		"region": "not one of the accepted values",
-		"limit":  "is not an integer",
-		"full":   "is not a boolean",
-		"layers": "appears more than once",
-		"tables": "character the shell interprets",
-		"ghost":  "does not declare the param",
-		"token":  "no default",
+	for field, want := range map[string]map[string]any{
+		"region": {"code": "not_one_of", "value": "mars", "allowed": []any{"br", "us"}},
+		"limit":  {"code": "not_integer", "value": "ten"},
+		"full":   {"code": "not_boolean", "value": "maybe"},
+		"layers": {"code": "item_duplicate", "value": "raw"},
+		"tables": {"code": "unsafe_chars", "value": "a b;", "item": float64(1)},
+		"ghost":  {"code": "undeclared", "value": "ghost"},
+		"token":  {"code": "required"},
 	} {
-		if !strings.Contains(got.Fields[field], want) {
-			t.Errorf("fields[%s] = %q, want it to say %q", field, got.Fields[field], want)
+		if !reflect.DeepEqual(got.Fields[field], want) {
+			t.Errorf("fields[%s] = %v, want %v", field, got.Fields[field], want)
 		}
 	}
-	if got.Error == "" || spy.called {
+	if got.Error != "invalid_params" || spy.called {
 		t.Errorf("error = %q, called = %v", got.Error, spy.called)
+	}
+	for _, old := range []string{"is not an integer", "accepted values", "shell interprets", "does not declare", "no default", "appears more than once", "invalid value"} {
+		if strings.Contains(rec.Body.String(), old) {
+			t.Errorf("the response speaks English (%q): %s", old, rec.Body)
+		}
+	}
+}
+
+// A PATTERN MISMATCH AND AN ITEM'S POSITION TRAVEL AS DATA.
+func TestTheTriggerAPISaysThePatternAndTheItem(t *testing.T) {
+	defs := knownDefs{"p": {Slug: "p", Nodes: []wf.Node{{ID: "a", Run: "echo"}}, Params: []wf.Param{
+		{Name: "code", Type: wf.ParamString, Pattern: "^[a-z]+$", Default: "ok"},
+		{Name: "days", Type: "list|integer"},
+	}}}
+	ui := api.NewUI(readsFake{}, defs, nil, &triggerSpy{}, nil, catalogFake{}, branding.Default(), slog.New(slog.DiscardHandler))
+	got := refusalOf(t, triggerPost(t, ui, "p", `{"params":{"code":"A1","days":["1","x"]}}`))
+	if want := (map[string]any{"code": "no_match", "value": "A1", "pattern": "^[a-z]+$"}); !reflect.DeepEqual(got.Fields["code"], want) {
+		t.Errorf("code = %v", got.Fields["code"])
+	}
+	if want := (map[string]any{"code": "not_integer", "value": "x", "item": float64(2)}); !reflect.DeepEqual(got.Fields["days"], want) {
+		t.Errorf("days = %v", got.Fields["days"])
+	}
+	got = refusalOf(t, triggerPost(t, ui, "p", `{"params":{"days":"1,,2"}}`))
+	if want := (map[string]any{"code": "item_empty", "item": float64(2)}); !reflect.DeepEqual(got.Fields["days"], want) {
+		t.Errorf("days = %v", got.Fields["days"])
 	}
 }
 
 // A VALUE THAT IS NO VALUE (an object, a list of lists) is that field's mistake.
 func TestTheTriggerAPIRefusesAShapeNoParamHas(t *testing.T) {
 	got := refusalOf(t, triggerPost(t, triggerAPIUI(&triggerSpy{}), "tuned", `{"params":{"region":{"a":1},"tables":[["x"]],"token":"t"}}`))
-	if got.Fields["region"] == "" || got.Fields["tables"] == "" {
+	if got.Fields["region"]["code"] != "bad_value_type" || got.Fields["tables"]["code"] != "nested_list" {
 		t.Errorf("fields = %v", got.Fields)
 	}
 }
@@ -171,26 +198,42 @@ func TestTheTriggerAPIReadsTheSlot(t *testing.T) {
 	}
 	spy = &triggerSpy{}
 	got := refusalOf(t, triggerPost(t, triggerAPIUI(spy), "tuned", `{"params":{"token":"t"},"slot":"yesterday"}`))
-	if !strings.Contains(got.Fields["slot"], `"yesterday"`) || spy.called {
+	if want := (map[string]any{"code": "slot_not_a_time", "value": "yesterday"}); !reflect.DeepEqual(got.Fields["slot"], want) || spy.called {
 		t.Errorf("fields = %v, called = %v", got.Fields, spy.called)
 	}
 }
 
-// THE SCHEDULER'S REFUSAL OF A SLOT (off the cron, in the future) IS THE SLOT
-// FIELD'S, with the nearest valid one it names.
+// THE SCHEDULER'S REFUSAL OF A SLOT IS THE SLOT FIELD'S, as codes with the data.
 func TestTheTriggerAPIRelaysTheSchedulersRefusal(t *testing.T) {
-	spy := &triggerSpy{err: errors.New(`2026-10-26 10:00 UTC is not a slot of "0 9 * * *"; the nearest before it is 2026-10-26 09:00 UTC`)}
-	got := refusalOf(t, triggerPost(t, triggerAPIUI(spy), "tuned", `{"params":{"token":"t"},"slot":"2026-10-26T10:00:00Z"}`))
-	if !strings.Contains(got.Fields["slot"], "the nearest before it is") {
-		t.Errorf("fields = %v", got.Fields)
+	at := time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC)
+	near := time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC)
+	for _, c := range []struct {
+		err  error
+		want map[string]any
+	}{
+		{&sch.SlotError{Code: sch.SlotNotOnCron, Slot: at, Cron: "0 9 * * *", Nearest: near, Zone: "UTC"},
+			map[string]any{"code": "slot_not_on_schedule", "slot": "2026-10-26T10:00:00Z", "cron": "0 9 * * *", "zone": "UTC", "nearest": "2026-10-26T09:00:00Z"}},
+		{&sch.SlotError{Code: sch.SlotInFuture, Slot: at}, map[string]any{"code": "slot_in_future", "slot": "2026-10-26T10:00:00Z"}},
+		{&sch.SlotError{Code: sch.SlotNoSchedule, Workflow: "tuned"}, map[string]any{"code": "slot_no_schedule"}},
+	} {
+		rec := triggerPost(t, triggerAPIUI(&triggerSpy{err: c.err}), "tuned", `{"params":{"token":"t"},"slot":"2026-10-26T10:00:00Z"}`)
+		got := refusalOf(t, rec)
+		if !reflect.DeepEqual(got.Fields["slot"], c.want) || got.Error != "invalid_params" {
+			t.Errorf("%v: fields = %v", c.err, got.Fields)
+		}
+		if strings.Contains(rec.Body.String(), "nearest before") || strings.Contains(rec.Body.String(), "in the future") {
+			t.Errorf("the response speaks English: %s", rec.Body)
+		}
 	}
 }
 
-// A REFUSAL WITH NO SLOT IS STILL AN INPUT ERROR, not the server's.
-func TestTheTriggerAPIAnswers422ToASchedulerRefusalWithoutASlot(t *testing.T) {
-	got := refusalOf(t, triggerPost(t, triggerAPIUI(&triggerSpy{err: errors.New("nope")}), "plain", `{}`))
-	if got.Error != "nope" {
-		t.Errorf("error = %q", got.Error)
+// ANY OTHER FAILURE OF THE SCHEDULER IS THE SERVER'S: a code, and its text stays in the log.
+func TestTheTriggerAPIAnswers500ToAnUnexpectedSchedulerFailure(t *testing.T) {
+	rec := triggerPost(t, triggerAPIUI(&triggerSpy{err: errors.New("nope")}), "plain", `{}`)
+	var got map[string]string
+	_ = json.Unmarshal(rec.Body.Bytes(), &got)
+	if rec.Code != http.StatusInternalServerError || got["error"] != "unavailable" || strings.Contains(rec.Body.String(), "nope") {
+		t.Errorf("status = %d: %s", rec.Code, rec.Body)
 	}
 }
 
@@ -200,7 +243,7 @@ func TestTheTriggerAPISaysWhenTheClickFoldedIntoAnother(t *testing.T) {
 	rec := triggerPost(t, triggerAPIUI(&foldedSpy{}), "plain", `{}`)
 	var got map[string]string
 	_ = json.Unmarshal(rec.Body.Bytes(), &got)
-	if rec.Code != http.StatusConflict || got["error"] == "" {
+	if rec.Code != http.StatusConflict || got["error"] != "run_just_started" {
 		t.Errorf("status = %d: %s", rec.Code, rec.Body)
 	}
 }
@@ -208,17 +251,17 @@ func TestTheTriggerAPISaysWhenTheClickFoldedIntoAnother(t *testing.T) {
 // AN UNKNOWN WORKFLOW IS 404 AND A BROKEN BODY 400, both as JSON, never HTML.
 func TestTheTriggerAPIAnswersJSONToWhatItCannotRun(t *testing.T) {
 	for _, c := range []struct {
-		slug, body string
-		status     int
+		slug, body, code string
+		status           int
 	}{
-		{"ghost", `{}`, http.StatusNotFound},
-		{"plain", `{"params":`, http.StatusBadRequest},
-		{"plain", `{"from_run":"nope"}`, http.StatusBadRequest},
+		{"ghost", `{}`, "not_found", http.StatusNotFound},
+		{"plain", `{"params":`, "invalid_request", http.StatusBadRequest},
+		{"plain", `{"from_run":"nope"}`, "invalid_request", http.StatusBadRequest},
 	} {
 		spy := &triggerSpy{}
 		rec := triggerPost(t, triggerAPIUI(spy), c.slug, c.body)
 		var got map[string]string
-		if rec.Code != c.status || json.Unmarshal(rec.Body.Bytes(), &got) != nil || got["error"] == "" || spy.called {
+		if rec.Code != c.status || json.Unmarshal(rec.Body.Bytes(), &got) != nil || got["error"] != c.code || spy.called {
 			t.Errorf("%s %s: status = %d, body = %s, called = %v", c.slug, c.body, rec.Code, rec.Body, spy.called)
 		}
 	}

@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { EndpointPanel } from "../ui/metrics/endpoints";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { ApiError, postJSON } from "../api/client";
+import { postJSON } from "../api/client";
 import { useData } from "../api/live";
 import { useFormat, useT } from "../i18n";
 import { useSince } from "../ui/format";
@@ -13,6 +13,8 @@ import { btn, Card, Empty, MethodPill, PageHead, StatCells, linkUnderline, Page 
 import { Logo } from "../ui/logo";
 import { Freshness, FreshnessMark } from "../ui/status";
 import { EndpointFreshness, endpointHref, kindOf, splitTarget, useParamsSaid } from "./endpoints";
+import { ErrorText } from "../api/errors";
+import { useErrorText } from "../api/errors";
 
 type Lineage = {
   target: string;
@@ -472,7 +474,7 @@ function TryIt({ d, values, setValues, ghost }: { d: Endpoint; values: Record<st
         </form>
         <div aria-live="polite" aria-busy={run.isPending} className="mt-4 transition-opacity aria-busy:opacity-50">
           {run.isError ? (
-            <p className={answerBox}>{(run.error as ApiError).message}</p>
+            <p className={answerBox}><ErrorText error={run.error} /></p>
           ) : run.data ? (
             <AnswerView a={run.data} />
           ) : (
@@ -541,6 +543,7 @@ function EndpointPage({ api, name, d, ghost }: { api: string; name: string; d: E
 
 export default function EndpointRoute() {
   const { t } = useT();
+  const errText = useErrorText();
   const { api = "", name = "" } = useParams();
   const q = useData<Endpoint>(["endpoint", api, name], `/api/endpoints/${encodeURIComponent(api)}/${encodeURIComponent(name)}`, { keep: false });
   useCrumb(q.data?.path ?? "", { mono: true });
@@ -548,7 +551,7 @@ export default function EndpointRoute() {
     return (
       <Page>
         <div className="pt-3">
-          <Empty msg={q.error.message}>
+          <Empty msg={errText(q.error)}>
             <Link to="/data/endpoints" className={`mt-2 inline-block text-xs ${linkUnderline}`}>
               &larr; {t("endpoint.back")}
             </Link>

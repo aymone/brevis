@@ -12,7 +12,7 @@ import (
 
 // The Ingest screens' JSON (loads.go and streams.go in the React app). Each
 // handler reuses the read its page handler makes; the words are written here in
-// the reader's language, and a failure is {"error"} with a status, never HTML.
+// the reader's language, and a failure is {"error": "<code>"} with a status, never HTML.
 
 // ingestCtx is the request's context in the reader's language, for the
 // sentences the server finishes.
@@ -22,11 +22,11 @@ func ingestCtx(r *http.Request) context.Context {
 
 func (u *UI) ingestFail(w http.ResponseWriter, what string, err error) {
 	u.log.Error("reading "+what, "error", err)
-	writeJSON(w, http.StatusInternalServerError, map[string]string{"error": what + " unavailable"})
+	fail(w, http.StatusInternalServerError, codeUnavailable)
 }
 
-func ingestMissing(w http.ResponseWriter, what string) {
-	writeJSON(w, http.StatusNotFound, map[string]string{"error": what + " not found"})
+func ingestMissing(w http.ResponseWriter) {
+	fail(w, http.StatusNotFound, codeNotFound)
 }
 
 // stepEntries is the catalog with every step's configuration attached, the

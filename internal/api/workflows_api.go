@@ -22,11 +22,6 @@ func (u *UI) registerWorkflowsAPI(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/workflows/{slug}/toggle", u.toggleJSON)
 }
 
-// jsonError is the failure every JSON endpoint answers: never an HTML page.
-func jsonError(w http.ResponseWriter, status int, msg string) {
-	writeJSON(w, status, map[string]string{"error": msg})
-}
-
 // logoView is a language, tool or connector: the logo key and its name in the
 // reader's language.
 type logoView struct {
@@ -108,7 +103,7 @@ func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 	all, err := u.leitura.Workflows(ctx)
 	if err != nil {
 		u.log.Error("listing the workflows", "error", err)
-		jsonError(w, http.StatusInternalServerError, "the workflows are unavailable")
+		fail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	now := time.Now()
@@ -204,20 +199,15 @@ func (u *UI) toggleJSON(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	active, err := u.actions.Toggle(r.Context(), slug, auth.De(r.Context()))
 	if errors.Is(err, pgx.ErrNoRows) {
-		jsonError(w, http.StatusNotFound, "no schedule for this workflow")
+		fail(w, http.StatusNotFound, codeNoSchedule)
 		return
 	}
 	if err != nil {
 		u.log.Error("toggling the schedule", "workflow", slug, "error", err)
-		jsonError(w, http.StatusInternalServerError, "the schedule could not be changed")
+		fail(w, http.StatusInternalServerError, codeScheduleFailed)
 		return
 	}
 	u.log.Info("schedule toggled", "workflow", slug, "active", active)
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	message := i18n.T(ctx, "workflows.paused.toast", "workflow", slug)
-	if active {
-		message = i18n.T(ctx, "workflows.resumed.toast", "workflow", slug)
-	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"active": active, "message": message})
+	writeJSON(w, http.StatusOK, map[string]any{"active": active})
 }

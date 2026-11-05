@@ -63,27 +63,27 @@ type targetDetailView struct {
 func (u *UI) apiCatalogTarget(w http.ResponseWriter, r *http.Request) {
 	target := r.URL.Query().Get("u")
 	if target == "" || len(target) > targetCeiling || strings.ContainsFunc(target, unicode.IsControl) {
-		dataFail(w, http.StatusBadRequest, "name a destination: /api/catalog/target?u=<target>")
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest)
 		return
 	}
 	if u.catalog == nil {
-		dataFail(w, http.StatusNotFound, "the catalog is not enabled")
+		dataFail(w, http.StatusNotFound, codeNotEnabled)
 		return
 	}
 	d, err := u.catalog.CatalogTarget(r.Context(), target)
 	if err != nil {
 		u.log.Error("reading a destination", "error", err)
-		dataFail(w, http.StatusInternalServerError, "the destination is unavailable")
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	if d == nil {
-		dataFail(w, http.StatusNotFound, "no destination is written by Brevis")
+		dataFail(w, http.StatusNotFound, codeNotWritten)
 		return
 	}
 	t := pages.BuildTarget(*d, time.Now())
 	if err := u.targetTools(r, &t, target); err != nil {
 		u.log.Error("reading what reads a destination", "error", err)
-		dataFail(w, http.StatusInternalServerError, "the destination is unavailable")
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))

@@ -94,7 +94,7 @@ func (u *UI) streamNames(r *http.Request) (map[[2]string]string, error) {
 func (u *UI) apiStreamsMetrics(w http.ResponseWriter, r *http.Request) {
 	n, ok := metricsMinutes(r, 30)
 	if !ok {
-		dataFail(w, http.StatusBadRequest, "minutes must be a number from 1 to "+strconv.Itoa(metrics.Retention))
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest, "max", metrics.Retention)
 		return
 	}
 	names, err := u.streamNames(r)
@@ -114,7 +114,7 @@ func (u *UI) apiStreamsMetrics(w http.ResponseWriter, r *http.Request) {
 func (u *UI) apiStreamMetrics(w http.ResponseWriter, r *http.Request) {
 	n, ok := metricsMinutes(r, 60)
 	if !ok {
-		dataFail(w, http.StatusBadRequest, "minutes must be a number from 1 to "+strconv.Itoa(metrics.Retention))
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest, "max", metrics.Retention)
 		return
 	}
 	entries, err := u.streamEntries(r)
@@ -125,7 +125,7 @@ func (u *UI) apiStreamMetrics(w http.ResponseWriter, r *http.Request) {
 	gateway, path := r.PathValue("gateway"), "/"+r.PathValue("path")
 	s := pages.FindStream(pages.StreamsOf(entries), gateway, path)
 	if s == nil {
-		ingestMissing(w, "that stream")
+		ingestMissing(w)
 		return
 	}
 	// A stream published without its configuration (a version-1 manifest) has
@@ -151,7 +151,7 @@ type endpointsMetricsView struct {
 func (u *UI) apiEndpointsMetrics(w http.ResponseWriter, r *http.Request) {
 	n, ok := metricsMinutes(r, 30)
 	if !ok {
-		dataFail(w, http.StatusBadRequest, "minutes must be a number from 1 to "+strconv.Itoa(metrics.Retention))
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest, "max", metrics.Retention)
 		return
 	}
 	snap := u.scrape.Snapshot(metrics.Endpoints, n, nil)
@@ -166,18 +166,18 @@ func (u *UI) apiEndpointsMetrics(w http.ResponseWriter, r *http.Request) {
 func (u *UI) apiEndpointMetrics(w http.ResponseWriter, r *http.Request) {
 	n, ok := metricsMinutes(r, 60)
 	if !ok {
-		dataFail(w, http.StatusBadRequest, "minutes must be a number from 1 to "+strconv.Itoa(metrics.Retention))
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest, "max", metrics.Retention)
 		return
 	}
 	api, name := r.PathValue("api"), r.PathValue("name")
 	if u.endpoints == nil {
-		dataFail(w, http.StatusNotFound, "that endpoint not found")
+		dataFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	all, err := u.endpoints.List(r.Context())
 	if err != nil {
 		u.log.Error("listing the endpoints", "error", err)
-		dataFail(w, http.StatusInternalServerError, "the endpoints are unavailable")
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	found := false
@@ -188,7 +188,7 @@ func (u *UI) apiEndpointMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !found {
-		dataFail(w, http.StatusNotFound, "that endpoint not found")
+		dataFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	snap := u.scrape.Snapshot(metrics.Endpoints, n, &[2]string{api, name})

@@ -26,7 +26,7 @@ async function mock(page: Page, seen: string[] = []) {
       return r.fulfill({ json: { rows: ROWS, total: 4, workflows: 3, summary: { on_time: 4 }, counts: { "": 4, on_time: 4 }, sources: [{ key: "http", label: "HTTP API" }], hasLegacy: false, filter: { status: "", source: "", q: "", legacy: false } } });
     const [workflow, step] = parts.map(decodeURIComponent);
     const target = u.searchParams.get("target");
-    if (workflow === "nope") return r.fulfill({ status: 404, json: { error: "that load" } });
+    if (workflow === "nope") return r.fulfill({ status: 404, json: { error: "not_found" } });
     if (step === "load_fx" && !target)
       return r.fulfill({ json: { workflow, step, choices: ["fx_a", "fx_b"].map((n) => ({ uri: `postgres://warehouse/public/${n}`, current: false })), choosing: true, detail: null } });
     const uri = target ?? ROWS.find((x) => x.step === step)!.target.uri;

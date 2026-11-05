@@ -127,7 +127,7 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	def, err := u.defs.Definition(ctx, slug)
 	if err != nil {
-		jsonError(w, http.StatusNotFound, "no such workflow")
+		fail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
 	day := dayOf(r.URL.Query().Get("day"))

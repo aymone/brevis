@@ -17,6 +17,7 @@ import "../ui/bar.css";
 import { Logos } from "../ui/logo";
 import { ContextPanel, ParamsPanel, StepsPanel } from "./run-panels";
 import { useQuickRun, useRunDrawer } from "./run-now";
+import { ErrorText } from "../api/errors";
 
 const TABS = ["logs", "steps", "params", "context"] as const;
 type Tab = (typeof TABS)[number];
@@ -205,7 +206,7 @@ function RunHead({ id, run, onGoto }: { id: string; run: Run | undefined; onGoto
       </div>
       {cancel.isError && (
         <p role="alert" className="mb-2 text-[12.5px] text-state-failed">
-          {cancel.error.message}
+          <ErrorText error={cancel.error} />
         </p>
       )}
       {drawer.drawer}

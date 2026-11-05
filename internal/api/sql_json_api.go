@@ -18,7 +18,7 @@ import (
 // limit) are the same functions, not copies -- BuildSQL/Knows, queryRows and
 // statementCeiling.
 //
-// A failure is {"error": "..."} with a status, plus "kind" where the screen
+// A failure is {"error": "<code>"} with a status, plus data where the screen
 // words it itself.
 
 func (u *UI) registerSQLJSON(mux *http.ServeMux) {
@@ -65,7 +65,7 @@ type sqlStateView struct {
 // catalog's view of what may be queried. ok is false once it has answered.
 func (u *UI) sqlView(w http.ResponseWriter, r *http.Request) (pages.SQLView, bool) {
 	if !u.preview.Configured() {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no SQL service is configured"})
+		fail(w, http.StatusNotFound, codeSQLNotConfigured)
 		return pages.SQLView{}, false
 	}
 	var entries []postgres.CatalogEntry
@@ -73,7 +73,7 @@ func (u *UI) sqlView(w http.ResponseWriter, r *http.Request) (pages.SQLView, boo
 		var err error
 		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
 			u.log.Error("reading the catalog for the workbench", "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "the catalog is unavailable"})
+			fail(w, http.StatusInternalServerError, codeUnavailable)
 			return pages.SQLView{}, false
 		}
 	}
@@ -89,7 +89,7 @@ func (u *UI) sqlKnownTarget(w http.ResponseWriter, r *http.Request, target strin
 	}
 	target = strings.TrimSpace(target)
 	if target == "" || !v.Knows(target) {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not a destination this console knows"})
+		fail(w, http.StatusNotFound, codeUnknownDestination)
 		return "", false
 	}
 	return target, true
@@ -156,7 +156,7 @@ func (u *UI) sqlDescribe(w http.ResponseWriter, r *http.Request) {
 	}
 	schema, name := r.URL.Query().Get("schema"), r.URL.Query().Get("name")
 	if schema == "" || name == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "schema and name are required"})
+		fail(w, http.StatusBadRequest, codeInvalidRequest)
 		return
 	}
 	// An undescribable relation is an empty list, as in the HTML door.
@@ -178,7 +178,7 @@ func sqlBodyOf(w http.ResponseWriter, r *http.Request) (sqlBody, bool) {
 	var b sqlBody
 	r.Body = http.MaxBytesReader(w, r.Body, statementCeiling)
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "that statement is too long to run", "kind": "too_long"})
+		fail(w, http.StatusBadRequest, codeStatementTooLong)
 		return b, false
 	}
 	b.Q = strings.TrimSpace(b.Q)
@@ -199,11 +199,11 @@ func (u *UI) sqlRun(w http.ResponseWriter, r *http.Request) {
 	// The catalog is checked on the body too: the service answers differently
 	// for a connection it holds, which would let a guess probe its config.
 	if b.Target == "" || !v.Knows(b.Target) {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not a destination this console knows", "kind": "unknown"})
+		fail(w, http.StatusNotFound, codeUnknownDestination)
 		return
 	}
 	if b.Q == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "there is no statement to run", "kind": "empty"})
+		fail(w, http.StatusBadRequest, codeStatementEmpty)
 		return
 	}
 	res, err := u.preview.Query(r.Context(), b.Target, b.Q, queryRows)
@@ -211,12 +211,11 @@ func (u *UI) sqlRun(w http.ResponseWriter, r *http.Request) {
 		var refused *sqlserve.Refused
 		switch {
 		case errors.Is(err, sqlserve.ErrNoConnection):
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{
-				"error": err.Error(), "kind": "no_connection", "connection": pages.ConnectionOf(b.Target)})
+			fail(w, http.StatusUnprocessableEntity, codeNoConnection, "connection", pages.ConnectionOf(b.Target))
 		case errors.As(err, &refused):
-			writeJSON(w, http.StatusUnprocessableEntity, map[string]string{"error": refused.Why, "kind": "refused"})
+			fail(w, http.StatusUnprocessableEntity, codeRefused, "detail", refused.Why)
 		default:
-			writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error(), "kind": "failed"})
+			fail(w, http.StatusBadGateway, codeRunFailed, "detail", err.Error())
 		}
 		return
 	}

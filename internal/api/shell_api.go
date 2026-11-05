@@ -20,7 +20,7 @@ func (u *UI) navRunsJSON(w http.ResponseWriter, r *http.Request) {
 		f, err := u.failing.FailingWorkflows(r.Context())
 		if err != nil {
 			u.log.Error("counting the failing workflows", "path", r.URL.Path, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "the badges are unavailable"})
+			fail(w, http.StatusInternalServerError, codeUnavailable)
 			return
 		}
 		out.Failing = len(f)
@@ -29,7 +29,7 @@ func (u *UI) navRunsJSON(w http.ResponseWriter, r *http.Request) {
 		n, err := u.inFlight(r.Context())
 		if err != nil {
 			u.log.Error("counting the runs in flight", "path", r.URL.Path, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "the badges are unavailable"})
+			fail(w, http.StatusInternalServerError, codeUnavailable)
 			return
 		}
 		out.Running = n

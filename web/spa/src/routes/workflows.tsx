@@ -19,6 +19,7 @@ import { recalled, remember } from "../ui/remembered";
 import { LoadError } from "../ui/query-boundary";
 import { useRunDrawer } from "./run-now";
 import { ToggleSwitch } from "../ui/toggle-switch";
+import { ErrorText } from "../api/errors";
 
 const STATES = ["", "failing", "running", "paused", "manual"] as const;
 const SORTABLE = [
@@ -445,11 +446,11 @@ export default function WorkflowsRoute() {
             <div role="status">
               {note && (
                 <p className="mb-2 text-[12.5px] text-muted">
-                  {note.message}{" "}
+                  {t(note.active ? "workflows.resumed.toast" : "workflows.paused.toast", { workflow: note.slug })}{" "}
                   <button type="button" className={linkClass} onClick={() => (toggle(note.slug), dismiss())}>{t("workflows.undo")}</button>
                 </p>
               )}
-              {error && <p className="mb-2 text-[12.5px] text-state-failed">{error.message}</p>}
+              {error && <p className="mb-2 text-[12.5px] text-state-failed"><ErrorText error={error} /></p>}
             </div>
             <Table data={data} links={links} toggler={toggler} onRun={(slug, el) => runDrawer.open({ slug }, el)} />
           </>

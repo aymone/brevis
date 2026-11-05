@@ -10,7 +10,7 @@ import (
 
 // registerCatalogAPI wires the JSON the React app's Data screens read: the
 // catalog, one destination, the endpoints and one endpoint with its Try it.
-// Every one answers {"error": "..."} with a status on failure, never a page.
+// Every one answers {"error": "<code>"} with a status on failure, never a page.
 func (u *UI) registerCatalogAPI(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/catalog", u.apiCatalog)
 	mux.HandleFunc("GET /api/catalog/target", u.apiCatalogTarget)
@@ -20,9 +20,9 @@ func (u *UI) registerCatalogAPI(mux *http.ServeMux) {
 }
 
 // dataFail answers a failure of the Data screens' JSON.
-func dataFail(w http.ResponseWriter, status int, msg string) {
+func dataFail(w http.ResponseWriter, status int, code apiCode, extra ...any) {
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, status, map[string]string{"error": msg})
+	fail(w, status, code, extra...)
 }
 
 // catalogRowView is one destination as the catalog lists it. The status is
@@ -104,13 +104,13 @@ var catalogStatusKeys = []string{"attention", "stale", "late", "on_time", "conti
 // query string the page has always taken (status, kind, legacy, q).
 func (u *UI) apiCatalog(w http.ResponseWriter, r *http.Request) {
 	if u.catalog == nil {
-		dataFail(w, http.StatusNotFound, "the catalog is not enabled")
+		dataFail(w, http.StatusNotFound, codeNotEnabled)
 		return
 	}
 	entries, err := u.catalog.Catalog(r.Context())
 	if err != nil {
 		u.log.Error("reading the catalog", "error", err)
-		dataFail(w, http.StatusInternalServerError, "the catalog is unavailable")
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	now := time.Now()

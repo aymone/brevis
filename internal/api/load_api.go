@@ -32,7 +32,7 @@ func (u *UI) loadAPI(w http.ResponseWriter, r *http.Request) {
 		target = uris[0]
 	}
 	if len(uris) == 0 || target != "" && !slices.Contains(uris, target) {
-		ingestMissing(w, "that load")
+		ingestMissing(w)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (u *UI) loadAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if d == nil {
-			ingestMissing(w, "that load")
+			ingestMissing(w)
 			return
 		}
 		*load = pages.BuildLoad(*d, workflow, step, time.Now())

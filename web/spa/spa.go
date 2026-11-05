@@ -54,7 +54,7 @@ func Handler() http.Handler {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Cache-Control", "no-store")
 			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(`{"error":"not found"}` + "\n"))
+			_, _ = w.Write([]byte(`{"error":"not_found"}` + "\n"))
 			return
 		}
 		if strings.HasPrefix(r.URL.Path, Assets) {

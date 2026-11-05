@@ -12,7 +12,7 @@ import (
 	"brevis.sh/brevis/internal/auth"
 )
 
-const wrongSentence = "Invalid username or password."
+const wrongCode = "invalid_credentials"
 
 type loginRig struct {
 	mux   *http.ServeMux
@@ -112,8 +112,8 @@ func TestAPILoginRefusalIsGenericAndRunsTheHashEvenForAWrongUser(t *testing.T) {
 	if a.Code != 401 || b.Code != 401 || a.Body.String() != b.Body.String() {
 		t.Fatalf("wrong user %d %q vs wrong password %d %q", a.Code, a.Body, b.Code, b.Body)
 	}
-	if decode(t, a)["error"] != wrongSentence {
-		t.Errorf("sentence = %v", decode(t, a)["error"])
+	if decode(t, a)["error"] != wrongCode {
+		t.Errorf("error = %v; want the code %q, never a sentence", decode(t, a)["error"], wrongCode)
 	}
 	if len(a.Result().Cookies()) != 0 {
 		t.Error("a refusal set a cookie")
@@ -207,6 +207,35 @@ func TestAPISessionEndpointsRejectCrossSiteAndNonJSON(t *testing.T) {
 		if rec.Code != 405 {
 			t.Errorf("GET /api/login = %d, want 405", rec.Code)
 		}
+	}
+}
+
+// THE SERVER SPEAKS CODES, NEVER SENTENCES: the sentence is the screen's, in the reader's language
+// (the console's catalog), so every refusal of a session endpoint is one of the enum's codes.
+func TestAPISessionRefusalsAreCodesNotSentences(t *testing.T) {
+	g := newLoginRig(t, false)
+	for name, c := range map[string]struct {
+		body, want string
+		hdr        map[string]string
+	}{
+		"wrong password": {login("ana", "wrong", ""), "invalid_credentials", nil},
+		"malformed":      {"[]", "malformed_request", nil},
+		"cross-site":     {login("ana", "right", ""), "cross_site_refused", map[string]string{"Sec-Fetch-Site": "cross-site"}},
+		"not json":       {login("ana", "right", ""), "json_required", map[string]string{"Content-Type": "text/plain"}},
+	} {
+		g.gate.Limit = auth.NewLimiter()
+		rec := g.post("/api/login", c.body, c.hdr)
+		if got := decode(t, rec)["error"]; got != c.want {
+			t.Errorf("%s: error = %v, want the code %q", name, got, c.want)
+		}
+	}
+	g.gate.Limit = auth.NewLimiter()
+	for i := 0; i < 4; i++ {
+		g.post("/api/login", login("ana", "wrong", ""), nil)
+	}
+	locked := decode(t, g.post("/api/login", login("ana", "right", ""), nil))
+	if locked["error"] != "too_many_attempts" || locked["retryAfter"].(float64) < 1 {
+		t.Errorf("locked: %v, want too_many_attempts with retryAfter", locked)
 	}
 }
 

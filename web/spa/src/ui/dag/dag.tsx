@@ -9,6 +9,7 @@ import { Skeleton } from "../skeleton";
 import { dagHeight, rememberDagHeight } from "./height";
 import { langLabel, NODE_TYPES, stageTone, tone, type NodeData } from "./nodes";
 import "./dag.css";
+import { useErrorText } from "../../api/errors";
 
 type GNode = Node<NodeData> & { parentId?: string };
 export type Graph = { slug: string; run_id?: string; status?: string; terminal: boolean; nodes: GNode[]; edges: Edge[] };
@@ -198,6 +199,7 @@ export default function Dag({ src, runId, onPick }: Props) {
   }, []);
 
   const { t } = useT();
+  const errText = useErrorText();
   const stageWord = t("graph.stage");
   const toggle = useCallback((id: string) => {
     setCollapsed((m) => {
@@ -262,7 +264,7 @@ export default function Dag({ src, runId, onPick }: Props) {
   return (
     <div ref={box} className="dag rounded-card border border-line bg-surface shadow-warm-sm" style={{ height: view?.height ?? dagHeight(url) }} aria-busy={isPending}>
       {isPending && <Skeleton h="100%" />}
-      {error && <div className="dag-err" role="alert">{t("graph.failed", { error: error.message })}</div>}
+      {error && <div className="dag-err" role="alert">{t("graph.failed", { error: errText(error) })}</div>}
       {view && (
         <>
           {/* A key on the shape remounts React Flow when the drawing changes: the only reliable re-fit. */}

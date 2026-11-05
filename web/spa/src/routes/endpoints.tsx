@@ -13,6 +13,7 @@ import { useSeen } from "../ui/seen";
 import { FreshnessMark } from "../ui/status";
 import { Row, Table, Td, Th } from "../ui/table";
 import { useFilter } from "../ui/use-filter";
+import { ErrorText } from "../api/errors";
 
 export type EndpointRow = {
   api: string;
@@ -316,7 +317,7 @@ function Endpoints({ filter }: { filter: Filter }) {
       <div aria-busy={ghost}>
         {q.isError ? (
           <p role="alert" className="rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
-            {(q.error as Error).message}
+            <ErrorText error={q.error} />
           </p>
         ) : none ? (
           <div aria-hidden={ghost || undefined} className={ghost ? "sk-ghost" : undefined}>

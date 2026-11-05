@@ -100,7 +100,7 @@ func (u *UI) runsAPI(w http.ResponseWriter, r *http.Request) {
 	runs, total, counts, err := u.runsList(r.Context(), query)
 	if err != nil {
 		u.log.Error("listing the runs", "error", err)
-		apiError(w, http.StatusInternalServerError, "the runs are unavailable")
+		apiError(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	// No state in the address: running while anything is in flight, else all.
@@ -109,7 +109,7 @@ func (u *UI) runsAPI(w http.ResponseWriter, r *http.Request) {
 		query.State, query.States = "", pages.InFlight
 		if runs, total, counts, err = u.runsList(r.Context(), query); err != nil {
 			u.log.Error("listing the runs", "error", err)
-			apiError(w, http.StatusInternalServerError, "the runs are unavailable")
+			apiError(w, http.StatusInternalServerError, codeUnavailable)
 			return
 		}
 	}

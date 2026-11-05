@@ -14,9 +14,10 @@ test.beforeAll(() => {
 test.use({ baseURL: URL });
 
 async function signIn(page: import("@playwright/test").Page, password = PASSWORD) {
-  await page.getByLabel("Username").fill(USER);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.locator("form").getByRole("button", { name: "Sign in" }).click();
+  // By id and by type, not by label: the labels are in the page's language.
+  await page.locator("#username").fill(USER);
+  await page.locator("#password").fill(password);
+  await page.locator("form button[type=submit]").click();
 }
 
 test("a signed-out page goes to the login with where it was going, and the API answers 401", async ({ page, request }) => {
@@ -25,16 +26,23 @@ test("a signed-out page goes to the login with where it was going, and the API a
   await expect(page.locator("form").getByRole("button", { name: "Sign in" })).toBeVisible();
   const res = await request.get("/api/session");
   expect(res.status()).toBe(401);
-  expect(await res.json()).toEqual({ error: "sign in" });
+  expect(await res.json()).toEqual({ error: "sign_in_required" });
 });
 
 test("a wrong password says so and stays on the login", async ({ page }) => {
   await page.goto("/login");
   await signIn(page, "not the password at all");
-  // The sentence is the server's (login_api.go), in English whatever the page's language; the catalog's
-  // login.failed is only for an answer with no text.
+  // The server answers with a code (invalid_credentials) and the screen says it from the catalog.
   await expect(page.getByText("Invalid username or password.")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
+});
+
+test("the refusal is said in the reader's language: the server sends a code, not a sentence", async ({ page, context }) => {
+  await context.addCookies([{ name: "brevis_lang", value: "pt-BR", url: URL! }]);
+  await page.goto("/login");
+  await signIn(page, "not the password at all");
+  await expect(page.getByText("Usuário ou senha inválidos.")).toBeVisible();
+  await expect(page.getByText("Invalid username or password.")).toHaveCount(0);
 });
 
 test("the right password goes where the page was going, then Sign out comes back to the login", async ({ page, request }) => {

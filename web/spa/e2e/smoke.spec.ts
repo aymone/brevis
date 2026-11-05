@@ -80,3 +80,28 @@ test("the run-now drawer validates a parameter before posting", async ({ page, s
   await expect(dialog.locator("[data-param-error]").first()).toBeVisible();
   expect(posts.filter((u) => u.endsWith("/trigger"))).toEqual([]);
 });
+
+// The server answers a refused slot as a code and data; the drawer says it in the reader's language
+// (internal/api/trigger_api.go, web/spa/src/api/trigger.ts). 04:30 is not a fire of e2e_nightly's "0 4 * * *".
+for (const [lang, sentence] of [["en", /is not a slot of "0 4 \* \* \*"/], ["pt-BR", /não é um slot de "0 4 \* \* \*"/]] as const) {
+  test(`the run-now drawer says a refused slot in ${lang}`, async ({ browser, baseURL, seed }) => {
+    void seed;
+    const ctx = await browser.newContext();
+    await ctx.addCookies([{ name: "brevis_lang", value: lang, url: baseURL ?? "http://localhost:8080" }]);
+    const page = await ctx.newPage();
+    await page.goto("/workflows/e2e_nightly");
+    await loaded(page);
+    await page.getByRole("button", { name: /run|executar/i }).first().click();
+    const dialog = page.locator("dialog[open]");
+    await expect(dialog).toBeVisible();
+    await dialog.locator('input[name="when"][value="slot"]').check({ force: true });
+    await dialog.getByRole("combobox").selectOption("other");
+    await dialog.locator('input[type="datetime-local"]').fill("2024-01-02T04:30");
+    await dialog.locator('button[type="submit"]').click();
+    const err = dialog.locator("[data-slot-error]");
+    await expect(err).toBeVisible();
+    await expect(err).toHaveText(sentence);
+    await expect(err).not.toContainText("slot_not_on_schedule");
+    await ctx.close();
+  });
+}

@@ -195,3 +195,45 @@ func (s Schedule) Window(slot time.Time) (start, end time.Time, err error) {
 	}
 	return time.Time{}, time.Time{}, nil
 }
+
+// SlotCode is why a manual run's slot was refused, answered as a word; Error() keeps the English
+// sentence for the logs.
+type SlotCode string
+
+const (
+	SlotInFuture   SlotCode = "slot_in_future"
+	SlotNotOnCron  SlotCode = "slot_not_on_schedule" // with Cron, and Nearest when one exists before it
+	SlotNoSchedule SlotCode = "slot_no_schedule"     // the workflow has no schedule to take a slot from
+)
+
+// SlotError is a refused slot. Slot and Nearest are instants; Zone is the schedule's zone name, which
+// the sentence names beside Nearest when it is not UTC.
+type SlotError struct {
+	Code     SlotCode
+	Workflow string
+	Slot     time.Time
+	Cron     string
+	Nearest  time.Time // zero when no fire exists before Slot
+	Zone     string
+}
+
+const slotLayout = "2006-01-02 15:04"
+
+func (e *SlotError) Error() string {
+	switch e.Code {
+	case SlotNoSchedule:
+		return fmt.Sprintf("workflow %q has no schedule: a slot is one of its schedule's runs", e.Workflow)
+	case SlotInFuture:
+		return fmt.Sprintf("slot %s is in the future", e.Slot.UTC().Format(slotLayout+" UTC"))
+	}
+	msg := fmt.Sprintf("%s is not a slot of %q", e.Slot.UTC().Format(slotLayout+" UTC"), e.Cron)
+	if !e.Nearest.IsZero() {
+		msg += "; the nearest before it is " + e.Nearest.UTC().Format(slotLayout+" UTC")
+		if e.Zone != "" && e.Zone != "UTC" {
+			if loc, err := time.LoadLocation(e.Zone); err == nil {
+				msg += " (" + e.Nearest.In(loc).Format(slotLayout) + " " + e.Zone + ")"
+			}
+		}
+	}
+	return msg
+}

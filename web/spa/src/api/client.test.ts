@@ -49,9 +49,9 @@ describe("getJSON", () => {
     await expect(getJSON("/api/x")).rejects.toMatchObject({ status: 502, message: "/api/x: HTTP 502" });
   });
 
-  it("the Gate's 401 {error: sign in} sends the browser to the login and back to this screen", async () => {
+  it("the Gate's 401 {error: sign_in_required} sends the browser to the login and back to this screen", async () => {
     here("/runs");
-    stub(reply(401, { error: "sign in" }));
+    stub(reply(401, { error: "sign_in_required" }));
     await expect(getJSON("/api/x")).rejects.toMatchObject({ status: 401 });
     expect(replace).toHaveBeenCalledWith("/login?next=%2Fruns%3Fq%3D1");
   });
@@ -65,7 +65,7 @@ describe("getJSON", () => {
 
   it("on the login screen itself there is nowhere to go: the caller handles the 401", async () => {
     here("/login");
-    stub(reply(401, { error: "sign in" }));
+    stub(reply(401, { error: "sign_in_required" }));
     await expect(getJSON("/api/session")).rejects.toMatchObject({ status: 401 });
     expect(replace).not.toHaveBeenCalled();
   });

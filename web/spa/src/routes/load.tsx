@@ -12,8 +12,9 @@ import { LoadBars } from "../ui/sparkline";
 import { Freshness } from "../ui/status";
 import { StepConfigPanel } from "./load-config";
 import { useRefreshRuns } from "./run-now";
-import { fieldErrors, triggerRun } from "../api/trigger";
+import { fieldErrors, fieldText, triggerRun } from "../api/trigger";
 import { toast } from "../shell/toast";
+import { ErrorText, useErrorText } from "../api/errors";
 
 const short = (id: string) => id.slice(0, 8);
 const th = "px-2.5 py-2 text-[11.5px] font-medium whitespace-nowrap text-faint";
@@ -257,6 +258,7 @@ function Body({ workflow, step, d, ghost }: { workflow: string; step: string; d:
 function Actions({ workflow, d, ghost }: { workflow: string; d: LoadDetail | null; ghost: boolean }) {
   const { t } = useT();
   const navigate = useNavigate();
+  const errText = useErrorText();
   const refresh = useRefreshRuns();
   const [pending, setPending] = useState(false);
   // One click, no questions (the workflow has no parameters). The drawer is modal, so a toast beside it could be
@@ -270,7 +272,7 @@ function Actions({ workflow, d, ghost }: { workflow: string; d: LoadDetail | nul
       navigate(r.href);
     } catch (e) {
       const [first] = Object.entries(fieldErrors(e));
-      toast(first ? `${first[0]}: ${first[1]}` : (e as Error).message, { kind: "fail" });
+      toast(first ? `${first[0]}: ${fieldText(t, first[1])}` : errText(e), { kind: "fail" });
     } finally {
       setPending(false);
     }
@@ -352,7 +354,7 @@ export function LoadDrawer({ workflow, step, target, q, close }: { workflow: str
       <div className="space-y-4">
         {q.isError && (
           <p role="alert" className="rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
-            {(q.error as Error).message}
+            <ErrorText error={q.error} />
           </p>
         )}
         {uris.length > 0 && (

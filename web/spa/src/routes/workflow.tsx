@@ -22,6 +22,7 @@ import { Stats, type StatProps } from "../ui/stat";
 import { Status, runKind } from "../ui/status";
 import { TabBar } from "../ui/tab-bar";
 import { YearOfRuns } from "./workflow-calendar";
+import { ErrorText } from "../api/errors";
 
 // The graph's chunk (React Flow) loads only when the graph is drawn.
 const Dag = lazy(() => import("../ui/dag/dag"));
@@ -574,11 +575,11 @@ export default function WorkflowRoute() {
         <div role="status">
           {note && (
             <p className="mb-2 text-[12.5px] text-muted">
-              {note.message}{" "}
+              {t(note.active ? "workflows.resumed.toast" : "workflows.paused.toast", { workflow: note.slug })}{" "}
               <button type="button" className={linkClass} onClick={() => (toggle(note.slug), dismiss())}>{t("workflows.undo")}</button>
             </p>
           )}
-          {error && <p className="mb-2 text-[12.5px] text-state-failed">{error.message}</p>}
+          {error && <p className="mb-2 text-[12.5px] text-state-failed"><ErrorText error={error} /></p>}
         </div>
         <div className="mb-3">
           <WorkflowStats d={d} />

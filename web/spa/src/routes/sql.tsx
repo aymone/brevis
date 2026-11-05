@@ -16,6 +16,7 @@ import { Tree, type TreeItem } from "../ui/Tree";
 import { Skeleton } from "../ui/skeleton";
 import "../ui/bar.css";
 import "./sql.css";
+import { useErrorText } from "../api/errors";
 
 type Connection = { name: string; target: string; queryable: boolean };
 type TreeData = { schemas: { name: string; tables: string[] }[]; cut: boolean; writable: boolean };
@@ -290,6 +291,7 @@ const resultTab = "px-3 py-1.5 text-xs text-muted hover:text-ink aria-selected:t
 
 function Workbench({ state }: { state: State | undefined }) {
   const { t, n } = useT();
+  const errText = useErrorText();
   const f = useFormat();
   const bytes = useBytes();
   const host = useRef<HTMLDivElement>(null);
@@ -374,24 +376,26 @@ function Workbench({ state }: { state: State | undefined }) {
     );
   } else if (run.error && run.error.name !== "AbortError") {
     const e = run.error;
-    const kind = e.body?.kind;
-    if (kind === "refused") {
+    const code = e.code;
+    // `detail` is the words of the service downstream (the SQL API's reason, the warehouse's message), shown as it came.
+    const detail = typeof e.body?.detail === "string" ? e.body.detail : "";
+    if (code === "refused") {
       answer = (
         <div role="alert" className={`${box} border-state-failed/40`}>
           <p className="font-medium text-state-failed">{t("sql.err.refused")}</p>
-          <p className="mt-1 text-ink-2">{e.message}</p>
+          <p className="mt-1 text-ink-2">{detail}</p>
           <a href="/workflows" className="mt-2 inline-block text-xs text-muted underline decoration-line-strong underline-offset-2 hover:text-ink">{t("sql.readonly.link")}</a>
         </div>
       );
-    } else if (kind === "no_connection") {
-      answer = <p role="alert" className={`${box} border-line-soft text-muted`}>{t("sql.err.no_connection", { connection: e.body?.connection ?? "" })}</p>;
-    } else if (kind === "unknown") {
+    } else if (code === "no_connection") {
+      answer = <p role="alert" className={`${box} border-line-soft text-muted`}>{t("sql.err.no_connection", { connection: String(e.body?.connection ?? "") })}</p>;
+    } else if (code === "unknown_destination") {
       answer = <p role="alert" className={`${box} border-line-soft text-muted`}>{t("sql.err.unknown")}</p>;
     } else {
       answer = (
         <div role="alert" className={`${box} border-line-soft`}>
           <p className="font-medium text-ink">{t("sql.err.failed")}</p>
-          <p className="mt-1 text-muted">{e.message}</p>
+          <p className="mt-1 text-muted">{detail || errText(e)}</p>
         </div>
       );
     }

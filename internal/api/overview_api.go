@@ -21,9 +21,9 @@ func (u *UI) registerOverviewAndRunsAPI(mux *http.ServeMux) {
 }
 
 // apiError is a failure the app can show: a JSON body, never an HTML page.
-func apiError(w http.ResponseWriter, status int, msg string) {
+func apiError(w http.ResponseWriter, status int, code apiCode) {
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, status, map[string]string{"error": msg})
+	fail(w, status, code)
 }
 
 type indicatorsView struct {
@@ -87,10 +87,10 @@ func (u *UI) overviewAPI(w http.ResponseWriter, r *http.Request) {
 	window := pages.ParseWindow(r.URL.Query().Get("window"))
 	fail := func(what string, err error) {
 		u.log.Error("reading the overview", "what", what, "error", err)
-		apiError(w, http.StatusInternalServerError, "the overview is unavailable")
+		apiError(w, http.StatusInternalServerError, codeUnavailable)
 	}
 	if u.leitura == nil {
-		apiError(w, http.StatusServiceUnavailable, "the overview is unavailable")
+		apiError(w, http.StatusServiceUnavailable, codeUnavailable)
 		return
 	}
 

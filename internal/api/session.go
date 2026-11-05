@@ -96,7 +96,7 @@ func (u *UI) projects(w http.ResponseWriter, r *http.Request) {
 	ps, err := u.leitura.Projects(r.Context())
 	if err != nil {
 		u.log.Error("listing the projects", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "the projects are unavailable"})
+		fail(w, http.StatusInternalServerError, codeUnavailable)
 		return
 	}
 	out := make([]projectView, 0, len(ps))

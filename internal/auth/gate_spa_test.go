@@ -54,7 +54,7 @@ func TestAnAPIRequestWithNoSessionIs401JSONForEveryMethod(t *testing.T) {
 	for _, m := range []string{"GET", "POST", "PUT", "DELETE"} {
 		rec := httptest.NewRecorder()
 		gate.ServeHTTP(rec, httptest.NewRequest(m, "/api/session", nil))
-		if rec.Code != 401 || strings.TrimSpace(rec.Body.String()) != `{"error":"sign in"}` ||
+		if rec.Code != 401 || strings.TrimSpace(rec.Body.String()) != `{"error":"sign_in_required"}` ||
 			!strings.HasPrefix(rec.Header().Get("Content-Type"), "application/json") || rec.Header().Get("Location") != "" {
 			t.Errorf("%s: %d %q %v", m, rec.Code, rec.Body, rec.Header())
 		}
@@ -78,10 +78,10 @@ func TestAPageWithNoSessionGoesToTheLoginAndComesBackThroughNext(t *testing.T) {
 			t.Errorf("GET %s = %d -> %q, want 303 -> %q", p, rec.Code, rec.Header().Get("Location"), want)
 		}
 	}
-	// A non-API POST keeps the plain 401.
+	// A non-API POST is a 401 too, not a redirect, and says it as the same code.
 	rec := httptest.NewRecorder()
 	gate.ServeHTTP(rec, httptest.NewRequest("POST", "/workflows/x/trigger", nil))
-	if rec.Code != 401 || !strings.Contains(rec.Body.String(), "session expired") {
+	if rec.Code != 401 || strings.TrimSpace(rec.Body.String()) != `{"error":"sign_in_required"}` {
 		t.Errorf("POST = %d %q", rec.Code, rec.Body)
 	}
 }

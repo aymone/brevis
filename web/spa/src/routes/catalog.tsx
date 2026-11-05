@@ -15,6 +15,7 @@ import { Row, Table, Td, Th } from "../ui/table";
 import { useFilter } from "../ui/use-filter";
 import type { TargetDetail } from "./target-drawer";
 import "./catalog-list.css";
+import { ErrorText } from "../api/errors";
 
 export type CatalogRow = {
   target: string;
@@ -229,7 +230,7 @@ function Catalog({ filter }: { filter: Filter }) {
       <CatalogBar filter={filter} data={data} ghost={ghost} />
       {q.isError ? (
         <p role="alert" className="rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
-          {(q.error as Error).message}
+          <ErrorText error={q.error} />
         </p>
       ) : empty ? (
         <div aria-hidden={ghost || undefined} className={ghost ? "sk-ghost" : undefined}>

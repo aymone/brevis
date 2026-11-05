@@ -164,7 +164,7 @@ func epOrigin(ctx context.Context, l pages.LineageRow) *originView {
 
 // loadEndpoint reads what one endpoint's page needs, as the page did: the
 // endpoint, the catalog's entries with the steps' configurations attached.
-func (u *UI) loadEndpoint(r *http.Request) (postgres.PublishedEndpoint, []postgres.CatalogEntry, int, string) {
+func (u *UI) loadEndpoint(r *http.Request) (postgres.PublishedEndpoint, []postgres.CatalogEntry, int, apiCode) {
 	e, _, status, msg := u.loadEndpointOnly(r)
 	if status != 0 || u.catalog == nil {
 		return e, nil, status, msg
@@ -178,7 +178,7 @@ func (u *UI) loadEndpoint(r *http.Request) (postgres.PublishedEndpoint, []postgr
 	}
 	if err != nil {
 		u.log.Error("reading the catalog for an endpoint", "error", err)
-		return e, nil, http.StatusInternalServerError, "the endpoint is unavailable"
+		return e, nil, http.StatusInternalServerError, codeUnavailable
 	}
 	return e, entries, 0, ""
 }
@@ -278,22 +278,22 @@ type answerView struct {
 	Error string `json:"error"`
 }
 
-// epRunError is why a run brought nothing back, in the reader's words: the
-// console's own failures by key, anything else as it came.
-func epRunError(ctx context.Context, err error) string {
-	for known, key := range map[error]string{
-		endpointcall.ErrNotConfigured: "endpoint.try.err.not_configured",
-		endpointcall.ErrUnbuilt:       "endpoint.try.err.unbuilt",
-		endpointcall.ErrUnreachable:   "endpoint.try.err.unreachable",
-		endpointcall.ErrUnreadable:    "endpoint.try.err.unreadable",
-		endpointcall.ErrTooLarge:      "endpoint.try.err.too_large",
-		endpointcall.ErrNotAnswer:     "endpoint.try.err.not_answer",
+// epRunFailure is why a call brought nothing back, as a code: the console's own failures by kind, anything
+// else as codeRunFailed with the error's own text (the second result) for the screen to show as it came.
+func epRunFailure(err error) (apiCode, string) {
+	for known, code := range map[error]apiCode{
+		endpointcall.ErrNotConfigured: codeEndpointNotConfigured,
+		endpointcall.ErrUnbuilt:       codeEndpointUnbuilt,
+		endpointcall.ErrUnreachable:   codeEndpointUnreachable,
+		endpointcall.ErrUnreadable:    codeEndpointUnreadable,
+		endpointcall.ErrTooLarge:      codeEndpointTooLarge,
+		endpointcall.ErrNotAnswer:     codeEndpointNotAnswer,
 	} {
 		if errors.Is(err, known) {
-			return i18n.T(ctx, key)
+			return code, ""
 		}
 	}
-	return err.Error()
+	return codeRunFailed, err.Error()
 }
 
 // apiEndpointCall is Try it: a POST with the parameters as JSON, so a call --
@@ -305,12 +305,12 @@ func epRunError(ctx context.Context, err error) string {
 func (u *UI) apiEndpointCall(w http.ResponseWriter, r *http.Request) {
 	// JSON only: a cross-site form cannot send this content type unasked.
 	if mt, _, _ := strings.Cut(r.Header.Get("Content-Type"), ";"); strings.TrimSpace(mt) != "application/json" {
-		dataFail(w, http.StatusUnsupportedMediaType, "send the parameters as application/json")
+		dataFail(w, http.StatusUnsupportedMediaType, codeInvalidRequest)
 		return
 	}
 	var body callBody
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&body); err != nil {
-		dataFail(w, http.StatusBadRequest, `send {"params": {"name": "value"}}`)
+		dataFail(w, http.StatusBadRequest, codeInvalidRequest)
 		return
 	}
 	e, _, status, msg := u.loadEndpointOnly(r)
@@ -319,17 +319,20 @@ func (u *UI) apiEndpointCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !u.canRun(e.API) {
-		dataFail(w, http.StatusForbidden, "this console cannot run that endpoint")
+		dataFail(w, http.StatusForbidden, codeForbidden)
 		return
 	}
 	q := url.Values{}
 	for k, v := range body.Params {
 		q.Set(k, v)
 	}
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
 	a, err := u.calls.Call(r.Context(), e.API, e.Path, pages.TryValues(e.Endpoint.Params, q))
 	if err != nil {
-		dataFail(w, http.StatusBadGateway, epRunError(ctx, err))
+		if code, detail := epRunFailure(err); detail != "" {
+			dataFail(w, http.StatusBadGateway, code, "detail", detail)
+		} else {
+			dataFail(w, http.StatusBadGateway, code)
+		}
 		return
 	}
 	out := answerView{Status: a.Status, StatusText: http.StatusText(a.Status), Cache: a.Cache, Millis: a.Millis,
@@ -348,17 +351,17 @@ func (u *UI) apiEndpointCall(w http.ResponseWriter, r *http.Request) {
 
 // loadEndpointOnly is the endpoint without the catalog: a call needs its
 // contract, not the lineage.
-func (u *UI) loadEndpointOnly(r *http.Request) (postgres.PublishedEndpoint, []postgres.CatalogEntry, int, string) {
+func (u *UI) loadEndpointOnly(r *http.Request) (postgres.PublishedEndpoint, []postgres.CatalogEntry, int, apiCode) {
 	if u.endpoints == nil {
-		return postgres.PublishedEndpoint{}, nil, http.StatusNotFound, "endpoints are not enabled"
+		return postgres.PublishedEndpoint{}, nil, http.StatusNotFound, codeNotEnabled
 	}
 	e, found, err := u.endpoints.Get(r.Context(), r.PathValue("api"), r.PathValue("name"))
 	switch {
 	case err != nil:
 		u.log.Error("reading an endpoint", "error", err)
-		return e, nil, http.StatusInternalServerError, "the endpoint is unavailable"
+		return e, nil, http.StatusInternalServerError, codeUnavailable
 	case !found:
-		return e, nil, http.StatusNotFound, "no such endpoint is published"
+		return e, nil, http.StatusNotFound, codeNotFound
 	}
 	return e, nil, 0, ""
 }

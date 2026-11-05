@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -224,17 +225,20 @@ func (p Param) acceptsList(value string) error {
 	seen := make(map[string]bool)
 	for i, item := range p.Items(value) {
 		if item == "" {
-			return fmt.Errorf("item %d is empty; a list is items separated by "+
-				"commas, with no empty ones", i+1)
+			return &ParamError{Code: ParamItemEmpty, Item: i + 1}
 		}
 		if seen[item] {
 			// A repeated item is nearly always a mistake in a form, and it
 			// silently doubles whatever the step does per item.
-			return fmt.Errorf("item %q appears more than once", item)
+			return &ParamError{Code: ParamItemDuplicate, Value: item}
 		}
 		seen[item] = true
 		if err := p.acceptsScalar(item, elem); err != nil {
-			return fmt.Errorf("item %d: %w", i+1, err)
+			var pe *ParamError
+			if errors.As(err, &pe) {
+				pe.Item = i + 1
+			}
+			return err
 		}
 	}
 	return nil
@@ -244,12 +248,12 @@ func (p Param) acceptsScalar(value string, kind ParamType) error {
 	switch kind {
 	case ParamBool:
 		if value != "true" && value != "false" {
-			return fmt.Errorf("%q is not a boolean (use true or false)", value)
+			return &ParamError{Code: ParamNotBoolean, Value: value}
 		}
 		return nil
 	case ParamInteger:
 		if _, err := strconv.Atoi(value); err != nil {
-			return fmt.Errorf("%q is not an integer", value)
+			return &ParamError{Code: ParamNotInteger, Value: value}
 		}
 		return nil
 	}
@@ -260,7 +264,7 @@ func (p Param) acceptsScalar(value string, kind ParamType) error {
 				return nil
 			}
 		}
-		return fmt.Errorf("%q is not one of the accepted values (%s)", value, strings.Join(p.Enum, ", "))
+		return &ParamError{Code: ParamNotOneOf, Value: value, Allowed: p.Enum}
 	}
 	if p.Pattern != "" {
 		re, err := regexp.Compile(p.Pattern)
@@ -268,13 +272,12 @@ func (p Param) acceptsScalar(value string, kind ParamType) error {
 			return err
 		}
 		if !re.MatchString(value) {
-			return fmt.Errorf("%q does not match the pattern %q", value, p.Pattern)
+			return &ParamError{Code: ParamNoMatch, Value: value, Pattern: p.Pattern}
 		}
 		return nil
 	}
 	if !safeCharacters.MatchString(value) {
-		return fmt.Errorf("%q has a character the shell interprets; "+
-			"declare a `pattern` on the param if the value genuinely needs it", value)
+		return &ParamError{Code: ParamUnsafeChars, Value: value}
 	}
 	return nil
 }
@@ -321,4 +324,65 @@ func namesOf(ps []Param) string {
 		names[i] = p.Name
 	}
 	return strings.Join(names, ", ")
+}
+
+// ParamCode is why a value was refused, as a word the API answers and the SPA
+// says in the reader's language. Error() keeps the English sentence the CLI prints.
+type ParamCode string
+
+const (
+	ParamNotBoolean    ParamCode = "not_boolean"
+	ParamNotInteger    ParamCode = "not_integer"
+	ParamNotOneOf      ParamCode = "not_one_of" // with Allowed
+	ParamNoMatch       ParamCode = "no_match"   // with Pattern
+	ParamUnsafeChars   ParamCode = "unsafe_chars"
+	ParamItemEmpty     ParamCode = "item_empty"     // Item is the empty one
+	ParamItemDuplicate ParamCode = "item_duplicate" // Value is the repeated item
+	ParamRequired      ParamCode = "required"       // no default and nothing typed
+	ParamUndeclared    ParamCode = "undeclared"     // Value is the param's name
+	ParamBadValueType  ParamCode = "bad_value_type" // a param is a string, number, boolean or list
+	ParamNestedList    ParamCode = "nested_list"    // a list holds values, not lists
+)
+
+// ParamError is a refused param value: the code, and the data that makes the sentence.
+// Item is the 1-based position when the value is an item of a list ("item 2: ...").
+type ParamError struct {
+	Code    ParamCode
+	Value   string
+	Item    int
+	Allowed []string
+	Pattern string
+}
+
+func (e *ParamError) Error() string {
+	var s string
+	switch e.Code {
+	case ParamNotBoolean:
+		s = fmt.Sprintf("%q is not a boolean (use true or false)", e.Value)
+	case ParamNotInteger:
+		s = fmt.Sprintf("%q is not an integer", e.Value)
+	case ParamNotOneOf:
+		s = fmt.Sprintf("%q is not one of the accepted values (%s)", e.Value, strings.Join(e.Allowed, ", "))
+	case ParamNoMatch:
+		s = fmt.Sprintf("%q does not match the pattern %q", e.Value, e.Pattern)
+	case ParamUnsafeChars:
+		s = fmt.Sprintf("%q has a character the shell interprets; "+
+			"declare a `pattern` on the param if the value genuinely needs it", e.Value)
+	case ParamItemEmpty:
+		return fmt.Sprintf("item %d is empty; a list is items separated by commas, with no empty ones", e.Item)
+	case ParamItemDuplicate:
+		return fmt.Sprintf("item %q appears more than once", e.Value)
+	case ParamRequired:
+		return "this parameter has no default: give it a value"
+	case ParamUndeclared:
+		return fmt.Sprintf("the param %q is not declared", e.Value)
+	case ParamNestedList:
+		return "a list holds values, not lists"
+	default:
+		return "a param is a string, number, boolean or list"
+	}
+	if e.Item > 0 {
+		return fmt.Sprintf("item %d: %s", e.Item, s)
+	}
+	return s
 }

@@ -125,21 +125,19 @@ func post(t *testing.T, ui *api.UI, target string, req func(*http.Request)) *htt
 	return rec
 }
 
-func TestTogglingFromTheAppAnswersTheOutcomeAndTheToast(t *testing.T) {
+// The server answers WHAT happened ({active}); the toast's sentence is the screen's, in the reader's language.
+func TestTogglingFromTheAppAnswersTheOutcomeNotTheSentence(t *testing.T) {
 	actor := ""
 	ui := api.NewUI(nil, nil, nil, toggleFake{active: false, actor: &actor}, nil, nil, branding.Default(), slog.New(slog.DiscardHandler))
 	rec := post(t, ui, "/api/workflows/daily/toggle", func(r *http.Request) {
 		*r = *r.WithContext(auth.IntoContext(r.Context(), "ana"))
 	})
-	var got struct {
-		Active  bool
-		Message string
-	}
+	var got map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil || rec.Code != http.StatusOK {
 		t.Fatalf("%d %v %s", rec.Code, err, rec.Body)
 	}
-	if got.Active || !strings.Contains(got.Message, "daily paused") || actor != "ana" {
-		t.Errorf("got %+v, actor %q", got, actor)
+	if got["active"] != false || len(got) != 1 || actor != "ana" {
+		t.Errorf("got %v, actor %q; want {active:false} and nothing else", got, actor)
 	}
 }
 
