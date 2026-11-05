@@ -189,6 +189,46 @@ func (c *Client) GetPod(ctx context.Context, name string) (Pod, error) {
 	return p, nil
 }
 
+// ListPods returns the Running pods of the client's own namespace, which is
+// all the metrics discovery needs (and all its Role allows). It follows the
+// server's pagination, bounded: a namespace with thousands of pods is not one
+// this is written for.
+func (c *Client) ListPods(ctx context.Context) ([]Pod, error) {
+	var out []Pod
+	cont := ""
+	for range 20 {
+		q := url.Values{}
+		q.Set("fieldSelector", "status.phase=Running")
+		q.Set("limit", "500")
+		if cont != "" {
+			q.Set("continue", cont)
+		}
+		res, err := c.request(ctx, http.MethodGet, "/api/v1/namespaces/"+c.namespace+"/pods?"+q.Encode(), nil)
+		if err != nil {
+			return nil, err
+		}
+		if res.StatusCode >= 300 {
+			return nil, apiError(res)
+		}
+		var list struct {
+			Metadata struct {
+				Continue string `json:"continue"`
+			} `json:"metadata"`
+			Items []Pod `json:"items"`
+		}
+		err = json.NewDecoder(io.LimitReader(res.Body, 32<<20)).Decode(&list)
+		_ = res.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("reading the pod list: %w", err)
+		}
+		out = append(out, list.Items...)
+		if cont = list.Metadata.Continue; cont == "" {
+			return out, nil
+		}
+	}
+	return nil, fmt.Errorf("the pod list has more than 20 pages")
+}
+
 // Logs opens the container's output stream. With `follow`, the response only
 // ends when the container ends — which is why there is no timeout on the
 // http.Client.

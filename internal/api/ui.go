@@ -176,8 +176,9 @@ type UI struct {
 
 	// hub feeds GET /api/events. See WithChangeHub.
 	hub *events.Hub
-	// scrape is the live volume collector; nil serves "not configured".
-	scrape *metrics.Collector
+	// scrape reads the live volume (from Postgres in production); nil serves
+	// "not configured".
+	scrape metrics.SnapshotReader
 }
 
 // WithPreview points the console at a SQL service, and says whether this

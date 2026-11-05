@@ -40,20 +40,66 @@ which is different from unset — unset gets the default.
 ## The live volume on the console's screens
 
 The Streams and Endpoints screens (list and detail) draw what was sent to the
-streams and what the endpoints served, per minute, as it happens. The console has
-no time series store: it **scrapes the `/metrics` of the gateways and the SQL
-APIs you name** and keeps per-minute buckets in memory.
+streams and what the endpoints served, per minute, as it happens. There is
+nothing to configure and no address to type: **the gateway and SQL API pods
+announce themselves** and the scheduler finds them, the way Prometheus'
+`kubernetes_sd` does.
+
+Put these annotations on the **pod template** of every gateway and SQL API
+Deployment (not on the Deployment itself):
+
+```yaml
+template:
+  metadata:
+    annotations:
+      brevis.sh/metrics-kind: gateway        # or: endpoints (a brevis-sql-api)
+      brevis.sh/metrics-name: zarv_ingestion # the gateway's `name:`, or the API's name as the console lists it
+      brevis.sh/metrics-port: "9090"         # optional, its `metrics.addr` port; default 9090
+      brevis.sh/metrics-path: /metrics       # optional; default /metrics
+```
+
+How it works, and what follows from it:
+
+- **One collector.** The *scheduler* lists the pods of **its own namespace**
+  every 15 s (its service account already may `list` pods; no new permission),
+  keeps every pod that is Running, Ready and annotated, scrapes each one every
+  `BREVIS_METRICS_SCRAPE_INTERVAL`, and writes the per-minute result to Postgres
+  (`metric_minutes`, `metric_sources`) in one transaction per round. The API
+  processes only read those tables, so every API pod answers the same, and the
+  console's SSE topics `metrics:streams` and `metrics:endpoints` move when a
+  round was written. **A deployment without a running scheduler shows no
+  metrics.** The gateways and SQL APIs must be in the scheduler's namespace.
+- **One at a time.** The collector runs under a Postgres advisory lock held on
+  its own connection. If two schedulers ever run, one collects and the other
+  retries every few seconds and takes over when the first dies.
+- **One target per pod is one replica.** Replicas are summed; a pod that is
+  scaled down leaves the list, its row is removed and it never stays behind as a
+  silent replica (`replicas_partial` is only for a pod that is announced and does
+  not answer). A pod that is not Ready, is shutting down, or has an annotation
+  that does not parse (a bad port or path, an unknown kind) is skipped.
+- **No address comes from a request.** The pod's IP is taken only from the
+  Kubernetes API server's answer; loopback, link-local and unspecified addresses
+  are refused, and so is a pod on the host network (`hostNetwork`, or a pod IP
+  equal to its node's). The port has to be one the pod **declares** as a
+  `containerPort`: the annotation picks among the pod's own listeners and cannot
+  aim the scheduler at another service. An address is never logged or returned.
+- **Who can add a source.** Whoever can create pods in the scheduler's namespace
+  can announce one, the same trust that namespace already gets (the scheduler
+  creates pods there on a workflow's say-so). A pod that restarts in a loop is a
+  new address each time: at most 64 retired pods are kept for their history,
+  the oldest dropped first, and at most 64 are scraped.
+- **Outside Kubernetes** (no service account) discovery is off: the console says
+  no pod announced itself, and the compose demo has no live volume.
+- **Retention.** `BREVIS_RETENTION_METRICS_HOURS` (default `3`, floor `3` which
+  is the window the console reads, cap `720`) is how long the per-minute rows are
+  kept; the collector prunes them every minute in bounded batches.
+- `BREVIS_GATEWAY_METRICS_URLS` and `BREVIS_ENDPOINTS_METRICS_URLS` no longer
+  exist. A process that still sees them logs one warning each and ignores them.
 
 | variable | |
 |---|---|
-| `BREVIS_GATEWAY_METRICS_URLS` | `events_gateway=http://gateway:9090/metrics` — the gateway's `name:`, then the address of **its metrics listener** (`metrics.addr`, `:9090` by default; on the compose demo, `${BREVIS_GATEWAY_METRICS_PORT:-9091}`), never the ingest port. Repeat a name for replicas |
-| `BREVIS_ENDPOINTS_METRICS_URLS` | `example-api=http://endpoints:9090/metrics` — the API's name as in `BREVIS_ENDPOINTS_URLS`, then its `metrics.addr`. Always its own variable: the metrics listener is never the API's port |
-| `BREVIS_METRICS_SCRAPE_INTERVAL` | `5s`; `1s` to `1m`. Each target is read at a random offset, +-10%, with a timeout of the interval (5 s at most), at most 8 MiB, no redirect and no proxy |
-
-Targets come **only** from these variables, never from a request, so nobody who
-can log in can aim the console at an address. An address with a credential in it
-is refused at start, and an address is never logged or returned: errors name the
-variable, the entry and the gateway or API.
+| `BREVIS_METRICS_SCRAPE_INTERVAL` | `5s`; `1s` to `1m`. Each pod is read at a random offset, +-10%, with a timeout of the interval (5 s at most), at most 8 MiB, no redirect and no proxy |
+| `BREVIS_RETENTION_METRICS_HOURS` | `3`; `3` to `720`. Hours of per-minute rows kept; out of range refuses to start |
 
 Which series feed which number:
 

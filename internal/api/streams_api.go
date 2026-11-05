@@ -32,7 +32,7 @@ func (u *UI) streamsAPI(w http.ResponseWriter, r *http.Request) {
 		u.ingestFail(w, "the streams", err)
 		return
 	}
-	v := pages.BuildStreamsWith(entries, pages.ParseStreamFilter(r.URL.Query()), u.streamHealth(u.scrape.Snapshot(metrics.Gateway, metrics.Retention, nil)))
+	v := pages.BuildStreamsWith(entries, pages.ParseStreamFilter(r.URL.Query()), u.streamHealth(u.healthSnapshot(r)))
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, pages.StreamsAsJSON(v))
 }

@@ -19,8 +19,8 @@
 .mx-notice { font-size: 12.5px; line-height: 1.4; color: var(--color-muted); }
 .mx-notice p { margin: 2px 0 0; }
 .mx-notice .mx-notice-title { margin: 6px 0 2px; font-size: 13px; font-weight: 600; color: var(--color-ink); }
-.mx-copy { display: flex; align-items: center; gap: 4px; margin-top: 6px; min-width: 0; }
-.mx-copy code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 4px 8px; border: 1px solid var(--color-line-soft); border-radius: var(--radius-sm); background: var(--color-canvas); font-family: var(--font-mono); font-size: 11.5px; color: var(--color-ink-2); }
+.mx-copy { display: flex; align-items: flex-start; gap: 4px; margin-top: 6px; min-width: 0; }
+.mx-copy code { flex: 1; min-width: 0; overflow-x: auto; white-space: pre; padding: 4px 8px; border: 1px solid var(--color-line-soft); border-radius: var(--radius-sm); background: var(--color-canvas); font-family: var(--font-mono); font-size: 11.5px; color: var(--color-ink-2); }
 
 /* A row's quiet cell: a width of its own, so the row is as tall and as wide with or without a source. */
 .mx-row { display: inline-flex; align-items: center; gap: 8px; height: 20px; min-width: 7.5rem; font-size: 12px; color: var(--color-ink-2); white-space: nowrap; }

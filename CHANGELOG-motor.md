@@ -18,6 +18,57 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+### Changed: the live volume finds its sources by pod annotation, and is collected by the scheduler
+
+- **`BREVIS_GATEWAY_METRICS_URLS` and `BREVIS_ENDPOINTS_METRICS_URLS` are gone.**
+  A process that still sees them logs one warning each and ignores them; nothing
+  fails to start. The gateways and SQL APIs announce themselves instead (below),
+  so replicas under an HPA are followed and nobody types an address.
+- **Discovery by annotation.** The scheduler lists the pods of its own namespace
+  every 15 s and scrapes every pod that is Running, Ready and carries
+  `brevis.sh/metrics-kind` (`gateway` or `endpoints`) and `brevis.sh/metrics-name`
+  (the gateway's `name:`, or the API's name as the console lists it), with
+  optional `brevis.sh/metrics-port` (default `9090`) and `brevis.sh/metrics-path`
+  (default `/metrics`). One pod is one replica; a pod scaled down leaves at once
+  and does not stay as a silent replica. The address is the pod IP from the API
+  server's answer, never from a request; a pod on the host network is refused
+  and the port must be one the pod declares as a `containerPort`, so a pod
+  that announces itself needs its metrics port declared. Outside Kubernetes
+  discovery is off and the console says no pod announced itself (the compose
+  demo has no live volume).
+- **One collector, in the scheduler.** It runs under a Postgres advisory lock
+  (two schedulers never both collect; the second takes over when the first dies)
+  and writes one transaction per scrape round. The API processes no longer
+  scrape: they read the tables, so every API pod answers the same, and the
+  `metrics:streams` and `metrics:endpoints` topics on the one `/api/events`
+  stream follow the rows. **A deployment without a running scheduler shows no
+  metrics.**
+- **Migration `00034` adds two tables** (`metric_minutes`, `metric_sources`).
+  Nothing is renamed, so, unlike `00033`, it is safe in a rolling update.
+- **RBAC: nothing new.** The scheduler's role already lists pods in its namespace
+  and is what discovery uses; the API's service account still has no pod access.
+- **`BREVIS_RETENTION_METRICS_HOURS`** (default `3`, the window the console reads;
+  allowed `3` to `720`; out of range refuses to start) is how long per-minute rows
+  are kept. The collector prunes every minute in bounded batches, so lowering it
+  on a large backlog does not lock the table.
+
+**Upgrade note: annotate the gateway and SQL API pods.** On the pod template (not
+the Deployment) of each. For a gateway named `zarv_ingestion` whose metrics
+listener is on port 9090:
+
+```yaml
+template:
+  metadata:
+    annotations:
+      brevis.sh/metrics-kind: gateway
+      brevis.sh/metrics-name: zarv_ingestion
+      brevis.sh/metrics-port: "9090"
+```
+
+A `brevis-sql-api` uses `brevis.sh/metrics-kind: endpoints` and its name as in
+the console. Until then the Streams and Endpoints screens say no pod announced
+itself.
+
 ## [0.43.0] — 2026-11-05
 
 ### Changed: the server has no language

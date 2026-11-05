@@ -65,11 +65,11 @@ function withAnswer(answer: unknown, status = 200) {
 }
 
 describe("the Streams band and rows", () => {
-  it("not configured says so and offers the variable to set", async () => {
+  it("not configured says so and offers the annotations to put on the pod", async () => {
     withAnswer(snap({ configured: false, owners: [], entities: [] }));
     renderApp(<StreamsStrip />, { qc: seededClient() });
     expect(await screen.findByText("[metrics.nc.title]")).toBeTruthy();
-    expect(screen.getByText(/BREVIS_GATEWAY_METRICS_URLS=/)).toBeTruthy();
+    expect(screen.getByText(/brevis\.sh\/metrics-kind: gateway/)).toBeTruthy();
   });
   it("waiting for the first scrape draws no number", async () => {
     withAnswer(snap({ owners: [owner({ state: "waiting" })] }));

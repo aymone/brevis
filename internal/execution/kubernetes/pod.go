@@ -40,6 +40,8 @@ type Metadata struct {
 	Namespace   string            `json:"namespace,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// DeletionTimestamp is set while the pod is shutting down.
+	DeletionTimestamp string `json:"deletionTimestamp,omitempty"`
 }
 
 type PodSpec struct {
@@ -51,6 +53,9 @@ type PodSpec struct {
 	ActiveDeadlineSeconds *int64            `json:"activeDeadlineSeconds,omitempty"`
 	Volumes               []Volume          `json:"volumes,omitempty"`
 	Containers            []Container       `json:"containers"`
+	// HostNetwork is only ever read (metrics discovery refuses such a pod); the
+	// engine never sets it on a step.
+	HostNetwork bool `json:"hostNetwork,omitempty"`
 }
 
 // Volume is a PersistentVolumeClaim mounted into the pod.
@@ -93,6 +98,9 @@ type Container struct {
 	Resources    *Resources    `json:"resources,omitempty"`
 	WorkingDir   string        `json:"workingDir,omitempty"`
 	VolumeMounts []VolumeMount `json:"volumeMounts,omitempty"`
+	// Ports is only ever read: the ports a pod declares, which metrics discovery
+	// requires the scraped port to be one of.
+	Ports []ContainerPort `json:"ports,omitempty"`
 
 	// TerminationMessagePath is where the step publishes its context, and the
 	// kubelet copies that file's contents into the pod's status when the
@@ -103,6 +111,11 @@ type Container struct {
 	// disagreeing means a step writes somewhere nobody reads. Written side by
 	// side, they cannot drift.
 	TerminationMessagePath string `json:"terminationMessagePath,omitempty"`
+}
+
+// ContainerPort is a port a container declares.
+type ContainerPort struct {
+	ContainerPort int `json:"containerPort"`
 }
 
 type Var struct {
@@ -136,6 +149,8 @@ type Resources struct {
 
 type PodStatus struct {
 	Phase             string            `json:"phase,omitempty"`
+	PodIP             string            `json:"podIP,omitempty"`
+	HostIP            string            `json:"hostIP,omitempty"`
 	Conditions        []Condition       `json:"conditions,omitempty"`
 	Reason            string            `json:"reason,omitempty"`
 	Message           string            `json:"message,omitempty"`

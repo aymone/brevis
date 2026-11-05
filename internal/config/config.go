@@ -19,6 +19,12 @@ import (
 	"brevis.sh/brevis/internal/auth"
 )
 
+// The bounds of BREVIS_RETENTION_METRICS_HOURS.
+const (
+	MetricsRetentionMinHours = 3       // the window the console reads
+	MetricsRetentionMaxHours = 30 * 24 // thirty days
+)
+
 // Config is the immutable state derived from the environment. Everything the
 // process needs to start is here -- nothing reads the environment after boot.
 type Config struct {
@@ -44,6 +50,10 @@ type Config struct {
 	RetentionTrimAfter  time.Duration
 	RetentionPurgeAfter time.Duration // zero: never delete runs
 	RetentionInterval   time.Duration
+	// RetentionMetrics is how long the live-volume minutes (metric_minutes) are
+	// kept, pruned by the collector in the scheduler. Always on: the default is
+	// the window the console reads.
+	RetentionMetrics time.Duration
 
 	// BrandFile points at the visual identity YAML. Optional: without it the
 	// interface uses the default identity.
@@ -134,13 +144,8 @@ type Config struct {
 	EndpointsURLs string
 	EndpointsKey  string
 
-	// The sources of the live volume screens (internal/metrics). Each is
-	// `name=url` pairs of a /metrics address, the same name repeated for
-	// replicas. Empty is "no metrics source configured", and nothing else
-	// changes. They are ADDRESSES OF OTHER PROCESSES' metrics listeners, not
-	// this console's own (BREVIS_METRICS_ADDR).
-	GatewayMetricsURLs   string
-	EndpointsMetricsURLs string
+	// The live volume screens find their sources by pod annotation, with no
+	// setting here (internal/metrics, discover.go).
 	// MetricsScrapeInterval is how often each source is read; zero is 5 s.
 	MetricsScrapeInterval time.Duration
 
@@ -207,9 +212,7 @@ func Load() (Config, error) {
 		SQLServeToken: os.Getenv("BREVIS_SQL_SERVE_TOKEN"),
 		EndpointsURLs: os.Getenv("BREVIS_ENDPOINTS_URLS"),
 
-		GatewayMetricsURLs:   os.Getenv("BREVIS_GATEWAY_METRICS_URLS"),
-		EndpointsMetricsURLs: os.Getenv("BREVIS_ENDPOINTS_METRICS_URLS"),
-		EndpointsKey:         os.Getenv("BREVIS_ENDPOINTS_KEY"),
+		EndpointsKey: os.Getenv("BREVIS_ENDPOINTS_KEY"),
 		Auth: auth.Credential{
 			User:   renamed("BREVIS_AUTH_USER", "BREVIS_AUTH_USUARIO"),
 			Hash:   renamed("BREVIS_AUTH_PASSWORD_HASH", "BREVIS_AUTH_SENHA_HASH"),
@@ -288,6 +291,23 @@ func Load() (Config, error) {
 	c.RetentionTrimAfter = time.Duration(trim) * 24 * time.Hour
 	c.RetentionPurgeAfter = time.Duration(purge) * 24 * time.Hour
 	c.RetentionInterval = time.Duration(hours) * time.Hour
+
+	// The floor is the longest window the console reads (the stream health rule
+	// and the charts: metrics.Retention minutes, three hours); the cap keeps the
+	// table, one row per entity per minute, from growing without a bound.
+	mh, err := envInt("BREVIS_RETENTION_METRICS_HOURS", 0)
+	if err != nil {
+		return Config{}, err
+	}
+	switch {
+	case mh == 0:
+		mh = MetricsRetentionMinHours
+	case mh < MetricsRetentionMinHours || mh > MetricsRetentionMaxHours:
+		return Config{}, fmt.Errorf("BREVIS_RETENTION_METRICS_HOURS: %d is outside %d to %d hours "+
+			"(the floor is the window the console reads, the cap keeps the table small); unset or 0 means %d",
+			mh, MetricsRetentionMinHours, MetricsRetentionMaxHours, MetricsRetentionMinHours)
+	}
+	c.RetentionMetrics = time.Duration(mh) * time.Hour
 
 	// Two words and not a boolean: `off` is what an operator types to get
 	// #122's cancel back, and a "false" or a "0" read as `on` would hand over

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"brevis.sh/brevis/internal/metrics"
 	"os"
 
 	"brevis.sh/brevis/internal/auth"
@@ -366,22 +367,45 @@ func TestLoadRejectsBadPoolAndRetentionSettings(t *testing.T) {
 	}
 }
 
-func TestTheMetricsSourcesAreOptionalAndTheIntervalIsBounded(t *testing.T) {
+func TestTheMetricsScrapeIntervalIsBounded(t *testing.T) {
 	t.Setenv("BREVIS_DATABASE_URL", "postgres://u:p@localhost:5432/db")
-	t.Setenv("BREVIS_GATEWAY_METRICS_URLS", "")
 	t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", "")
 	c, err := Load()
-	if err != nil || c.GatewayMetricsURLs != "" || c.EndpointsMetricsURLs != "" || c.MetricsScrapeInterval != 0 {
-		t.Fatalf("nothing set must mean nothing configured: %+v %v", c, err)
+	if err != nil || c.MetricsScrapeInterval != 0 {
+		t.Fatalf("nothing set must mean the default: %+v %v", c, err)
 	}
-	t.Setenv("BREVIS_GATEWAY_METRICS_URLS", "gw=http://g:9090/metrics")
 	t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", "10s")
-	if c, err = Load(); err != nil || c.GatewayMetricsURLs == "" || c.MetricsScrapeInterval != 10*time.Second {
+	if c, err = Load(); err != nil || c.MetricsScrapeInterval != 10*time.Second {
 		t.Fatalf("%+v %v", c, err)
 	}
 	for _, bad := range []string{"fast", "0s", "500ms", "2h", "-5s"} {
 		t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", bad)
 		if _, err := Load(); err == nil || !strings.Contains(err.Error(), "BREVIS_METRICS_SCRAPE_INTERVAL") {
+			t.Errorf("%q accepted: %v", bad, err)
+		}
+	}
+}
+
+func TestTheMetricsRetentionDefaultsAndIsBounded(t *testing.T) {
+	t.Setenv("BREVIS_DATABASE_URL", "postgres://u:p@localhost:5432/db")
+	t.Setenv("BREVIS_RETENTION_METRICS_HOURS", "")
+	c, err := Load()
+	if err != nil || c.RetentionMetrics != 3*time.Hour {
+		t.Fatalf("unset must mean the default, three hours: %v %v", c.RetentionMetrics, err)
+	}
+	// The floor is what the console reads; if that window grows, so must this.
+	if time.Duration(metrics.Retention)*time.Minute > time.Duration(MetricsRetentionMinHours)*time.Hour {
+		t.Fatalf("the retention floor (%dh) is shorter than the window the console reads (%d min)", MetricsRetentionMinHours, metrics.Retention)
+	}
+	for in, want := range map[string]time.Duration{"0": 3 * time.Hour, "3": 3 * time.Hour, "24": 24 * time.Hour, "720": 720 * time.Hour} {
+		t.Setenv("BREVIS_RETENTION_METRICS_HOURS", in)
+		if c, err := Load(); err != nil || c.RetentionMetrics != want {
+			t.Errorf("%s: %v %v", in, c.RetentionMetrics, err)
+		}
+	}
+	for _, bad := range []string{"1", "2", "721", "-5", "soon"} {
+		t.Setenv("BREVIS_RETENTION_METRICS_HOURS", bad)
+		if _, err := Load(); err == nil || !strings.Contains(err.Error(), "BREVIS_RETENTION_METRICS_HOURS") {
 			t.Errorf("%q accepted: %v", bad, err)
 		}
 	}

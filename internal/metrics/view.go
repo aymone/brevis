@@ -135,8 +135,16 @@ func (c *Collector) Snapshot(k Kind, minutes int, only *[2]string) Snapshot {
 
 	byOwner := map[string][]*targetState{}
 	var names []string
+	live := map[string]bool{}
 	for _, t := range c.targets {
-		if t.Kind != k {
+		if t.Kind == k && t.retired.IsZero() {
+			live[t.Owner] = true
+		}
+	}
+	for _, t := range c.targets {
+		// A retired replica keeps its past minutes in the sums, but only while
+		// its owner still has a live one: an owner nobody announces is gone.
+		if t.Kind != k || !live[t.Owner] {
 			continue
 		}
 		if byOwner[t.Owner] == nil {
@@ -151,7 +159,13 @@ func (c *Collector) Snapshot(k Kind, minutes int, only *[2]string) Snapshot {
 	fresh := 3*c.cfg.Interval + c.client.Timeout
 	for _, owner := range names {
 		ts := byOwner[owner]
-		snap.Owners = append(snap.Owners, ownerState(owner, ts, now, fresh))
+		var current []*targetState
+		for _, t := range ts {
+			if t.retired.IsZero() && !t.synthetic {
+				current = append(current, t)
+			}
+		}
+		snap.Owners = append(snap.Owners, ownerState(owner, current, now, fresh))
 		// Coverage of an owner is its best replica per minute: replicas watch
 		// the same wall clock, so seconds do not add, events do.
 		cov := make([]float64, n)
@@ -176,7 +190,7 @@ func (c *Collector) Snapshot(k Kind, minutes int, only *[2]string) Snapshot {
 			total.cov[i] = max(total.cov[i], cov[i])
 		}
 		for _, t := range ts {
-			up := !t.lastOK.IsZero() && now.Sub(t.lastOK) <= fresh
+			up := t.retired.IsZero() && !t.lastOK.IsZero() && now.Sub(t.lastOK) <= fresh
 			for name, e := range t.ents {
 				key := [2]string{owner, name}
 				a := ents[key]

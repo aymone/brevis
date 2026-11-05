@@ -30,7 +30,11 @@ func (u *UI) streamAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	v := pages.BuildStream(*s, detail)
 	if name := s.Field("name"); name != "" {
-		snap := u.scrape.Snapshot(metrics.Gateway, metrics.Retention, &[2]string{s.Gateway, name})
+		snap, err := u.snapshot(r.Context(), metrics.Gateway, metrics.Retention, &[2]string{s.Gateway, name})
+		if err != nil {
+			u.log.Warn("the live metrics are unavailable", "error", err)
+			snap = (*metrics.Collector)(nil).Snapshot(metrics.Gateway, metrics.Retention, nil)
+		}
 		h := u.streamHealth(snap)(*s)
 		v.Live = &h
 	}

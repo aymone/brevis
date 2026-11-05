@@ -257,7 +257,7 @@ func (u *UI) failingStreams(r *http.Request) ([]attentionStreamView, int) {
 		u.log.Warn("the failing streams are unavailable", "error", err)
 		return []attentionStreamView{}, 0
 	}
-	v := pages.BuildStreamsWith(entries, pages.StreamFilter{}, u.streamHealth(u.scrape.Snapshot(metrics.Gateway, metrics.Retention, nil)))
+	v := pages.BuildStreamsWith(entries, pages.StreamFilter{}, u.streamHealth(u.healthSnapshot(r)))
 	out := []attentionStreamView{}
 	more := 0
 	for _, s := range v.Rows {

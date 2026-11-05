@@ -1,10 +1,6 @@
 package metrics
 
-import (
-	"fmt"
-	"net/url"
-	"strings"
-)
+import "strings"
 
 // Kind is which family of sources a target belongs to.
 type Kind string
@@ -16,12 +12,17 @@ const (
 	Endpoints Kind = "endpoints"
 )
 
-// maxTargets bounds what an operator can ask this process to scrape every few
-// seconds. Replicas of a few gateways and APIs, not a fleet.
+// maxTargets bounds what this process scrapes every few seconds: replicas of a
+// few gateways and APIs, not a fleet.
 const maxTargets = 64
 
 // Target is one /metrics URL and the name the console knows its owner by: the
-// gateway's `name:` or the API's name in BREVIS_ENDPOINTS_URLS.
+// gateway's `name:` or the API's name as the console lists it.
+//
+// Targets come ONLY from the Kubernetes API server's answer about the pods of
+// this process's own namespace (see discover.go). Nothing a request carries can
+// add one, which is what keeps the console from being aimed at an internal
+// address by whoever can log in.
 //
 // The URL is unexported and String leaves it out: a token may ride in it, and
 // a struct that prints itself is how a token reaches a log line.
@@ -31,43 +32,16 @@ type Target struct {
 	url   string
 }
 
+// NewTarget is for tests of other packages, which scrape an httptest server on
+// loopback (an address discovery refuses). Production targets come only from
+// TargetsFromPods.
+func NewTarget(kind Kind, owner, url string) Target {
+	return Target{Kind: kind, Owner: owner, url: url}
+}
+
 func (t Target) String() string { return string(t.Kind) + ":" + t.Owner }
 
-// ParseTargets reads `owner=url` pairs separated by commas or newlines, the
-// style of BREVIS_ENDPOINTS_URLS. The same owner may appear more than once:
-// those are replicas, and their counters are summed.
-//
-// Targets come ONLY from here, from the operator's environment. Nothing a
-// request carries can add one, which is what keeps the console from being
-// aimed at an internal address by whoever can log in. The errors name the
-// variable and the entry, never the address.
-func ParseTargets(kind Kind, variable, list string) ([]Target, error) {
-	var out []Target
-	for i, part := range strings.FieldsFunc(list, func(r rune) bool { return r == ',' || r == '\n' }) {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		where := fmt.Sprintf("%s, entry %d", variable, i+1)
-		owner, raw, found := strings.Cut(part, "=")
-		owner = strings.TrimSpace(owner)
-		if !found || owner == "" {
-			return nil, fmt.Errorf("%s: not name=url", where)
-		}
-		u, err := url.Parse(strings.TrimSpace(raw))
-		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-			return nil, fmt.Errorf("%s: the address is not an http(s) URL", where)
-		}
-		if u.User != nil {
-			return nil, fmt.Errorf("%s: the address carries a credential; metrics ports are not public, so none is needed", where)
-		}
-		out = append(out, Target{Kind: kind, Owner: owner, url: u.String()})
-	}
-	if len(out) > maxTargets {
-		return nil, fmt.Errorf("%s: %d targets, at most %d", variable, len(out), maxTargets)
-	}
-	return out, nil
-}
+func (t Target) key() string { return string(t.Kind) + "\x00" + t.Owner + "\x00" + t.url }
 
 type class int
 

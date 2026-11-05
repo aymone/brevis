@@ -5,7 +5,6 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -235,27 +234,6 @@ func TestEndpointClassification(t *testing.T) {
 		if (cl == counter) != tc.ok || (tc.ok && idx != tc.want) {
 			t.Errorf("%v: class %v idx %d", tc.s.Labels, cl, idx)
 		}
-	}
-}
-
-func TestParseTargets(t *testing.T) {
-	ts, err := ParseTargets(Gateway, "V", "a=http://h1:9090/metrics, a=http://h2:9090/metrics\nb=https://h3/metrics")
-	if err != nil || len(ts) != 3 || ts[1].Owner != "a" {
-		t.Fatalf("%v %v", ts, err)
-	}
-	if strings.Contains(ts[0].String(), "h1") {
-		t.Fatal("a target prints its address")
-	}
-	for _, bad := range []string{"nourl", "a=ftp://h", "a=http://u:p@h/metrics", "=http://h", "a=//h"} {
-		_, err := ParseTargets(Gateway, "V", bad)
-		if err == nil {
-			t.Errorf("%q accepted", bad)
-		} else if strings.Contains(err.Error(), "u:p") || strings.Contains(err.Error(), "ftp://h") {
-			t.Errorf("error quotes the address: %v", err)
-		}
-	}
-	if ts, err := ParseTargets(Gateway, "V", ""); err != nil || len(ts) != 0 {
-		t.Fatal("empty list is not an error")
 	}
 }
 

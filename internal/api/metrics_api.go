@@ -13,9 +13,18 @@ import (
 // WithMetrics turns on the live volume endpoints and, with WithMetricsTopics,
 // their SSE topics. Nil (the default) serves the same JSON saying "not
 // configured", so a screen can tell an absent source from a failed one.
-func (u *UI) WithMetrics(c *metrics.Collector) *UI {
+func (u *UI) WithMetrics(c metrics.SnapshotReader) *UI {
 	u.scrape = c
 	return u
+}
+
+// snapshot reads the kind's live volume. With no reader it says "not
+// configured", the same JSON a console with no source gets.
+func (u *UI) snapshot(ctx context.Context, k metrics.Kind, minutes int, only *[2]string) (metrics.Snapshot, error) {
+	if u.scrape == nil {
+		return (*metrics.Collector)(nil).Snapshot(k, minutes, only), nil
+	}
+	return u.scrape.Read(ctx, k, minutes, only)
 }
 
 // The paths. Streams live under /api/ingest/metrics/streams because Go's mux
@@ -29,24 +38,34 @@ func (u *UI) registerMetricsAPI(mux *http.ServeMux) {
 }
 
 // WithMetricsTopics adds the two topics to the hub's factory. The fingerprint
-// is the collector's scrape counter of the kind: it changes once per finished
-// scrape, so a change event cannot be emitted more often than data arrives,
-// and it never changes (never emits) when nothing is configured.
-func WithMetricsTopics(f events.Factory, c *metrics.Collector) events.Factory {
-	seq := func(k metrics.Kind) events.Detector {
-		return events.DetectorFunc(func(context.Context) (string, error) {
-			return strconv.FormatUint(c.Seq(k), 10), nil
-		})
+// comes from the database (metrics.Store.Fingerprint), so every API pod answers
+// the same whichever one holds the connection, and it moves only when the
+// collector wrote a round, so a change event is never more frequent than data.
+func WithMetricsTopics(f events.Factory, st metrics.Store) events.Factory {
+	fp := func(k metrics.Kind) events.Detector {
+		return events.DetectorFunc(func(ctx context.Context) (string, error) { return st.Fingerprint(ctx, k) })
 	}
 	return func(topic string) events.Detector {
 		switch topic {
 		case events.MetricsStreams:
-			return seq(metrics.Gateway)
+			return fp(metrics.Gateway)
 		case events.MetricsEndpoints:
-			return seq(metrics.Endpoints)
+			return fp(metrics.Endpoints)
 		}
 		return f(topic)
 	}
+}
+
+// healthSnapshot is the gateways' snapshot the stream health is judged on. A
+// failed read is logged and answered as "no source": the list still draws, its
+// streams with their static health, rather than the whole screen failing.
+func (u *UI) healthSnapshot(r *http.Request) metrics.Snapshot {
+	snap, err := u.snapshot(r.Context(), metrics.Gateway, metrics.Retention, nil)
+	if err != nil {
+		u.log.Warn("the live metrics are unavailable", "error", err)
+		return (*metrics.Collector)(nil).Snapshot(metrics.Gateway, metrics.Retention, nil)
+	}
+	return snap
 }
 
 // metricsMinutes reads ?minutes=, bounded by what the collector keeps.
@@ -102,7 +121,12 @@ func (u *UI) apiStreamsMetrics(w http.ResponseWriter, r *http.Request) {
 		u.ingestFail(w, "the streams", err)
 		return
 	}
-	snap := u.scrape.Snapshot(metrics.Gateway, n, nil)
+	snap, err := u.snapshot(r.Context(), metrics.Gateway, n, nil)
+	if err != nil {
+		u.log.Error("reading the live metrics", "error", err)
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
+		return
+	}
 	v := streamsMetricsView{Snapshot: snap, Entities: make([]streamMetric, 0, len(snap.Entities))}
 	for _, e := range snap.Entities {
 		v.Entities = append(v.Entities, streamMetric{Entity: e, Gateway: e.Owner, Path: names[[2]string{e.Owner, e.Name}]})
@@ -132,7 +156,12 @@ func (u *UI) apiStreamMetrics(w http.ResponseWriter, r *http.Request) {
 	// no name to match the gateway's label with: the source cannot be asked
 	// about it, and the entity comes back not present.
 	name := s.Field("name")
-	snap := u.scrape.Snapshot(metrics.Gateway, n, &[2]string{gateway, name})
+	snap, err := u.snapshot(r.Context(), metrics.Gateway, n, &[2]string{gateway, name})
+	if err != nil {
+		u.log.Error("reading the live metrics", "error", err)
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
+		return
+	}
 	v := streamsMetricsView{Snapshot: snap, Entities: []streamMetric{{Entity: snap.Entities[0], Gateway: gateway, Path: path}}}
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, v)
@@ -154,7 +183,12 @@ func (u *UI) apiEndpointsMetrics(w http.ResponseWriter, r *http.Request) {
 		dataFail(w, http.StatusBadRequest, codeInvalidRequest, "max", metrics.Retention)
 		return
 	}
-	snap := u.scrape.Snapshot(metrics.Endpoints, n, nil)
+	snap, err := u.snapshot(r.Context(), metrics.Endpoints, n, nil)
+	if err != nil {
+		u.log.Error("reading the live metrics", "error", err)
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
+		return
+	}
 	v := endpointsMetricsView{Snapshot: snap, Entities: make([]endpointMetric, 0, len(snap.Entities))}
 	for _, e := range snap.Entities {
 		v.Entities = append(v.Entities, endpointMetric{Entity: e, API: e.Owner})
@@ -191,7 +225,12 @@ func (u *UI) apiEndpointMetrics(w http.ResponseWriter, r *http.Request) {
 		dataFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
-	snap := u.scrape.Snapshot(metrics.Endpoints, n, &[2]string{api, name})
+	snap, err := u.snapshot(r.Context(), metrics.Endpoints, n, &[2]string{api, name})
+	if err != nil {
+		u.log.Error("reading the live metrics", "error", err)
+		dataFail(w, http.StatusInternalServerError, codeUnavailable)
+		return
+	}
 	v := endpointsMetricsView{Snapshot: snap, Entities: []endpointMetric{{Entity: snap.Entities[0], API: api}}}
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, v)

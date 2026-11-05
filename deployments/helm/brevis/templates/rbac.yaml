@@ -37,6 +37,11 @@ rules:
   # No `update` and no `patch`: the scheduler creates, watches and deletes. It
   # never edits a pod in flight, and one more verb here is one more for whoever
   # compromises the process.
+  #
+  # `list` is also what the live-volume collector uses to find the gateway and
+  # SQL API pods that carry the brevis.sh/metrics-* annotations, in this
+  # namespace only. The API's account has no pod access and needs none: it
+  # reads what the collector wrote to Postgres.
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["create", "get", "list", "watch", "delete"]

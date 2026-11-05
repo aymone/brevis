@@ -875,9 +875,8 @@ afterwards.
 |---|---|---|
 | `BREVIS_ENV` | `production` | `local` uses text logging and opens the UI without a password; anything else (including unset) requires a credential and logs JSON. Set `BREVIS_ENV=local` for development |
 | `BREVIS_HTTP_ADDR` | `:8080` | listen address |
-| `BREVIS_GATEWAY_METRICS_URLS` | — | Where the gateways' `/metrics` answer, as `name=url` pairs (the gateway's `name:`), comma- or newline-separated; repeat a name for replicas. Feeds the live volume of Streams. Unset: those screens say "no metrics source configured". See [OBSERVABILITY](OBSERVABILITY.md#the-live-volume-on-the-consoles-screens) |
-| `BREVIS_ENDPOINTS_METRICS_URLS` | — | The same for each `brevis-sql-api` (`api=url`, the API's name as in `BREVIS_ENDPOINTS_URLS`). Feeds the live consumption of Endpoints |
-| `BREVIS_METRICS_SCRAPE_INTERVAL` | `5s` | How often each source is read (`1s` to `1m`) |
+| `BREVIS_METRICS_SCRAPE_INTERVAL` | `5s` | How often each source is read (`1s` to `1m`), by the scheduler. The sources are the gateway and SQL API pods that carry the `brevis.sh/metrics-*` annotations; see [OBSERVABILITY](OBSERVABILITY.md#the-live-volume-on-the-consoles-screens) |
+| `BREVIS_RETENTION_METRICS_HOURS` | `3` | How many hours of per-minute live metrics are kept (`3` to `720`); `0` or unset is the default. The floor is the window the console reads, the cap keeps the table (one row per stream or endpoint per minute) small. The scheduler prunes in bounded batches, so lowering it on a large backlog does not lock the table. Out of range is a boot error |
 | `BREVIS_METRICS_ADDR` | `:9090` | where `/metrics` listens, on a port of its own. `""` serves nothing — and unlike the others here, an EMPTY value is not the same as an unset one |
 | `BREVIS_LOG_LEVEL` | `info` | |
 | `BREVIS_SHUTDOWN_TIMEOUT_SECONDS` | `15` | an integer; a non-numeric value is a boot error |

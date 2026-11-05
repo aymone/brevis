@@ -4,13 +4,13 @@ import { CopyButton } from "../copy";
 import type { Health } from "./hooks";
 import type { Snapshot } from "./types";
 
-// THE HONEST STATES. A chart of zeros would be a claim, so each thing the screen cannot know says so: no source
-// configured (with the variable to set, copyable), nothing scraped yet, the source down (and when it last answered).
+// THE HONEST STATES. A chart of zeros would be a claim, so each thing the screen cannot know says so: no pod announced
+// itself (with the annotations to put on the pod template, copyable), nothing scraped yet, the source down (and when it last answered).
 
-/** What to set, per family: the variable and an example value in its own format. */
+/** What to put on the pod template, per family: the kind, and an example name. The annotation names are code. */
 const SETUP = {
-  streams: { variable: "BREVIS_GATEWAY_METRICS_URLS", example: "events_gateway=http://gateway:9090/metrics" },
-  endpoints: { variable: "BREVIS_ENDPOINTS_METRICS_URLS", example: "example-api=http://endpoints:9090/metrics" },
+  streams: { kind: "gateway", name: "events_gateway" },
+  endpoints: { kind: "endpoints", name: "example-api" },
 } as const;
 
 export type Family = keyof typeof SETUP;
@@ -19,7 +19,11 @@ export function Notice({ family, h }: { family: Family; h: Exclude<Health, { kin
   const { t } = useT();
   const since = useSince();
   if (h.kind === "not_configured") {
-    const line = `${SETUP[family].variable}=${SETUP[family].example}`;
+    const line = [
+      `brevis.sh/metrics-kind: ${SETUP[family].kind}`,
+      `brevis.sh/metrics-name: ${SETUP[family].name}`,
+      `brevis.sh/metrics-port: "9090"`,
+    ].join("\n");
     return (
       <div className="mx-notice" role="status">
         <p className="mx-notice-title">{t("metrics.nc.title")}</p>

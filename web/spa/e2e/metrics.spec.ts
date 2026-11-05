@@ -122,12 +122,12 @@ test.describe("streams", () => {
     await expect(page.locator("#stream-rows .mx-row").first()).toBeVisible();
   });
 
-  test("not configured names the variable to set and offers it to copy", async ({ page }) => {
+  test("not configured names the annotations to set and offers them to copy", async ({ page }) => {
     await mockMetrics(page, "not_configured");
     await page.goto(STREAMS);
     const band = page.locator(".mx-strip");
-    await expect(band).toContainText("No metrics source configured");
-    await expect(band.locator("code")).toContainText("BREVIS_GATEWAY_METRICS_URLS=");
+    await expect(band).toContainText("No pod announced itself as a metrics source");
+    await expect(band.locator("code")).toContainText("brevis.sh/metrics-kind: gateway");
     await expect(band.getByRole("button", { name: "Copy" })).toBeVisible();
     await expect(band.locator(".mx-big")).toHaveCount(0); // no invented number
     await expect(page.locator("#stream-rows .mx-off").first()).toHaveText("—");
@@ -180,11 +180,11 @@ test.describe("endpoints", () => {
     await expect(page.locator("#endpoint-rows .mx-row").first()).toBeVisible();
   });
 
-  test("list: not configured names its own variable", async ({ page }) => {
+  test("list: not configured names its own annotations", async ({ page }) => {
     await mockMetrics(page, "not_configured");
     await mockEndpointsList(page);
     await page.goto(ENDPOINTS);
-    await expect(page.locator(".mx-strip code")).toContainText("BREVIS_ENDPOINTS_METRICS_URLS=");
+    await expect(page.locator(".mx-strip code")).toContainText("brevis.sh/metrics-kind: endpoints");
   });
 
   test("detail: outcomes stacked, percentiles, hit ratio; partial replicas and dropped series are said", async ({ page }) => {

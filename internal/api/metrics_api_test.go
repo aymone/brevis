@@ -31,11 +31,7 @@ func metricsServer(t *testing.T, body func(n int) string) *httptest.Server {
 // scraped runs the collector's loop long enough for two scrapes and stops it.
 func scraped(t *testing.T, kind metrics.Kind, owner, url string) *metrics.Collector {
 	t.Helper()
-	ts, err := metrics.ParseTargets(kind, "V", owner+"="+url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	c := metrics.New(metrics.Config{Targets: ts, Interval: time.Second})
+	c := metrics.New(metrics.Config{Targets: []metrics.Target{metrics.NewTarget(kind, owner, url)}, Interval: time.Second})
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() { c.Run(ctx); close(done) }()
@@ -163,32 +159,41 @@ func TestEndpointsMetrics(t *testing.T) {
 	}
 }
 
-func TestMetricsTopicsFingerprintIsTheScrapeCount(t *testing.T) {
+// fpStore is a metrics.Store that only knows fingerprints.
+type fpStore struct{ fp map[metrics.Kind]string }
+
+func (f *fpStore) Write(context.Context, metrics.Export) error { return nil }
+func (f *fpStore) Load(context.Context, metrics.Kind, int64) (metrics.Rows, error) {
+	return metrics.Rows{}, nil
+}
+func (f *fpStore) Prune(context.Context, int64, int) (int, error)                { return 0, nil }
+func (f *fpStore) Fingerprint(_ context.Context, k metrics.Kind) (string, error) { return f.fp[k], nil }
+
+func TestMetricsTopicsFingerprintComesFromTheStore(t *testing.T) {
 	var base int
+	st := &fpStore{fp: map[metrics.Kind]string{metrics.Gateway: "g1", metrics.Endpoints: "e1"}}
 	factory := api.WithMetricsTopics(func(string) events.Detector {
 		base++
 		return events.DetectorFunc(func(context.Context) (string, error) { return "db", nil })
-	}, nil)
-	for _, topic := range []string{events.MetricsStreams, events.MetricsEndpoints} {
+	}, st)
+	for topic, want := range map[string]string{events.MetricsStreams: "g1", events.MetricsEndpoints: "e1"} {
 		fp, err := factory(topic).Fingerprint(context.Background())
-		if err != nil || fp != "0" {
+		if err != nil || fp != want {
 			t.Errorf("%s: %q %v", topic, fp, err)
 		}
 	}
 	if base != 0 {
 		t.Error("the metrics topics fell through to the database detector")
 	}
+	st.fp[metrics.Gateway] = "g2"
+	if fp, _ := factory(events.MetricsStreams).Fingerprint(context.Background()); fp != "g2" {
+		t.Error("the fingerprint did not follow the store")
+	}
+	if fp, _ := factory(events.MetricsEndpoints).Fingerprint(context.Background()); fp != "e1" {
+		t.Error("the endpoints topic moved with the gateway's rows")
+	}
 	if fp, _ := factory(events.Runs).Fingerprint(context.Background()); fp != "db" || base != 1 {
 		t.Error("other topics must keep their detector")
-	}
-	srv := metricsServer(t, func(int) string { return "" })
-	c := scraped(t, metrics.Gateway, "edge", srv.URL)
-	fp, _ := api.WithMetricsTopics(nil, c)(events.MetricsStreams).Fingerprint(context.Background())
-	if fp == "0" {
-		t.Error("the fingerprint did not move with the scrapes")
-	}
-	if fp, _ = api.WithMetricsTopics(nil, c)(events.MetricsEndpoints).Fingerprint(context.Background()); fp != "0" {
-		t.Error("the endpoints topic moved with the gateway's scrapes")
 	}
 }
 

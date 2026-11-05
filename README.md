@@ -212,8 +212,7 @@ make build   # binary in bin/
 | `BREVIS_HTTP_ADDR` | `:8080` | |
 | `BREVIS_METRICS_ADDR` | `:9090` | Prometheus scrape endpoint. A **separate** port from the one above; set to `""` to serve nothing |
 | `BREVIS_LOG_LEVEL` | `info` | |
-| `BREVIS_GATEWAY_METRICS_URLS` | — | Where the gateways' `/metrics` answer, as `name=url` pairs (the gateway's `name:`), comma- or newline-separated; repeat a name for replicas. Feeds the live volume of Streams. Unset: those screens say "no metrics source configured". See [OBSERVABILITY](docs/OBSERVABILITY.md#the-live-volume-on-the-consoles-screens) |
-| `BREVIS_ENDPOINTS_METRICS_URLS` | — | The same for each `brevis-sql-api` (`api=url`, the API's name as in `BREVIS_ENDPOINTS_URLS`). Feeds the live consumption of Endpoints |
+| `BREVIS_RETENTION_METRICS_HOURS` | `3` | Hours of per-minute live metrics kept (`3` to `720`). The gateways and SQL APIs are found by pod annotation, with no address to set: [OBSERVABILITY](docs/OBSERVABILITY.md#the-live-volume-on-the-consoles-screens) |
 | `BREVIS_METRICS_SCRAPE_INTERVAL` | `5s` | How often each source is read (`1s` to `1m`) |
 | `BREVIS_SHUTDOWN_TIMEOUT_SECONDS` | `15` | |
 

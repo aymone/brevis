@@ -20,6 +20,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -947,6 +948,7 @@ func cmdScheduler() *cobra.Command {
 					func() error { return sched.Run(ctx) },
 					func() error { return disp.Run(ctx) },
 					func() error { return pruneLoop(ctx, cfg, runs, log) },
+					func() error { return metricsCollector(ctx, cfg, pool, log) },
 				)
 			}()
 
@@ -1439,11 +1441,9 @@ func serve(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	collector, err := newScraper(cfg, log)
-	if err != nil {
-		return err
-	}
-	go collector.Run(ctx)
+	// The live volume is collected by the scheduler and read from Postgres.
+	metricsStore := postgres.NewMetricsStore(pool)
+	warnRemovedMetricsEnv(log, os.Getenv)
 	ui := api.NewUI(postgres.NewReadRepo(pool), postgres.NewWorkflowRepo(pool),
 		runsRepo, uiActions{schedules: schedules, sched: sched, runs: runsRepo},
 		alerts.New(pool.Pool), postgres.NewReadRepo(pool), brand, log).
@@ -1469,8 +1469,8 @@ func serve(ctx context.Context) error {
 		// Server-sent change notifications. Bound to ctx so the signal that
 		// starts the graceful shutdown also ends every open stream; otherwise
 		// srv.Shutdown would wait on them until its timeout.
-		WithMetrics(collector).
-		WithChangeHub(events.NewHub(ctx, api.WithMetricsTopics(api.NewFingerprints(postgres.NewFingerprints(pool)), collector),
+		WithMetrics(scrape.NewReader(metricsStore)).
+		WithChangeHub(events.NewHub(ctx, api.WithMetricsTopics(api.NewFingerprints(postgres.NewFingerprints(pool)), metricsStore),
 			events.Options{Log: log})).
 		WithVersion(Version, updateChecker(ctx, log))
 	// `inseguro` follows the environment: locally the server listens on plain
@@ -1533,20 +1533,58 @@ func updateChecker(ctx context.Context, log *slog.Logger) api.UpdateSource {
 	return c
 }
 
-// newScraper reads the live-volume sources from the environment. REFUSED AT
-// START when a list is malformed, like BREVIS_ENDPOINTS_URLS: a source that
-// silently is not scraped is a chart that says "no traffic".
-func newScraper(cfg config.Config, log *slog.Logger) (*scrape.Collector, error) {
-	gw, err := scrape.ParseTargets(scrape.Gateway, "BREVIS_GATEWAY_METRICS_URLS", cfg.GatewayMetricsURLs)
-	if err != nil {
-		return nil, err
+// metricsCollector is the scheduler's loop that collects the live volume of
+// gateways and SQL APIs: it finds the pods that carry the brevis.sh/metrics-*
+// annotations in its own namespace, scrapes them, and writes the minutes to
+// Postgres, where every API process reads them.
+//
+// ONE collects. The scheduler is a singleton by deployment, but two processes
+// can overlap (a rollout, a second copy by mistake), so the loop runs only
+// under a Postgres advisory lock held on its own connection: the second
+// process waits, and takes over within a few seconds when the first dies.
+//
+// Outside a cluster (no service account) there is nothing to discover and the
+// loop returns at once; the console says it has no source. A failure to reach
+// the API server is the discovery's to log and retry; it never stops the
+// scheduler.
+func metricsCollector(ctx context.Context, cfg config.Config, pool *postgres.Pool, log *slog.Logger) error {
+	warnRemovedMetricsEnv(log, os.Getenv)
+	client, err := k8s.NoCluster()
+	var outside k8s.ErrOutsideCluster
+	switch {
+	case errors.As(err, &outside):
+		log.Info("live volume sources: not in a Kubernetes cluster, so no pod discovery", "reason", outside.Reason)
+		return nil
+	case err != nil:
+		log.Warn("live volume sources: pod discovery is off", "error", err)
+		return nil
 	}
-	ep, err := scrape.ParseTargets(scrape.Endpoints, "BREVIS_ENDPOINTS_METRICS_URLS", cfg.EndpointsMetricsURLs)
-	if err != nil {
-		return nil, err
+	store := postgres.NewMetricsStore(pool)
+	pool.RunExclusive(ctx, postgres.MetricsLockKey, 5*time.Second, log, func(ctx context.Context) {
+		c := scrape.New(scrape.Config{Interval: cfg.MetricsScrapeInterval, Log: log})
+		log.Info("live volume sources: discovering annotated pods", "namespace", client.Namespace(),
+			"retention", cfg.RetentionMetrics.String())
+		var wg sync.WaitGroup
+		for _, f := range []func(){
+			func() { c.Run(ctx) },
+			func() { scrape.Discover(ctx, client, c, 15*time.Second, log) },
+			func() { c.Persist(ctx, store, c.Interval(), cfg.RetentionMetrics, log) },
+		} {
+			wg.Add(1)
+			go func() { defer wg.Done(); f() }()
+		}
+		wg.Wait()
+	})
+	return nil
+}
+
+// warnRemovedMetricsEnv says, once, that the two lists of addresses that used to
+// feed the live volume are ignored now. A deployment that still sets them keeps
+// starting; its gateways and SQL API pods only need the annotations.
+func warnRemovedMetricsEnv(log *slog.Logger, getenv func(string) string) {
+	for _, name := range []string{"BREVIS_GATEWAY_METRICS_URLS", "BREVIS_ENDPOINTS_METRICS_URLS"} {
+		if getenv(name) != "" {
+			log.Warn(name+" is ignored: gateway and SQL API pods are found by their brevis.sh/metrics-kind, brevis.sh/metrics-name annotations (see docs/OBSERVABILITY.md)", "variable", name)
+		}
 	}
-	if len(gw)+len(ep) > 0 {
-		log.Info("live volume sources", "gateways", len(gw), "endpoint_apis", len(ep))
-	}
-	return scrape.New(scrape.Config{Targets: append(gw, ep...), Interval: cfg.MetricsScrapeInterval, Log: log}), nil
 }
