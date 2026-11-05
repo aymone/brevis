@@ -54,7 +54,7 @@ print(uuid.uuid5(ns, chave))`
 	}
 	quero := strings.TrimSpace(string(b))
 	if got != quero {
-		t.Errorf("IngestionIDWith(pycompat.Text) = %s, e o Python dá %s", got, quero)
+		t.Errorf("IngestionIDWith(pycompat.Text) = %s, and Python gives %s", got, quero)
 	}
 
 	// And the default does NOT match. That is the divergence that motivated all
@@ -65,8 +65,8 @@ print(uuid.uuid5(ns, chave))`
 		t.Fatal(err)
 	}
 	if fallback := defaultOutput.(map[string]any)[sdk.ColumnIngestionID].(string); fallback == quero {
-		t.Error("o padrão passou a casar com o Python; se foi intencional, a decisão " +
-			"documentada em asText mudou e este teste precisa ser reescrito")
+		t.Error("the pattern now matches Python; if that was intentional, the decision " +
+			"documented in asText changed and this test has to be rewritten")
 	}
 }
 
@@ -87,7 +87,7 @@ func TestKeyWithMatchesPython(t *testing.T) {
 		t.Fatal(err)
 	}
 	if fallback != "|19.0|true" {
-		t.Errorf("Key = %q -- se mudou, o padrão mudou", fallback)
+		t.Errorf("Key = %q -- if it changed, the pattern changed", fallback)
 	}
 }
 
@@ -99,13 +99,13 @@ func TestKeyWithRefusesAFloat64NamingTheField(t *testing.T) {
 		"a": "ok", "b": float64(19),
 	})
 	if err == nil {
-		t.Fatal("um float64 passou; o literal já se perdeu e ele adivinhou")
+		t.Fatal("a float64 got through; the literal was already lost and it guessed")
 	}
 	if !strings.Contains(err.Error(), `"b"`) {
-		t.Errorf("o erro não nomeia o campo: %v", err)
+		t.Errorf("the error does not name the field: %v", err)
 	}
 	if !strings.Contains(err.Error(), "PreserveNumbers") {
-		t.Errorf("o erro não oferece a saída: %v", err)
+		t.Errorf("the error does not offer the way out: %v", err)
 	}
 }
 
@@ -114,10 +114,10 @@ func TestKeyWithRefusesAFloat64NamingTheField(t *testing.T) {
 func TestKeyWithRefusesNamingTheField(t *testing.T) {
 	_, err := sdk.KeyWith(pycompat.Text, "a", "b")(map[string]any{"a": "ok", "b": 1e-5})
 	if err == nil {
-		t.Fatal("a faixa exponencial passou")
+		t.Fatal("the exponential range got through")
 	}
 	if !strings.Contains(err.Error(), `"b"`) {
-		t.Errorf("o erro não nomeia o campo: %v", err)
+		t.Errorf("the error does not name the field: %v", err)
 	}
 }
 
@@ -194,7 +194,7 @@ func TestTheDivergenceBetweenTheDefaultAndPython(t *testing.T) {
 			t.Fatalf("Key(%#v): %v", c.input, err)
 		}
 		if fallback != c.fallback {
-			t.Errorf("Key(%#v) = %q, a tabela diz %q", c.input, fallback, c.fallback)
+			t.Errorf("Key(%#v) = %q, the table says %q", c.input, fallback, c.fallback)
 		}
 
 		python, err := sdk.KeyWith(pycompat.Text, "v")(map[string]any{"v": c.input})
@@ -202,7 +202,7 @@ func TestTheDivergenceBetweenTheDefaultAndPython(t *testing.T) {
 			t.Fatalf("KeyWith(%#v): %v", c.input, err)
 		}
 		if python != c.python {
-			t.Errorf("KeyWith(%#v) = %q, a tabela diz %q", c.input, python, c.python)
+			t.Errorf("KeyWith(%#v) = %q, the table says %q", c.input, python, c.python)
 		}
 	}
 }
@@ -221,10 +221,10 @@ func TestTheUserAgentIsOursAndNotGos(t *testing.T) {
 	drain(t, sdk.Source{From: from.HTTP{URL: srv.URL}})
 
 	if strings.Contains(visto, "Go-http-client") {
-		t.Errorf("o UA é o padrão do Go: %q", visto)
+		t.Errorf("the UA is Go's default: %q", visto)
 	}
 	if !strings.Contains(visto, "brevis") {
-		t.Errorf("o UA não identifica o SDK: %q", visto)
+		t.Errorf("the UA does not identify the SDK: %q", visto)
 	}
 }
 
@@ -244,7 +244,7 @@ func TestTheCallersUserAgentWins(t *testing.T) {
 	}})
 
 	if visto != "meu-fetcher/2.0" {
-		t.Errorf("UA = %q; o do chamador devia vencer", visto)
+		t.Errorf("UA = %q; the caller's should win", visto)
 	}
 }
 
@@ -275,10 +275,10 @@ func TestResponsePreserveNumbersReachesObject(t *testing.T) {
 	}
 
 	if tipos[false] != "float64" {
-		t.Errorf("sem PreserveNumbers, o tipo é %s; esperado float64", tipos[false])
+		t.Errorf("without PreserveNumbers, the type is %s; want float64", tipos[false])
 	}
 	if tipos[true] != "json.Number" {
-		t.Errorf("com PreserveNumbers, o tipo é %s; o Object devia honrar a Source", tipos[true])
+		t.Errorf("with PreserveNumbers, the type is %s; the Object should honor the Source", tipos[true])
 	}
 }
 

@@ -309,7 +309,7 @@ func TestLoadOptionsApply(t *testing.T) {
 		t.Errorf("staging options did not apply: %+v", cfg)
 	}
 	if cfg.ThresholdForGCS != 42 || len(cfg.Columns) != 1 {
-		t.Errorf("behaviour options did not apply: %+v", cfg)
+		t.Errorf("behavior options did not apply: %+v", cfg)
 	}
 }
 

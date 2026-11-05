@@ -108,7 +108,7 @@ steps:
 `
 	_, err := Parse("x.yaml", []byte(yaml))
 	if err == nil {
-		t.Fatal("aceitou a mesma variavel em env e em secrets")
+		t.Fatal("accepted the same variable in env and in secrets")
 	}
 	if !strings.Contains(err.Error(), "TOKEN") {
 		t.Errorf("the error does not name the variable: %v", err)

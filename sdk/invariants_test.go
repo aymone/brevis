@@ -31,11 +31,11 @@ func TestI2SchemaRequiresAType(t *testing.T) {
 	}
 	err := sdk.ValidateTarget(target)
 	if err == nil {
-		t.Fatal("coluna sem Type passou")
+		t.Fatal("a column without a Type got through")
 	}
 	for _, quero := range []string{"a", "Type", "TypeString"} {
 		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("o erro não diz %q: %v", quero, err)
+			t.Errorf("the error does not say %q: %v", quero, err)
 		}
 	}
 }
@@ -49,10 +49,10 @@ func TestI2ColumnsAndSchemaTogetherIsRefused(t *testing.T) {
 		Schema:  sdk.Schema{{Name: "a", Type: sdk.TypeString}},
 	})
 	if err == nil {
-		t.Fatal("declarar Columns e Schema passou")
+		t.Fatal("declaring Columns and Schema got through")
 	}
 	if !strings.Contains(err.Error(), "drop Columns") {
-		t.Errorf("o erro não diz qual manter: %v", err)
+		t.Errorf("the error does not say which to keep: %v", err)
 	}
 }
 
@@ -75,13 +75,13 @@ func TestI3ChecksBeforeTheExtract(t *testing.T) {
 	}
 	err := sdk.Execute(context.Background(), &p, nil)
 	if err == nil {
-		t.Fatal("o destino recusou e a execução seguiu")
+		t.Fatal("the destination refused and the run carried on")
 	}
 	if extraiu {
-		t.Error("o extract rodou antes da conferência -- é exatamente a quota que o I3 economiza")
+		t.Error("the extract ran before the check -- exactly the quota that I3 saves")
 	}
 	if !strings.Contains(err.Error(), "before the extract") {
-		t.Errorf("o erro não diz que foi antes: %v", err)
+		t.Errorf("the error does not say it was before: %v", err)
 	}
 }
 
@@ -93,10 +93,10 @@ func TestI4ThePartitionIsDeclared(t *testing.T) {
 		PartitionBy: "nao_declarada",
 	})
 	if err == nil {
-		t.Fatal("particionar por uma coluna que o Schema não declara passou")
+		t.Fatal("partitioning by a column the Schema does not declare got through")
 	}
 	if !strings.Contains(err.Error(), "nao_declarada") {
-		t.Errorf("o erro não nomeia a coluna: %v", err)
+		t.Errorf("the error does not name the column: %v", err)
 	}
 }
 
@@ -112,7 +112,7 @@ type refusingTarget struct{}
 
 func (refusingTarget) Describe() string { return "destino de teste" }
 func (refusingTarget) Write(context.Context, []sdk.Envelope, sdk.WriteOptions) (*sdk.LoadResult, error) {
-	return nil, fmt.Errorf("não deveria chegar aqui")
+	return nil, fmt.Errorf("should not get here")
 }
 func (refusingTarget) CheckDestination(_ context.Context, columns []string) error {
 	return fmt.Errorf("the declaration lists %s, which the table does not have. "+

@@ -106,7 +106,7 @@ func request(t *testing.T, ui *api.UI, path string) (*http.Response, graph) {
 	body, _ := io.ReadAll(res.Body)
 	if res.StatusCode == http.StatusOK {
 		if err := json.Unmarshal(body, &g); err != nil {
-			t.Fatalf("json invalido: %v — %s", err, body)
+			t.Fatalf("invalid json: %v — %s", err, body)
 		}
 	}
 	return res, g
@@ -136,16 +136,16 @@ func TestTheWorkflowGraphPutsLevelsInColumns(t *testing.T) {
 		}
 	}
 	if x["a"] >= x["b"] || x["b"] >= x["d"] {
-		t.Errorf("colunas fora de ordem: a=%d b=%d d=%d", x["a"], x["b"], x["d"])
+		t.Errorf("columns out of order: a=%d b=%d d=%d", x["a"], x["b"], x["d"])
 	}
 	if x["b"] != x["c"] {
 		t.Errorf("b and c run in parallel but came out in different columns: %d and %d", x["b"], x["c"])
 	}
 	if y["b"] == y["c"] {
-		t.Errorf("b e c sairam sobrepostos em y=%d", y["b"])
+		t.Errorf("b and c came out overlapping at y=%d", y["b"])
 	}
 	if y["a"] != y["d"] {
-		t.Errorf("single-node levels should stay centred: a=%d d=%d", y["a"], y["d"])
+		t.Errorf("single-node levels should stay centered: a=%d d=%d", y["a"], y["d"])
 	}
 }
 
@@ -164,7 +164,7 @@ func TestTheWorkflowGraphHasNoState(t *testing.T) {
 		t.Errorf("run_id = %q on a graph with no run", g.RunID)
 	}
 	if g.Nodes[0].Data["acao"] == nil {
-		t.Error("o card perdeu o rotulo da acao")
+		t.Error("the card lost the action's label")
 	}
 }
 
@@ -186,7 +186,7 @@ func TestTheRunGraphAppliesStatePerNode(t *testing.T) {
 		t.Fatalf("status = %d, want 200", res.StatusCode)
 	}
 	if g.RunID != id.String() || g.Status != "running" {
-		t.Fatalf("cabecalho errado: run=%q status=%q", g.RunID, g.Status)
+		t.Fatalf("wrong header: run=%q status=%q", g.RunID, g.Status)
 	}
 	if g.Terminal {
 		t.Error("a running run marked terminal: the UI would stop refreshing")
@@ -326,7 +326,7 @@ func TestAnSDKStepBecomesAGroupWithTheStagesInside(t *testing.T) {
 	for _, f := range children {
 		n := g.Nodes[f]
 		if n.Type != "etapa" || n.Extent != "parent" {
-			t.Errorf("filho mal formado: %+v", n)
+			t.Errorf("malformed child: %+v", n)
 		}
 		if n.Selectable == nil || *n.Selectable {
 			t.Errorf("a selectable stage would open an empty panel: %+v", n)
@@ -379,7 +379,7 @@ func TestAColumnDoesNotOverlapWithAnExpandedNode(t *testing.T) {
 		}
 	}
 	if !temB || !temC {
-		t.Fatal("b e c precisam estar no grafo")
+		t.Fatal("b and c must be in the graph")
 	}
 
 	// b and c are on the SAME level of the diamond: one has to end before the
@@ -389,7 +389,7 @@ func TestAColumnDoesNotOverlapWithAnExpandedNode(t *testing.T) {
 		top, bottom, topHeight = c, b, height("c")
 	}
 	if top+topHeight > bottom {
-		t.Errorf("os nos se sobrepoem: um vai de %d a %d, o outro comeca em %d",
+		t.Errorf("the nodes overlap: one runs from %d to %d, the other starts at %d",
 			top, top+topHeight, bottom)
 	}
 }
@@ -437,7 +437,7 @@ func TestAPlainStepGainsNoNesting(t *testing.T) {
 			t.Errorf("a card without the declared width: %+v", n.Style)
 		}
 		if n.Type != "brevis" {
-			t.Errorf("no comum mudou de tipo: %q", n.Type)
+			t.Errorf("the shared node changed type: %q", n.Type)
 		}
 	}
 }
@@ -660,7 +660,7 @@ func TestAnUnlabelledEdgeCarriesNoLabel(t *testing.T) {
 	body := rawBody(t, newUI(defsFake{w: diamond()}, execsFake{}), "/api/workflows/diamond/graph")
 	edges := body[strings.Index(body, `"edges"`):]
 	if strings.Contains(edges, `"label"`) {
-		t.Errorf("an unlabelled edge emitted an empty label key:\n%s", edges)
+		t.Errorf("an unlabeled edge emitted an empty label key:\n%s", edges)
 	}
 }
 
@@ -751,7 +751,7 @@ func TestAWorkflowWithNoGroupsIsUnchanged(t *testing.T) {
 			t.Errorf("a group node appeared in an ungrouped workflow")
 		}
 		if _, has := n.Data["grupo"]; has {
-			t.Errorf("%s carries a grupo key", n.ID)
+			t.Errorf("%s carries a group key", n.ID)
 		}
 	}
 }

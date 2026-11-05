@@ -853,13 +853,13 @@ func TestIntegrationCreateSQLRunsTheCallersDDL(t *testing.T) {
 	// NUMERIC is the point: autodetect would never produce that from JSON, and
 	// that is precisely why CreateSQL exists.
 	if f := byName["preco"]; f == nil || f.Type != bigquery.NumericFieldType {
-		t.Errorf("a DDL do chamador não sobreviveu: preco = %+v", f)
+		t.Errorf("the caller's DDL did not survive: price = %+v", f)
 	}
 	if f := byName["sku"]; f == nil || !f.Required {
-		t.Errorf("o NOT NULL da DDL do chamador se perdeu: %+v", f)
+		t.Errorf("the caller's DDL NOT NULL was lost: %+v", f)
 	}
 	if got := countRows(ctx, t, client, env, name); got != 1 {
-		t.Errorf("%d linhas, esperado 1", got)
+		t.Errorf("%d rows, want 1", got)
 	}
 }
 
@@ -904,14 +904,14 @@ func TestIntegrationPartitionOptionsReachTheTable(t *testing.T) {
 		t.Fatalf("reading metadata: %v", err)
 	}
 	if meta.TimePartitioning == nil {
-		t.Fatal("a tabela saiu sem particionamento")
+		t.Fatal("the table came out without partitioning")
 	}
 	if meta.TimePartitioning.Expiration != expiry {
-		t.Errorf("PartitionExpiration = %v, esperado %v",
+		t.Errorf("PartitionExpiration = %v, want %v",
 			meta.TimePartitioning.Expiration, expiry)
 	}
 	if !meta.TimePartitioning.RequirePartitionFilter {
-		t.Error("RequirePartitionFilter não chegou à tabela")
+		t.Error("RequirePartitionFilter did not reach the table")
 	}
 
 	// And the proof of what the option exists to do: a query with no partition
@@ -919,7 +919,7 @@ func TestIntegrationPartitionOptionsReachTheTable(t *testing.T) {
 	// copied.
 	q := client.Query(fmt.Sprintf("SELECT COUNT(*) FROM `%s.%s.%s`", env.project, env.dataset, name))
 	if _, err := q.Read(ctx); err == nil {
-		t.Error("uma consulta sem filtro de partição deveria ser recusada")
+		t.Error("a query without a partition filter should have been refused")
 	}
 }
 
@@ -968,7 +968,7 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 				t.Fatalf("load: %v", err)
 			}
 			if res.Strategy != "gcs" {
-				t.Fatalf("estratégia = %q; o teste precisa do caminho do GCS", res.Strategy)
+				t.Fatalf("strategy = %q; the test needs the GCS path", res.Strategy)
 			}
 
 			gcsClient, err := storage.NewClient(ctx)
@@ -985,14 +985,14 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 					break
 				}
 				if err != nil {
-					t.Fatalf("listando o bucket: %v", err)
+					t.Fatalf("listing the bucket: %v", err)
 				}
 				n++
 				t.Cleanup(func() { _ = gcsClient.Bucket(env.bucket).Object(attrs.Name).Delete(context.Background()) })
 			}
 
 			if n != c.esperar {
-				t.Errorf("%d objetos no bucket, esperado %d", n, c.esperar)
+				t.Errorf("%d objects in the bucket, want %d", n, c.esperar)
 			}
 			_ = client
 		})
@@ -1038,11 +1038,11 @@ func TestIntegrationInlineLimitPicksTheStrategy(t *testing.T) {
 				t.Fatalf("load: %v", err)
 			}
 			if res.Strategy != c.esperada {
-				t.Errorf("com limite %d e %d linhas a estratégia foi %q, esperada %q",
+				t.Errorf("with limit %d and %d rows the strategy was %q, want %q",
 					c.limite, c.lines, res.Strategy, c.esperada)
 			}
 			if res.RowsLoaded != int64(c.lines) {
-				t.Errorf("%d linhas escritas, esperado %d", res.RowsLoaded, c.lines)
+				t.Errorf("%d rows written, want %d", res.RowsLoaded, c.lines)
 			}
 		})
 	}
@@ -1089,14 +1089,14 @@ func TestIntegrationProvenanceLabelsTheTable(t *testing.T) {
 	}
 
 	if meta.Labels["provider"] != "integration" {
-		t.Errorf("label provider = %q, esperado o do lote", meta.Labels["provider"])
+		t.Errorf("label provider = %q, want the batch's", meta.Labels["provider"])
 	}
 	if meta.Labels["entity"] != "rows" {
-		t.Errorf("label entity = %q, esperado o do lote", meta.Labels["entity"])
+		t.Errorf("label entity = %q, want the batch's", meta.Labels["entity"])
 	}
 	// The description answers "what writes here?" six months later.
 	if !strings.Contains(meta.Description, "integration/rows") {
-		t.Errorf("a descrição não nomeia a proveniência: %q", meta.Description)
+		t.Errorf("the description does not name the provenance: %q", meta.Description)
 	}
 }
 
@@ -1167,7 +1167,7 @@ func TestIntegrationMergeIntoAJSONColumn(t *testing.T) {
 		t.Fatalf("second load: %v", err)
 	}
 	if second.RowsIgnored != 6 {
-		t.Errorf("RowsIgnored = %d, expected 6: the merge should have recognised every row", second.RowsIgnored)
+		t.Errorf("RowsIgnored = %d, expected 6: the merge should have recognized every row", second.RowsIgnored)
 	}
 
 	if got := countRows(ctx, t, client, env, name); got != 6 {
@@ -1251,16 +1251,16 @@ func TestIntegrationChainWritesEverything(t *testing.T) {
 	}
 
 	if _, err := loader.Load(ctx, core.Envelope{Payload: line}); err != nil {
-		t.Fatalf("primeira carga: %v", err)
+		t.Fatalf("first load: %v", err)
 	}
 	// The second must not re-ingest: it is what the merge exists to do, and it
 	// matches on exactly the column the chain wrote.
 	res, err := loader.Load(ctx, core.Envelope{Payload: line})
 	if err != nil {
-		t.Fatalf("segunda carga: %v", err)
+		t.Fatalf("second load: %v", err)
 	}
 	if res.RowsLoaded != 0 || res.RowsIgnored != 1 {
-		t.Errorf("segunda carga escreveu %d e ignorou %d, esperado 0 e 1",
+		t.Errorf("the second load wrote %d and ignored %d, want 0 and 1",
 			res.RowsLoaded, res.RowsIgnored)
 	}
 
@@ -1275,13 +1275,13 @@ func TestIntegrationChainWritesEverything(t *testing.T) {
 		byName[f.Name] = f
 	}
 	if f := byName["ingestion_id"]; f == nil || !f.Required {
-		t.Errorf("ingestion_id não saiu NOT NULL: %+v", f)
+		t.Errorf("ingestion_id did not come out NOT NULL: %+v", f)
 	}
 	if f := byName["ingestion_loaded_at"]; f == nil || !f.Required {
-		t.Errorf("ingestion_loaded_at não saiu NOT NULL: %+v", f)
+		t.Errorf("ingestion_loaded_at did not come out NOT NULL: %+v", f)
 	}
 	if len(meta.Schema) != len(declared) {
-		t.Errorf("a tabela tem %d colunas, a declaração tem %d", len(meta.Schema), len(declared))
+		t.Errorf("the table has %d columns, the declaration has %d", len(meta.Schema), len(declared))
 	}
 	// And the labels, which come from the row's own provider/entity columns.
 	if meta.Labels["provider"] != "open_meteo" {
@@ -1300,7 +1300,7 @@ func TestIntegrationChainWritesEverything(t *testing.T) {
 		t.Fatalf("read: %v", err)
 	}
 	if len(row) != 1 || row[0] != id {
-		t.Errorf("o id gravado (%v) não é o da fórmula (%s)", row, id)
+		t.Errorf("the stored id (%v) is not the formula's (%s)", row, id)
 	}
 }
 

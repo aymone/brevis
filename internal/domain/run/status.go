@@ -178,7 +178,7 @@ type ErrInvalidTransition struct {
 }
 
 func (e ErrInvalidTransition) Error() string {
-	return fmt.Sprintf("transicao invalida: %s -> %s", e.De, e.Para)
+	return fmt.Sprintf("invalid transition: %s -> %s", e.De, e.Para)
 }
 
 // Validate returns an error when a RUN's transition does not exist in the

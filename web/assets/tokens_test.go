@@ -40,7 +40,7 @@ func TestEveryDerivedRoleIsPaintedByTheBrand(t *testing.T) {
 			continue
 		}
 		if strings.Contains(v, "#") {
-			t.Errorf("--color-%s carries a literal colour (%s), which no brand can repaint", role, v)
+			t.Errorf("--color-%s carries a literal color (%s), which no brand can repaint", role, v)
 		}
 		found := refs.FindAllStringSubmatch(v, -1)
 		if len(found) == 0 {
@@ -138,7 +138,7 @@ func TestTheDesignRolesArePaintedByTheBrand(t *testing.T) {
 			continue
 		}
 		if strings.Contains(v, "#") {
-			t.Errorf("--color-%s carries a literal colour (%s), which no brand can repaint", role, v)
+			t.Errorf("--color-%s carries a literal color (%s), which no brand can repaint", role, v)
 			continue
 		}
 		for _, leaf := range leaves(role, 0) {

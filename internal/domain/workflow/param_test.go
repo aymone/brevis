@@ -26,10 +26,10 @@ func TestResolveUsesTheDefaultAndTheGivenOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	if out["load_full"] != "true" {
-		t.Errorf("informado ignorado: %v", out)
+		t.Errorf("given value ignored: %v", out)
 	}
 	if out["days"] != "7" {
-		t.Errorf("padrao perdido: %v", out)
+		t.Errorf("default lost: %v", out)
 	}
 }
 
@@ -92,7 +92,7 @@ func TestTextRefusesAShellCharacter(t *testing.T) {
 		"'; DROP TABLE runs; --",
 	} {
 		if err := p.Accepts(veneno); err == nil {
-			t.Errorf("aceitou %q", veneno)
+			t.Errorf("accepted %q", veneno)
 		}
 	}
 
@@ -134,7 +134,7 @@ func TestAnInvalidDeclarationIsRefused(t *testing.T) {
 	}
 	for _, p := range casos {
 		if err := p.Validate(); err == nil {
-			t.Errorf("declaracao invalida aceita: %+v", p)
+			t.Errorf("an invalid declaration was accepted: %+v", p)
 		}
 	}
 }

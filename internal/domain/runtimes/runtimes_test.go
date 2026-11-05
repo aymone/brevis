@@ -330,7 +330,7 @@ func TestTheIdsAreStableKeys(t *testing.T) {
 	// one is a decision rather than a slip.
 	for _, id := range rt.Tools {
 		if tokens[id] {
-			t.Errorf("tool %q has a colour token; tools draw muted on purpose", id)
+			t.Errorf("tool %q has a color token; tools draw muted on purpose", id)
 		}
 	}
 

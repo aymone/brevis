@@ -137,7 +137,7 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 		t.Errorf("QUEUED = %d, wanted %d", got, total-maxConc)
 	}
 	if p := pico.Load(); p > maxConc {
-		t.Errorf("pico de concorrencia = %d, excedeu o maximo de %d", p, maxConc)
+		t.Errorf("concurrency peak = %d, exceeded the maximum of %d", p, maxConc)
 	}
 	if pending+claimed != total {
 		t.Errorf("the queue holds %d items, wanted %d -- something was lost", pending+claimed, total)
@@ -168,7 +168,7 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 		t.Errorf("the queue should be empty, it holds %d pending and %d claimed", pending, claimed)
 	}
 	if p := pico.Load(); p > maxConc {
-		t.Errorf("pico de concorrencia = %d durante toda a corrida", p)
+		t.Errorf("concurrency peak = %d for the whole race", p)
 	}
 }
 
@@ -265,7 +265,7 @@ func TestClaimDoesNotHandOutTheSameItemTwice(t *testing.T) {
 	}
 	for id, c := range vistos {
 		if c > 1 {
-			t.Errorf("run %s entregue %d vezes", id, c)
+			t.Errorf("run %s delivered %d times", id, c)
 		}
 	}
 }
@@ -290,7 +290,7 @@ func TestRecoverReturnsADeadWorkersItem(t *testing.T) {
 	}
 
 	if _, claimed, _ := queue.Size(ctx); claimed != 1 {
-		t.Fatal("esperava 1 item reivindicado")
+		t.Fatal("expected 1 claimed item")
 	}
 	items, err := queue.Recover(ctx, 0) // a zero limit: everything claimed comes back
 	if err != nil {
@@ -303,7 +303,7 @@ func TestRecoverReturnsADeadWorkersItem(t *testing.T) {
 		t.Errorf("the recovered item points at %s, wanted %s", items[0].RunID, r.ID)
 	}
 	if pending, _, _ := queue.Size(ctx); pending != 1 {
-		t.Error("o item deveria estar livre de novo")
+		t.Error("the item should be free again")
 	}
 }
 

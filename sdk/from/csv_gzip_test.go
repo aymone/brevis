@@ -47,10 +47,10 @@ func TestHTTPWithASemicolonDelimiter(t *testing.T) {
 
 	lines := readAll(t, from.HTTP{URL: srv.URL, Format: core.FormatCSV, Delimiter: ';'})
 	if len(lines) != 2 {
-		t.Fatalf("saiu com %d linhas: %v", len(lines), lines)
+		t.Fatalf("finished with %d rows: %v", len(lines), lines)
 	}
 	if lines[0]["municipio"] != "São Paulo" || lines[0]["populacao"] != "11451999" {
-		t.Errorf("primeira linha: %v", lines[0])
+		t.Errorf("first row: %v", lines[0])
 	}
 }
 
@@ -64,7 +64,7 @@ func TestWithoutADelimiterASemicolonCSVBecomesOneColumn(t *testing.T) {
 
 	lines := readAll(t, from.HTTP{URL: srv.URL, Format: core.FormatCSV})
 	if len(lines[0]) != 1 {
-		t.Errorf("com vírgula o CSV devia virar uma coluna só, veio %v", lines[0])
+		t.Errorf("with a comma the CSV should become a single column, got %v", lines[0])
 	}
 }
 
@@ -99,7 +99,7 @@ func TestHTTPDecompressesGzip(t *testing.T) {
 				URL: srv.URL + caso.path, Format: core.FormatCSV, Delimiter: ';',
 			})
 			if len(lines) != 2 || lines[1]["municipio"] != "Rio" {
-				t.Errorf("não descomprimiu: %v", lines)
+				t.Errorf("did not decompress: %v", lines)
 			}
 		})
 	}
@@ -117,10 +117,10 @@ func TestALyingGzipFailsSayingWhatItIs(t *testing.T) {
 	_, err := from.HTTP{URL: srv.URL, Format: core.FormatCSV}.Read(
 		context.Background(), core.ReadOptions{Stats: &core.Stats{}})
 	if err == nil {
-		t.Fatal("um corpo que não é gzip passou")
+		t.Fatal("a body that is not gzip got through")
 	}
 	if !containsAll(err.Error(), "gzip") {
-		t.Errorf("a mensagem não diz o que houve: %v", err)
+		t.Errorf("the message does not say what happened: %v", err)
 	}
 }
 

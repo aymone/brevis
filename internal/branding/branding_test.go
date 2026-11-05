@@ -26,7 +26,7 @@ func TestAMissingFileUsesTheDefault(t *testing.T) {
 		t.Fatalf("an absence became an error: %v", err)
 	}
 	if m.Title != "Brevis" {
-		t.Errorf("titulo = %q", m.Title)
+		t.Errorf("title = %q", m.Title)
 	}
 	if m.CSS() != "" {
 		t.Error("the default theme should emit no CSS -- the compiled sheet already has it")
@@ -40,18 +40,18 @@ func TestMissingFieldsInheritTheDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	if m.Title != "Acme Dados" {
-		t.Errorf("titulo = %q", m.Title)
+		t.Errorf("title = %q", m.Title)
 	}
 	if m.Subtitle != branding.Default().Subtitle {
-		t.Errorf("subtitulo perdido: %q", m.Subtitle)
+		t.Errorf("subtitle lost: %q", m.Subtitle)
 	}
 	// The colours are the product's own, and an empty one says so: the
 	// stylesheet carries them, and nothing is written for a file that sets none.
 	if m.Theme != (branding.Theme{}) {
-		t.Errorf("a file with no colours changed the theme: %+v", m.Theme)
+		t.Errorf("a file with no colors changed the theme: %+v", m.Theme)
 	}
 	if m.CSS() != "" {
-		t.Errorf("a file with no colours wrote CSS: %s", m.CSS())
+		t.Errorf("a file with no colors wrote CSS: %s", m.CSS())
 	}
 }
 
@@ -135,7 +135,7 @@ func TestAnInvalidColourIsRefused(t *testing.T) {
 	}
 	for _, v := range venenos {
 		if _, err := branding.Load(writeFile(t, v)); err == nil {
-			t.Errorf("aceitou cor invalida: %s", v)
+			t.Errorf("accepted an invalid color: %s", v)
 		}
 	}
 }
@@ -149,7 +149,7 @@ func TestAnEmptyTitleIsRefused(t *testing.T) {
 func TestABrokenYamlFallsBackToTheDefault(t *testing.T) {
 	m, err := branding.Load(writeFile(t, "title: [this: does\n  not close"))
 	if err == nil {
-		t.Error("yaml invalido deveria ser reportado")
+		t.Error("invalid yaml should have been reported")
 	}
 	if m.Title != "Brevis" {
 		t.Errorf("an error should return the usable default, got %q", m.Title)
@@ -165,7 +165,7 @@ func TestThePhrasePreservesTheLines(t *testing.T) {
 	}
 	rows := m.Lines()
 	if len(rows) != 3 || rows[0] != "Primeira" || rows[2] != "Terceira" {
-		t.Errorf("linhas = %q", rows)
+		t.Errorf("lines = %q", rows)
 	}
 	sem, _ := branding.Load(writeFile(t, `phrase: ""`))
 	if len(sem.Lines()) != 0 {
@@ -177,7 +177,7 @@ func TestThePhrasePreservesTheLines(t *testing.T) {
 // it.
 func TestTheAttributionDoesNotComeFromConfiguration(t *testing.T) {
 	if branding.Attribution != "Powered by Brevis" {
-		t.Errorf("atribuicao = %q", branding.Attribution)
+		t.Errorf("attribution = %q", branding.Attribution)
 	}
 	// Since an unknown field became an error, the guarantee got stronger: the
 	// attempt is not ignored, it is refused naming the field.
@@ -218,7 +218,7 @@ theme_light:
 	}
 	dark, light := css[:i], css[i:]
 	if !strings.Contains(light, "--color-ink:#202830") || !strings.Contains(light, "--color-gold-strong:#3a4a10") {
-		t.Errorf("the light block is missing the client's light colours:\n%s", light)
+		t.Errorf("the light block is missing the client's light colors:\n%s", light)
 	}
 	if strings.Contains(light, "#101820") {
 		t.Errorf("the dark ink reached the light block:\n%s", light)
@@ -253,6 +253,6 @@ theme:
 
 func TestAnInvalidLightColourIsRefused(t *testing.T) {
 	if _, err := branding.Load(writeFile(t, `theme_light: {ink: "#fff;} body{display:none"}`)); err == nil {
-		t.Error("an injected light colour was accepted")
+		t.Error("an injected light color was accepted")
 	}
 }

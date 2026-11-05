@@ -47,7 +47,7 @@ func TestASecretBecomesASecretKeyRef(t *testing.T) {
 		t.Fatal("no valueFrom.secretKeyRef")
 	}
 	if got := found.ValueFrom.SecretKeyRef; got.Name != "gabriel-session" || got.Key != "cookie" {
-		t.Errorf("coordenada errada: %+v", got)
+		t.Errorf("wrong coordinate: %+v", got)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestThePodsJSONSendsNoEmptyValueAlongsideValueFrom(t *testing.T) {
 		t.Fatalf("marshal: %v", err)
 	}
 	if strings.Contains(string(b), `"value":""`) {
-		t.Errorf("o JSON manda value vazio junto de valueFrom:\n%s", b)
+		t.Errorf("the JSON sends an empty value next to valueFrom:\n%s", b)
 	}
 }
 
@@ -107,7 +107,7 @@ func TestThePodsEnvironmentIsDeterministic(t *testing.T) {
 			continue
 		}
 		if string(b) != first {
-			t.Fatalf("ordem instavel:\n%s\n%s", first, b)
+			t.Fatalf("unstable order:\n%s\n%s", first, b)
 		}
 	}
 }

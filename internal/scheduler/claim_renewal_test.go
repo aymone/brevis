@@ -416,7 +416,7 @@ func TestARenewalErrorIsNotALostClaim(t *testing.T) {
 
 	r := dispatchUntilSettled(t, d, repo, id, nil)
 	if n := executions.Load(); n != 1 || cancelled.Load() != 0 {
-		t.Errorf("executed %d times, cancelled %d; one renewal error must change neither",
+		t.Errorf("executed %d times, canceled %d; one renewal error must change neither",
 			n, cancelled.Load())
 	}
 	if r.Status != dom.StatusSuccess {
@@ -456,7 +456,7 @@ func untilExecuted(t *testing.T, d *scheduler.Dispatcher, returned <-chan struct
 	select {
 	case <-returned:
 	case <-time.After(10 * time.Second):
-		t.Fatal("executar never returned")
+		t.Fatal("run never returned")
 	}
 	stop()
 	<-done
@@ -513,9 +513,9 @@ func TestALostClaimCancelsTheRunAndWritesNothing(t *testing.T) {
 
 	untilExecuted(t, d, returned)
 	if after := time.Duration(cancelledAfter.Load()); after == 0 {
-		t.Error("the run went on after its claim was taken; it has to be cancelled")
+		t.Error("the run went on after its claim was taken; it has to be canceled")
 	} else if after > lostClaim.Visibility {
-		t.Errorf("the run was cancelled %s after its claim was taken; the heartbeat is every %s",
+		t.Errorf("the run was canceled %s after its claim was taken; the heartbeat is every %s",
 			after, lostClaim.Visibility/3)
 	}
 	assertUntouched(t, pool, id)

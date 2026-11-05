@@ -63,7 +63,7 @@ func TestTheSecondRunUsesWhatCameFromTheVolume(t *testing.T) {
 			Auth: &core.Credential{
 				Value: func(context.Context) (string, error) {
 					if seed == "" {
-						return "", fmt.Errorf("GABRIEL_SESSION_COOKIE nao esta definida")
+						return "", fmt.Errorf("GABRIEL_SESSION_COOKIE is not set")
 					}
 					return "session=" + seed, nil
 				},
@@ -89,24 +89,24 @@ func TestTheSecondRunUsesWhatCameFromTheVolume(t *testing.T) {
 
 	// First: the seed exists, and the rotation is written.
 	if err := runIt("colado-pelo-humano"); err != nil {
-		t.Fatalf("primeira execucao: %v", err)
+		t.Fatalf("first run: %v", err)
 	}
 
 	// Second: the seed is GONE. Only the volume has a credential.
 	if err := runIt(""); err != nil {
-		t.Fatalf("segunda execucao, sem a semente: %v", err)
+		t.Fatalf("second run, without the seed: %v", err)
 	}
 
 	mu.Lock()
 	defer mu.Unlock()
 	if len(seenValues) != 2 {
-		t.Fatalf("a renovacao recebeu credencial %d vezes, esperado 2: %v", len(seenValues), seenValues)
+		t.Fatalf("the renewal received the credential %d times, want 2: %v", len(seenValues), seenValues)
 	}
 	if seenValues[0] != "colado-pelo-humano" {
-		t.Errorf("a primeira execucao usou %q", seenValues[0])
+		t.Errorf("the first run used %q", seenValues[0])
 	}
 	if seenValues[1] != "rotacionado-1" {
-		t.Errorf("a segunda execucao usou %q; esperava o valor que a primeira gravou", seenValues[1])
+		t.Errorf("the second run used %q; expected the value the first one wrote", seenValues[1])
 	}
 }
 
@@ -138,7 +138,7 @@ func TestAFailedWriteDoesNotStopTheRun(t *testing.T) {
 		},
 	}, nil)
 	if err != nil {
-		t.Fatalf("a execucao morreu por causa da escrita: %v", err)
+		t.Fatalf("the run died because of the write: %v", err)
 	}
 	lines := 0
 	for _, err := range seq {
@@ -148,10 +148,10 @@ func TestAFailedWriteDoesNotStopTheRun(t *testing.T) {
 		lines++
 	}
 	if lines != 1 {
-		t.Errorf("linhas = %d; a extracao devia ter acontecido", lines)
+		t.Errorf("rows = %d; the extraction should have happened", lines)
 	}
 	if stats.CredentialStoreError == "" {
-		t.Error("a falha de escrita nao chegou a Stats; so o log a teria")
+		t.Error("the write failure did not reach Stats; only the log would have")
 	}
 }
 

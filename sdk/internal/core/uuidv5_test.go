@@ -32,7 +32,7 @@ func TestUUIDv5AgreesWithThePackage(t *testing.T) {
 		quero := uuid.NewSHA1(espaco, data)
 		got := uuidV5(espaco, data)
 		if got != quero {
-			t.Fatalf("divergiu em %d bytes de dados:\n  meu  %s\n  uuid %s", len(data), got, quero)
+			t.Fatalf("diverged at %d bytes of data:\n  mine %s\n  uuid %s", len(data), got, quero)
 		}
 	}
 }
@@ -48,7 +48,7 @@ func TestUUIDv5InTheRealNamespace(t *testing.T) {
 	}
 	for _, data := range entries {
 		if got, quero := uuidV5(DefaultNamespace, data), uuid.NewSHA1(DefaultNamespace, data); got != quero {
-			t.Errorf("%d bytes: meu %s, uuid %s", len(data), got, quero)
+			t.Errorf("%d bytes: mine %s, uuid %s", len(data), got, quero)
 		}
 	}
 }
@@ -63,7 +63,7 @@ func TestFormatUUIDAgreesWithString(t *testing.T) {
 			u[j] = byte(r.Intn(256))
 		}
 		if got, quero := formatUUID(u), u.String(); got != quero {
-			t.Fatalf("meu %q, String() %q", got, quero)
+			t.Fatalf("mine %q, String() %q", got, quero)
 		}
 	}
 }
@@ -83,6 +83,6 @@ func TestAKeyLargerThanTheStackBuffer(t *testing.T) {
 	quero := uuid.NewSHA1(DefaultNamespace,
 		[]byte(longo+"|entidade|chave|2026-09-05T12:00:00Z")).String()
 	if got != quero {
-		t.Errorf("chave longa divergiu:\n  meu  %s\n  uuid %s", got, quero)
+		t.Errorf("long key diverged:\n  mine %s\n  uuid %s", got, quero)
 	}
 }

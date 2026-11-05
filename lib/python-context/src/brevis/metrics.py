@@ -20,7 +20,7 @@ looking for `@brevis:` lines -- that is how the SDK's phases reach the graph --
 and it already has a meter and a Prometheus endpoint.
 
 So this writes one line to stdout and the engine does the rest. The metric
-arrives labelled with the workflow and the step for free, because the engine
+arrives labeled with the workflow and the step for free, because the engine
 knows what it was running; through a Pushgateway this library would have to
 label itself, and would get it wrong.
 

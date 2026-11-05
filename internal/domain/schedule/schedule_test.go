@@ -33,7 +33,7 @@ func TestCatchupTruePreencheALacuna(t *testing.T) {
 		t.Fatalf("slots = %d (%v), wanted 4", len(slots), slots)
 	}
 	if !slots[0].Equal(inUTC("2026-01-02T02:00:00Z")) {
-		t.Errorf("primeiro slot = %v", slots[0])
+		t.Errorf("first slot = %v", slots[0])
 	}
 }
 

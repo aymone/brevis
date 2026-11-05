@@ -41,7 +41,7 @@ func BenchmarkTransformChain(b *testing.B) {
 			b.Fatal(err)
 		}
 		if payload == nil {
-			b.Fatal("payload vazio")
+			b.Fatal("empty payload")
 		}
 	}
 	b.StopTimer()

@@ -37,7 +37,7 @@ func TestTheCallersCookieArrivesWhole(t *testing.T) {
 	})
 
 	if received != paddedJWT {
-		t.Errorf("o servidor recebeu %q, o caller mandou %q", received, paddedJWT)
+		t.Errorf("the server received %q, the caller sent %q", received, paddedJWT)
 	}
 }
 
@@ -72,10 +72,10 @@ func TestARenewedCookieSurvivesIntoTheNextPage(t *testing.T) {
 	})
 
 	if len(seenValues) != 2 {
-		t.Fatalf("esperava 2 requisicoes, houve %d", len(seenValues))
+		t.Fatalf("expected 2 requests, got %d", len(seenValues))
 	}
 	if seenValues[1] != "renovado==" {
-		t.Errorf("a pagina 2 foi com %q; o Set-Cookie da pagina 1 nao pegou", seenValues[1])
+		t.Errorf("page 2 went with %q; page 1's Set-Cookie did not take", seenValues[1])
 	}
 }
 
@@ -103,7 +103,7 @@ func TestTheCookieDoesNotGoTwice(t *testing.T) {
 	})
 
 	if n := strings.Count(bruto, "session-token="); n != 1 {
-		t.Errorf("session-token aparece %d vezes no header: %q", n, bruto)
+		t.Errorf("session-token appears %d times in the header: %q", n, bruto)
 	}
 }
 
@@ -115,10 +115,10 @@ func TestAMalformedCookieFailsEarly(t *testing.T) {
 		Header: map[string][]string{"Cookie": {"isso nao e um cookie"}},
 	}, nil)
 	if err == nil {
-		t.Fatal("cookie invalido passou")
+		t.Fatal("an invalid cookie got through")
 	}
 	if !strings.Contains(err.Error(), "Cookie") {
-		t.Errorf("o erro nao diz que o problema e o Cookie: %v", err)
+		t.Errorf("the error does not say the problem is the Cookie: %v", err)
 	}
 }
 
@@ -134,7 +134,7 @@ func TestTheCallersHeaderIsNotMutated(t *testing.T) {
 	drain(t, core.Source{URL: srv.URL, Header: h})
 
 	if got := http.Header(h).Get("Cookie"); got != "session-token="+paddedJWT {
-		t.Errorf("o SDK mexeu no header do caller: %q", got)
+		t.Errorf("the SDK touched the caller's header: %q", got)
 	}
 }
 
@@ -174,6 +174,6 @@ func TestASecurePrefixedCookieDoesNotVanishSilently(t *testing.T) {
 	}})
 
 	if visto == "" {
-		t.Fatal("o cookie __Secure- sumiu antes de chegar ao servidor")
+		t.Fatal("the __Secure- cookie vanished before reaching the server")
 	}
 }

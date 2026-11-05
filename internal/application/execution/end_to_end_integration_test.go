@@ -32,7 +32,7 @@ import (
 func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 	dsn := os.Getenv("BREVIS_IT_PG_DSN")
 	if dsn == "" {
-		t.Skip("BREVIS_IT_PG_DSN ausente")
+		t.Skip("BREVIS_IT_PG_DSN is not set")
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 	runID := uuid.New()
 	repo := postgres.NewRunRepo(pool)
 	if err := createRun(ctx, pool, runID); err != nil {
-		t.Fatalf("criando a run: %v", err)
+		t.Fatalf("creating the run: %v", err)
 	}
 
 	r := app.Runner{
@@ -162,7 +162,7 @@ func buildFetcher(t *testing.T, dir string) string {
 	// three places that build against the local SDK and they all need it.
 	cmd.Env = append(os.Environ(), "GOFLAGS=-mod=mod")
 	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("compilando o fetcher: %v\n%s", err, out)
+		t.Fatalf("compiling the fetcher: %v\n%s", err, out)
 	}
 	return output
 }

@@ -39,7 +39,7 @@ type PoolOptions struct {
 func poolConfig(url string, o PoolOptions) (*pgxpool.Config, error) {
 	cfg, err := pgxpool.ParseConfig(url)
 	if err != nil {
-		return nil, fmt.Errorf("parse da BREVIS_DATABASE_URL: %w", err)
+		return nil, fmt.Errorf("parsing BREVIS_DATABASE_URL: %w", err)
 	}
 	cfg.MaxConnLifetime = time.Hour
 	cfg.HealthCheckPeriod = 30 * time.Second
@@ -70,14 +70,14 @@ func New(ctx context.Context, url string, opts ...PoolOptions) (*Pool, error) {
 
 	p, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("abrindo o pool: %w", err)
+		return nil, fmt.Errorf("opening the pool: %w", err)
 	}
 
 	ctxPing, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if err := p.Ping(ctxPing); err != nil {
 		p.Close()
-		return nil, fmt.Errorf("conectando ao postgres: %w", err)
+		return nil, fmt.Errorf("connecting to postgres: %w", err)
 	}
 	return &Pool{Pool: p}, nil
 }

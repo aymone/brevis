@@ -122,7 +122,7 @@ func TestIntegrationBrevisSQLModelsReachTheCatalog(t *testing.T) {
 	for target, found := range want {
 		if !found {
 			t.Errorf("%s built and never reached /data.\n"+
-				"    An unrecognised target is dropped and counted, so the step "+
+				"    An unrecognized target is dropped and counted, so the step "+
 				"succeeded and said nothing.", target)
 		}
 	}

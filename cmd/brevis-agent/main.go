@@ -105,7 +105,7 @@ func main() {
 		keepMax    = flag.Int("keep-finished-max", 200, "at most this many finished steps are kept, each with its ring; past it the oldest goes first")
 		insecure   = flag.Bool("insecure-no-token", false, "run with NO authentication: anything that reaches the port runs any command. Say it out loud or do not do it")
 		advertise  = flag.String("advertise", "", "the address the engine should come back to for this instance's executions; required behind a shared address, meaningless without one")
-		drain      = flag.Duration("drain-timeout", 0, "on SIGTERM, how long to wait for the running steps to end and be read before cancelling them; 0 waits as long as it takes, leaving the bound to the orchestrator's grace period")
+		drain      = flag.Duration("drain-timeout", 0, "on SIGTERM, how long to wait for the running steps to end and be read before canceling them; 0 waits as long as it takes, leaving the bound to the orchestrator's grace period")
 		logLevel   = flag.String("log-level", "info", "debug, info, warn or error")
 	)
 	flag.Parse()

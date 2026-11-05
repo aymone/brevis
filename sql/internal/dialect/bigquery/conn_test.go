@@ -166,7 +166,7 @@ func TestPollingStopsWhenTheContextIsDone(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	if _, err := c.Scalar(ctx, "SELECT 1"); err == nil {
-		t.Error("a cancelled context did not stop the wait")
+		t.Error("a canceled context did not stop the wait")
 	}
 }
 

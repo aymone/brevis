@@ -47,7 +47,7 @@ func stagesOf(t *testing.T, p *Pipeline) ([]map[string]any, error) {
 		}
 		var ev map[string]any
 		if e := json.Unmarshal([]byte(strings.TrimPrefix(line, phaseMarker)), &ev); e != nil {
-			t.Fatalf("linha marcada ilegivel %q: %v", line, e)
+			t.Fatalf("line marked unreadable %q: %v", line, e)
 		}
 		eventos = append(eventos, ev)
 	}
@@ -110,13 +110,13 @@ func TestTheAnnouncementCarriesTheVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(eventos) == 0 || eventos[0]["type"] != "sdk" {
-		t.Fatalf("o primeiro evento tem de ser o anuncio, veio %v", eventos)
+		t.Fatalf("the first event has to be the announcement, got %v", eventos)
 	}
 	if v, _ := eventos[0]["version"].(string); v == "" {
-		t.Error("o anuncio saiu sem versao")
+		t.Error("the announcement came out without a version")
 	}
 	if eventos[0]["pipeline"] != "fetcher" {
-		t.Errorf("o anuncio nao diz de quem e: %v", eventos[0])
+		t.Errorf("the announcement does not say whose it is: %v", eventos[0])
 	}
 }
 
@@ -138,8 +138,8 @@ func TestTheSourceDurationMeasuresTheRealExtraction(t *testing.T) {
 
 	ms := stageDuration(t, eventos, "extract")
 	if ms < 50 {
-		t.Errorf("extract durou %vms; a origem gasta 60ms, entao a medicao esta "+
-			"cronometrando a chamada em vez do fluxo", ms)
+		t.Errorf("extract took %vms; the source spends 60ms, so the measurement is "+
+			"timing the call instead of the stream", ms)
 	}
 }
 
@@ -178,7 +178,7 @@ func TestAMapStageSaysHowManyItDropped(t *testing.T) {
 	}
 	end := findStage(t, eventos, "map", "done")
 	if end["in"] != 3.0 || end["out"] != 2.0 || end["dropped"] != 1.0 {
-		t.Errorf("contagem errada: %v", end)
+		t.Errorf("wrong count: %v", end)
 	}
 }
 
@@ -196,11 +196,11 @@ func TestOutsideTheEngineNothingIsAnnounced(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(eventos) != 0 {
-		t.Errorf("anunciou %d eventos rodando a mao: %v", len(eventos), eventos)
+		t.Errorf("announced %d events when run by hand: %v", len(eventos), eventos)
 	}
 	// E o pipeline continua funcionando igual.
 	if len(box) != 1 {
-		t.Errorf("carregou %d registros, esperado 1", len(box))
+		t.Errorf("loaded %d records, want 1", len(box))
 	}
 }
 
@@ -218,7 +218,7 @@ func TestThePhaseCap(t *testing.T) {
 		r.started(PhaseSource)
 	}
 	if n := strings.Count(buf.String(), phaseMarker); n != phaseCap {
-		t.Errorf("emitiu %d linhas, o teto e %d", n, phaseCap)
+		t.Errorf("emitted %d rows, the ceiling is %d", n, phaseCap)
 	}
 }
 
@@ -229,7 +229,7 @@ func findStage(t *testing.T, eventos []map[string]any, name, state string) map[s
 			return ev
 		}
 	}
-	t.Fatalf("nao achei a etapa %s:%s em %v", name, state, eventos)
+	t.Fatalf("could not find the stage %s:%s in %v", name, state, eventos)
 	return nil
 }
 
@@ -237,7 +237,7 @@ func stageDuration(t *testing.T, eventos []map[string]any, name string) float64 
 	t.Helper()
 	ms, ok := findStage(t, eventos, name, "done")["ms"].(float64)
 	if !ok {
-		t.Fatalf("a etapa %s nao reportou duracao", name)
+		t.Fatalf("the stage %s did not report a duration", name)
 	}
 	return ms
 }

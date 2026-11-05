@@ -122,10 +122,10 @@ func TestIntegrationS3RoundTrip(t *testing.T) {
 	}
 
 	if len(read) != 2 {
-		t.Fatalf("%d registros de volta, esperado 2", len(read))
+		t.Fatalf("%d records back, want 2", len(read))
 	}
 	if read[0]["sku"] != "W-1" || read[1]["sku"] != "W-2" {
-		t.Errorf("os registros voltaram diferentes: %v", read)
+		t.Errorf("the records came back different: %v", read)
 	}
 }
 
@@ -158,7 +158,7 @@ func TestIntegrationS3ReadsInOrder(t *testing.T) {
 			order = append(order, env.Payload.(map[string]any)["n"].(string))
 		}
 		if strings.Join(order, "") != "abc" {
-			t.Fatalf("ordem = %v, esperado a,b,c em toda execução", order)
+			t.Fatalf("order = %v, want a,b,c on every run", order)
 		}
 	}
 }
@@ -187,7 +187,7 @@ func TestIntegrationS3Comprimido(t *testing.T) {
 		n++
 	}
 	if n != 1 {
-		t.Errorf("%d registros, esperado 1", n)
+		t.Errorf("%d records, want 1", n)
 	}
 }
 
@@ -204,7 +204,7 @@ func TestIntegrationS3PaginatesTheListing(t *testing.T) {
 		body := fmt.Sprintf(`{"i":%d}`+"\n", i)
 		key := fmt.Sprintf("muitos/%05d.ndjson", i)
 		if err := store.Create(ctx, bucket, key, bytes.NewReader([]byte(body))); err != nil {
-			t.Fatalf("objeto %d: %v", i, err)
+			t.Fatalf("object %d: %v", i, err)
 		}
 	}
 
@@ -213,7 +213,7 @@ func TestIntegrationS3PaginatesTheListing(t *testing.T) {
 		t.Fatalf("List: %v", err)
 	}
 	if len(keys) != n {
-		t.Errorf("List devolveu %d de %d objetos; a paginação não seguiu", len(keys), n)
+		t.Errorf("List returned %d of %d objects; the pagination did not follow", len(keys), n)
 	}
 }
 
@@ -268,11 +268,11 @@ func TestIntegrationGCSRoundTrip(t *testing.T) {
 			t.Fatalf("iterando: %v", err)
 		}
 		if env.Payload.(map[string]any)["sku"] == nil {
-			t.Errorf("registro sem sku: %v", env.Payload)
+			t.Errorf("record without sku: %v", env.Payload)
 		}
 		n++
 	}
 	if n != 2 {
-		t.Errorf("%d registros de volta, esperado 2", n)
+		t.Errorf("%d records back, want 2", n)
 	}
 }

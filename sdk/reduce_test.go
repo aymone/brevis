@@ -65,11 +65,11 @@ func TestAggregatorsComputeWhatTheyPromise(t *testing.T) {
 	}, vendas()...)
 
 	if len(lines) != 2 {
-		t.Fatalf("saiu com %d grupos, esperado 2", len(lines))
+		t.Fatalf("came out with %d groups, want 2", len(lines))
 	}
 	// Deterministic order by key: "norte" before "sul".
 	if lines[0]["regiao"] != "norte" || lines[1]["regiao"] != "sul" {
-		t.Fatalf("ordem não determinística: %v", lines)
+		t.Fatalf("non-deterministic order: %v", lines)
 	}
 
 	sul := lines[1]
@@ -82,7 +82,7 @@ func TestAggregatorsComputeWhatTheyPromise(t *testing.T) {
 	}
 	for k, quero := range casos {
 		if sul[k] != quero {
-			t.Errorf("%s = %v (%T), esperado %v", k, sul[k], sul[k], quero)
+			t.Errorf("%s = %v (%T), want %v", k, sul[k], sul[k], quero)
 		}
 	}
 }
@@ -96,10 +96,10 @@ func TestAGroupWithNoValuesReturnsNullNotZero(t *testing.T) {
 	}, map[string]any{"g": "x", "v": nil})
 
 	if lines[0]["total"] != nil || lines[0]["media"] != nil {
-		t.Errorf("total=%v media=%v, os dois deviam ser nulos", lines[0]["total"], lines[0]["media"])
+		t.Errorf("total=%v avg=%v, both should be null", lines[0]["total"], lines[0]["media"])
 	}
 	if lines[0]["n"] != int64(1) {
-		t.Errorf("a linha existiu e Count devia vê-la: %v", lines[0]["n"])
+		t.Errorf("the row existed and Count should see it: %v", lines[0]["n"])
 	}
 }
 
@@ -118,13 +118,13 @@ func TestVarianceSurvivesLargeValues(t *testing.T) {
 
 	v := lines[0]["var"].(float64)
 	if v < 0 {
-		t.Fatalf("variância negativa (%v): a fórmula perdeu os dígitos", v)
+		t.Fatalf("negative variance (%v): the formula lost the digits", v)
 	}
 	if math.Abs(v-2.5) > 1e-6 {
-		t.Errorf("variância = %v, esperado 2.5", v)
+		t.Errorf("variance = %v, want 2.5", v)
 	}
 	if dp := lines[0]["dp"].(float64); math.Abs(dp-math.Sqrt(2.5)) > 1e-9 {
-		t.Errorf("desvio = %v", dp)
+		t.Errorf("deviation = %v", dp)
 	}
 }
 
@@ -139,10 +139,10 @@ func TestAFieldNoRowHasIsRefused(t *testing.T) {
 		}
 	}
 	if failure == nil {
-		t.Fatal("um campo inexistente passou como coluna de nulos")
+		t.Fatal("a nonexistent field passed as a column of nulls")
 	}
 	if !strings.Contains(failure.Error(), "vlaor") || !strings.Contains(failure.Error(), "valor") {
-		t.Errorf("a mensagem precisa nomear o errado e listar os certos: %v", failure)
+		t.Errorf("the message must name the wrong one and list the right ones: %v", failure)
 	}
 }
 
@@ -160,10 +160,10 @@ func TestMixedTypesAreAnError(t *testing.T) {
 		}
 	}
 	if failure == nil {
-		t.Fatal("misturar número e texto passou")
+		t.Fatal("mixing number and text got through")
 	}
 	if !strings.Contains(failure.Error(), "arrival order") {
-		t.Errorf("a mensagem não diz o problema: %v", failure)
+		t.Errorf("the message does not say the problem: %v", failure)
 	}
 }
 
@@ -189,10 +189,10 @@ func TestGroupByWithNoFieldsGivesTheGrandTotal(t *testing.T) {
 		Agg: map[string]Aggregator{"total": Sum("valor"), "n": Count()},
 	}, vendas()...)
 	if len(lines) != 1 {
-		t.Fatalf("saiu com %d linhas, esperado 1", len(lines))
+		t.Fatalf("came out with %d rows, want 1", len(lines))
 	}
 	if lines[0]["total"] != 60.0 || lines[0]["n"] != int64(4) {
-		t.Errorf("total geral errado: %v", lines[0])
+		t.Errorf("wrong grand total: %v", lines[0])
 	}
 }
 
@@ -206,7 +206,7 @@ func TestFinishSeesTheGroups(t *testing.T) {
 			var best map[string]any
 			for g, row := range grupos {
 				if len(g.Fields) != 1 || g.Fields[0] != "regiao" {
-					return nil, fmt.Errorf("o grupo não trouxe seus campos: %v", g.Fields)
+					return nil, fmt.Errorf("the group did not bring its fields: %v", g.Fields)
 				}
 				if best == nil || row["total"].(float64) > best["total"].(float64) {
 					best = row
@@ -217,7 +217,7 @@ func TestFinishSeesTheGroups(t *testing.T) {
 	}, vendas()...)
 
 	if len(lines) != 1 || lines[0]["regiao"] != "sul" {
-		t.Errorf("a redução global não escolheu o maior: %v", lines)
+		t.Errorf("the global reduction did not pick the largest: %v", lines)
 	}
 }
 
@@ -234,13 +234,13 @@ func TestWhatDoesNotFitRefusesBeforeExtracting(t *testing.T) {
 	} {
 		err := (&Reduce{By: GroupBy("g"), Agg: map[string]Aggregator{"x": a}}).validate()
 		if err == nil {
-			t.Errorf("%s passou na validação", name)
+			t.Errorf("%s passed validation", name)
 			continue
 		}
 		// The message has to name both ways out, because both exist.
 		for _, expected := range []string{"constant", "SQL", "sdk.Custom"} {
 			if !strings.Contains(err.Error(), expected) {
-				t.Errorf("%s: a mensagem não diz %q: %v", name, expected, err)
+				t.Errorf("%s: the message does not say %q: %v", name, expected, err)
 			}
 		}
 	}
@@ -252,7 +252,7 @@ func TestANameCollidingWithTheGroupIsRefused(t *testing.T) {
 		Agg: map[string]Aggregator{"regiao": Count()},
 	}).validate()
 	if err == nil || !strings.Contains(err.Error(), "two values") {
-		t.Errorf("colisão de nome passou: %v", err)
+		t.Errorf("a name collision got through: %v", err)
 	}
 }
 
@@ -329,7 +329,7 @@ func picoDeHeap(t *testing.T, n, grupos int, agg map[string]Aggregator) uint64 {
 		lines++
 	}
 	if lines != grupos {
-		t.Fatalf("saiu com %d grupos, esperado %d", lines, grupos)
+		t.Fatalf("came out with %d groups, want %d", lines, grupos)
 	}
 	return pico
 }
@@ -342,7 +342,7 @@ func picoDeHeap(t *testing.T, n, grupos int, agg map[string]Aggregator) uint64 {
 // most likely regression: somebody adding an aggregator that keeps rows.
 func TestMemoryDoesNotGrowWithTheInput(t *testing.T) {
 	if testing.Short() {
-		t.Skip("mede heap com 1M de registros")
+		t.Skip("measures heap with 1M records")
 	}
 	const grupos = 100
 	agg := map[string]Aggregator{
@@ -358,8 +358,8 @@ func TestMemoryDoesNotGrowWithTheInput(t *testing.T) {
 	// allowance.
 	const folga = 4 << 20
 	if grande > pequeno+folga {
-		t.Errorf("o heap cresceu com a entrada: %.1f MB com 10 mil registros, "+
-			"%.1f MB com 1 milhão. A memória devia depender só dos %d grupos",
+		t.Errorf("the heap grew with the input: %.1f MB with 10 thousand records, "+
+			"%.1f MB with 1 million. Memory should depend only on the %d groups",
 			mb(pequeno), mb(grande), grupos)
 	}
 }
@@ -389,8 +389,8 @@ func TestTheMeasurementCatchesAnAggregatorThatKeepsRows(t *testing.T) {
 
 	const folga = 4 << 20
 	if grande <= pequeno+folga {
-		t.Errorf("a medição NÃO pegou um agregador que guarda linhas: "+
-			"%.1f MB contra %.1f MB. O teste da promessa não vale nada assim",
+		t.Errorf("the measurement did NOT catch an aggregator that keeps rows: "+
+			"%.1f MB against %.1f MB. The promise's test is worthless this way",
 			mb(pequeno), mb(grande))
 	}
 }

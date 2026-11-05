@@ -14,7 +14,7 @@ func envOuPular(b *testing.B) string {
 	b.Helper()
 	d := os.Getenv("BREVIS_IT_PG_DSN")
 	if d == "" {
-		b.Skip("BREVIS_IT_PG_DSN não definida")
+		b.Skip("BREVIS_IT_PG_DSN is not set")
 	}
 	return d
 }

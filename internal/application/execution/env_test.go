@@ -30,7 +30,7 @@ func TestTheEnvironmentsPrecedence(t *testing.T) {
 		env := mesclarEnv(r.Env, r.runContext(instance{key: run.Step(n.ID)}, false, 0), w.EnvDe(n))
 
 		if got := env["NIVEL"]; got != casos[n.ID] {
-			t.Errorf("%s: NIVEL = %q, expected %q", n.ID, got, casos[n.ID])
+			t.Errorf("%s: LEVEL = %q, expected %q", n.ID, got, casos[n.ID])
 		}
 		// Inheriting must not mean losing the rest.
 		if env["SO_DO_WORKFLOW"] != "1" {

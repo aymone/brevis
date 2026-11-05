@@ -209,17 +209,17 @@ func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan stru
 	cancelled := 0
 	if err := a.Wait(ctx); err != nil {
 		left := a.pending()
-		log.Warn("the drain did not finish; cancelling what is left", "steps", left, "error", err)
+		log.Warn("the drain did not finish; canceling what is left", "steps", left, "error", err)
 		for _, id := range left {
 			a.mu.Lock()
 			_, running := a.runs[id]
 			a.mu.Unlock()
 			if err := a.Cancel(id); err != nil {
-				log.Error("a step could not be cancelled", "execution", id, "error", err)
+				log.Error("a step could not be canceled", "execution", id, "error", err)
 				continue
 			}
 			if running {
-				log.Warn("step cancelled by the shutdown", "execution", id)
+				log.Warn("step canceled by the shutdown", "execution", id)
 			} else {
 				// Ended, and nobody came for it: its exit leaves with this
 				// process, and the engine will run it again.
@@ -237,7 +237,7 @@ func (a *Agent) Serve(srv *http.Server, ln net.Listener, stop, force <-chan stru
 		// anybody any more, so it is cut.
 		_ = srv.Close()
 	}
-	log.Info("drained", "cancelled", cancelled)
+	log.Info("drained", "canceled", cancelled)
 	return cancelled, nil
 }
 

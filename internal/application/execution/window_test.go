@@ -11,7 +11,7 @@ func TestTheWindowKeepsEverythingWhenItFits(t *testing.T) {
 		j.Write(l)
 	}
 	if got := j.String(); got != "first\nsegunda\nterceira\n" {
-		t.Errorf("saida = %q", got)
+		t.Errorf("output = %q", got)
 	}
 }
 
@@ -24,7 +24,7 @@ func TestTheWindowRespectsTheCeiling(t *testing.T) {
 		j.Write(line)
 	}
 	if n := len(j.String()); n > LogCeiling+512 {
-		t.Errorf("guardou %d bytes; o teto e %d", n, LogCeiling)
+		t.Errorf("kept %d bytes; the ceiling is %d", n, LogCeiling)
 	}
 }
 
@@ -46,7 +46,7 @@ func TestTheWindowKeepsBothEnds(t *testing.T) {
 		t.Error("it lost the beginning -- the command that ran disappears")
 	}
 	if !strings.Contains(got, "ERRO-NO-FIM") {
-		t.Error("perdeu o fim — some o motivo da falha")
+		t.Error("lost the end -- the reason for the failure is gone")
 	}
 }
 

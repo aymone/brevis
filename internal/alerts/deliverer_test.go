@@ -133,7 +133,7 @@ func TestAnAlertSurvivesSlackBeingDown(t *testing.T) {
 	pool := testDB(t)
 	runID, outbox := raise(t, pool, alerts.ChannelSlack)
 
-	ch := &channel{failFor: 2, err: errors.New("slack respondeu 503")}
+	ch := &channel{failFor: 2, err: errors.New("slack answered 503")}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond, MaxAttempts: 5,
 	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())
@@ -164,7 +164,7 @@ func TestItGivesUpAndKeepsTheRow(t *testing.T) {
 	pool := testDB(t)
 	runID, outbox := raise(t, pool, alerts.ChannelSlack)
 
-	ch := &channel{failFor: 1000, err: errors.New("slack respondeu 403: invalid_token")}
+	ch := &channel{failFor: 1000, err: errors.New("slack answered 403: invalid_token")}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond, MaxAttempts: 3,
 	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())

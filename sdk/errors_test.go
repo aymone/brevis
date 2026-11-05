@@ -34,18 +34,18 @@ func TestFormatErrorMessage(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.err.Error()
 			if got != c.quer {
-				t.Errorf("mensagem\n  got:  %q\n  want: %q", got, c.quer)
+				t.Errorf("message\n  got:  %q\n  want: %q", got, c.quer)
 			}
 			// A hole in the message is the defect this test exists to catch:
 			// two spaces in a row, or a stray comma.
 			if strings.Contains(got, "  ") {
-				t.Errorf("a mensagem tem espaco duplo, sinal de campo vazio interpolado: %q", got)
+				t.Errorf("the message has a double space, a sign of an empty field interpolated: %q", got)
 			}
 			if !errors.Is(c.err, ErrFormat) {
-				t.Error("FormatError deve satisfazer errors.Is(err, ErrFormat)")
+				t.Error("FormatError must satisfy errors.Is(err, ErrFormat)")
 			}
 			if !errors.Is(c.err, c.err.Cause) {
-				t.Error("FormatError deve desembrulhar para a causa")
+				t.Error("FormatError must unwrap to the cause")
 			}
 		})
 	}
@@ -55,9 +55,9 @@ func TestSourceErrorMessageHasNoHole(t *testing.T) {
 	e := &SourceError{URL: "https://api.example.com/v1", Attempts: 3, Cause: errors.New("connection reset")}
 	got := e.Error()
 	if strings.Contains(got, "  ") {
-		t.Errorf("espaco duplo em SourceError: %q", got)
+		t.Errorf("double space in SourceError: %q", got)
 	}
 	if !strings.Contains(got, "3 attempt") {
-		t.Errorf("a mensagem deve dizer quantas tentativas houve: %q", got)
+		t.Errorf("the message must say how many attempts there were: %q", got)
 	}
 }

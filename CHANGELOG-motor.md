@@ -18,6 +18,24 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+### Fixed: everything the backend says is American English
+
+- Run-log lines and errors that were still Portuguese now read in English:
+  `pod aguardando:` (now `pod waiting:`), `pod ... terminou em`, the
+  Kubernetes client and Go-task errors, `slack respondeu` (now `slack
+  answered`), the scheduler's `slots truncados` warning (its log keys
+  `limite` and `obs` are now `limit` and `note`, and `primeiro_slot_apos` is
+  `first_slot_after`), the Postgres, queue and alert-outbox errors, and the
+  run state machine's `transicao invalida`.
+- Spelling is American: `canceled` (agent logs, the SQL API's timeout message),
+  `color` in the brand validation errors and `brand.example.yaml`.
+- The Slack alert and the weekly report show dates as `2006-01-02` instead of
+  `dd/mm/yyyy`.
+- Existing rows written in Portuguese by older versions (events, run errors,
+  alert rows, the column comments of the early migrations) are not rewritten.
+- `repo-language-check.sh` now judges every string literal in non-test Go and
+  in the Python library, and the messages of `t.Error`/`t.Fatal` in tests.
+
 ### Added: a stream's health, from what the gateway measured
 
 - The Streams list and a stream's page say `healthy`, `quiet`, `degraded` or

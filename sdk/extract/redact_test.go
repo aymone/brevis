@@ -50,11 +50,11 @@ func TestRedactPreservesWhatIsNotASecret(t *testing.T) {
 
 	for _, quer := range []string{"api.open-meteo.com", "/v1/forecast", "latitude=-23.55", "longitude=-46.63"} {
 		if !strings.Contains(got, quer) {
-			t.Errorf("a URL perdeu %q, e assim não serve para depurar: %s", quer, got)
+			t.Errorf("the URL lost %q, so it is no use for debugging: %s", quer, got)
 		}
 	}
 	if !strings.Contains(got, "REDACTED") {
-		t.Errorf("a chave não foi redigida: %s", got)
+		t.Errorf("the key was not redacted: %s", got)
 	}
 }
 
@@ -63,13 +63,13 @@ func TestRedactPreservesWhatIsNotASecret(t *testing.T) {
 func TestRedactKeepsAUserWithNoPassword(t *testing.T) {
 	got := redactURL("https://usuario@api.exemplo.com/v1")
 	if !strings.Contains(got, "usuario") {
-		t.Errorf("o usuário sem senha sumiu: %s", got)
+		t.Errorf("the user without a password vanished: %s", got)
 	}
 }
 
 func TestRedactDoesNotPanicOnAnInvalidURL(t *testing.T) {
 	if got := redactURL("://isto-nao-e-url"); got != "[invalid url]" {
-		t.Errorf("redactURL(inválida) = %q", got)
+		t.Errorf("redactURL(invalid) = %q", got)
 	}
 }
 
@@ -77,6 +77,6 @@ func TestRedactDoesNotPanicOnAnInvalidURL(t *testing.T) {
 // It is the price of not depending on guessing the name the vendor chose.
 func TestRedactErrsOnTheSafeSide(t *testing.T) {
 	if got := redactURL("https://x/y?monkey=1"); !strings.Contains(got, "REDACTED") {
-		t.Errorf("esperado sobre-redigir: %s", got)
+		t.Errorf("expected over-redaction: %s", got)
 	}
 }

@@ -200,7 +200,7 @@ func (a *Agent) handleCancel(log *slog.Logger) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
-		log.Info("step cancelled", "execution", id)
+		log.Info("step canceled", "execution", id)
 		w.WriteHeader(http.StatusOK)
 	}
 }

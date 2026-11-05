@@ -84,7 +84,7 @@ func mixHex(t *testing.T, name, a, pct, b string) string {
 	ar, ag, ab, ok1 := rgb(t, name, a)
 	br, bg, bb, ok2 := rgb(t, name, b)
 	if !ok1 || !ok2 {
-		t.Fatalf("--color-%s mixes something that is not a hex colour: %q, %q", name, a, b)
+		t.Fatalf("--color-%s mixes something that is not a hex color: %q, %q", name, a, b)
 	}
 	w := float64(p) / 100
 	ch := func(x, y float64) int { return int(math.Round(x*w + y*(1-w))) }
@@ -130,11 +130,11 @@ func ratio(t *testing.T, tok map[string]string, fg, bg string) float64 {
 	t.Helper()
 	fr, fgg, fb, ok := rgb(t, fg, tok[fg])
 	if !ok {
-		t.Fatalf("--color-%s is not a hex colour: %q", fg, tok[fg])
+		t.Fatalf("--color-%s is not a hex color: %q", fg, tok[fg])
 	}
 	br, bgg, bb, ok := rgb(t, bg, tok[bg])
 	if !ok {
-		t.Fatalf("--color-%s is not a hex colour: %q", bg, tok[bg])
+		t.Fatalf("--color-%s is not a hex color: %q", bg, tok[bg])
 	}
 	l1, l2 := luminance(fr, fgg, fb), luminance(br, bgg, bb)
 	if l1 < l2 {
@@ -204,7 +204,7 @@ func stateColoursReadable(t *testing.T, tok map[string]string) {
 		}
 	}
 	if len(states) < 5 {
-		t.Fatalf("found %d state colours, which is not the set this is about", len(states))
+		t.Fatalf("found %d state colors, which is not the set this is about", len(states))
 	}
 	for _, s := range states {
 		for _, bg := range []string{"canvas", "surface"} {

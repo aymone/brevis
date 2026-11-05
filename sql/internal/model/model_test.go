@@ -25,7 +25,7 @@ func TestAModelIsItsPathAndItsHeader(t *testing.T) {
 		t.Errorf("Ref() = %q, wanted silver.order_totals", m.Ref())
 	}
 	if m.Materialised != Table {
-		t.Errorf("materialised = %q, wanted table", m.Materialised)
+		t.Errorf("materialized = %q, wanted table", m.Materialised)
 	}
 	if len(m.Tests) != 2 || m.Tests[0].Kind != "not_null" || m.Tests[1].Kind != "unique" {
 		t.Errorf("tests = %+v", m.Tests)
@@ -138,7 +138,7 @@ func TestAnIncrementalModelCarriesItsKeyAndItsWatermark(t *testing.T) {
 		t.Fatal(err)
 	}
 	if m.Materialised != Incremental {
-		t.Errorf("materialised = %q, wanted incremental", m.Materialised)
+		t.Errorf("materialized = %q, wanted incremental", m.Materialised)
 	}
 	if len(m.UniqueKey) != 1 || m.UniqueKey[0] != "order_id" {
 		t.Errorf("unique_key = %v", m.UniqueKey)

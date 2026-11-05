@@ -112,7 +112,7 @@ func (s *Slack) post(ctx context.Context, payload map[string]any) error {
 		// JSON. Passing the body through is what lets one tell a revoked webhook
 		// from a malformed payload without opening a browser.
 		reason, _ := io.ReadAll(io.LimitReader(res.Body, 512))
-		return fmt.Errorf("slack respondeu %s: %s", res.Status, strings.TrimSpace(string(reason)))
+		return fmt.Errorf("slack answered %s: %s", res.Status, strings.TrimSpace(string(reason)))
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func (s *Slack) message(a Alert) map[string]any {
 		// setting TZ on the deployment -- and now the message says which
 		// decision that was.
 		fields = append(fields, field("*Logical date:*\n"+
-			a.LogicalDate.Local().Format("02/01/2006 15:04 MST")))
+			a.LogicalDate.Local().Format("2006-01-02 15:04 MST")))
 	}
 
 	blocos := []bloco{
@@ -243,5 +243,5 @@ func truncar(s string, max int) string {
 	if len(s) <= max {
 		return s
 	}
-	return s[:max] + "\n… (truncado)"
+	return s[:max] + "\n… (truncated)"
 }

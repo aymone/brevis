@@ -38,14 +38,14 @@ func TestFilesSaysWhatItWrote(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(res.Objects) != 1 {
-		t.Fatalf("Objects = %v, esperado um caminho", res.Objects)
+		t.Fatalf("Objects = %v, want one path", res.Objects)
 	}
 
 	if _, err := os.Stat(res.Objects[0]); err != nil {
-		t.Errorf("o caminho reportado não existe: %v", err)
+		t.Errorf("the reported path does not exist: %v", err)
 	}
 	if filepath.Dir(res.Objects[0]) != dir {
-		t.Errorf("o caminho %q não está no diretório configurado %q", res.Objects[0], dir)
+		t.Errorf("the path %q is not in the configured directory %q", res.Objects[0], dir)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestFilesPathGoesBackIntoFromFiles(t *testing.T) {
 		From: from.Files{Path: res.Objects[0]},
 	})
 	if err != nil {
-		t.Fatalf("Extract do caminho reportado: %v", err)
+		t.Fatalf("Extract of the reported path: %v", err)
 	}
 	n := 0
 	for env, err := range data.Records {
@@ -72,12 +72,12 @@ func TestFilesPathGoesBackIntoFromFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 		if _, ok := env.Payload.(map[string]any)["nome"]; !ok {
-			t.Errorf("linha sem os campos: %v", env.Payload)
+			t.Errorf("row without the fields: %v", env.Payload)
 		}
 		n++
 	}
 	if n != 4 {
-		t.Errorf("releu %d linhas, escreveu 4", n)
+		t.Errorf("re-read %d rows, wrote 4", n)
 	}
 }
 
@@ -108,11 +108,11 @@ func TestFilesWithFlushEveryReportsAllOfThem(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(res.Objects) != 4 {
-		t.Fatalf("Objects = %v, esperado 4 arquivos (3+3+3+1)", res.Objects)
+		t.Fatalf("Objects = %v, want 4 files (3+3+3+1)", res.Objects)
 	}
 	for _, path := range res.Objects {
 		if _, err := os.Stat(path); err != nil {
-			t.Errorf("%s não existe: %v", path, err)
+			t.Errorf("%s does not exist: %v", path, err)
 		}
 	}
 }
@@ -150,7 +150,7 @@ func TestFilesWritesIntoTheConfiguredDirectory(t *testing.T) {
 			t.Fatal(err)
 		}
 		if got := filepath.Dir(res.Objects[0]); got != dir {
-			t.Errorf("Path %q escreveu em %q, esperado %q", dir+sufixo, got, dir)
+			t.Errorf("Path %q wrote to %q, want %q", dir+sufixo, got, dir)
 		}
 	}
 }
@@ -169,11 +169,11 @@ func TestFilesObjectInObjectStorage(t *testing.T) {
 		t.Fatalf("Objects = %v", res.Objects)
 	}
 	if !strings.HasPrefix(res.Objects[0], "s3://meu-bucket/landing/parte-") {
-		t.Errorf("caminho = %q; esperava o URI completo dentro de landing/", res.Objects[0])
+		t.Errorf("path = %q; expected the full URI inside landing/", res.Objects[0])
 	}
 	// And it is the same one handed to the store, with no scheme and no bucket.
 	if len(escritos) != 1 || !strings.HasPrefix(escritos[0], "landing/parte-") {
-		t.Errorf("a chave entregue ao store foi %v", escritos)
+		t.Errorf("the key handed to the store was %v", escritos)
 	}
 }
 

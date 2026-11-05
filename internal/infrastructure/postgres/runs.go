@@ -63,7 +63,7 @@ func (r *RunRepo) Create(ctx context.Context, run dom.Run) (dom.Run, error) {
 		if isUniqueViolation(err) {
 			return dom.Run{}, ErrJaExiste
 		}
-		return dom.Run{}, fmt.Errorf("criando run: %w", err)
+		return dom.Run{}, fmt.Errorf("creating run: %w", err)
 	}
 	return run, nil
 }

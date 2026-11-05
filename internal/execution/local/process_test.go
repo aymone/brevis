@@ -38,7 +38,7 @@ func TestItRefusesToBeBuiltOutsideLocal(t *testing.T) {
 		if _, err := New(env); err == nil {
 			t.Fatalf("New(%q) should refuse: outside local, `run:` goes to Kubernetes", env)
 		} else if !errors.As(err, &ErrOutsideLocal{}) {
-			t.Errorf("New(%q) devolveu %T, wanted ErrOutsideLocal", env, err)
+			t.Errorf("New(%q) returned %T, wanted ErrOutsideLocal", env, err)
 		}
 	}
 }

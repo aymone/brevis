@@ -62,20 +62,20 @@ func TestTheLogDoesNotSayLoadedWhenItDidNot(t *testing.T) {
 	output := runCapturingLog(t, fakeTarget{failure: true, rows: []string{"linha 0 recusada"}})
 
 	if strings.Contains(output, "msg=loaded") {
-		t.Errorf("uma carga que falhou logou \"loaded\":\n%s", output)
+		t.Errorf("a load that failed logged \"loaded\":\n%s", output)
 	}
 	if !strings.Contains(output, `msg="load failed"`) {
-		t.Errorf("a falha precisa aparecer na linha que resume:\n%s", output)
+		t.Errorf("the failure has to show up in the summary line:\n%s", output)
 	}
 	if !strings.Contains(output, "level=ERROR msg=\"load failed\"") {
-		t.Errorf("a linha que resume uma falha tem de ser ERROR:\n%s", output)
+		t.Errorf("the line that summarizes a failure has to be ERROR:\n%s", output)
 	}
 	// And the counters are still there, which is why the result comes back.
 	if !strings.Contains(output, "lines=0") || !strings.Contains(output, "records=2") {
-		t.Errorf("os contadores se perderam na troca:\n%s", output)
+		t.Errorf("the counters were lost in the swap:\n%s", output)
 	}
 	if !strings.Contains(output, "row rejected") {
-		t.Errorf("as linhas recusadas sumiram:\n%s", output)
+		t.Errorf("the refused rows vanished:\n%s", output)
 	}
 }
 
@@ -83,9 +83,9 @@ func TestTheLogSaysLoadedWhenItLoaded(t *testing.T) {
 	output := runCapturingLog(t, fakeTarget{})
 
 	if !strings.Contains(output, "level=INFO msg=loaded") {
-		t.Errorf("uma carga que funcionou tem de logar loaded em INFO:\n%s", output)
+		t.Errorf("a load that worked has to log loaded at INFO:\n%s", output)
 	}
 	if strings.Contains(output, "load failed") {
-		t.Errorf("uma carga que funcionou não pode logar falha:\n%s", output)
+		t.Errorf("a load that worked must not log a failure:\n%s", output)
 	}
 }

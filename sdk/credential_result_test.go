@@ -54,10 +54,10 @@ func TestResultCarriesTheCredentialsExpiry(t *testing.T) {
 	}
 
 	if !res.CredentialExpiry.Equal(vence) {
-		t.Errorf("Result.CredentialExpiry = %v, esperado %v", res.CredentialExpiry, vence)
+		t.Errorf("Result.CredentialExpiry = %v, want %v", res.CredentialExpiry, vence)
 	}
 	if !strings.Contains(fmt.Sprint(res.Args()...), "credential_expires") {
-		t.Error("Args() nao carrega a validade; a linha do pipeline nao a mostraria")
+		t.Error("Args() does not carry the expiry; the pipeline line would not show it")
 	}
 }
 
@@ -66,7 +66,7 @@ func TestResultCarriesTheCredentialsExpiry(t *testing.T) {
 // line that matters.
 func TestArgsOmitsTheCredentialWhenThereIsNone(t *testing.T) {
 	if got := fmt.Sprint((&Result{}).Args()...); strings.Contains(got, "credential") {
-		t.Errorf("Args() carrega a chave sem validade nenhuma: %s", got)
+		t.Errorf("Args() carries the key with no expiry at all: %s", got)
 	}
 }
 
@@ -81,14 +81,14 @@ func TestArgsOmitsAZeroedCounter(t *testing.T) {
 	empty := fmt.Sprint((&Result{Rows: 10}).Args()...)
 	for _, key := range []string{"extract_bytes", "bytes", "format"} {
 		if strings.Contains(empty, key) {
-			t.Errorf("%q aparece com valor zerado: %s", key, empty)
+			t.Errorf("%q shows up zeroed: %s", key, empty)
 		}
 	}
 
 	full := fmt.Sprint((&Result{ExtractBytes: 1, Bytes: 2, Format: "ndjson"}).Args()...)
 	for _, key := range []string{"extract_bytes", "bytes", "format"} {
 		if !strings.Contains(full, key) {
-			t.Errorf("%q sumiu mesmo tendo valor: %s", key, full)
+			t.Errorf("%q vanished even though it had a value: %s", key, full)
 		}
 	}
 }

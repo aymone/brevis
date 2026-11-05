@@ -68,7 +68,7 @@ func TestRunContextSurvivesMalformedValues(t *testing.T) {
 		t.Error("Params must stay an empty map after a parse failure")
 	}
 	if rc.ID != "some-id" {
-		t.Error("a good value must survive a bad neighbour")
+		t.Error("a good value must survive a bad neighbor")
 	}
 }
 

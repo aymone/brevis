@@ -22,7 +22,7 @@ func dsn(t *testing.T) string {
 	t.Helper()
 	d := os.Getenv("BREVIS_IT_MYSQL_DSN")
 	if d == "" {
-		t.Skip("BREVIS_IT_MYSQL_DSN não definida; suba o docker-compose.drivers.yml")
+		t.Skip("BREVIS_IT_MYSQL_DSN is not set; bring up docker-compose.drivers.yml")
 	}
 	return d
 }
@@ -44,7 +44,7 @@ func table(t *testing.T, db *sql.DB, ddl string) string {
 	t.Helper()
 	name := fmt.Sprintf("t_%d", time.Now().UnixNano())
 	if _, err := db.Exec(fmt.Sprintf("CREATE TABLE %s (%s)", name, ddl)); err != nil {
-		t.Fatalf("criando %s: %v", name, err)
+		t.Fatalf("creating %s: %v", name, err)
 	}
 	t.Cleanup(func() { _, _ = db.Exec("DROP TABLE IF EXISTS " + name) })
 	return name
@@ -84,7 +84,7 @@ func TestIntegrationARowActuallyGoesIn(t *testing.T) {
 		t.Fatalf("Write: %v", err)
 	}
 	if res.RowsLoaded != 3 {
-		t.Errorf("RowsLoaded = %d, esperado 3", res.RowsLoaded)
+		t.Errorf("RowsLoaded = %d, want 3", res.RowsLoaded)
 	}
 
 	var n int
@@ -92,7 +92,7 @@ func TestIntegrationARowActuallyGoesIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 3 {
-		t.Errorf("o servidor tem %d linhas", n)
+		t.Errorf("the server has %d rows", n)
 	}
 }
 
@@ -142,7 +142,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 		t.Fatalf("primeira: %v", err)
 	}
 	if first.RowsLoaded != 5 {
-		t.Errorf("primeira: %d carregadas", first.RowsLoaded)
+		t.Errorf("first: %d loaded", first.RowsLoaded)
 	}
 
 	segunda, err := target.Write(context.Background(), l, opt)
@@ -150,7 +150,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 		t.Fatalf("segunda: %v", err)
 	}
 	if segunda.RowsLoaded != 0 || segunda.RowsIgnored != 5 {
-		t.Errorf("segunda: %d carregadas, %d ignoradas -- esperava 0 e 5",
+		t.Errorf("second: %d loaded, %d ignored -- expected 0 and 5",
 			segunda.RowsLoaded, segunda.RowsIgnored)
 	}
 
@@ -159,7 +159,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 5 {
-		t.Errorf("a tabela tem %d linhas depois de duas cargas do mesmo lote", n)
+		t.Errorf("the table has %d rows after two loads of the same batch", n)
 	}
 }
 
@@ -198,10 +198,10 @@ func TestIntegrationDedupWithoutAnIndexRefuses(t *testing.T) {
 	_, err := tomy.Table{DSN: dsn(t), Name: name}.Write(
 		context.Background(), lote(1), sdk.WriteOptions{Dedup: sdk.DedupMerge})
 	if err == nil {
-		t.Fatal("dedup sem índice único passou")
+		t.Fatal("dedup without a unique index got through")
 	}
 	if !strings.Contains(err.Error(), "CREATE UNIQUE INDEX") {
-		t.Errorf("o erro não diz o comando: %v", err)
+		t.Errorf("the error does not say the command: %v", err)
 	}
 }
 
@@ -219,11 +219,11 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 	}}}
 	_, err := tomy.Table{DSN: dsn(t), Name: name}.Write(context.Background(), l, sdk.WriteOptions{})
 	if err == nil {
-		t.Fatal("campo sem coluna passou")
+		t.Fatal("a field without a column got through")
 	}
 	for _, exigido := range []string{"coluna_inexistente", "remove the field in Transform"} {
 		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("o erro não diz %q: %v", exigido, err)
+			t.Errorf("the error does not say %q: %v", exigido, err)
 		}
 	}
 }
@@ -268,7 +268,7 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 20000 {
-		t.Fatalf("a tabela tem %d linhas; o teste precisa das 20 mil para significar algo", n)
+		t.Fatalf("the table has %d rows; the test needs the 20 thousand to mean anything", n)
 	}
 
 	start := time.Now()
@@ -281,10 +281,10 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 		break
 	}
 	if !recebeu {
-		t.Fatal("nenhuma linha")
+		t.Fatal("no rows")
 	}
 	if d := time.Since(start); d > 2*time.Second {
-		t.Errorf("a primeira linha levou %s; o driver parece bufferizar", d)
+		t.Errorf("the first row took %s; the driver seems to buffer", d)
 	}
 }
 
@@ -322,7 +322,7 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 		line = e.Payload.(map[string]any)
 	}
 	if line == nil {
-		t.Fatal("nenhuma linha")
+		t.Fatal("no rows")
 	}
 
 	expected := map[string]any{
@@ -335,14 +335,14 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 	}
 	for field, quero := range expected {
 		if got := line[field]; got != quero {
-			t.Errorf("%s = %#v (%T), esperado %#v", field, got, got, quero)
+			t.Errorf("%s = %#v (%T), want %#v", field, got, got, quero)
 		}
 	}
 	if _, ok := line["documento"].(map[string]any); !ok {
-		t.Errorf("documento = %#v; JSON devia chegar aninhado", line["documento"])
+		t.Errorf("document = %#v; the JSON should arrive nested", line["documento"])
 	}
 	if b, ok := line["bytes"].([]byte); !ok || len(b) != 4 {
-		t.Errorf("bytes = %#v; VARBINARY devia chegar como []byte", line["bytes"])
+		t.Errorf("bytes = %#v; VARBINARY should arrive as []byte", line["bytes"])
 	}
 }
 
@@ -404,10 +404,10 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 	}
 
 	if first := runIt(); first.Rows != 100 {
-		t.Errorf("primeira carga: %d linhas, esperado 100", first.Rows)
+		t.Errorf("first load: %d rows, want 100", first.Rows)
 	}
 	if segunda := runIt(); segunda.Rows != 0 || segunda.Ignored != 100 {
-		t.Errorf("segunda carga: %d carregadas e %d ignoradas", segunda.Rows, segunda.Ignored)
+		t.Errorf("second load: %d loaded and %d ignored", segunda.Rows, segunda.Ignored)
 	}
 
 	var n int
@@ -415,7 +415,7 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 100 {
-		t.Errorf("o destino tem %d linhas depois de duas execuções idênticas", n)
+		t.Errorf("the destination has %d rows after two identical runs", n)
 	}
 
 	var value string
@@ -423,7 +423,7 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 		t.Fatal(err)
 	}
 	if value != "3.00" {
-		t.Errorf("valor = %q, esperado \"3.00\"", value)
+		t.Errorf("value = %q, want \"3.00\"", value)
 	}
 }
 

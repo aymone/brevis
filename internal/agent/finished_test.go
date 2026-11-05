@@ -123,7 +123,7 @@ func TestCancellingAFinishedExecutionIsHonestlyANoOp(t *testing.T) {
 	a := agent.New(agent.Options{Shell: []string{"/bin/sh", "-c"}})
 	finish(t, a, "done-2", "true")
 	if err := a.Cancel("done-2"); err != nil {
-		t.Errorf("cancelling a finished execution: %v", err)
+		t.Errorf("canceling a finished execution: %v", err)
 	}
 }
 

@@ -48,10 +48,10 @@ func TestPageKeyAdvancesOneAtATime(t *testing.T) {
 	lines := gather(t, core.Source{URL: srv.URL, PageKey: "page", DataKey: "results"})
 
 	if lines != 2 {
-		t.Errorf("linhas = %d, esperado 2 (paginas 1 e 2)", lines)
+		t.Errorf("rows = %d, want 2 (pages 1 and 2)", lines)
 	}
 	if got := strings.Join(seenValues, ","); got != "1,2,3" {
-		t.Errorf("paginas pedidas = %q, esperado \"1,2,3\"", got)
+		t.Errorf("pages requested = %q, want \"1,2,3\"", got)
 	}
 }
 
@@ -83,7 +83,7 @@ func TestPageKeyNumbersTheFirstRequest(t *testing.T) {
 				DataKey:   "results",
 			})
 			if got := strings.Join(seenValues, ","); got != c.seq {
-				t.Errorf("paginas pedidas = %q, esperado %q", got, c.seq)
+				t.Errorf("pages requested = %q, want %q", got, c.seq)
 			}
 		})
 	}
@@ -99,7 +99,7 @@ func TestAZeroIndexedAPISaysSoInTheURL(t *testing.T) {
 
 	gather(t, core.Source{URL: srv.URL + "?page=0", PageKey: "page", DataKey: "results"})
 	if got := strings.Join(seenValues, ","); got != "0,1,2,3" {
-		t.Errorf("paginas pedidas = %q, esperado \"0,1,2,3\"", got)
+		t.Errorf("pages requested = %q, want \"0,1,2,3\"", got)
 	}
 }
 
@@ -113,7 +113,7 @@ func TestPaginationRefusesTwoStrategies(t *testing.T) {
 	}
 	for _, s := range casos {
 		if _, err := JSON(context.Background(), s, nil); err == nil {
-			t.Errorf("aceitou duas estrategias: %+v", s)
+			t.Errorf("accepted two strategies: %+v", s)
 		}
 	}
 }
@@ -123,15 +123,15 @@ func TestPaginationRefusesTwoStrategies(t *testing.T) {
 func TestPageSizeAloneIsRefused(t *testing.T) {
 	_, err := JSON(context.Background(), core.Source{URL: "http://x", PageSize: 100}, nil)
 	if err == nil {
-		t.Fatal("PageSize sem OffsetKey passou")
+		t.Fatal("PageSize without OffsetKey got through")
 	}
 	if !strings.Contains(err.Error(), "PageKey") {
-		t.Errorf("o erro nao aponta para PageKey: %v", err)
+		t.Errorf("the error does not point to PageKey: %v", err)
 	}
 
 	_, err = JSON(context.Background(), core.Source{URL: "http://x", FirstPage: 2}, nil)
 	if err == nil {
-		t.Fatal("FirstPage sem PageKey passou")
+		t.Fatal("FirstPage without PageKey got through")
 	}
 }
 

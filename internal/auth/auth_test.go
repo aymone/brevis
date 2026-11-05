@@ -55,7 +55,7 @@ func TestAMalformedHashDoesNotAuthenticate(t *testing.T) {
 		"pbkdf2-sha256$600000$c2Fs$", // empty key
 	} {
 		if auth.CheckPassword(h, "qualquer-coisa") {
-			t.Errorf("hash malformado %q autenticou", h)
+			t.Errorf("a malformed hash authenticated: %q", h)
 		}
 		if auth.CheckPassword(h, "") {
 			t.Errorf("malformed hash %q authenticated with an empty password", h)
@@ -167,7 +167,7 @@ func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 	gate.ServeHTTP(rec, req)
 
 	if visto != "operador" {
-		t.Errorf("operador no contexto = %q; esperava %q", visto, "operador")
+		t.Errorf("operator in the context = %q; want %q", visto, "operador")
 	}
 	if rec.Code == http.StatusSeeOther {
 		t.Error("the valid session was sent to the login")
@@ -228,7 +228,7 @@ func TestAnExternalDestinationIsDiscarded(t *testing.T) {
 		"":                          "/",
 	} {
 		if d := auth.Target(bruto); d != expected {
-			t.Errorf("Target(%q) = %q; esperava %q", bruto, d, expected)
+			t.Errorf("Target(%q) = %q; want %q", bruto, d, expected)
 		}
 	}
 }

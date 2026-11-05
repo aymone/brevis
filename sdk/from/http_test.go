@@ -66,27 +66,27 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 
 	// Os campos do driver.
 	if metodo != http.MethodPost {
-		t.Errorf("Method não chegou: %q", metodo)
+		t.Errorf("Method did not arrive: %q", metodo)
 	}
 	if body != `{"q":1}` {
-		t.Errorf("Body não chegou: %q", body)
+		t.Errorf("Body did not arrive: %q", body)
 	}
 	if header != "brevis" {
-		t.Errorf("Header não chegou: %q", header)
+		t.Errorf("Header did not arrive: %q", header)
 	}
 	if path != "/v1/eventos" {
-		t.Errorf("URL não chegou inteira: %q", path)
+		t.Errorf("URL did not arrive whole: %q", path)
 	}
 
 	// The options that cross every driver.
 	if stats.Bytes == 0 || stats.Pages == 0 {
-		t.Errorf("Stats não foi preenchido: %+v", stats)
+		t.Errorf("Stats was not filled in: %+v", stats)
 	}
 	if !strings.Contains(preview.String(), "id") {
-		t.Errorf("o Preview não saiu:\n%s", preview.String())
+		t.Errorf("the Preview did not come out:\n%s", preview.String())
 	}
 	if n != 1 {
-		t.Errorf("%d registros, esperado 1", n)
+		t.Errorf("%d records, want 1", n)
 	}
 }
 
@@ -122,12 +122,12 @@ func TestHTTPForwardsEachFormat(t *testing.T) {
 					t.Fatalf("iterando: %v", err)
 				}
 				if _, err := core.AsObject(env.Payload); err != nil {
-					t.Errorf("o registro não é objeto: %v", env.Payload)
+					t.Errorf("the record is not an object: %v", env.Payload)
 				}
 				n++
 			}
 			if n == 0 {
-				t.Errorf("nenhum registro saiu de um corpo %s válido", c.formato)
+				t.Errorf("no record came out of a valid %s body", c.formato)
 			}
 		})
 	}
@@ -136,10 +136,10 @@ func TestHTTPForwardsEachFormat(t *testing.T) {
 func TestHTTPRefusesAnUnknownFormat(t *testing.T) {
 	_, err := HTTP{URL: "http://x", Format: "yaml"}.Read(context.Background(), core.ReadOptions{})
 	if err == nil {
-		t.Fatal("um formato que o SDK não decodifica tem de ser recusado")
+		t.Fatal("a format the SDK does not decode has to be refused")
 	}
 	if !strings.Contains(err.Error(), "yaml") {
-		t.Errorf("o erro precisa nomear o formato: %v", err)
+		t.Errorf("the error must name the format: %v", err)
 	}
 }
 
@@ -149,10 +149,10 @@ func TestHTTPDescribeLeaksNoSecret(t *testing.T) {
 	got := HTTP{URL: "https://api.exemplo.com/v1?api_key=SEGREDO&lat=-23.5"}.Describe()
 
 	if strings.Contains(got, "SEGREDO") {
-		t.Errorf("Describe vazou a chave: %s", got)
+		t.Errorf("Describe leaked the key: %s", got)
 	}
 	if !strings.Contains(got, "api.exemplo.com") || !strings.Contains(got, "lat=-23.5") {
-		t.Errorf("Describe apagou o que serve para depurar: %s", got)
+		t.Errorf("Describe erased what is useful for debugging: %s", got)
 	}
 }
 

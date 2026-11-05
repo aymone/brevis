@@ -65,7 +65,7 @@ func TestTheArrivalOrderIsPreserved(t *testing.T) {
 	querido := []string{"check", "extract", "load"}
 	for i, name := range querido {
 		if c.Stages[i].TaskName != name {
-			t.Fatalf("ordem: %+v, esperada %v", c.Stages, querido)
+			t.Fatalf("order: %+v, want %v", c.Stages, querido)
 		}
 	}
 }
@@ -79,7 +79,7 @@ func TestAnUnknownStageIsIgnored(t *testing.T) {
 		t.Error("the line is a marker and should be consumed even when unknown")
 	}
 	if len(c.Stages) != 0 {
-		t.Errorf("inventou um bloco: %+v", c.Stages)
+		t.Errorf("invented a block: %+v", c.Stages)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestTheBadgeComesFromTheAnnouncement(t *testing.T) {
 		t.Fatal("the announcement was not recognized")
 	}
 	if c.Version != "v0.44.1" {
-		t.Errorf("versao = %q", c.Version)
+		t.Errorf("version = %q", c.Version)
 	}
 	// And the announcement invents no box on the screen: it only carries the
 	// badge.
@@ -114,7 +114,7 @@ func TestTheCeilingProtectsTheDatabase(t *testing.T) {
 		c.line(`@brevis:{"tipo":"etapa","nome":"extract","estado":"running"}`)
 	}
 	if c.seen > stageCeiling {
-		t.Errorf("registrou %d transicoes, o teto e %d", c.seen, stageCeiling)
+		t.Errorf("recorded %d transitions, the ceiling is %d", c.seen, stageCeiling)
 	}
 }
 
@@ -193,7 +193,7 @@ func TestTwoStagesWithTheSameNameAreTwoBoxes(t *testing.T) {
 	}
 	// The first map was not swallowed by the second.
 	if c.Stages[0].Numbers["in"] != 100.0 {
-		t.Errorf("o primeiro map perdeu os numeros: %+v", c.Stages[0].Numbers)
+		t.Errorf("the first map lost its numbers: %+v", c.Stages[0].Numbers)
 	}
 }
 
@@ -223,7 +223,7 @@ func TestTheLoadNumbersComeOutOfThePhases(t *testing.T) {
 		t.Helper()
 		for _, l := range lines {
 			if !c.line(l) {
-				t.Fatalf("not recognised: %s", l)
+				t.Fatalf("not recognized: %s", l)
 			}
 		}
 	}

@@ -3,7 +3,7 @@
 # The other side of the engine's third executor. A step with `host: tools` is
 # dispatched here instead of becoming a pod, so this pod stays up and the work
 # comes to it -- which is what you want when the runtime is expensive to build,
-# when a licence lives on it, when an egress IP is allowlisted, or when your
+# when a license lives on it, when an egress IP is allowlisted, or when your
 # platform team will not grant pod-creation RBAC.
 #
 # WHAT TO CHANGE FIRST: the image. This one is the FLOOR -- a shell and the

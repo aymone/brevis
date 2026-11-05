@@ -99,7 +99,7 @@ func TestAStartRefusedDuringSetupLeavesTheIdFree(t *testing.T) {
 func TestACancelDuringTheSetupNeverLeavesTheStepRunning(t *testing.T) {
 	a := agent.New(agent.Options{Shell: []string{"/bin/sh", "-c"}})
 	for i := range 30 {
-		id := "cancelled-" + strings.Repeat("x", i)
+		id := "canceled-" + strings.Repeat("x", i)
 		stop := make(chan struct{})
 		var canceller sync.WaitGroup
 		canceller.Add(1)
@@ -128,7 +128,7 @@ func TestACancelDuringTheSetupNeverLeavesTheStepRunning(t *testing.T) {
 		select {
 		case <-ended:
 		case <-time.After(5 * time.Second):
-			t.Fatalf("start %d: a step cancelled during or after its setup is still running", i)
+			t.Fatalf("start %d: a step canceled during or after its setup is still running", i)
 		}
 	}
 }

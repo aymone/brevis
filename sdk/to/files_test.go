@@ -34,7 +34,7 @@ func unico(t *testing.T, dir string) string {
 		return nil
 	})
 	if len(found) != 1 {
-		t.Fatalf("%d arquivos em %s, esperado 1: %v", len(found), dir, found)
+		t.Fatalf("%d files in %s, want 1: %v", len(found), dir, found)
 	}
 	return found[0]
 }
@@ -56,14 +56,14 @@ func TestFilesWritesNDJSON(t *testing.T) {
 	}
 	lines := strings.Split(strings.TrimSpace(string(body)), "\n")
 	if len(lines) != 3 {
-		t.Fatalf("%d linhas, esperado 3", len(lines))
+		t.Fatalf("%d rows, want 3", len(lines))
 	}
 	var row map[string]any
 	if err := json.Unmarshal([]byte(lines[0]), &row); err != nil {
-		t.Fatalf("a primeira linha não é JSON: %v", err)
+		t.Fatalf("the first line is not JSON: %v", err)
 	}
 	if row["sku"] != "A" {
-		t.Errorf("o registro não sobreviveu: %v", row)
+		t.Errorf("the record did not survive: %v", row)
 	}
 }
 
@@ -80,11 +80,11 @@ func TestFilesAddsNothingWithoutMetadata(t *testing.T) {
 	_ = json.Unmarshal([]byte(strings.TrimSpace(string(body))), &row)
 
 	if len(row) != 2 {
-		t.Errorf("o registro tem %d campos, esperado os 2 do chamador: %v", len(row), row)
+		t.Errorf("the record has %d fields, want the caller's 2: %v", len(row), row)
 	}
 	for _, forbidden := range []string{"ingestion_id", "provider", "entity", "source_key", "payload"} {
 		if _, tem := row[forbidden]; tem {
-			t.Errorf("o SDK escreveu %q sem ser pedido", forbidden)
+			t.Errorf("the SDK wrote %q without being asked", forbidden)
 		}
 	}
 }
@@ -98,7 +98,7 @@ func TestFilesComprime(t *testing.T) {
 
 	path := unico(t, dir)
 	if !strings.HasSuffix(path, ".gz") {
-		t.Errorf("o arquivo não terminou em .gz: %s", path)
+		t.Errorf("the file did not end in .gz: %s", path)
 	}
 	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
@@ -106,7 +106,7 @@ func TestFilesComprime(t *testing.T) {
 	}
 	defer func() { _ = f.Close() }()
 	if _, err := gzip.NewReader(f); err != nil {
-		t.Errorf("o conteúdo não é gzip: %v", err)
+		t.Errorf("the content is not gzip: %v", err)
 	}
 }
 
@@ -116,10 +116,10 @@ func TestFilesRefusesAFormatItDoesNotWrite(t *testing.T) {
 	_, err := Files{Path: t.TempDir() + "/", Format: "parquet"}.
 		Write(context.Background(), lote(1), core.WriteOptions{})
 	if err == nil {
-		t.Fatal("to.Files escreve NDJSON e CSV; parquet tem de ser recusado")
+		t.Fatal("to.Files writes NDJSON and CSV; parquet has to be refused")
 	}
 	if !strings.Contains(err.Error(), "parquet") {
-		t.Errorf("o erro precisa nomear o formato: %v", err)
+		t.Errorf("the error must name the format: %v", err)
 	}
 }
 
@@ -128,10 +128,10 @@ func TestFilesChecksColumns(t *testing.T) {
 	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), lote(1),
 		core.WriteOptions{Columns: []string{"sku", "quantidade", "faltando"}})
 	if err == nil {
-		t.Fatal("uma coluna declarada e não entregue tem de ser erro aqui também")
+		t.Fatal("a declared column that is not delivered has to be an error here too")
 	}
 	if !strings.Contains(err.Error(), "faltando") {
-		t.Errorf("o erro precisa nomear a coluna: %v", err)
+		t.Errorf("the error must name the column: %v", err)
 	}
 }
 
@@ -149,10 +149,10 @@ func TestFilesWritesCSVWithTheUnionOfTheFields(t *testing.T) {
 	body, _ := os.ReadFile(unico(t, dir))
 	lines := strings.Split(strings.TrimSpace(string(body)), "\n")
 	if lines[0] != "a,b" {
-		t.Errorf("cabeçalho = %q, esperado a união ordenada", lines[0])
+		t.Errorf("header = %q, want the sorted union", lines[0])
 	}
 	if lines[2] != "3," {
-		t.Errorf("a linha sem b = %q; o campo ausente tem de ficar vazio na coluna certa", lines[2])
+		t.Errorf("the row without b = %q; the missing field has to stay empty in the right column", lines[2])
 	}
 }
 
@@ -169,7 +169,7 @@ func TestFilesDoesNotOverwriteThePreviousBatch(t *testing.T) {
 
 	entries, _ := os.ReadDir(dir)
 	if len(entries) != 2 {
-		t.Errorf("%d arquivos depois de duas cargas, esperado 2", len(entries))
+		t.Errorf("%d files after two loads, want 2", len(entries))
 	}
 }
 
@@ -183,7 +183,7 @@ func TestFilesLeavesNoTemporaryFile(t *testing.T) {
 	entries, _ := os.ReadDir(dir)
 	for _, e := range entries {
 		if strings.HasPrefix(e.Name(), ".brevis-") {
-			t.Errorf("sobrou um temporário: %s", e.Name())
+			t.Errorf("a temporary file was left: %s", e.Name())
 		}
 	}
 }
@@ -191,10 +191,10 @@ func TestFilesLeavesNoTemporaryFile(t *testing.T) {
 func TestFilesRefusesAPathWithNoStore(t *testing.T) {
 	_, err := Files{Path: "gs://b/x/"}.Write(context.Background(), lote(1), core.WriteOptions{})
 	if err == nil {
-		t.Fatal("um caminho gs:// sem Store não tem como ser escrito")
+		t.Fatal("a gs:// path without a Store cannot be written")
 	}
 	if !strings.Contains(err.Error(), "gs") || !strings.Contains(err.Error(), "Store") {
-		t.Errorf("o erro precisa nomear os dois: %v", err)
+		t.Errorf("the error must name both: %v", err)
 	}
 }
 
@@ -204,11 +204,11 @@ func TestFilesRefusesDedup(t *testing.T) {
 	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), lote(1),
 		core.WriteOptions{Dedup: core.DedupMerge})
 	if err == nil {
-		t.Fatal("to.Files não sabe deduplicar; aceitar a flag seria ignorá-la")
+		t.Fatal("to.Files cannot deduplicate; accepting the flag would mean ignoring it")
 	}
 	for _, quer := range []string{"to.Files", "Dedup"} {
 		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("o erro precisa nomear %q: %v", quer, err)
+			t.Errorf("the error must name %q: %v", quer, err)
 		}
 	}
 }
@@ -227,6 +227,6 @@ func TestFilesPartitionsByTheRowsColumn(t *testing.T) {
 		t.Fatal(err)
 	}
 	if path := unico(t, dir); !strings.Contains(path, "ingestion_loaded_at=2026-09-04") {
-		t.Errorf("o caminho não foi particionado: %s", path)
+		t.Errorf("the path was not partitioned: %s", path)
 	}
 }

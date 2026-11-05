@@ -135,14 +135,14 @@ func TestRejectIf(t *testing.T) {
 		t.Fatal("a 200 flagged with error must be rejected")
 	}
 	if !strings.Contains(err.Error(), "invalid parameter") {
-		t.Errorf("o reason da API precisa aparecer: %v", err)
+		t.Errorf("the API's reason must show up: %v", err)
 	}
 	if !errors.Is(err, ErrRejected) {
-		t.Error("uma recusa tem de ser distinguível de um erro de programação")
+		t.Error("a refusal has to be distinguishable from a programming error")
 	}
 
 	if err := guarda(resp(200, `{"temperature": 20}`)); err != nil {
-		t.Errorf("response boa foi recusada: %v", err)
+		t.Errorf("a good response was refused: %v", err)
 	}
 }
 
@@ -152,13 +152,13 @@ func TestRejectIf(t *testing.T) {
 func TestRejectIfDoesNotLetANonJSONBodyThrough(t *testing.T) {
 	err := RejectIf("error")(resp(200, `<html><body>Em manutenção</body></html>`))
 	if err == nil {
-		t.Fatal("um corpo que não é JSON tem de ser recusado, não aceito")
+		t.Fatal("a body that is not JSON has to be refused, not accepted")
 	}
 	if !strings.Contains(err.Error(), "not a JSON object") {
-		t.Errorf("o erro precisa dizer que a resposta não é JSON: %v", err)
+		t.Errorf("the error must say the response is not JSON: %v", err)
 	}
 	if !errors.Is(err, ErrRejected) {
-		t.Error("é uma recusa da fonte, não um erro de programação")
+		t.Error("it is a refusal from the source, not a programming error")
 	}
 }
 
@@ -254,12 +254,12 @@ func TestExtractExpandsAndMaps(t *testing.T) {
 		t.Errorf("source_key = %q", first["source_key"])
 	}
 	if first[ColumnIngestionID] == nil || first[ColumnIngestionID] == "" {
-		t.Error("a cadeia não escreveu ingestion_id")
+		t.Error("the chain did not write ingestion_id")
 	}
 
 	segundo := envelopes[1].Payload.(map[string]any)
 	if first[ColumnIngestionID] == segundo[ColumnIngestionID] {
-		t.Error("duas leituras diferentes colidiram no mesmo id")
+		t.Error("two different reads collided on the same id")
 	}
 }
 
@@ -278,7 +278,7 @@ func TestExtractRecordsRefusesBeforeDecoding(t *testing.T) {
 	}
 	// Without this, the error document would land in the warehouse as data.
 	if !strings.Contains(err.Error(), "latitude fora do intervalo") {
-		t.Errorf("o reason precisa chegar a quem chamou: %v", err)
+		t.Errorf("the reason must reach the caller: %v", err)
 	}
 }
 
@@ -666,21 +666,21 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 				},
 			}})
 			if err != nil {
-				t.Fatalf("http %d derrubou a execução: %v", c.status, err)
+				t.Fatalf("http %d brought the run down: %v", c.status, err)
 			}
 			if visto != c.status {
-				t.Errorf("Records viu status %d, esperado %d", visto, c.status)
+				t.Errorf("Records saw status %d, want %d", visto, c.status)
 			}
 
 			n := 0
 			for _, err := range data.Records {
 				if err != nil {
-					t.Fatalf("iteração: %v", err)
+					t.Fatalf("iteration: %v", err)
 				}
 				n++
 			}
 			if n != c.lines {
-				t.Errorf("http %d rendeu %d registros, esperado %d", c.status, n, c.lines)
+				t.Errorf("http %d yielded %d records, want %d", c.status, n, c.lines)
 			}
 		})
 	}
@@ -700,14 +700,14 @@ func TestANon2xxStillFails(t *testing.T) {
 		Records: func(Response) ([]any, error) { called = true; return nil, nil },
 	}})
 	if err == nil {
-		t.Fatal("um 404 tem de falhar")
+		t.Fatal("a 404 has to fail")
 	}
 	if called {
-		t.Error("um não-2xx não é resposta de sucesso; Records não deve vê-lo")
+		t.Error("a non-2xx is not a success response; Records must not see it")
 	}
 	var se *SourceError
 	if !errors.As(err, &se) || se.Status != 404 {
-		t.Errorf("o status precisa chegar a quem chamou: %v", err)
+		t.Errorf("the status must reach the caller: %v", err)
 	}
 }
 
@@ -716,19 +716,19 @@ func TestANon2xxStillFails(t *testing.T) {
 func TestARejectionIsDistinctFromAProgrammingError(t *testing.T) {
 	recusa := Reject("open-meteo recusou: %s", "latitude inválida")
 	if !errors.Is(recusa, ErrRejected) {
-		t.Error("Reject tem de casar com errors.Is(err, ErrRejected)")
+		t.Error("Reject has to match errors.Is(err, ErrRejected)")
 	}
 	if !strings.Contains(recusa.Error(), "latitude inválida") {
-		t.Errorf("a razão precisa sobreviver: %v", recusa)
+		t.Errorf("the reason must survive: %v", recusa)
 	}
 
 	if errors.Is(fmt.Errorf("nil map"), ErrRejected) {
-		t.Error("um erro comum não pode passar por recusa")
+		t.Error("an ordinary error must not pass as a refusal")
 	}
 
 	var r *Rejection
 	if !errors.As(recusa, &r) {
-		t.Error("Rejection tem de ser alcançável por errors.As")
+		t.Error("Rejection has to be reachable by errors.As")
 	}
 }
 
@@ -746,13 +746,13 @@ func TestTheRejectionSurvivesTheExtract(t *testing.T) {
 		Records: func(r Response) ([]any, error) { return nil, RejectIf("error")(r) },
 	}})
 	if err == nil {
-		t.Fatal("a recusa não chegou")
+		t.Fatal("the refusal did not arrive")
 	}
 	if !errors.Is(err, ErrRejected) {
-		t.Errorf("a recusa perdeu o tipo na travessia: %T %v", err, err)
+		t.Errorf("the refusal lost its type in transit: %T %v", err, err)
 	}
 	if !strings.Contains(err.Error(), "latitude fora do intervalo") {
-		t.Errorf("a razão do vendor se perdeu: %v", err)
+		t.Errorf("the vendor's reason was lost: %v", err)
 	}
 }
 
@@ -765,11 +765,11 @@ func TestRecordsWithDataKeyIsRefused(t *testing.T) {
 		Records: func(Response) ([]any, error) { return nil, nil },
 	}})
 	if err == nil {
-		t.Fatal("Records junto de DataKey deixaria o DataKey sem efeito")
+		t.Fatal("Records together with DataKey would leave DataKey with no effect")
 	}
 	for _, want := range []string{"Reading", "DataKey", "results"} {
 		if !strings.Contains(err.Error(), want) {
-			t.Errorf("o erro não menciona %q: %v", want, err)
+			t.Errorf("the error does not mention %q: %v", want, err)
 		}
 	}
 }
@@ -782,17 +782,17 @@ func TestDecodingTheWrongBodyIsARejection(t *testing.T) {
 
 	_, err := r.Object()
 	if err == nil {
-		t.Fatal("HTML não é objeto JSON")
+		t.Fatal("HTML is not a JSON object")
 	}
 	if !errors.Is(err, ErrRejected) {
-		t.Errorf("Object() devolveu erro comum, não recusa: %T %v", err, err)
+		t.Errorf("Object() returned an ordinary error, not a refusal: %T %v", err, err)
 	}
 
 	var docs []any
 	if err := r.JSON(&docs); err == nil {
-		t.Fatal("HTML não é o JSON esperado")
+		t.Fatal("HTML is not the expected JSON")
 	} else if !errors.Is(err, ErrRejected) {
-		t.Errorf("JSON() devolveu erro comum, não recusa: %T %v", err, err)
+		t.Errorf("JSON() returned an ordinary error, not a refusal: %T %v", err, err)
 	}
 }
 

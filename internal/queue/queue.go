@@ -77,7 +77,7 @@ func (q *Queue) Enqueue(ctx context.Context, runID uuid.UUID, priority int, avai
 		ON CONFLICT (run_id) DO NOTHING`,
 		runID, priority, when)
 	if err != nil {
-		return fmt.Errorf("enfileirando run %s: %w", runID, err)
+		return fmt.Errorf("enqueuing run %s: %w", runID, err)
 	}
 	return nil
 }
@@ -129,12 +129,12 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 	// flight is a change there too.
 	tx, err := q.pool.Begin(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("reivindicando itens: %w", err)
+		return nil, fmt.Errorf("claiming items: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	// Transaction-scoped: released on commit, or on rollback if the claim fails.
 	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1)`, claimLock); err != nil {
-		return nil, fmt.Errorf("reivindicando itens: %w", err)
+		return nil, fmt.Errorf("claiming items: %w", err)
 	}
 	rows, err := tx.Query(ctx, `
 		WITH em_voo AS (
@@ -176,7 +176,7 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 		RETURNING id, run_id, prioridade, disponivel_em, reivindicado_em`,
 		worker, limite)
 	if err != nil {
-		return nil, fmt.Errorf("reivindicando itens: %w", err)
+		return nil, fmt.Errorf("claiming items: %w", err)
 	}
 	defer rows.Close()
 
@@ -193,7 +193,7 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 		return nil, err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("reivindicando itens: %w", err)
+		return nil, fmt.Errorf("claiming items: %w", err)
 	}
 	return items, nil
 }

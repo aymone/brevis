@@ -230,7 +230,7 @@ func TestEncodeRowsStructPayloadUsesJSONTags(t *testing.T) {
 
 	rows := decodeNDJSON(t, data)
 	if rows[0]["id"] != "a" || rows[0]["amount"] != float64(7) {
-		t.Errorf("struct payload should honour json tags: %v", rows[0])
+		t.Errorf("struct payload should honor json tags: %v", rows[0])
 	}
 }
 
@@ -309,7 +309,7 @@ func TestRowErrorsTruncates(t *testing.T) {
 		t.Fatalf("Expected %d entries plus a summary, got %d", maxReportedErrors, len(got))
 	}
 	if !strings.Contains(got[len(got)-1], "and 5 more") {
-		t.Errorf("last entry should summarise the remainder, got %q", got[len(got)-1])
+		t.Errorf("last entry should summarize the remainder, got %q", got[len(got)-1])
 	}
 }
 
@@ -400,9 +400,9 @@ func TestPartitionOptionsNeedTheLoadedAtColumn(t *testing.T) {
 			RequirePartitionFilter: true, Columns: []string{"sku"}},
 	} {
 		if _, err := resolveConfig(&c); err == nil {
-			t.Error("uma opção de partição sem a coluna declarada tem de ser recusada")
+			t.Error("a partition option without the declared column has to be refused")
 		} else if !strings.Contains(err.Error(), "ingestion_loaded_at") {
-			t.Errorf("o erro precisa nomear a coluna: %v", err)
+			t.Errorf("the error must name the column: %v", err)
 		}
 	}
 
@@ -411,7 +411,7 @@ func TestPartitionOptionsNeedTheLoadedAtColumn(t *testing.T) {
 		PartitionExpiration: time.Hour,
 		Columns:             []string{"ingestion_loaded_at", "sku"},
 	}); err != nil {
-		t.Errorf("com a coluna declarada deveria passar: %v", err)
+		t.Errorf("with the column declared it should pass: %v", err)
 	}
 }
 
@@ -475,11 +475,11 @@ func TestProvenanceComesFromTheBatch(t *testing.T) {
 
 	labels := tableLabels(got)
 	if labels["provider"] != "open_meteo" || labels["entity"] != "hourly" {
-		t.Errorf("os labels não saíram do lote: %v", labels)
+		t.Errorf("the labels did not come from the batch: %v", labels)
 	}
 
 	if empty := provenanceOf(nil); empty.Provider != "" {
-		t.Errorf("um lote vazio não tem proveniência: %+v", empty)
+		t.Errorf("an empty batch has no provenance: %+v", empty)
 	}
 }
 
@@ -659,11 +659,11 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 		Dedup: core.DedupMerge, Columns: []string{"sku", "quantidade"},
 	})
 	if err == nil {
-		t.Fatal("o merge casa em ingestion_id; sem a coluna declarada não há como")
+		t.Fatal("the merge matches on ingestion_id; without the declared column there is no way")
 	}
 	for _, quer := range []string{"ingestion_id", "sdk.IngestionID"} {
 		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("o erro precisa dizer %q: %v", quer, err)
+			t.Errorf("the error must say %q: %v", quer, err)
 		}
 	}
 
@@ -672,7 +672,7 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 		ProjectID: "p", Dataset: "d", Table: "t", Format: "ndjson",
 		Dedup: core.DedupMerge, Columns: []string{"ingestion_id", "sku"},
 	}); err != nil {
-		t.Errorf("com a coluna declarada deveria passar: %v", err)
+		t.Errorf("with the column declared it should pass: %v", err)
 	}
 
 	// And with no declaration at all there is nothing to check here -- the row
@@ -682,7 +682,7 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 		ProjectID: "p", Dataset: "d", Table: "t", Format: "ndjson",
 		Dedup: core.DedupMerge,
 	}); err != nil {
-		t.Errorf("sem Columns não há o que conferir na configuração: %v", err)
+		t.Errorf("without Columns there is nothing to check in the configuration: %v", err)
 	}
 }
 

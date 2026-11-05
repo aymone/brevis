@@ -21,7 +21,7 @@ import (
 func BenchmarkMySQLLoad(b *testing.B) {
 	d := os.Getenv("BREVIS_IT_MYSQL_DSN")
 	if d == "" {
-		b.Skip("BREVIS_IT_MYSQL_DSN não definida")
+		b.Skip("BREVIS_IT_MYSQL_DSN is not set")
 	}
 
 	db, err := sql.Open("mysql", frommy.WithParseTime(d))

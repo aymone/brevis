@@ -55,7 +55,7 @@ func TestTheMessageCarriesTheFailuresContext(t *testing.T) {
 	// o Slack mostra "This content can't be displayed" no preview.
 	text, _ := payload["text"].(string)
 	if !strings.Contains(text, "id_verification") {
-		t.Errorf("texto de preview = %q", text)
+		t.Errorf("preview text = %q", text)
 	}
 
 	body := *received
@@ -88,7 +88,7 @@ func TestALongErrorIsTruncated(t *testing.T) {
 	if len(*received) > 3000 {
 		t.Errorf("a payload of %d bytes; Slack's block would refuse it", len(*received))
 	}
-	if !strings.Contains(*received, "truncado") {
+	if !strings.Contains(*received, "truncated") {
 		t.Error("it truncated without saying it truncated")
 	}
 }
@@ -155,7 +155,7 @@ func TestTheDomainFallsBackToTheSlugsPrefix(t *testing.T) {
 // whoever wrote it and failed in CI, which runs in UTC -- and that is how it took
 // the v0.4.0 release down, on the one gate nobody had exercised.
 func expectedLogicalDate() string {
-	return time.Date(2026, 9, 1, 4, 0, 0, 0, time.UTC).Local().Format("02/01/2006 15:04")
+	return time.Date(2026, 9, 1, 4, 0, 0, 0, time.UTC).Local().Format("2006-01-02 15:04")
 }
 
 // The time alone is ambiguous, and the ambiguity is not theoretical: the pod

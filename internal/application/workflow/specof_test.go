@@ -79,7 +79,7 @@ func TestAWorkflowWithEverythingRoundTrips(t *testing.T) {
 		},
 		Nodes: []dominio.Node{
 			{ID: "fetch", Run: "python fetch.py --full={{ .full }}", Runtime: "python", Tools: []string{"dbt"}, Env: map[string]string{"X": "1"},
-				PersistContext: []string{"codes"}, Shell: &yes, Resources: dominio.Resources{CPU: "1"}, Host: "licence-box"},
+				PersistContext: []string{"codes"}, Shell: &yes, Resources: dominio.Resources{CPU: "1"}, Host: "license-box"},
 			{ID: "load", Action: "docker.run", With: map[string]any{"image": "acme/load:1"},
 				When: "all_done", OnError: &dominio.OnError{Type: "SLACK", When: "give_up"}},
 			{ID: "publish", Marker: true},

@@ -153,7 +153,7 @@ func TestRetryGivesUpAfterTheLimit(t *testing.T) {
 		MaxAttempts: 2, BackoffBase: time.Millisecond,
 	}
 	if err := r.Run(context.Background(), w); err == nil {
-		t.Fatal("esperava falha")
+		t.Fatal("expected a failure")
 	}
 	if n := attempts.Load(); n != 2 {
 		t.Errorf("attempts = %d, wanted exactly 2", n)
@@ -182,7 +182,7 @@ func TestCancellingFiresNoRetry(t *testing.T) {
 	_ = r.Run(ctx, w)
 
 	if n := attempts.Load(); n != 1 {
-		t.Errorf("attempts = %d; cancelling must not retry", n)
+		t.Errorf("attempts = %d; canceling must not retry", n)
 	}
 }
 
@@ -211,7 +211,7 @@ func TestAStepsErrorCarriesTheExitCode(t *testing.T) {
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)
 	if failure == nil {
-		t.Fatal("esperava falha")
+		t.Fatal("expected a failure")
 	}
 
 	var step *app.StepError
@@ -240,7 +240,7 @@ func TestTheErrorCarriesStderrAndTheCodesHint(t *testing.T) {
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)
 	if failure == nil {
-		t.Fatal("esperava falha")
+		t.Fatal("expected a failure")
 	}
 
 	msg := failure.Error()
@@ -327,7 +327,7 @@ func TestAFailureWithNoStderrUsesStdout(t *testing.T) {
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}).Run(context.Background(), w)
 	if failure == nil {
-		t.Fatal("esperava falha")
+		t.Fatal("expected a failure")
 	}
 	if !strings.Contains(failure.Error(), "Env var required") {
 		t.Errorf("the cause, printed to stdout, did not reach the message: %q", failure.Error())
@@ -397,7 +397,7 @@ func TestSlotsLimitSimultaneousSteps(t *testing.T) {
 	}
 
 	if p := atomic.LoadInt64(&pico); p > ceiling {
-		t.Errorf("pico de %d passos simultaneos, o teto e %d", p, ceiling)
+		t.Errorf("peak of %d simultaneous steps, the ceiling is %d", p, ceiling)
 	} else if p < ceiling {
 		t.Errorf("a peak of %d: the slots went unused, the limit became serialization", p)
 	}

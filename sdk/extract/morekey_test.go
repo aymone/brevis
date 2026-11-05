@@ -64,10 +64,10 @@ func TestMoreKeyStopsWithoutAskingForTheEmptyPage(t *testing.T) {
 		URL: srv.URL, PageKey: "page", DataKey: "results", MoreKey: "pageMeta.hasNextPage",
 	})
 	if lines != 3 {
-		t.Errorf("%d linhas, esperado 3", lines)
+		t.Errorf("%d rows, want 3", lines)
 	}
 	if *requested != 3 {
-		t.Errorf("%d requisições, esperado 3 -- a quarta é a que o MoreKey economiza", *requested)
+		t.Errorf("%d requests, want 3 -- the fourth is the one MoreKey saves", *requested)
 	}
 }
 
@@ -78,7 +78,7 @@ func TestWithoutMoreKeyItAsksForTheEmptyPage(t *testing.T) {
 
 	count(t, core.Source{URL: srv.URL, PageKey: "page", DataKey: "results"})
 	if *requested != 4 {
-		t.Errorf("%d requisições, esperado 4 -- a quarta volta vazia e é o que encerra", *requested)
+		t.Errorf("%d requests, want 4 -- the fourth comes back empty and is what ends it", *requested)
 	}
 }
 
@@ -91,12 +91,12 @@ func TestMoreKeyDoesNotReplaceTheSafetyNet(t *testing.T) {
 		URL: srv.URL, PageKey: "page", DataKey: "results", MoreKey: "pageMeta.hasNextPage",
 	})
 	if lines != 2 {
-		t.Errorf("%d linhas, esperado 2", lines)
+		t.Errorf("%d rows, want 2", lines)
 	}
 	// The third comes back empty and ends it, despite the field saying there is
 	// more.
 	if *requested != 3 {
-		t.Errorf("%d requisições; a parada por página vazia devia ter encerrado", *requested)
+		t.Errorf("%d requests; stopping on an empty page should have ended it", *requested)
 	}
 }
 
@@ -116,11 +116,11 @@ func TestAnAbsentMoreKeyIsNotTheEndOfPagination(t *testing.T) {
 		URL: srv.URL, DataKey: "results", MoreKey: "pageMeta.hasNextPage",
 	}, nil)
 	if err == nil {
-		t.Fatal("um campo ausente passou como 'não há mais'")
+		t.Fatal("a missing field passed as 'no more'")
 	}
 	for _, quero := range []string{"pageMeta", "check the path"} {
 		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("o erro não diz %q: %v", quero, err)
+			t.Errorf("the error does not say %q: %v", quero, err)
 		}
 	}
 }
@@ -143,10 +143,10 @@ func TestMoreKeyAtTheRoot(t *testing.T) {
 	if n := count(t, core.Source{
 		URL: srv.URL, PageKey: "page", DataKey: "data", MoreKey: "has_more",
 	}); n != 2 {
-		t.Errorf("%d linhas, esperado 2", n)
+		t.Errorf("%d rows, want 2", n)
 	}
 	if requested != 2 {
-		t.Errorf("%d requisições, esperado 2", requested)
+		t.Errorf("%d requests, want 2", requested)
 	}
 }
 
@@ -159,7 +159,7 @@ func TestANullMoreKeyIsTheEnd(t *testing.T) {
 	defer srv.Close()
 
 	if n := count(t, core.Source{URL: srv.URL, DataKey: "data", MoreKey: "next"}); n != 1 {
-		t.Errorf("%d linhas, esperado 1", n)
+		t.Errorf("%d rows, want 1", n)
 	}
 }
 
@@ -176,6 +176,6 @@ func TestAMoreKeyNotLeadingToABooleanIsAnError(t *testing.T) {
 		URL: srv.URL, DataKey: "data", MoreKey: "meta.next",
 	}, nil)
 	if err == nil || !strings.Contains(err.Error(), "boolean") {
-		t.Errorf("erro = %v", err)
+		t.Errorf("error = %v", err)
 	}
 }

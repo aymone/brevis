@@ -133,7 +133,7 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 			return 0, err
 		}
 		s.log.Info("schedule started", "workflow", a.WorkflowSlug,
-			"cron", a.Cron, "primeiro_slot_apos", now.Format(time.RFC3339))
+			"cron", a.Cron, "first_slot_after", now.Format(time.RFC3339))
 		return 0, nil
 	}
 
@@ -144,8 +144,8 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 	if truncado {
 		// Visible, not silent: truncating without warning makes it look as
 		// though the gap was covered.
-		s.log.Warn("slots truncados no ciclo", "workflow", a.WorkflowSlug,
-			"limite", s.maxPerCycle, "obs", "o restante entra nos proximos ciclos")
+		s.log.Warn("slots truncated in this cycle", "workflow", a.WorkflowSlug,
+			"limit", s.maxPerCycle, "note", "the rest is picked up in the next cycles")
 	}
 	if len(slots) == 0 {
 		return 0, nil
@@ -166,7 +166,7 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 		// in the morning, and a cron that required params would never fire.
 		defaults, err := def.Resolver(nil)
 		if err != nil {
-			return created, fmt.Errorf("params padrao de %q: %w", a.WorkflowSlug, err)
+			return created, fmt.Errorf("default params of %q: %w", a.WorkflowSlug, err)
 		}
 		made, err := s.createAndEnqueue(ctx, a.WorkflowSlug, bruto, slot,
 			sch.TriggerSchedule, 0, defaults, def.MaxActive, def.Group)

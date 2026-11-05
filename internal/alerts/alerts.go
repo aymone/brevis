@@ -126,14 +126,14 @@ func New(pool *pgxpool.Pool) *Outbox { return &Outbox{pool: pool} }
 func WriteTx(ctx context.Context, tx pgx.Tx, p Pending) error {
 	payload, err := json.Marshal(p.Payload)
 	if err != nil {
-		return fmt.Errorf("serializando o alerta da run %s: %w", p.RunID, err)
+		return fmt.Errorf("serializing the alert of run %s: %w", p.RunID, err)
 	}
 	_, err = tx.Exec(ctx, `
 		INSERT INTO alertas (run_id, tipo, node_id, canal, payload)
 		VALUES ($1, $2, $3, $4, $5)`,
 		p.RunID, p.Kind, p.NodeID, p.Channel, payload)
 	if err != nil {
-		return fmt.Errorf("gravando o alerta da run %s: %w", p.RunID, err)
+		return fmt.Errorf("saving the alert of run %s: %w", p.RunID, err)
 	}
 	return nil
 }
@@ -164,7 +164,7 @@ func (o *Outbox) Claim(ctx context.Context, worker string, limit int) ([]Item, e
 		RETURNING id, run_id, tipo, node_id, canal, payload, tentativas`,
 		worker, limit)
 	if err != nil {
-		return nil, fmt.Errorf("reivindicando alertas: %w", err)
+		return nil, fmt.Errorf("claiming alerts: %w", err)
 	}
 	defer rows.Close()
 	return scan(rows)

@@ -45,7 +45,7 @@ func TestFilesLeNDJSONLocal(t *testing.T) {
 		t.Fatalf("Read: %v", err)
 	}
 	if len(got) != 2 {
-		t.Fatalf("%d registros, esperado 2", len(got))
+		t.Fatalf("%d records, want 2", len(got))
 	}
 }
 
@@ -67,7 +67,7 @@ func TestFilesLeEmOrdemDeterminística(t *testing.T) {
 			order = append(order, e.Payload.(map[string]any)["n"].(string))
 		}
 		if strings.Join(order, "") != "abc" {
-			t.Fatalf("ordem = %v, esperado a,b,c em toda execução", order)
+			t.Fatalf("order = %v, want a,b,c on every run", order)
 		}
 	}
 }
@@ -81,13 +81,13 @@ func TestFilesReadsCSVWithAHeader(t *testing.T) {
 		t.Fatalf("Read: %v", err)
 	}
 	if len(got) != 2 {
-		t.Fatalf("%d registros, esperado 2", len(got))
+		t.Fatalf("%d records, want 2", len(got))
 	}
 	// The CSV decoder yields map[string]any -- the same record model as every
 	// other source. It used to yield map[string]string, and that meant no
 	// transformer worked on a CSV at all.
 	if got[0].Payload.(map[string]any)["nome"] != "ana" {
-		t.Errorf("a primeira linha não virou registro: %v", got[0].Payload)
+		t.Errorf("the first line did not become a record: %v", got[0].Payload)
 	}
 }
 
@@ -102,7 +102,7 @@ func TestFilesDecompressesGzipByExtension(t *testing.T) {
 		t.Fatalf("Read: %v", err)
 	}
 	if len(got) != 1 {
-		t.Fatalf("%d registros, esperado 1", len(got))
+		t.Fatalf("%d records, want 1", len(got))
 	}
 }
 
@@ -114,10 +114,10 @@ func TestFilesInvalidGzipNamesTheFile(t *testing.T) {
 
 	_, err := le(t, Files{Path: filepath.Join(dir, "*.gz")})
 	if err == nil {
-		t.Fatal("um .gz que não é gzip tem de falhar")
+		t.Fatal("a .gz that is not gzip has to fail")
 	}
 	if !strings.Contains(err.Error(), "mentira.ndjson.gz") || !strings.Contains(err.Error(), "gzip") {
-		t.Errorf("o erro precisa nomear o arquivo e o problema: %v", err)
+		t.Errorf("the error must name the file and the problem: %v", err)
 	}
 }
 
@@ -126,10 +126,10 @@ func TestFilesInvalidGzipNamesTheFile(t *testing.T) {
 func TestFilesAnEmptyDirectoryIsNotAFailure(t *testing.T) {
 	got, err := le(t, Files{Path: filepath.Join(t.TempDir(), "*.ndjson")})
 	if err != nil {
-		t.Fatalf("um diretório sem arquivos é uma janela vazia: %v", err)
+		t.Fatalf("a directory with no files is an empty window: %v", err)
 	}
 	if len(got) != 0 {
-		t.Errorf("%d registros de um diretório vazio", len(got))
+		t.Errorf("%d records from an empty directory", len(got))
 	}
 }
 
@@ -137,11 +137,11 @@ func TestFilesAnEmptyDirectoryIsNotAFailure(t *testing.T) {
 func TestFilesRefusesAPathWithNoStore(t *testing.T) {
 	_, err := Files{Path: "s3://bucket/x/*.ndjson"}.Read(context.Background(), core.ReadOptions{})
 	if err == nil {
-		t.Fatal("um caminho s3:// sem Store não tem como ser lido")
+		t.Fatal("an s3:// path without a Store cannot be read")
 	}
 	for _, quer := range []string{"s3", "Store"} {
 		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("o erro não menciona %q: %v", quer, err)
+			t.Errorf("the error does not mention %q: %v", quer, err)
 		}
 	}
 }
@@ -150,10 +150,10 @@ func TestFilesRefusesAStoreForAnotherScheme(t *testing.T) {
 	_, err := Files{Path: "gs://b/x/*.ndjson", Store: falso{"s3"}}.
 		Read(context.Background(), core.ReadOptions{})
 	if err == nil {
-		t.Fatal("um Store de S3 não serve um caminho gs://")
+		t.Fatal("an S3 Store does not serve a gs:// path")
 	}
 	if !strings.Contains(err.Error(), "gs") || !strings.Contains(err.Error(), "s3") {
-		t.Errorf("o erro precisa nomear os dois lados: %v", err)
+		t.Errorf("the error must name both sides: %v", err)
 	}
 }
 
@@ -172,10 +172,10 @@ func TestFilesCountsTheBytesRead(t *testing.T) {
 	}
 
 	if stats.Bytes != int64(len(body)) {
-		t.Errorf("Stats.Bytes = %d, esperado %d", stats.Bytes, len(body))
+		t.Errorf("Stats.Bytes = %d, want %d", stats.Bytes, len(body))
 	}
 	if stats.Pages != 1 {
-		t.Errorf("Stats.Pages = %d; um arquivo é uma página", stats.Pages)
+		t.Errorf("Stats.Pages = %d; a file is a page", stats.Pages)
 	}
 }
 
@@ -195,7 +195,7 @@ func TestFilesHonraOPreview(t *testing.T) {
 	}
 
 	if !strings.Contains(out.String(), "alfa") || !strings.Contains(out.String(), "2 rows") {
-		t.Errorf("o preview não saiu:\n%s", out.String())
+		t.Errorf("the preview did not come out:\n%s", out.String())
 	}
 }
 

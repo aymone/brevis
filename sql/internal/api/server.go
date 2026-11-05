@@ -345,7 +345,7 @@ func (s *Server) answer(parent context.Context, endpoint, tenant, query string, 
 	if status != 0 {
 		if ctx.Err() == context.DeadlineExceeded {
 			status, why = http.StatusGatewayTimeout,
-				fmt.Sprintf("the query took longer than %s and was cancelled", timeout)
+				fmt.Sprintf("the query took longer than %s and was canceled", timeout)
 		}
 		return outcome{status: status, why: why, warehouse: took}
 	}

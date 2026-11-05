@@ -6,7 +6,7 @@
 #
 # An unrecognized key is an ERROR, not a field that gets ignored: a typo used to
 # leave the installation on the default identity while somebody looked for the
-# reason their colours had not applied. The names became English in v0.7 -- a
+# reason their colors had not applied. The names became English in v0.7 -- a
 # file still using `titulo:` and `tema:` fails saying so.
 #
 # What is NOT customizable: the "Powered by Brevis" line in the sidebar's
@@ -17,7 +17,7 @@ subtitle: Orchestration       # the small caps under the title
 
 # The graphic mark next to the title, in the sidebar and on the sign-in screen.
 # It takes a URL (https:// or http://) or an internal path starting with `/`.
-# Absent, it uses Brevis's embedded symbol, which follows the theme's colour.
+# Absent, it uses Brevis's embedded symbol, which follows the theme's color.
 #
 # A logo hosted elsewhere depends on that host: if it goes down, or if the
 # cluster has no route to the internet, the image does not load — the rest of the
@@ -30,11 +30,11 @@ phrase: |
   are also part
   of whoever builds.
 
-# Colours. Hex values (#rgb, #rrggbb or #rrggbbaa) — anything else is refused at
+# Colors. Hex values (#rgb, #rrggbb or #rrggbbaa) — anything else is refused at
 # boot, and the installation comes up with the default theme and a warning in the
 # log.
 #
-# EVERY COLOUR IS OPTIONAL, and one is enough: a colour you leave out stays the
+# EVERY COLOR IS OPTIONAL, and one is enough: a color you leave out stays the
 # product's own (the dark console), so `accent: "#c02a2a"` repaints the accent and
 # nothing else. Do not copy the whole block below -- write only what you change.
 #

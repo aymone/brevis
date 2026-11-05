@@ -50,7 +50,7 @@ func FlattenOneLevel(record map[string]any) (Flattened, error) {
 	from := make(map[string]string, len(record))
 
 	// Sorted, so the FIRST source of a collision is the same one on every
-	// run. Map iteration is randomised, and a refusal that names a different
+	// run. Map iteration is randomized, and a refusal that names a different
 	// pair each time is a refusal nobody can act on.
 	keys := make([]string, 0, len(record))
 	for k := range record {
@@ -67,7 +67,7 @@ func FlattenOneLevel(record map[string]any) (Flattened, error) {
 		}
 		if was, taken := from[column]; taken {
 			return fmt.Errorf("%q and %q both become the column %q. Go's map "+
-				"iteration is randomised, so letting one win would give this "+
+				"iteration is randomized, so letting one win would give this "+
 				"batch a different table on a different run. Rename one of "+
 				"them before it reaches the landing layout",
 				was, source, column)

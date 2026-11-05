@@ -274,7 +274,7 @@ func TestTheTrendOutlivesTheRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(days) != 1 || days[0].Rows != 7 {
-		t.Errorf("the trend died with the run it summarised: %+v", days)
+		t.Errorf("the trend died with the run it summarized: %+v", days)
 	}
 }
 

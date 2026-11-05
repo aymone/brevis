@@ -106,7 +106,7 @@ func Set(ctx context.Context, key string, value any) error {
 
 	body, err := json.Marshal(value)
 	if err != nil {
-		return fmt.Errorf("persist %q: the value does not serialise: %w", key, err)
+		return fmt.Errorf("persist %q: the value does not serialize: %w", key, err)
 	}
 	if len(body) > MaxBytes {
 		return fmt.Errorf("persist %q: %d bytes, and the ceiling is %d. "+

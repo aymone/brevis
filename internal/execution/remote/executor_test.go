@@ -505,7 +505,7 @@ func TestCancelReachesTheAgent(t *testing.T) {
 		t.Fatalf("Cancel: %v", err)
 	}
 	if len(agent.cancelled) != 1 || agent.cancelled[0] != "exec-1" {
-		t.Errorf("cancelled = %v", agent.cancelled)
+		t.Errorf("canceled = %v", agent.cancelled)
 	}
 }
 
@@ -622,7 +622,7 @@ func TestACancelledRunCancelsItsProcessOnTheHost(t *testing.T) {
 	select {
 	case <-agent.cancelled:
 	case <-time.After(5 * time.Second):
-		t.Fatal("the run was cancelled and the agent was never told")
+		t.Fatal("the run was canceled and the agent was never told")
 	}
 	agent.mu.Lock()
 	defer agent.mu.Unlock()
@@ -653,7 +653,7 @@ func TestAFinishedStepIsNotCancelledWhenItsContextEnds(t *testing.T) {
 	agent.mu.Lock()
 	defer agent.mu.Unlock()
 	if len(agent.cancelled) != 0 {
-		t.Errorf("a finished step was cancelled: %v", agent.cancelled)
+		t.Errorf("a finished step was canceled: %v", agent.cancelled)
 	}
 }
 
@@ -711,7 +711,7 @@ func TestAShutdownHandsAHostStepOver(t *testing.T) {
 	events, cancels := runAndEnd(t, true, execution.ErrShutdown)
 
 	if len(cancels) != 0 {
-		t.Errorf("a step handed over was cancelled on its agent: %v", cancels)
+		t.Errorf("a step handed over was canceled on its agent: %v", cancels)
 	}
 	var h *execution.Handover
 	for _, ev := range events {

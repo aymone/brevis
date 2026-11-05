@@ -73,7 +73,7 @@ func (g *fakeGCS) servidor(t *testing.T) *storage.Client {
 			})
 			return
 		}
-		http.Error(w, "nao esperado: "+r.Method+" "+r.URL.Path, http.StatusBadRequest)
+		http.Error(w, "unexpected: "+r.Method+" "+r.URL.Path, http.StatusBadRequest)
 	}))
 	t.Cleanup(srv.Close)
 
@@ -112,7 +112,7 @@ func TestItStoresAndReturns(t *testing.T) {
 	c := credential(t, g)
 
 	if v, err := c.Load(); err != nil || v != "" {
-		t.Fatalf("objeto ausente = (%q, %v); devia ser vazio sem erro", v, err)
+		t.Fatalf("missing object = (%q, %v); should be empty with no error", v, err)
 	}
 	if err := c.Save("session=abc=="); err != nil {
 		t.Fatalf("Save: %v", err)
@@ -149,17 +149,17 @@ func TestTheConditionalWrite(t *testing.T) {
 
 	// This run's write was conditional on the generation it read.
 	if err := c.Save("meu-valor"); err != nil {
-		t.Fatalf("o conflito virou erro: %v", err)
+		t.Fatalf("the conflict became an error: %v", err)
 	}
 	g.mu.Lock()
 	conflitos, conteudo := g.conflitos, string(g.conteudo)
 	g.mu.Unlock()
 
 	if conflitos != 1 {
-		t.Errorf("conflitos = %d, esperado 1 -- a escrita nao foi condicional", conflitos)
+		t.Errorf("conflicts = %d, want 1 -- the write was not conditional", conflitos)
 	}
 	if !strings.Contains(conteudo, "de-outro-processo") {
-		t.Errorf("sobrescreveu o valor mais novo: %q", conteudo)
+		t.Errorf("overwrote the newer value: %q", conteudo)
 	}
 }
 
@@ -178,12 +178,12 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 	g.mu.Unlock()
 
 	if err := c.Save("meu"); err != nil {
-		t.Fatalf("o conflito virou erro: %v", err)
+		t.Fatalf("the conflict became an error: %v", err)
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	if g.conflitos != 1 {
-		t.Errorf("conflitos = %d; a primeira gravacao nao usou DoesNotExist", g.conflitos)
+		t.Errorf("conflicts = %d; the first write did not use DoesNotExist", g.conflitos)
 	}
 	if !strings.Contains(string(g.conteudo), "de-outro") {
 		t.Errorf("sobrescreveu: %q", g.conteudo)
@@ -194,7 +194,7 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 func TestBucketAndObjectAreRequired(t *testing.T) {
 	for _, c := range []Credential{{Object: "o"}, {Bucket: "b"}, {}} {
 		if err := c.CheckStore(); err == nil {
-			t.Errorf("aceitou %+v", c)
+			t.Errorf("accepted %+v", c)
 		}
 	}
 }
@@ -203,7 +203,7 @@ func TestBucketAndObjectAreRequired(t *testing.T) {
 func TestDescribeRevealsNothing(t *testing.T) {
 	c := Credential{Bucket: "b", Object: "o", Key: "chave-secreta-aqui"}
 	if strings.Contains(c.Describe(), "chave-secreta") {
-		t.Errorf("Describe vaza a chave: %q", c.Describe())
+		t.Errorf("Describe leaks the key: %q", c.Describe())
 	}
 	if c.Describe() != "gs://b/o" {
 		t.Errorf("Describe = %q", c.Describe())

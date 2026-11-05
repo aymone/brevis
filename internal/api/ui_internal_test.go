@@ -92,13 +92,13 @@ func TestTheWorkflowsNextRun(t *testing.T) {
 
 	active1 := postgres.WorkflowSummary{Slug: "a", Cron: "0 5 * * *", Timezone: "UTC", Active: true}
 	if p := proximaDoWorkflow(active1, now); p == nil || !p.Equal(time.Date(2026, 3, 10, 5, 0, 0, 0, time.UTC)) {
-		t.Errorf("next = %v, want 05:00 do mesmo dia", p)
+		t.Errorf("next = %v, want 05:00 the same day", p)
 	}
 
 	// Paused has no next firing: showing one would mislead whoever paused it.
 	paused := postgres.WorkflowSummary{Slug: "b", Cron: "0 5 * * *", Active: false}
 	if p := proximaDoWorkflow(paused, now); p != nil {
-		t.Errorf("workflow pausado devolveu next disparo: %v", p)
+		t.Errorf("a paused workflow returned a next trigger: %v", p)
 	}
 
 	semCron := postgres.WorkflowSummary{Slug: "c", Active: true}
@@ -108,7 +108,7 @@ func TestTheWorkflowsNextRun(t *testing.T) {
 
 	invalid := postgres.WorkflowSummary{Slug: "d", Cron: "this is not a cron", Active: true}
 	if p := proximaDoWorkflow(invalid, now); p != nil {
-		t.Errorf("cron invalido devolveu next disparo: %v", p)
+		t.Errorf("an invalid cron returned a next trigger: %v", p)
 	}
 }
 
@@ -125,10 +125,10 @@ func TestNextRunsSortsAndIgnoresInvalidOnes(t *testing.T) {
 
 	out := nextRuns(schedules, now, 8, slog.New(slog.DiscardHandler))
 	if len(out) != 2 {
-		t.Fatalf("obtive %d entradas, want 2 (a pausada e a quebrada ficam de fora)", len(out))
+		t.Fatalf("got %d entries, want 2 (the paused one and the broken one stay out)", len(out))
 	}
 	if out[0].Workflow != "cedo" || out[1].Workflow != "tarde" {
-		t.Errorf("ordem = %s, %s; want o disparo mais next primeiro", out[0].Workflow, out[1].Workflow)
+		t.Errorf("order = %s, %s; want the earliest next trigger first", out[0].Workflow, out[1].Workflow)
 	}
 }
 
@@ -141,7 +141,7 @@ func TestNextRunsRespectsTheLimit(t *testing.T) {
 		})
 	}
 	if out := nextRuns(schedules, now, 5, slog.New(slog.DiscardHandler)); len(out) != 5 {
-		t.Errorf("obtive %d, want 5", len(out))
+		t.Errorf("got %d, want 5", len(out))
 	}
 }
 
@@ -201,7 +201,7 @@ func TestSlicingAPage(t *testing.T) {
 	// A page past the end happens when filtering while on a high page; it has to
 	// voltar vazia em vez de estourar o slice.
 	if r := recortar(ws, pages.Filter{Page: 9, PerPage: 3}); r != nil {
-		t.Errorf("pagina fora do intervalo devolveu %d linhas", len(r))
+		t.Errorf("a page out of range returned %d rows", len(r))
 	}
 	equal(t, slugs(recortar(ws, pages.Filter{Page: 3, PerPage: 3})), []string{"g"})
 }

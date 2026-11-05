@@ -52,16 +52,16 @@ func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 
 	retrato, ok := line["payload"].(map[string]any)
 	if !ok {
-		t.Fatalf("sem retrato: %v", line)
+		t.Fatalf("no snapshot: %v", line)
 	}
 	if _, contaminado := retrato["derivado"]; contaminado {
-		t.Errorf("o retrato carrega um campo que a cadeia escreveu: %v", retrato)
+		t.Errorf("the snapshot carries a field the chain wrote: %v", retrato)
 	}
 	if retrato["id"] != "1" {
-		t.Errorf("o retrato perdeu o nome original do campo: %v", retrato)
+		t.Errorf("the snapshot lost the field's original name: %v", retrato)
 	}
 	if line["source_key"] != "1" {
-		t.Errorf("a cadeia não rodou sobre o registro: %v", line)
+		t.Errorf("the chain did not run on the record: %v", line)
 	}
 }
 
@@ -87,10 +87,10 @@ func TestTheSnapshotRefusesToOverwriteWhatTheSourceSent(t *testing.T) {
 		}
 	}
 	if visto == nil {
-		t.Fatal("gravou o retrato por cima de um campo da fonte")
+		t.Fatal("wrote the snapshot over a field of the source")
 	}
 	if !strings.Contains(visto.Error(), "payload") {
-		t.Errorf("o erro não nomeia o campo: %v", visto)
+		t.Errorf("the error does not name the field: %v", visto)
 	}
 }
 
@@ -118,7 +118,7 @@ func TestSkipWithoutDropsInsteadOfFailing(t *testing.T) {
 		ids = append(ids, env.Payload.(map[string]any)["id"].(string))
 	}
 	if len(ids) != 2 || ids[0] != "1" || ids[1] != "4" {
-		t.Errorf("sobraram %v; esperava as duas com id -- nulo e ausente são a mesma coisa aqui", ids)
+		t.Errorf("%v left over; expected both with an id -- null and absent are the same thing here", ids)
 	}
 }
 
@@ -146,7 +146,7 @@ func TestTheNamespaceChangesTheID(t *testing.T) {
 	defaultID := fallback.(map[string]any)[sdk.ColumnIngestionID].(string)
 	idOutro := outro.(map[string]any)[sdk.ColumnIngestionID].(string)
 	if defaultID == idOutro {
-		t.Error("namespaces diferentes produziram o mesmo id; então o namespace não é usado")
+		t.Error("different namespaces produced the same id; so the namespace is not used")
 	}
 }
 
@@ -168,7 +168,7 @@ func TestTheDefaultNamespaceHasNotChanged(t *testing.T) {
 	// identity.
 	const congelado = "7e18f9f9-37c4-5033-abce-def940db4cba"
 	if got != congelado {
-		t.Errorf("o id padrão mudou: %s, era %s", got, congelado)
+		t.Errorf("the default id changed: %s, was %s", got, congelado)
 	}
 }
 
@@ -186,7 +186,7 @@ func TestAChosenNamespaceIsDeterministic(t *testing.T) {
 		}
 		got := output.(map[string]any)[sdk.ColumnIngestionID].(string)
 		if i > 0 && got != previous {
-			t.Fatalf("o id variou entre execuções: %s e %s", previous, got)
+			t.Fatalf("the id varied between runs: %s and %s", previous, got)
 		}
 		previous = got
 	}
@@ -207,7 +207,7 @@ func (d *countingTarget) Write(_ context.Context, envs []sdk.Envelope, _ sdk.Wri
 	}
 	d.levas = append(d.levas, ids)
 	if d.failAt > 0 && len(d.levas) == d.failAt {
-		return &sdk.LoadResult{RowsLoaded: 0}, fmt.Errorf("a leva %d falhou", d.failAt)
+		return &sdk.LoadResult{RowsLoaded: 0}, fmt.Errorf("batch %d failed", d.failAt)
 	}
 	return &sdk.LoadResult{RowsLoaded: int64(len(envs))}, nil
 }
@@ -224,16 +224,16 @@ func TestFlushEveryWritesInBatches(t *testing.T) {
 	}
 
 	if len(target.levas) != 4 {
-		t.Fatalf("%d levas, esperado 4 (3+3+3+1)", len(target.levas))
+		t.Fatalf("%d batches, want 4 (3+3+3+1)", len(target.levas))
 	}
 	if len(target.levas[3]) != 1 {
-		t.Errorf("a última leva tem %d, esperado 1", len(target.levas[3]))
+		t.Errorf("the last batch has %d, want 1", len(target.levas[3]))
 	}
 
 	// The Result sums the batches. A Rows counting only the last one would lie
 	// to whoever reads the pipeline's line.
 	if res.Rows != 10 || res.Records != 10 {
-		t.Errorf("Rows=%d Records=%d, esperado 10 e 10", res.Rows, res.Records)
+		t.Errorf("Rows=%d Records=%d, want 10 and 10", res.Rows, res.Records)
 	}
 }
 
@@ -244,7 +244,7 @@ func TestFlushEveryZeroAccumulatesEverything(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(target.levas) != 1 || len(target.levas[0]) != 10 {
-		t.Errorf("levas = %v; sem FlushEvery a carga é uma só", target.levas)
+		t.Errorf("batches = %v; without FlushEvery the load is a single one", target.levas)
 	}
 }
 
@@ -258,13 +258,13 @@ func TestFlushEveryFailingMidwaySaysWhatWentIn(t *testing.T) {
 		To: target, FlushEvery: 3,
 	})
 	if err == nil {
-		t.Fatal("a leva falhou e o Load deu certo")
+		t.Fatal("the batch failed and the Load succeeded")
 	}
 	if res == nil {
-		t.Fatal("o Result não voltou; quem reexecuta não saberia o que já entrou")
+		t.Fatal("the Result did not come back; whoever reruns would not know what already went in")
 	}
 	if res.Rows != 6 {
-		t.Errorf("Rows = %d, esperado 6 -- as duas primeiras levas gravaram", res.Rows)
+		t.Errorf("Rows = %d, want 6 -- the first two batches wrote", res.Rows)
 	}
 }
 

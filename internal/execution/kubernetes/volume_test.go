@@ -89,7 +89,7 @@ func TestWithNoPVCNothingChanges(t *testing.T) {
 	}
 	b, _ := json.Marshal(pod)
 	if strings.Contains(string(b), "volumes") {
-		t.Errorf("o JSON carrega volumes vazio:\n%s", b)
+		t.Errorf("the JSON carries empty volumes:\n%s", b)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestTheStepsEnvBeatsTheDefaultDirectory(t *testing.T) {
 		}
 	}
 	if len(vistos) != 1 {
-		t.Fatalf("BREVIS_CREDENTIAL_DIR aparece %d vezes: %v", len(vistos), vistos)
+		t.Fatalf("BREVIS_CREDENTIAL_DIR appears %d times: %v", len(vistos), vistos)
 	}
 	if vistos[0] != "/outro/lugar" {
 		t.Errorf("the injection overwrote what the step declared: %q", vistos[0])

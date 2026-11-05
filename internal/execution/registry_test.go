@@ -19,13 +19,13 @@ func TestRegisterRefusesADuplicate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := r.Register(task("sync")); err == nil {
-		t.Fatal("esperava recusa de nome duplicado")
+		t.Fatal("expected a duplicate name to be refused")
 	}
 }
 
 func TestRegisterRefusesAnEmptyName(t *testing.T) {
 	if err := execution.NewRegistry().Register(task("")); err == nil {
-		t.Fatal("esperava recusa de nome vazio")
+		t.Fatal("expected an empty name to be refused")
 	}
 }
 
@@ -44,7 +44,7 @@ func TestTheTextInputValidatesTheParameter(t *testing.T) {
 	in := execution.Input{With: map[string]any{"image": "acme:1.0", "porta": 8080}}
 
 	if v, err := in.Text("image"); err != nil || v != "acme:1.0" {
-		t.Errorf("Texto(image) = %q, %v", v, err)
+		t.Errorf("Text(image) = %q, %v", v, err)
 	}
 	if _, err := in.Text("ausente"); err == nil {
 		t.Error("expected a missing-parameter error")

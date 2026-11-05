@@ -11,9 +11,9 @@ import (
 func TestTheGlyphsCarryTheirLicence(t *testing.T) {
 	raw, err := os.ReadFile("LICENSE-lucide")
 	if err != nil {
-		t.Fatalf("the Lucide licence is not beside the glyphs: %v", err)
+		t.Fatalf("the Lucide license is not beside the glyphs: %v", err)
 	}
 	if !strings.Contains(string(raw), "ISC License") {
-		t.Error("LICENSE-lucide is not the ISC licence")
+		t.Error("LICENSE-lucide is not the ISC license")
 	}
 }

@@ -38,7 +38,7 @@ func shutDownMidRun(t *testing.T, d *scheduler.Dispatcher, started <-chan struct
 	select {
 	case <-started:
 	case <-time.After(10 * time.Second):
-		t.Fatal("executar never started")
+		t.Fatal("run never started")
 	}
 	sigterm()
 	select {

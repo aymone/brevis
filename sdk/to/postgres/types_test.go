@@ -63,12 +63,12 @@ func TestToColumnRowByRow(t *testing.T) {
 			if ts, ok := c.quero.(time.Time); ok {
 				gt, ok := got.(time.Time)
 				if !ok || !gt.Equal(ts) {
-					t.Errorf("= %#v, esperado %v\n  %s", got, ts, c.why)
+					t.Errorf("= %#v, want %v\n  %s", got, ts, c.why)
 				}
 				return
 			}
 			if got != c.quero {
-				t.Errorf("= %#v, esperado %#v\n  %s", got, c.quero, c.why)
+				t.Errorf("= %#v, want %#v\n  %s", got, c.quero, c.why)
 			}
 		})
 	}
@@ -83,10 +83,10 @@ func TestToColumnSerializesJSON(t *testing.T) {
 	}
 	var doc map[string]any
 	if err := json.Unmarshal([]byte(got.(string)), &doc); err != nil {
-		t.Fatalf("nao saiu JSON valido: %q", got)
+		t.Fatalf("no valid JSON came out: %q", got)
 	}
 	if doc["a"] != float64(1) {
-		t.Errorf("documento = %v", doc)
+		t.Errorf("document = %v", doc)
 	}
 }
 
@@ -99,7 +99,7 @@ func TestToColumnTruncatesADate(t *testing.T) {
 	}
 	ts := got.(time.Time)
 	if ts.Hour() != 0 || ts.Minute() != 0 {
-		t.Errorf("date = %v; a hora devia ter sido truncada", ts)
+		t.Errorf("date = %v; the time should have been truncated", ts)
 	}
 }
 
@@ -108,11 +108,11 @@ func TestToColumnTruncatesADate(t *testing.T) {
 func TestToColumnsErrorSaysTheFormat(t *testing.T) {
 	_, err := toColumn("cinco de setembro", "timestamp with time zone")
 	if err == nil {
-		t.Fatal("texto que nao e data passou")
+		t.Fatal("text that is not a date got through")
 	}
 	for _, exigido := range []string{"RFC 3339", "2026-09-05T12:30:00Z"} {
 		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("o erro nao diz %q: %v", exigido, err)
+			t.Errorf("the error does not say %q: %v", exigido, err)
 		}
 	}
 }
@@ -126,7 +126,7 @@ func TestToColumnElidesALongValue(t *testing.T) {
 		t.Fatal("passou")
 	}
 	if len(err.Error()) > 300 {
-		t.Errorf("a mensagem tem %d bytes; o valor devia ter sido elidido", len(err.Error()))
+		t.Errorf("the message has %d bytes; the value should have been elided", len(err.Error()))
 	}
 }
 
@@ -150,11 +150,11 @@ func TestNumericGoesTypedAndNotAsText(t *testing.T) {
 	}
 	n, ok := got.(pgtype.Numeric)
 	if !ok {
-		t.Fatalf("toColumn devolveu %T; o pgx encoda pgtype.Numeric direto e "+
-			"paga um erro construído por linha para qualquer outra coisa", got)
+		t.Fatalf("toColumn returned %T; pgx encodes pgtype.Numeric directly and "+
+			"pays for an error built per row for anything else", got)
 	}
 	if !n.Valid {
-		t.Error("o número não foi lido")
+		t.Error("the number was not read")
 	}
 
 	// And the precision is still exact: that was the point of keeping it as
@@ -164,7 +164,7 @@ func TestNumericGoesTypedAndNotAsText(t *testing.T) {
 		t.Fatal(err)
 	}
 	if string(b) != "1234567890123456.78" {
-		t.Errorf("= %s, esperado o valor exato", b)
+		t.Errorf("= %s, want the exact value", b)
 	}
 }
 
@@ -172,11 +172,11 @@ func TestNumericGoesTypedAndNotAsText(t *testing.T) {
 // log.
 func TestAnInvalidNumericSaysWhatItGot(t *testing.T) {
 	if _, err := toColumn("dez reais", "numeric"); err == nil {
-		t.Fatal("texto que não é número passou")
+		t.Fatal("text that is not a number got through")
 	}
 	if _, err := toColumn(strings.Repeat("9", 4000)+"x", "numeric"); err != nil {
 		if len(err.Error()) > 300 {
-			t.Errorf("a mensagem tem %d bytes; o valor devia ter sido elidido", len(err.Error()))
+			t.Errorf("the message has %d bytes; the value should have been elided", len(err.Error()))
 		}
 	}
 }

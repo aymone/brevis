@@ -35,7 +35,7 @@ func serverWithLogin(t *testing.T, failTimes int32) (*httptest.Server, *atomic.I
 			return
 		}
 		if r.Method != http.MethodPost {
-			http.Error(w, "login precisa ser POST", http.StatusMethodNotAllowed)
+			http.Error(w, "login must be a POST", http.StatusMethodNotAllowed)
 			return
 		}
 		_, _ = fmt.Fprint(w, `{"data":{"accessToken":"tok-123"}}`)
@@ -86,7 +86,7 @@ func TestLoginTradesSecretsForAToken(t *testing.T) {
 		t.Fatalf("Read: %v", err)
 	}
 	if logins.Load() != 1 {
-		t.Errorf("%d logins, esperado 1", logins.Load())
+		t.Errorf("%d logins, want 1", logins.Load())
 	}
 }
 
@@ -104,10 +104,10 @@ func TestLoginHasRetry(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Fatalf("o login não teve retry: %v", err)
+		t.Fatalf("the login was not retried: %v", err)
 	}
 	if logins.Load() != 3 {
-		t.Errorf("%d tentativas de login, esperado 3", logins.Load())
+		t.Errorf("%d login attempts, want 3", logins.Load())
 	}
 }
 
@@ -134,7 +134,7 @@ func TestLoginCachesWithTTL(t *testing.T) {
 		}
 	}
 	if logins.Load() != 1 {
-		t.Errorf("%d logins para várias chamadas com TTL, esperado 1", logins.Load())
+		t.Errorf("%d logins for several calls with a TTL, want 1", logins.Load())
 	}
 }
 
@@ -147,17 +147,17 @@ func TestALoginThatFailsStopsTheRun(t *testing.T) {
 		http.Error(w, "credencial recusada", http.StatusUnauthorized)
 	})
 	mux.HandleFunc("/dados", func(w http.ResponseWriter, _ *http.Request) {
-		t.Error("pediu dados depois de o login falhar")
+		t.Error("asked for data after the login failed")
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
 	err := readAll(t, core.Source{URL: srv.URL + "/dados", Auth: loginCredential(srv)})
 	if err == nil {
-		t.Fatal("o login falhou e a execução seguiu")
+		t.Fatal("the login failed and the run carried on")
 	}
 	if !strings.Contains(err.Error(), "login") || !strings.Contains(err.Error(), "401") {
-		t.Errorf("o erro não diz que foi o login: %v", err)
+		t.Errorf("the error does not say it was the login: %v", err)
 	}
 }
 
@@ -178,14 +178,14 @@ func TestLoginDoesNotLeakTheSourcesHeader(t *testing.T) {
 
 	source := core.Source{
 		URL:    srv.URL + "/dados",
-		Header: map[string][]string{"X-Segredo-Da-Fonte": {"não deveria ir"}},
+		Header: map[string][]string{"X-Segredo-Da-Fonte": {"should not have gone"}},
 		Auth:   loginCredential(srv),
 	}
 	if err := readAll(t, source); err != nil {
 		t.Fatal(err)
 	}
 	if vistoNoLogin != "" {
-		t.Errorf("o cabeçalho da fonte foi para o login: %q", vistoNoLogin)
+		t.Errorf("the source's header went to the login: %q", vistoNoLogin)
 	}
 }
 
@@ -215,7 +215,7 @@ func TestLoginRefusesConfigurationThatCannotWork(t *testing.T) {
 				t.Fatal("passou")
 			}
 			if !strings.Contains(err.Error(), c.diz) {
-				t.Errorf("o erro não diz %q: %v", c.diz, err)
+				t.Errorf("the error does not say %q: %v", c.diz, err)
 			}
 		})
 	}
@@ -227,11 +227,11 @@ func TestLoginRefusesConfigurationThatCannotWork(t *testing.T) {
 func TestAMissingJSONFieldIsAnError(t *testing.T) {
 	_, err := core.JSONToken("data.accessToken")([]byte(`{"data":{"outro":"x"}}`))
 	if err == nil {
-		t.Fatal("campo ausente passou")
+		t.Fatal("a missing field got through")
 	}
 	for _, quero := range []string{"accessToken", "empty header"} {
 		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("o erro não diz %q: %v", quero, err)
+			t.Errorf("the error does not say %q: %v", quero, err)
 		}
 	}
 }

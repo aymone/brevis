@@ -90,7 +90,7 @@ func TestARunningRunAskedToStopIsCanceledNotRetried(t *testing.T) {
 	select {
 	case <-started:
 	case <-time.After(5 * time.Second):
-		t.Fatal("executar never started")
+		t.Fatal("run never started")
 	}
 	asked := time.Now()
 	if got, err := repo.RequestCancel(context.Background(), id, "ana"); err != nil || got.Outcome != postgres.CancelRequested {
@@ -103,7 +103,7 @@ func TestARunningRunAskedToStopIsCanceledNotRetried(t *testing.T) {
 	}
 	time.Sleep(100 * time.Millisecond) // a retry would have started by now
 	if n := runs.Load(); n != 1 {
-		t.Errorf("executar ran %d times; a canceled run is not retried", n)
+		t.Errorf("run ran %d times; a canceled run is not retried", n)
 	}
 	if c, _ := cause.Load().(error); !errors.Is(c, execution.ErrCanceled) {
 		t.Errorf("the run's context was ended by %v, wanted ErrCanceled", c)
@@ -139,7 +139,7 @@ func TestARunAskedToStopBeforeItStartsNeverRuns(t *testing.T) {
 
 	r := waitForStatus(t, repo, id, dom.StatusCanceled)
 	if n := runs.Load(); n != 0 {
-		t.Errorf("executar ran %d times", n)
+		t.Errorf("run ran %d times", n)
 	}
 	if r.Err != "canceled by cli" || r.StartedAt != nil {
 		t.Errorf("run = err %q, started %v; wanted \"canceled by cli\", never started", r.Err, r.StartedAt)
@@ -178,7 +178,7 @@ func TestAnEndedRunsItemLeavesTheQueue(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	if n := runs.Load(); n != 0 {
-		t.Errorf("executar ran %d times", n)
+		t.Errorf("run ran %d times", n)
 	}
 }
 
@@ -255,7 +255,7 @@ func TestARunIsStoppedOnce(t *testing.T) {
 	select {
 	case <-started:
 	case <-time.After(5 * time.Second):
-		t.Fatal("executar never started")
+		t.Fatal("run never started")
 	}
 	before := counter.reads.Load()
 	if _, err := repo.RequestCancel(context.Background(), id, "ana"); err != nil {

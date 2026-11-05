@@ -46,7 +46,7 @@ func TestStagingErrorNamesTheBucketAndTheWayOut(t *testing.T) {
 				"StagingBucket",          // how to choose another
 			} {
 				if !strings.Contains(msg, exigido) {
-					t.Errorf("mensagem nao diz %q:\n%s", exigido, msg)
+					t.Errorf("the message does not say %q:\n%s", exigido, msg)
 				}
 			}
 		})
@@ -63,13 +63,13 @@ func TestStagingErrorInventsNoDiagnosis(t *testing.T) {
 
 	err := l.stagingError(context.Background(), causa, 12000)
 	if !errors.Is(err, causa) {
-		t.Fatal("o erro original precisa continuar acessivel por errors.Is")
+		t.Fatal("the original error must remain reachable through errors.Is")
 	}
 	if strings.Contains(err.Error(), "create the bucket") {
-		t.Errorf("aconselhou criar bucket numa falha de rede:\n%s", err)
+		t.Errorf("advised creating the bucket on a network failure:\n%s", err)
 	}
 	if !strings.Contains(err.Error(), "gs://b/p/") {
-		t.Errorf("nem no caminho generico diz onde estava escrevendo:\n%s", err)
+		t.Errorf("not even the generic path says where it was writing:\n%s", err)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestLoadViaGCSUsesStagingError(t *testing.T) {
 		option.WithoutAuthentication(),
 	)
 	if err != nil {
-		t.Fatalf("cliente falso: %v", err)
+		t.Fatalf("fake client: %v", err)
 	}
 	defer func() { _ = client.Close() }()
 
@@ -111,15 +111,15 @@ func TestLoadViaGCSUsesStagingError(t *testing.T) {
 
 	_, _, _, _, err = l.loadViaGCS(ctx, nil, []byte(`{"a":1}`+"\n"), 12000)
 	if err == nil {
-		t.Fatal("bucket ausente precisa falhar")
+		t.Fatal("a missing bucket has to fail")
 	}
 	msg := err.Error()
 	if strings.Contains(msg, "close gcs writer") {
-		t.Errorf("voltou a mensagem crua do writer:\n%s", msg)
+		t.Errorf("the writer's raw message came back:\n%s", msg)
 	}
 	for _, exigido := range []string{"projeto-brevis-staging", "InlineLimit", "12000"} {
 		if !strings.Contains(msg, exigido) {
-			t.Errorf("o caminho real nao diz %q:\n%s", exigido, msg)
+			t.Errorf("the real path does not say %q:\n%s", exigido, msg)
 		}
 	}
 }
@@ -232,6 +232,6 @@ func TestTheProbeNeverBreaksTheError(t *testing.T) {
 	cancel()
 	l.gcs = gcsWhere(t, "projeto-bravis-staging")
 	if msg := l.stagingError(dead, storage.ErrBucketNotExist, 5156).Error(); !strings.Contains(msg, "DOES exist") {
-		t.Errorf("a cancelled run lost the hint:\n%s", msg)
+		t.Errorf("a canceled run lost the hint:\n%s", msg)
 	}
 }

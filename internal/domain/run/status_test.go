@@ -17,7 +17,7 @@ func TestTheHappyPath(t *testing.T) {
 		}
 	}
 	if r.StartedAt == nil || r.FinishedAt == nil {
-		t.Error("running e success devem carimbar os tempos")
+		t.Error("running and success must stamp the times")
 	}
 }
 
@@ -81,7 +81,7 @@ func TestFailedIsNotTerminal(t *testing.T) {
 		t.Error("failed cannot be terminal -- it goes to retrying")
 	}
 	if !StatusSuccess.Terminal() || !StatusCanceled.Terminal() {
-		t.Error("success e canceled sao terminais")
+		t.Error("success and canceled are terminal")
 	}
 }
 
@@ -94,7 +94,7 @@ func TestCancelling(t *testing.T) {
 		}
 	}
 	if err := Validate(StatusSuccess, StatusCanceled); err == nil {
-		t.Error("what already succeeded is not cancelled")
+		t.Error("what already succeeded is not canceled")
 	}
 }
 

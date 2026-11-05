@@ -17,11 +17,11 @@ func TestColumnsRefusesAColumnTheTableLacks(t *testing.T) {
 	err := checkDeclaredAgainstTable(
 		[]string{"ingestion_id", "payload", "provider"}, schema, "bronze.pedidos")
 	if err == nil {
-		t.Fatal("uma coluna declarada que a tabela não tem é uma carga que não funciona")
+		t.Fatal("a declared column that the table does not have is a load that does not work")
 	}
 	for _, want := range []string{"provider", "bronze.pedidos", "ingestion_id"} {
 		if !strings.Contains(err.Error(), want) {
-			t.Errorf("o erro não menciona %q (precisa nomear os dois lados): %v", want, err)
+			t.Errorf("the error does not mention %q (it must name both sides): %v", want, err)
 		}
 	}
 }
@@ -35,6 +35,6 @@ func TestColumnsAcceptsAnUndeclaredTableColumn(t *testing.T) {
 		{Name: "source_key", Type: bigquery.StringFieldType},
 	}
 	if err := checkDeclaredAgainstTable([]string{"ingestion_id", "payload"}, schema, "t"); err != nil {
-		t.Errorf("coluna da tabela que a declaração não lista fica NULL, e isso é legítimo: %v", err)
+		t.Errorf("a table column that the declaration does not list stays NULL, and that is legitimate: %v", err)
 	}
 }

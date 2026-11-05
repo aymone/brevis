@@ -224,7 +224,7 @@ func TestOneFailedInstanceFailsTheStep(t *testing.T) {
 func TestIntegrationARetryRedoesOnlyTheInstancesThatFailed(t *testing.T) {
 	dsn := os.Getenv("BREVIS_IT_PG_DSN")
 	if dsn == "" {
-		t.Skip("BREVIS_IT_PG_DSN ausente")
+		t.Skip("BREVIS_IT_PG_DSN is not set")
 	}
 	exec, err := local.New("local")
 	if err != nil {
@@ -239,7 +239,7 @@ func TestIntegrationARetryRedoesOnlyTheInstancesThatFailed(t *testing.T) {
 
 	runID := uuid.New()
 	if err := createRun(ctx, pool, runID); err != nil {
-		t.Fatalf("criando a run: %v", err)
+		t.Fatalf("creating the run: %v", err)
 	}
 	repo := postgres.NewRunRepo(pool)
 

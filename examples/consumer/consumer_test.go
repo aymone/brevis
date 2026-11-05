@@ -118,7 +118,7 @@ func TestBeforeSeesTheParams(t *testing.T) {
 	run(t, p)
 
 	if viu != "true" {
-		t.Errorf(`p.Run.Params["load_full"] = %q, esperado "true"`, viu)
+		t.Errorf(`p.Run.Params["load_full"] = %q, want "true"`, viu)
 	}
 }
 
@@ -196,7 +196,7 @@ func TestAConsumerReadsTheSizeOfWhatWasExtracted(t *testing.T) {
 	}
 
 	if data.Stats().Bytes <= 0 {
-		t.Errorf("Data.Stats().Bytes = %d depois de drenar o fluxo", data.Stats().Bytes)
+		t.Errorf("Data.Stats().Bytes = %d after draining the stream", data.Stats().Bytes)
 	}
 }
 
@@ -241,11 +241,11 @@ func TestAConsumerComposesTheColumnsInTransform(t *testing.T) {
 	n := 0
 	for env, err := range data.Records {
 		if err != nil {
-			t.Fatalf("registro %d: %v", n, err)
+			t.Fatalf("record %d: %v", n, err)
 		}
 		obj, ok := env.Payload.(map[string]any)
 		if !ok {
-			t.Fatalf("registro %d mudou de forma: %T", n, env.Payload)
+			t.Fatalf("record %d changed shape: %T", n, env.Payload)
 		}
 		if len(obj) != 1 {
 			t.Errorf("record %d has %d fields, expected only the declared one: %v", n, len(obj), obj)
@@ -303,7 +303,7 @@ func TestAConsumerWritesBothColumnsInTheChain(t *testing.T) {
 	n := 0
 	for env, err := range data.Records {
 		if err != nil {
-			t.Fatalf("registro %d: %v", n, err)
+			t.Fatalf("record %d: %v", n, err)
 		}
 		line := env.Payload.(map[string]any)
 		for _, column := range []string{sdk.ColumnIngestionID, sdk.ColumnIngestionLoadedAt} {

@@ -59,14 +59,14 @@ type Client struct {
 type ErrOutsideCluster struct{ Reason string }
 
 func (e ErrOutsideCluster) Error() string {
-	return "fora de um cluster Kubernetes: " + e.Reason
+	return "outside a Kubernetes cluster: " + e.Reason
 }
 
 // NoCluster builds the client out of the environment the kubelet injects.
 func NoCluster() (*Client, error) {
 	host, port := os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")
 	if host == "" || port == "" {
-		return nil, ErrOutsideCluster{Reason: "KUBERNETES_SERVICE_HOST/PORT ausentes"}
+		return nil, ErrOutsideCluster{Reason: "KUBERNETES_SERVICE_HOST/PORT are not set"}
 	}
 	ns, err := os.ReadFile(nsFile)
 	if err != nil {
@@ -78,7 +78,7 @@ func NoCluster() (*Client, error) {
 	}
 	pool := x509.NewCertPool()
 	if !pool.AppendCertsFromPEM(ca) {
-		return nil, fmt.Errorf("CA do cluster invalida")
+		return nil, fmt.Errorf("the cluster CA is not a valid PEM certificate")
 	}
 
 	transporte := http.DefaultTransport.(*http.Transport).Clone()
@@ -104,7 +104,7 @@ func (c *Client) authorize(r *http.Request) error {
 	if c.token == "" || time.Since(c.tokenLido) > c.tokenTTL {
 		b, err := c.readFile(tokenFile)
 		if err != nil {
-			return fmt.Errorf("lendo token da service account: %w", err)
+			return fmt.Errorf("reading the service account token: %w", err)
 		}
 		c.token, c.tokenLido = strings.TrimSpace(string(b)), time.Now()
 	}

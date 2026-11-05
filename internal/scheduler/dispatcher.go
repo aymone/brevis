@@ -718,7 +718,7 @@ func (d *Dispatcher) keepClaim(ctx context.Context, it queue.Item, cancelRun fun
 			case err != nil:
 				d.log.Warn("renewing the claim", "run", it.RunID, "item", it.ID, "error", err)
 			case !held:
-				d.log.Error("claim lost, cancelling the run", "run", it.RunID, "item", it.ID)
+				d.log.Error("claim lost, canceling the run", "run", it.RunID, "item", it.ID)
 				cancelRun()
 				return
 			}

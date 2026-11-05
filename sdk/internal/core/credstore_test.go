@@ -48,7 +48,7 @@ func TestItStoresAndReturns(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	if got != value {
-		t.Errorf("Load = %q, esperado %q", got, value)
+		t.Errorf("Load = %q, want %q", got, value)
 	}
 
 	// And the value is not in the clear in the file.
@@ -57,10 +57,10 @@ func TestItStoresAndReturns(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(bruto), "eyJhbGciOiJkaXIi") {
-		t.Error("a credencial esta em claro no arquivo")
+		t.Error("the credential is in the clear in the file")
 	}
 	if !strings.HasPrefix(string(bruto), formatEncrypted+"\n") {
-		t.Errorf("o arquivo nao comeca com a versao: %q", bruto[:min(20, len(bruto))])
+		t.Errorf("the file does not start with the version: %q", bruto[:min(20, len(bruto))])
 	}
 }
 
@@ -70,10 +70,10 @@ func TestAbsentIsNotAnError(t *testing.T) {
 	s, _ := storePronto(t)
 	got, err := s.Load()
 	if err != nil {
-		t.Fatalf("Load de arquivo ausente devolveu erro: %v", err)
+		t.Fatalf("Load of a missing file returned an error: %v", err)
 	}
 	if got != "" {
-		t.Errorf("Load = %q, esperado vazio", got)
+		t.Errorf("Load = %q, want empty", got)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestTheNonceDoesNotRepeat(t *testing.T) {
 		_, body, _ := firstLine(bruto)
 		nonce := string(body[:12])
 		if vistos[nonce] {
-			t.Fatalf("nonce repetido na escrita %d", i)
+			t.Fatalf("nonce repeated in write %d", i)
 		}
 		vistos[nonce] = true
 	}
@@ -115,7 +115,7 @@ func TestWithoutAKeyItWritesInTheClear(t *testing.T) {
 
 	s := FileStore{Name: "x"}
 	if err := s.CheckStore(); err != nil {
-		t.Fatalf("sem chave virou erro: %v", err)
+		t.Fatalf("no key became an error: %v", err)
 	}
 
 	const value = "session=abc=="
@@ -132,7 +132,7 @@ func TestWithoutAKeyItWritesInTheClear(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.HasPrefix(string(bruto), formatPlaintext+"\n") {
-		t.Errorf("o claro tambem precisa de versao na primeira linha: %q", bruto)
+		t.Errorf("the plain text also needs a version on the first line: %q", bruto)
 	}
 }
 
@@ -159,7 +159,7 @@ func TestPlaintextWarnsOnlyOnce(t *testing.T) {
 		}
 	}
 	if n := strings.Count(buf.String(), "writing in the clear"); n != 1 {
-		t.Errorf("avisou %d vezes, esperado 1", n)
+		t.Errorf("warned %d times, want 1", n)
 	}
 }
 
@@ -175,10 +175,10 @@ func TestWithAKeyItDoesNotWriteInTheClear(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(bruto), "session=abc==") {
-		t.Error("com chave, gravou em claro")
+		t.Error("with a key, it wrote in the clear")
 	}
 	if !strings.HasPrefix(string(bruto), formatEncrypted+"\n") {
-		t.Errorf("cabecalho errado: %q", bruto[:min(20, len(bruto))])
+		t.Errorf("wrong header: %q", bruto[:min(20, len(bruto))])
 	}
 }
 
@@ -194,10 +194,10 @@ func TestEncryptedWithoutAKeyFallsBackToTheSeed(t *testing.T) {
 
 	got, err := FileStore{Name: "gabriel-session"}.Load()
 	if err != nil {
-		t.Fatalf("virou erro: %v", err)
+		t.Fatalf("became an error: %v", err)
 	}
 	if got != "" {
-		t.Errorf("Load = %q, esperado vazio", got)
+		t.Errorf("Load = %q, want empty", got)
 	}
 	_ = dir
 }
@@ -217,7 +217,7 @@ func TestAKeyOfTheWrongLength(t *testing.T) {
 	} {
 		t.Setenv(EnvCredentialKey, ruim)
 		if err := (FileStore{Name: "x"}).CheckStore(); err == nil {
-			t.Errorf("aceitou a chave %q", ruim)
+			t.Errorf("accepted the key %q", ruim)
 		}
 	}
 }
@@ -232,13 +232,13 @@ func TestWithNoDirectoryItTurnsOffInsteadOfFailing(t *testing.T) {
 
 	s := FileStore{Name: "x"}
 	if err := s.CheckStore(); err != nil {
-		t.Fatalf("store desligado virou erro: %v", err)
+		t.Fatalf("a disabled store became an error: %v", err)
 	}
 	if v, err := s.Load(); err != nil || v != "" {
-		t.Errorf("Load desligado = (%q, %v)", v, err)
+		t.Errorf("Load disabled = (%q, %v)", v, err)
 	}
 	if err := s.Save("qualquer"); err != nil {
-		t.Errorf("Save desligado = %v", err)
+		t.Errorf("Save disabled = %v", err)
 	}
 }
 
@@ -254,10 +254,10 @@ func TestALooseDirectoryIsRefused(t *testing.T) {
 
 	err := FileStore{Name: "x"}.CheckStore()
 	if err == nil {
-		t.Fatal("diretorio 0777 foi aceito")
+		t.Fatal("a 0777 directory was accepted")
 	}
 	if !strings.Contains(err.Error(), "0700") {
-		t.Errorf("o erro nao diz o que fazer: %v", err)
+		t.Errorf("the error does not say what to do: %v", err)
 	}
 }
 
@@ -277,14 +277,14 @@ func TestPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got := di.Mode().Perm(); got != 0o700 {
-		t.Errorf("diretorio = %04o, esperado 0700", got)
+		t.Errorf("directory = %04o, want 0700", got)
 	}
 	fi, err := os.Stat(filepath.Join(dir, "x.cred"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got := fi.Mode().Perm(); got != 0o600 {
-		t.Errorf("arquivo = %04o, esperado 0600", got)
+		t.Errorf("file = %04o, want 0600", got)
 	}
 }
 
@@ -308,10 +308,10 @@ func TestAnUnreadableFileFallsBackToTheSeed(t *testing.T) {
 			}
 			got, err := s.Load()
 			if err != nil {
-				t.Fatalf("Load virou erro em vez de cair na semente: %v", err)
+				t.Fatalf("Load became an error instead of falling back to the seed: %v", err)
 			}
 			if got != "" {
-				t.Errorf("Load = %q, esperado vazio", got)
+				t.Errorf("Load = %q, want empty", got)
 			}
 		})
 	}
@@ -337,10 +337,10 @@ func TestASwappedKeyDoesNotDecrypt(t *testing.T) {
 	t.Setenv(EnvCredentialKey, testKey(t))
 	got, err := FileStore{Name: "x"}.Load()
 	if err != nil {
-		t.Fatalf("chave trocada virou erro: %v", err)
+		t.Fatalf("a swapped key became an error: %v", err)
 	}
 	if got != "" {
-		t.Errorf("decifrou com outra chave: %q", got)
+		t.Errorf("decrypted with another key: %q", got)
 	}
 }
 
@@ -362,7 +362,7 @@ func TestTamperingIsDetected(t *testing.T) {
 	}
 
 	if got, err := s.Load(); err != nil || got != "" {
-		t.Errorf("adulteracao passou: (%q, %v)", got, err)
+		t.Errorf("tampering got through: (%q, %v)", got, err)
 	}
 }
 
@@ -374,7 +374,7 @@ func TestANameThatIsAPathIsRefused(t *testing.T) {
 
 	for _, ruim := range []string{"", "../fora", "sub/dir", ".", ".."} {
 		if err := (FileStore{Name: ruim}).CheckStore(); err == nil {
-			t.Errorf("aceitou Name = %q", ruim)
+			t.Errorf("accepted Name = %q", ruim)
 		}
 	}
 }
@@ -403,7 +403,7 @@ func TestConcurrentWritesDoNotCorrupt(t *testing.T) {
 				// Any of the eight values will do; what must not happen is
 				// garbage.
 				if got != "" && strings.Trim(got, "v") != "" {
-					t.Errorf("Load devolveu conteudo corrompido: %q", got)
+					t.Errorf("Load returned corrupted content: %q", got)
 					return
 				}
 			}
@@ -436,10 +436,10 @@ func TestTheStoreComesBeforeTheSeed(t *testing.T) {
 		t.Fatalf("Get: %v", err)
 	}
 	if got != "do-store" {
-		t.Errorf("Get = %q, esperado o valor do store", got)
+		t.Errorf("Get = %q, want the store's value", got)
 	}
 	if sementeUsada {
-		t.Error("a semente foi chamada mesmo havendo valor guardado")
+		t.Error("the seed was called even though there was a stored value")
 	}
 }
 
@@ -457,7 +457,7 @@ func TestWithNoStoredValueItUsesTheSeed(t *testing.T) {
 		t.Fatalf("Get: %v", err)
 	}
 	if got != "da-semente" {
-		t.Errorf("Get = %q, esperado a semente", got)
+		t.Errorf("Get = %q, want the seed", got)
 	}
 }
 

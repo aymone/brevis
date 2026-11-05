@@ -96,7 +96,7 @@ func TestARetryAdoptsTheJobThatLanded(t *testing.T) {
 	cancel()
 	_, _, err := awaitLoad(ctx, "t", "brevis_x", svc.submit, svc.find)
 	if err == nil {
-		t.Fatal("a cancelled wait reported success")
+		t.Fatal("a canceled wait reported success")
 	}
 
 	// Server side, the job finished fine after we stopped waiting.

@@ -134,7 +134,7 @@ func (e *Executor) follow(ctx context.Context, name string, t execution.TaskExec
 		return
 	}
 
-	msg := fmt.Sprintf("pod %s terminou em %s", name, pod.Fase())
+	msg := fmt.Sprintf("pod %s ended in phase %s", name, pod.Fase())
 	if finished {
 		msg = fmt.Sprintf("exited with code %d", codigo)
 	}
@@ -181,7 +181,7 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 	for {
 		pod, err := e.api.LerPod(ctx, name)
 		if err != nil {
-			return Pod{}, fmt.Errorf("lendo pod %s: %w", name, err)
+			return Pod{}, fmt.Errorf("reading pod %s: %w", name, err)
 		}
 		if pod.Finished() {
 			return pod, nil
@@ -194,7 +194,7 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 			lastReason = reason
 			events <- execution.Event{
 				Kind: execution.EventLog, NodeID: t.NodeID, Stream: "stderr",
-				Message: "pod aguardando: " + reason,
+				Message: "pod waiting: " + reason,
 			}
 		}
 

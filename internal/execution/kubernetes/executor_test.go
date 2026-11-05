@@ -133,7 +133,7 @@ func TestASuccessfulPodReportsTheLogAndIsDeleted(t *testing.T) {
 		t.Errorf("a successful pod has to be deleted (deleted=%v)", api.deleted)
 	}
 	if len(api.created) != 1 || api.created[0].Spec.Containers[0].Image != task().Image {
-		t.Errorf("pod criado errado: %+v", api.created)
+		t.Errorf("pod created wrong: %+v", api.created)
 	}
 }
 
@@ -292,7 +292,7 @@ func TestTheNameChangesWithTheRunsAttempt(t *testing.T) {
 	b := task()
 	b.RunAttempt = 1
 	if k8s.PodName(a) == k8s.PodName(b) {
-		t.Error("attempts diferentes do run geraram o mesmo pod")
+		t.Error("different attempts of the run produced the same pod")
 	}
 }
 
@@ -318,6 +318,6 @@ func TestACancelledPodIsDeletedEvenWhenFailedOnesAreKept(t *testing.T) {
 	api.mu.Lock()
 	defer api.mu.Unlock()
 	if len(api.deleted) != 1 {
-		t.Errorf("a cancelled pod, still running, was kept (deleted=%v)", api.deleted)
+		t.Errorf("a canceled pod, still running, was kept (deleted=%v)", api.deleted)
 	}
 }

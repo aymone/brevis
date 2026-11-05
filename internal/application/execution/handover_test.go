@@ -85,7 +85,7 @@ func TestAHandedOverStepStaysRunningAndSaysWhere(t *testing.T) {
 		t.Errorf("handover recorded = %+v (%v); wanted the agent's instance, the id and line 41", h, ok)
 	}
 	if len(exec.cancelled) != 0 {
-		t.Errorf("a step handed over was cancelled: %v", exec.cancelled)
+		t.Errorf("a step handed over was canceled: %v", exec.cancelled)
 	}
 }
 

@@ -126,13 +126,13 @@ func TestCompositeStillComesOutTheSame(t *testing.T) {
 		t.Fatalf("the output is not valid JSON: %q\n%v", line, err)
 	}
 	if doc["texto"] != `com "aspas"` {
-		t.Errorf("texto = %#v", doc["texto"])
+		t.Errorf("text = %#v", doc["texto"])
 	}
 	if m, ok := doc["documento"].(map[string]any); !ok || m["a"] != float64(1) {
-		t.Errorf("documento = %#v", doc["documento"])
+		t.Errorf("document = %#v", doc["documento"])
 	}
 	if l, ok := doc["lista"].([]any); !ok || len(l) != 2 {
-		t.Errorf("lista = %#v", doc["lista"])
+		t.Errorf("list = %#v", doc["lista"])
 	}
 }
 

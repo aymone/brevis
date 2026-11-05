@@ -75,7 +75,7 @@ steps:
 	}
 	// The bare entries in the same workflow are untouched.
 	if got := edgeOf(t, w, "internal_api_load_full", "report").Label; got != "" {
-		t.Errorf("an unlabelled edge got %q", got)
+		t.Errorf("an unlabeled edge got %q", got)
 	}
 }
 

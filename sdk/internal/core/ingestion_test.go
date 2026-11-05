@@ -20,7 +20,7 @@ func TestComputeIngestionIDAgainstPython(t *testing.T) {
 			t.Fatalf("ComputeIngestionID: %v", err)
 		}
 		if got != c.expected {
-			t.Errorf("ComputeIngestionID(%q,%q,%q,%q) = %s, congelado em %s",
+			t.Errorf("ComputeIngestionID(%q,%q,%q,%q) = %s, frozen at %s",
 				c.provider, c.entity, c.sourceKey, c.recordTS, got, c.expected)
 		}
 	}
@@ -37,6 +37,6 @@ func TestEnvelopeUsaAMesmaFormula(t *testing.T) {
 	}
 	direto, _ := ComputeIngestionID("p", "e", "k", "t")
 	if pelaEnvelope != direto {
-		t.Errorf("os dois caminhos divergiram: %s != %s", pelaEnvelope, direto)
+		t.Errorf("the two paths diverged: %s != %s", pelaEnvelope, direto)
 	}
 }

@@ -65,7 +65,7 @@ func BenchmarkExtractTransform(b *testing.B) {
 			n++
 		}
 		if n != 5000 {
-			b.Fatalf("linhas = %d", n)
+			b.Fatalf("rows = %d", n)
 		}
 	}
 }

@@ -45,7 +45,7 @@ func TestAuthAppliesTheSecret(t *testing.T) {
 			}})
 
 			if visto != c.expected {
-				t.Errorf("%s = %q, esperado %q", c.header, visto, c.expected)
+				t.Errorf("%s = %q, want %q", c.header, visto, c.expected)
 			}
 		})
 	}
@@ -94,10 +94,10 @@ func TestRefreshRenewsTheCookieForThePages(t *testing.T) {
 	})
 
 	if len(data) != 1 || data[0] != "renovado==" {
-		t.Errorf("a pagina foi com %v; esperava o cookie reemitido pela renovacao", data)
+		t.Errorf("the page went with %v; expected the cookie reissued by the renewal", data)
 	}
 	if stats.CredentialExpiry.IsZero() {
-		t.Error("Stats.CredentialExpiry ficou zerado; a validade nao chegou a quem observa")
+		t.Error("Stats.CredentialExpiry stayed zeroed; the expiry never reached whoever observes it")
 	}
 }
 
@@ -127,13 +127,13 @@ func TestARefreshThatFailsStopsTheRun(t *testing.T) {
 	}, nil)
 
 	if err == nil {
-		t.Fatal("renovacao recusada passou batido")
+		t.Fatal("a refused renewal went unnoticed")
 	}
 	if !strings.Contains(err.Error(), "refresh") || !strings.Contains(err.Error(), "401") {
-		t.Errorf("o erro nao diz que foi a renovacao: %v", err)
+		t.Errorf("the error does not say it was the renewal: %v", err)
 	}
 	if askedForData.Load() {
-		t.Error("pediu dados depois da renovacao falhar")
+		t.Error("asked for data after the renewal failed")
 	}
 }
 
@@ -164,7 +164,7 @@ func TestTTLCachesTheLogin(t *testing.T) {
 	wg.Wait()
 
 	if n := logins.Load(); n != 1 {
-		t.Errorf("%d logins para 20 chamadas concorrentes; TTL deveria deixar em 1", n)
+		t.Errorf("%d logins for 20 concurrent calls; the TTL should keep it at 1", n)
 	}
 }
 
@@ -180,7 +180,7 @@ func TestWithoutTTLItDoesNotCache(t *testing.T) {
 		_, _ = cred.Get(context.Background())
 	}
 	if n != 3 {
-		t.Errorf("Value chamado %d vezes sem TTL, esperado 3", n)
+		t.Errorf("Value called %d times without a TTL, want 3", n)
 	}
 }
 
@@ -210,7 +210,7 @@ func TestAuthRefusesConfigurationThatCannotWork(t *testing.T) {
 				t.Fatal("passou")
 			}
 			if !strings.Contains(err.Error(), c.diz) {
-				t.Errorf("o erro nao aponta %q: %v", c.diz, err)
+				t.Errorf("the error does not point to %q: %v", c.diz, err)
 			}
 		})
 	}
@@ -220,7 +220,7 @@ func TestAuthRefusesConfigurationThatCannotWork(t *testing.T) {
 func TestAMissingEnvVarSaysItsName(t *testing.T) {
 	_, err := core.FromEnv("BREVIS_ENV_THAT_DOES_NOT_EXIST")(context.Background())
 	if err == nil || !strings.Contains(err.Error(), "BREVIS_ENV_THAT_DOES_NOT_EXIST") {
-		t.Errorf("erro nao nomeia a variavel: %v", err)
+		t.Errorf("the error does not name the variable: %v", err)
 	}
 }
 
@@ -240,7 +240,7 @@ func TestAuthDoesNotMutateTheCallersHeader(t *testing.T) {
 	}})
 
 	if _, tem := h["Authorization"]; tem {
-		t.Errorf("o segredo ficou no header do caller: %v", h)
+		t.Errorf("the secret stayed in the caller's header: %v", h)
 	}
 }
 
@@ -277,6 +277,6 @@ func TestRefreshRetries(t *testing.T) {
 	})
 
 	if n := attempts.Load(); n != 3 {
-		t.Errorf("a renovacao tentou %d vezes, esperado 3", n)
+		t.Errorf("the renewal tried %d times, want 3", n)
 	}
 }

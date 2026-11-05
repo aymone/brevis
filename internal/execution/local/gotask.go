@@ -80,7 +80,7 @@ func (g *GoExecutor) Execute(ctx context.Context, t execution.TaskExec) (<-chan 
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					err = fmt.Errorf("task %q entrou em panico: %v", t.Action, r)
+					err = fmt.Errorf("task %q panicked: %v", t.Action, r)
 				}
 			}()
 			err = task.Run(ctx, execution.Input{
@@ -106,7 +106,7 @@ func (g *GoExecutor) Execute(ctx context.Context, t execution.TaskExec) (<-chan 
 		case ctx.Err() == context.DeadlineExceeded:
 			events <- execution.Event{
 				Kind: execution.EventFailed, NodeID: t.NodeID, Err: err,
-				Message: fmt.Sprintf("estourou o timeout de %s", t.Timeout),
+				Message: fmt.Sprintf("timed out after %s", t.Timeout),
 			}
 		default:
 			events <- execution.Event{

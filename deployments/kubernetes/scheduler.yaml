@@ -13,7 +13,7 @@ spec:
   # ONE replica. The dispatcher uses `FOR UPDATE SKIP LOCKED`, so two would not
   # hand out the same item — but two would also MATERIALIZE the same slots, and
   # what protects against that is the idempotency key, not a lock. One replica
-  # keeps the behaviour obvious until there is leader election.
+  # keeps the behavior obvious until there is leader election.
   replicas: 1
   strategy:
     # Recreate and not RollingUpdate: with two replicas up during the rollout,

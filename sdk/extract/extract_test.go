@@ -379,19 +379,19 @@ func TestPostSendsMethodBodyAndHeaders(t *testing.T) {
 	}
 
 	if gotMethod != http.MethodPost {
-		t.Errorf("método = %q, esperado POST", gotMethod)
+		t.Errorf("method = %q, want POST", gotMethod)
 	}
 	if gotBody != body {
-		t.Errorf("corpo = %q, esperado %q", gotBody, body)
+		t.Errorf("body = %q, want %q", gotBody, body)
 	}
 	if gotHeader != "brevis" {
-		t.Errorf("o header do fetcher não chegou: %q", gotHeader)
+		t.Errorf("the fetcher's header did not arrive: %q", gotHeader)
 	}
 	if gotType != "application/json" {
 		t.Errorf("Content-Type = %q", gotType)
 	}
 	if n != 1 {
-		t.Errorf("%d registros, esperado 1", n)
+		t.Errorf("%d records, want 1", n)
 	}
 }
 
@@ -419,6 +419,6 @@ func TestTotalTimeoutStopsTheWalk(t *testing.T) {
 	}
 
 	if d := time.Since(start); d > 2*time.Second {
-		t.Errorf("a caminhada durou %v; o TotalTimeout não a parou", d)
+		t.Errorf("the walk took %v; TotalTimeout did not stop it", d)
 	}
 }

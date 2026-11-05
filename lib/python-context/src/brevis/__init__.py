@@ -76,6 +76,6 @@ try:  # pragma: no cover - the fallback needs an uninstalled checkout
     __version__ = _version("brevis")
 except (ImportError, PackageNotFoundError):
     # A checkout on sys.path, with nothing installed. "devel" is the truth, and
-    # telling it apart from a release is what somebody reporting odd behaviour
+    # telling it apart from a release is what somebody reporting odd behavior
     # needs.
     __version__ = "devel"

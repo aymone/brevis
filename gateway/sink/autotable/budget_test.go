@@ -238,7 +238,7 @@ func TestAnErrorThatIsNotTheBudgetStillStopsTheRun(t *testing.T) {
 	if log.landed["z_after"] {
 		t.Error("z_after was written after the destination said we were " +
 			"wrong about the table before it: the cache is dropped and the " +
-			"next batch re-reads the catalogue, which is the designed response")
+			"next batch re-reads the catalog, which is the designed response")
 	}
 }
 

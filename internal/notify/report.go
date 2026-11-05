@@ -122,7 +122,7 @@ func (s *Slack) Report(ctx context.Context, r Report) error {
 
 func (s *Slack) reportMessage(r Report) map[string]any {
 	window := fmt.Sprintf("%s → %s",
-		r.From.Local().Format("02/01"), r.To.Local().Format("02/01/2006"))
+		r.From.Local().Format("2006-01-02"), r.To.Local().Format("2006-01-02"))
 
 	summary := fmt.Sprintf("*%d* runs · *%d* succeeded · *%d* failed", r.Runs, r.Succeeded, r.Failed)
 	if rate := r.SuccessRate(); rate >= 0 {

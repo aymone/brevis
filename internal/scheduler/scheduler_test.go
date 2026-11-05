@@ -314,7 +314,7 @@ func TestPruningRemovesWhatLeftTheFolder(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(removed) != 1 || removed[0] != sai.Slug {
-		t.Fatalf("removidos = %v, want apenas %s", removed, sai.Slug)
+		t.Fatalf("removed = %v, want only %s", removed, sai.Slug)
 	}
 
 	if _, err := repo.Definition(ctx, sai.Slug); err == nil {
@@ -424,7 +424,7 @@ func TestPruningKeepsTheScheduleOfASlugAnotherProjectStillPublishes(t *testing.T
 		t.Fatalf("the schedule went with the pruned copy: %v", err)
 	}
 	if ativo || last == nil {
-		t.Errorf("schedule = ativo %v, last slot %v; want the pause and the slot kept", ativo, last)
+		t.Errorf("schedule = active %v, last slot %v; want the pause and the slot kept", ativo, last)
 	}
 
 	// Pruned from the last project that publishes it, the schedule goes.

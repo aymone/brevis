@@ -78,6 +78,6 @@ func TestAMultiLineScriptSurvives(t *testing.T) {
 		t.Errorf("it lost line breaks:\n%s", out)
 	}
 	if !strings.HasSuffix(out, "echo fim") {
-		t.Errorf("o fim do script sumiu:\n%s", out)
+		t.Errorf("the end of the script is missing:\n%s", out)
 	}
 }

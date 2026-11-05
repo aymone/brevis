@@ -74,7 +74,7 @@ func main() {
 	}
 
 	fmt.Println(res)
-	fmt.Println("\nescrito em", outDir)
+	fmt.Println("\nwritten to", outDir)
 	_ = filepath.Walk(outDir, func(p string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			fmt.Printf("  %s  (%d bytes)\n", p[len(outDir)+1:], info.Size())

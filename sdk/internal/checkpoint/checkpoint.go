@@ -281,7 +281,7 @@ func (d *Depot) Writer() *Write {
 func (e *Write) Add(env core.Envelope) error {
 	data, err := json.Marshal(env.Payload)
 	if err != nil {
-		return fmt.Errorf("record %d do checkpoint: %w", e.written+e.buffered, err)
+		return fmt.Errorf("record %d of the checkpoint: %w", e.written+e.buffered, err)
 	}
 
 	// Once discovered, never again: the decoder is fixed per source, so the

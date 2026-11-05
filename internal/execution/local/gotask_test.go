@@ -91,7 +91,7 @@ func TestTheGoExecutorContainsAPanic(t *testing.T) {
 	if lastKind(events) != execution.EventFailed {
 		t.Fatalf("last event = %v, wanted failed", lastKind(events))
 	}
-	if !strings.Contains(events[len(events)-1].Err.Error(), "panico") {
+	if !strings.Contains(events[len(events)-1].Err.Error(), "panicked") {
 		t.Errorf("error = %v; it should name the panic", events[len(events)-1].Err)
 	}
 }
@@ -123,8 +123,8 @@ func TestTheGoExecutorRespectsTheTimeout(t *testing.T) {
 	if last.Kind != execution.EventFailed {
 		t.Fatalf("last event = %v, wanted failed", last.Kind)
 	}
-	if !strings.Contains(last.Message, "timeout") {
-		t.Errorf("message = %q; it should mention the timeout", last.Message)
+	if !strings.Contains(last.Message, "timed out") {
+		t.Errorf("message = %q; it should say it timed out", last.Message)
 	}
 }
 

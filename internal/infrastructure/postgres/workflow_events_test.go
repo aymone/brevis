@@ -133,7 +133,7 @@ func TestPruningRecordsEachWorkflowRemoved(t *testing.T) {
 
 	removed, err := repo.Podar(ctx, sales, []string{"keep"}, "cli")
 	if err != nil || len(removed) != 2 {
-		t.Fatalf("Podar = %v, %v", removed, err)
+		t.Fatalf("Prune = %v, %v", removed, err)
 	}
 	if got := recorded(t, pool); got != "workflow.removed old_a cli, workflow.removed old_b cli" &&
 		got != "workflow.removed old_b cli, workflow.removed old_a cli" {

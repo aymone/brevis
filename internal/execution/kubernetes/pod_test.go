@@ -35,10 +35,10 @@ func TestThePodCarriesImageCommandAndResources(t *testing.T) {
 
 	c := p.Spec.Containers[0]
 	if c.Image != task().Image {
-		t.Errorf("imagem = %q", c.Image)
+		t.Errorf("image = %q", c.Image)
 	}
 	if len(c.Command) != 3 || c.Command[0] != "/bin/sh" || c.Command[1] != "-c" {
-		t.Errorf("comando = %v, want sh -c", c.Command)
+		t.Errorf("command = %v, want sh -c", c.Command)
 	}
 	if !strings.HasPrefix(c.Command[2], "dbt build") {
 		t.Errorf("command line = %q", c.Command[2])
@@ -59,7 +59,7 @@ func TestThePodCarriesImageCommandAndResources(t *testing.T) {
 		t.Errorf("restartPolicy = %q", p.Spec.RestartPolicy)
 	}
 	if p.Spec.ServiceAccountName != "brevis" || p.Metadata.Namespace != "dados" {
-		t.Errorf("identidade errada: sa=%q ns=%q", p.Spec.ServiceAccountName, p.Metadata.Namespace)
+		t.Errorf("wrong identity: sa=%q ns=%q", p.Spec.ServiceAccountName, p.Metadata.Namespace)
 	}
 	if p.Spec.ActiveDeadlineSeconds == nil || *p.Spec.ActiveDeadlineSeconds != 1800 {
 		t.Errorf("deadline = %v, want 1800s", p.Spec.ActiveDeadlineSeconds)
@@ -79,7 +79,7 @@ func TestWithNoShellItUsesArgvDirectly(t *testing.T) {
 	}
 	c := p.Spec.Containers[0].Command
 	if len(c) != 3 || c[0] != "/notify" || c[2] != "dados" {
-		t.Errorf("comando = %v, want argv direto", c)
+		t.Errorf("command = %v, want argv as is", c)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestEnvIsOrderedAndEnvFrom(t *testing.T) {
 	// A stable order: two pods with the same contents have to produce the same
 	// JSON, otherwise comparing two deploys becomes noise.
 	if len(c.Env) != 2 || c.Env[0].Name != "GOOGLE_PROJECT_ID" || c.Env[1].Name != "STAGE" {
-		t.Errorf("env = %v, want ordem alfabetica", c.Env)
+		t.Errorf("env = %v, want alphabetical order", c.Env)
 	}
 	if len(c.EnvFrom) != 2 || c.EnvFrom[0].SecretRef.Name != "brevis-bigquery" {
 		t.Errorf("envFrom = %+v", c.EnvFrom)
@@ -137,7 +137,7 @@ func TestThePodsNameIsStablePerAttempt(t *testing.T) {
 	outra := task()
 	outra.Attempt = 1
 	if c := k8s.PodName(outra); c == a {
-		t.Error("attempts diferentes deveriam gerar pods diferentes")
+		t.Error("different attempts should produce different pods")
 	}
 }
 
@@ -152,7 +152,7 @@ func TestThePodsNameObeysKubernetesLimit(t *testing.T) {
 	}
 	for _, r := range name {
 		if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
-			t.Fatalf("caractere invalido %q em %q", r, name)
+			t.Fatalf("invalid character %q in %q", r, name)
 		}
 	}
 	if strings.HasPrefix(name, "-") || strings.HasSuffix(name, "-") {
@@ -173,7 +173,7 @@ func TestTheLabelsMakeTheRunsPodsFindable(t *testing.T) {
 		t.Error("without the management label there is no way to find Brevis's pods")
 	}
 	if p.Metadata.Labels["brevis.dev/workflow"] != "platform-workspace" {
-		t.Errorf("rotulo de workflow = %q (sanitizado)", p.Metadata.Labels["brevis.dev/workflow"])
+		t.Errorf("workflow label = %q (sanitized)", p.Metadata.Labels["brevis.dev/workflow"])
 	}
 	// The original value lives in the annotation: a label has a 63-character limit
 	// and a restricted alphabet, an annotation does not.

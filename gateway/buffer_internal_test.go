@@ -1449,7 +1449,7 @@ func TestAQuietTableDoesNotInheritTheBusyOnesCadence(t *testing.T) {
 	if n := sink.carrying("quiet"); n != 1 {
 		t.Errorf("`quiet` left in %d deliveries, want 1 -- it has 3 events and "+
 			"`flush.records` is 10, so the only thing that can flush it is its "+
-			"own clock, not the neighbour's", n)
+			"own clock, not the neighbor's", n)
 	}
 	// And the busy table still flushes on its own trigger, ten at a time.
 	if n := sink.carrying("busy"); n < 10 {
@@ -1606,7 +1606,7 @@ func TestTheTimerTakesOnlyWhatIsDue(t *testing.T) {
 	}
 	if n := sink.carrying("late"); n != 0 {
 		t.Errorf("`late` left in %d deliveries at 400ms, want 0 -- it was 200ms "+
-			"old when the neighbour's timer rang, and its own target is 300ms", n)
+			"old when the neighbor's timer rang, and its own target is 300ms", n)
 	}
 
 	// 650ms: past 200+300, so `late` goes on its own clock.

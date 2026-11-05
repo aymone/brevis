@@ -79,7 +79,7 @@ func TestQuoteEscapesABacktick(t *testing.T) {
 func TestInsertSQLReservedWord(t *testing.T) {
 	got := InsertSQL("t", []string{core.MetadataID, "order"}, 1, "")
 	if !strings.Contains(got, "`order`") {
-		t.Errorf("palavra reservada sem crase:\n%s", got)
+		t.Errorf("reserved word without a backtick:\n%s", got)
 	}
 }
 
@@ -89,7 +89,7 @@ func TestSplitName(t *testing.T) {
 		t.Errorf("= (%q, %q)", b, tb)
 	}
 	if b, tb := splitName("pedidos"); b != "" || tb != "pedidos" {
-		t.Errorf("= (%q, %q); banco vazio significa o do DSN", b, tb)
+		t.Errorf("= (%q, %q); an empty database means the DSN's", b, tb)
 	}
 }
 
@@ -105,7 +105,7 @@ func TestWithParseTime(t *testing.T) {
 	}
 	for input, quero := range casos {
 		if got := comParseTime(input); got != quero {
-			t.Errorf("comParseTime(%q) = %q, esperado %q", input, got, quero)
+			t.Errorf("withParseTime(%q) = %q, want %q", input, got, quero)
 		}
 	}
 }

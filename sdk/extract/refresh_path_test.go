@@ -80,7 +80,7 @@ func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
 				},
 			}, nil)
 			if err != nil {
-				t.Fatalf("a execucao morreu: %v", err)
+				t.Fatalf("the run died: %v", err)
 			}
 			for _, err := range seq {
 				if err != nil {
@@ -89,7 +89,7 @@ func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
 			}
 
 			if cookieOnRefresh == "" {
-				t.Error("a renovacao foi SEM a credencial")
+				t.Error("the renewal went WITHOUT the credential")
 			}
 			// And the REISSUED cookie has to apply to the pages, or the refresh
 			// refreshed for nobody: the new value would stay pinned to the
@@ -100,14 +100,14 @@ func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
 			// default is the case that breaks.
 			for _, got := range cookieOnPages {
 				if got == "" {
-					t.Error("a pagina foi sem credencial nenhuma")
+					t.Error("the page went with no credential at all")
 				}
 				if !strings.Contains(got, "renovado==") {
-					t.Errorf("a pagina foi com %q; esperava o valor reemitido pela renovacao", got)
+					t.Errorf("the page went with %q; expected the value reissued by the renewal", got)
 				}
 			}
 			if stats.CredentialExpiry.IsZero() {
-				t.Error("a validade nao chegou; a renovacao nao autenticou")
+				t.Error("the expiry did not arrive; the renewal did not authenticate")
 			}
 		})
 	}

@@ -57,7 +57,7 @@ func TestToJSONRowByRow(t *testing.T) {
 				t.Fatal(err)
 			}
 			if string(b) != c.quero {
-				t.Errorf("= %s, esperado %s\n  %s", b, c.quero, c.why)
+				t.Errorf("= %s, want %s\n  %s", b, c.quero, c.why)
 			}
 		})
 	}
@@ -77,7 +77,7 @@ func TestTheTwoInstantPathsAgree(t *testing.T) {
 	semParse := ToJSON([]byte("2026-09-05 12:30:00"), "DATETIME")
 
 	if comParse != semParse {
-		t.Errorf("os caminhos divergem: com parseTime %v, sem %v", comParse, semParse)
+		t.Errorf("the paths diverge: with parseTime %v, without %v", comParse, semParse)
 	}
 	if comParse != "2026-09-05T12:30:00Z" {
 		t.Errorf("= %v", comParse)

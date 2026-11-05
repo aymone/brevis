@@ -51,11 +51,11 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 			got, err := CreationPlan(c.cfg, "d.t")
 			if c.failure {
 				if err == nil {
-					t.Fatal("aceitou criar tabela sem dizer os tipos -- o autodetect voltou")
+					t.Fatal("accepted creating a table without the types -- autodetect is back")
 				}
 				for _, quero := range []string{"Target.Schema", "CreateSQL", "does not infer"} {
 					if !strings.Contains(err.Error(), quero) {
-						t.Errorf("o erro não diz %q: %v", quero, err)
+						t.Errorf("the error does not say %q: %v", quero, err)
 					}
 				}
 				return
@@ -64,7 +64,7 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 				t.Fatalf("CreationPlan: %v", err)
 			}
 			if got != c.quero {
-				t.Errorf("= %v, esperado %v", got, c.quero)
+				t.Errorf("= %v, want %v", got, c.quero)
 			}
 		})
 	}
@@ -94,15 +94,15 @@ func TestI2SchemaBecomesBigQuerysType(t *testing.T) {
 		"data": "DATE", "documento": "JSON", "bytes": "BYTES",
 	}
 	if len(got) != len(expected) {
-		t.Fatalf("%d colunas, esperado %d", len(got), len(expected))
+		t.Fatalf("%d columns, want %d", len(got), len(expected))
 	}
 	for _, f := range got {
 		if string(f.Type) != expected[f.Name] {
-			t.Errorf("%s = %s, esperado %s", f.Name, f.Type, expected[f.Name])
+			t.Errorf("%s = %s, want %s", f.Name, f.Type, expected[f.Name])
 		}
 	}
 	if !got[0].Required {
-		t.Error("Required não virou NOT NULL")
+		t.Error("Required did not become NOT NULL")
 	}
 }
 
@@ -118,7 +118,7 @@ func TestI2TheSDKsColumnsBeatTheDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 	if string(got[0].Type) != "STRING" || !got[0].Required {
-		t.Errorf("%s = %s required=%v; a forma do SDK devia vencer",
+		t.Errorf("%s = %s required=%v; the SDK's shape should win",
 			core.MetadataID, got[0].Type, got[0].Required)
 	}
 	if string(got[1].Type) != "TIMESTAMP" || !got[1].Required {
@@ -129,9 +129,9 @@ func TestI2TheSDKsColumnsBeatTheDeclaration(t *testing.T) {
 // TestI4ThePartitionComesFromTheDeclaration.
 func TestI4ThePartitionComesFromTheDeclaration(t *testing.T) {
 	if got := partitionOf(&core.LoadConfig{PartitionBy: "minha_coluna"}); got != "minha_coluna" {
-		t.Errorf("= %q, a declaração devia vencer", got)
+		t.Errorf("= %q, the declaration should win", got)
 	}
 	if got := partitionOf(&core.LoadConfig{}); got != core.MetadataLoadedAt {
-		t.Errorf("= %q, sem declaração fica o padrão documentado", got)
+		t.Errorf("= %q, with no declaration the documented default stays", got)
 	}
 }

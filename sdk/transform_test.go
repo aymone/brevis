@@ -373,14 +373,14 @@ func TestIngestionIDReadsItAfterTheRename(t *testing.T) {
 
 	// The old name no longer exists, and the error says so.
 	if _, err := IngestionID("provider", "entity", "source_key", "time")(renomeado); err == nil {
-		t.Fatal("nomear o campo antigo depois de um rename tem de falhar")
+		t.Fatal("naming the old field after a rename has to fail")
 	} else if !strings.Contains(err.Error(), "observed_at") {
-		t.Errorf("o erro precisa listar o que a linha tem: %v", err)
+		t.Errorf("the error must list what the row has: %v", err)
 	}
 
 	// Com o nome novo, funciona.
 	if _, err := IngestionID("provider", "entity", "source_key", "observed_at")(renomeado); err != nil {
-		t.Errorf("com o nome novo deveria funcionar: %v", err)
+		t.Errorf("with the new name it should work: %v", err)
 	}
 }
 
@@ -402,7 +402,7 @@ func TestRenameDoesNotChain(t *testing.T) {
 		}
 		m := out.(map[string]any)
 		if _, tem := m["b"]; !tem {
-			t.Fatalf("o valor foi parar em %v; renomear a->b não pode encadear em b->c", m)
+			t.Fatalf("the value ended up in %v; renaming a->b must not chain into b->c", m)
 		}
 	}
 }

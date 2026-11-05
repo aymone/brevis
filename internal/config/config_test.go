@@ -73,7 +73,7 @@ func TestWithNoDeclarationOnlyPathAndHome(t *testing.T) {
 	t.Setenv("SEGREDO_QUALQUER", "nao-deve-vazar")
 	env := TasksEnvironment(nil)
 	if len(env) != 2 {
-		t.Errorf("ambiente = %v, want apenas PATH e HOME", env)
+		t.Errorf("environment = %v, want only PATH and HOME", env)
 	}
 }
 
@@ -87,7 +87,7 @@ func TestALiteralValueAndAMissingVariable(t *testing.T) {
 	// Absent does not become an empty string: `GOOGLE_PROJECT_ID=""` would make
 	// dbt fail later, with a worse message than the missing-variable one.
 	if _, existe := env["NAO_EXISTE"]; existe {
-		t.Error("variavel ausente virou string vazia")
+		t.Error("a missing variable became an empty string")
 	}
 }
 
@@ -101,7 +101,7 @@ func TestTheWildcardDoesNotCarryBrevisOwnVariables(t *testing.T) {
 	env := TasksEnvironment([]string{"*"})
 
 	if env["MINHA_VAR"] != "valor" {
-		t.Error("curinga deveria repassar as variaveis comuns")
+		t.Error("the wildcard should pass the common variables through")
 	}
 	for k := range env {
 		if strings.HasPrefix(k, "BREVIS_") {

@@ -51,7 +51,7 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 				return
 			}
 			if !c.soSemantico {
-				t.Fatalf("%q:\n  meu      %s\n  Encoder  %s", c.s, got, quero)
+				t.Fatalf("%q:\n  mine     %s\n  Encoder  %s", c.s, got, quero)
 			}
 
 			// Invalid UTF-8: 1.25's encoding/json escapes the U+FFFD and
@@ -59,13 +59,13 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 			// the equality that counts there is of the value.
 			var meu, dele string
 			if err := json.Unmarshal([]byte(got), &meu); err != nil {
-				t.Fatalf("a minha saída nem é JSON válido: %s", got)
+				t.Fatalf("my output is not even valid JSON: %s", got)
 			}
 			if err := json.Unmarshal([]byte(quero), &dele); err != nil {
-				t.Fatalf("a saída do encoder não decodifica: %s", quero)
+				t.Fatalf("the encoder's output does not decode: %s", quero)
 			}
 			if meu != dele {
-				t.Errorf("%q decodifica diferente:\n  meu     %q\n  Encoder %q", c.s, meu, dele)
+				t.Errorf("%q decodes differently:\n  mine    %q\n  Encoder %q", c.s, meu, dele)
 			}
 		})
 	}

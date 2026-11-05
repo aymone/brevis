@@ -25,7 +25,7 @@ func TestBackoffWithoutJitterDoesNotPanic(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			for attempt := 0; attempt < 4; attempt++ {
 				if d := calculateBackoff(attempt, &c.cfg); d < 0 {
-					t.Errorf("backoff negativo na tentativa %d: %v", attempt, d)
+					t.Errorf("negative backoff at attempt %d: %v", attempt, d)
 				}
 			}
 		})
@@ -38,6 +38,6 @@ func TestBackoffWithoutJitterDoesNotPanic(t *testing.T) {
 func TestBackoffWithoutMaxBackoffDoesNotStickAtZero(t *testing.T) {
 	cfg := core.RetryConfig{MaxAttempts: 3, InitialBackoff: 100 * time.Millisecond}
 	if d := calculateBackoff(1, &cfg); d < 200*time.Millisecond {
-		t.Errorf("backoff = %v, esperado ao menos 200ms (2^1 x 100ms)", d)
+		t.Errorf("backoff = %v, want at least 200ms (2^1 x 100ms)", d)
 	}
 }

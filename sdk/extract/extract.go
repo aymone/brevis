@@ -488,7 +488,7 @@ func drainPage(ctx context.Context, source core.Source, p *page, yield func(core
 	for {
 		select {
 		case <-ctx.Done():
-			return emitted, "", fmt.Errorf("context cancelled")
+			return emitted, "", fmt.Errorf("context canceled")
 		default:
 		}
 

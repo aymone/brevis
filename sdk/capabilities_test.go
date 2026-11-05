@@ -89,11 +89,11 @@ func TestDedupEitherWorksOrRefuses(t *testing.T) {
 
 			if !d.support.dedup {
 				if err == nil {
-					t.Fatalf("%s aceitou Dedup sem suportá-lo -- uma flag escrita "+
-						"que não faz nada é pior que um erro", name)
+					t.Fatalf("%s accepted Dedup without supporting it -- a flag that is written "+
+						"and does nothing is worse than an error", name)
 				}
 				if d.refusalHint != "" && !strings.Contains(err.Error(), d.refusalHint) {
-					t.Errorf("a recusa não nomeia %q: %v", d.refusalHint, err)
+					t.Errorf("the refusal does not name %q: %v", d.refusalHint, err)
 				}
 				return
 			}
@@ -103,7 +103,7 @@ func TestDedupEitherWorksOrRefuses(t *testing.T) {
 			// rejects it in validation would be the same lie in reverse.
 			if err != nil && strings.Contains(err.Error(), "does not have") &&
 				strings.Contains(err.Error(), "Dedup") {
-				t.Errorf("%s declara suportar Dedup e o recusou: %v", name, err)
+				t.Errorf("%s claims to support Dedup and refused it: %v", name, err)
 			}
 		})
 	}
@@ -128,8 +128,8 @@ func TestNoSQLDestinationInventsAType(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			if hasField(d.writer, "CreateTable") {
-				t.Errorf("%s tem campo CreateTable e a matriz diz que não cria tabela; "+
-					"ou o campo faz algo, ou ele não devia existir", name)
+				t.Errorf("%s has a CreateTable field and the matrix says it does not create tables; "+
+					"either the field does something, or it should not exist", name)
 			}
 		})
 	}

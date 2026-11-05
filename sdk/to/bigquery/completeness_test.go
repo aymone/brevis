@@ -44,8 +44,8 @@ func TestEveryLoadConfigFieldIsReachable(t *testing.T) {
 
 	if len(missing) > 0 {
 		sort.Strings(missing)
-		t.Errorf("LoadConfig tem %s, e bigquery.Table não os define nem os declara "+
-			"inaplicáveis. Quem usa a fachada não consegue ajustá-los, e nada avisa.",
+		t.Errorf("LoadConfig has %s, and bigquery.Table neither defines nor declares them: "+
+			"inapplicable. Whoever uses the facade cannot tune them, and nothing warns them.",
 			strings.Join(missing, ", "))
 	}
 }
@@ -60,12 +60,12 @@ func fieldsOf(t *testing.T, path, kind string) []string {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("lendo %s: %v", path, err)
+		t.Fatalf("reading %s: %v", path, err)
 	}
 	s := string(data)
 	i := strings.Index(s, "type "+kind+" struct {")
 	if i < 0 {
-		t.Fatalf("%s não achado em %s", kind, path)
+		t.Fatalf("%s not found in %s", kind, path)
 	}
 	body := s[i:]
 	body = body[:strings.Index(body, "\n}")]
@@ -81,7 +81,7 @@ func escritosPor(t *testing.T, path string) map[string]bool {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("lendo %s: %v", path, err)
+		t.Fatalf("reading %s: %v", path, err)
 	}
 	s := string(data)
 

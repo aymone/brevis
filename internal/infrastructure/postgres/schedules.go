@@ -76,7 +76,7 @@ func (r *WorkflowRepo) Publicar(ctx context.Context, w wf.Workflow, projeto uuid
 		SET name = EXCLUDED.name, definicao = EXCLUDED.definicao, updated_at = now()`,
 		uuid.New(), projeto, w.Slug, w.Name, def)
 	if err != nil {
-		return fmt.Errorf("publicando workflow %q: %w", w.Slug, err)
+		return fmt.Errorf("publishing workflow %q: %w", w.Slug, err)
 	}
 
 	if w.Schedule == "" {

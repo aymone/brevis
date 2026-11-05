@@ -104,15 +104,15 @@ func TestARefreshThatDoesNotAuthenticateDoesNotWrite(t *testing.T) {
 
 	err := runWithStore(t, srv, store, core.JSONField("expires"))
 	if err == nil {
-		t.Fatal("a renovacao nao autenticada devia falhar a execucao")
+		t.Fatal("an unauthenticated renewal should have failed the run")
 	}
 	if !strings.Contains(err.Error(), "expires") {
-		t.Errorf("o erro nao aponta a validade ausente: %v", err)
+		t.Errorf("the error does not point to the missing expiry: %v", err)
 	}
 
 	guardado, writes := store.state()
 	if writes != 0 {
-		t.Errorf("gravou %d vez(es) numa renovacao que nao autenticou; guardou %q",
+		t.Errorf("wrote %d time(s) after a renewal that did not authenticate; kept %q",
 			writes, guardado)
 	}
 }
@@ -134,15 +134,15 @@ func TestAGoodRefreshStillWrites(t *testing.T) {
 
 	store := &spyStore{}
 	if err := runWithStore(t, srv, store, core.JSONField("expires")); err != nil {
-		t.Fatalf("execucao boa falhou: %v", err)
+		t.Fatalf("a good run failed: %v", err)
 	}
 
 	guardado, writes := store.state()
 	if writes != 1 {
-		t.Fatalf("gravacoes = %d, esperado 1", writes)
+		t.Fatalf("writes = %d, want 1", writes)
 	}
 	if !strings.Contains(guardado, "rotacionado") {
-		t.Errorf("guardou %q, esperava o valor rotacionado", guardado)
+		t.Errorf("kept %q, expected the rotated value", guardado)
 	}
 }
 
@@ -155,10 +155,10 @@ func TestWithoutExpiresAtItWrites(t *testing.T) {
 	store := &spyStore{}
 
 	if err := runWithStore(t, srv, store, nil); err != nil {
-		t.Fatalf("sem ExpiresAt a execucao devia seguir: %v", err)
+		t.Fatalf("without ExpiresAt the run should carry on: %v", err)
 	}
 	if _, writes := store.state(); writes != 1 {
-		t.Errorf("gravacoes = %d, esperado 1", writes)
+		t.Errorf("writes = %d, want 1", writes)
 	}
 }
 
@@ -211,7 +211,7 @@ func TestTheRotationAppliesToThePagesEvenWhenExpiresAtFails(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	if !strings.Contains(cookieOnPage, "rotacionado") {
-		t.Errorf("a pagina foi com %q; a rotacao deixou de valer para a execucao", cookieOnPage)
+		t.Errorf("the page went with %q; the rotation stopped applying to the run", cookieOnPage)
 	}
 }
 
@@ -232,13 +232,13 @@ func TestAStoreWithoutExpiresAtWarnsAtAssembly(t *testing.T) {
 		Refresh: &core.Refresh{URL: "http://x", Store: &spyStore{}},
 	}
 	if err := c.Check(); err != nil {
-		t.Fatalf("virou erro em vez de aviso: %v", err)
+		t.Fatalf("became an error instead of a warning: %v", err)
 	}
 
 	log := buf.String()
 	for _, exigido := range []string{"ExpiresAt", "store espiao", "200"} {
 		if !strings.Contains(log, exigido) {
-			t.Errorf("o aviso nao diz %q:\n%s", exigido, log)
+			t.Errorf("the warning does not say %q:\n%s", exigido, log)
 		}
 	}
 }
@@ -263,6 +263,6 @@ func TestAStoreWithExpiresAtDoesNotWarn(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Contains(buf.String(), "without ExpiresAt") {
-		t.Errorf("avisou na configuracao certa:\n%s", buf.String())
+		t.Errorf("warned about the right setting:\n%s", buf.String())
 	}
 }

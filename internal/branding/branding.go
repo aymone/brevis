@@ -170,7 +170,7 @@ func (m Brand) Validate() error {
 	for name, colour := range m.Theme.colours() {
 		// Empty keeps the product's colour; anything else must be hex.
 		if colour != "" && !hex.MatchString(colour) {
-			return fmt.Errorf("colour %s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
+			return fmt.Errorf("color %s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
 		}
 	}
 	if m.ThemeLight != nil {
@@ -178,7 +178,7 @@ func (m Brand) Validate() error {
 			// Empty is allowed here and only here: it keeps the product's
 			// light value for that colour.
 			if colour != "" && !hex.MatchString(colour) {
-				return fmt.Errorf("colour theme_light.%s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
+				return fmt.Errorf("color theme_light.%s: %q is not a hex value (#rgb, #rrggbb or #rrggbbaa)", name, colour)
 			}
 		}
 	}

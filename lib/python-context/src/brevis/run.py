@@ -193,7 +193,7 @@ def auto() -> AutoParams:
     """The run's automatic params.
 
     Read on every call rather than cached at import: a module that snapshots
-    the environment at import time is a module whose behaviour depends on
+    the environment at import time is a module whose behavior depends on
     import order, and no test can set a variable after it.
     """
     raw = os.environ.get(ENV_AUTO_PARAMS, "").strip()

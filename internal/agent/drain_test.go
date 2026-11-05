@@ -285,7 +285,7 @@ func TestACancelledStepDoesNotHoldTheDrain(t *testing.T) {
 		t.Fatalf("cancel answered %d", resp.StatusCode)
 	}
 	if err := waitFor(a, 5*time.Second); err != nil {
-		t.Fatalf("a cancelled step held the drain: %v", err)
+		t.Fatalf("a canceled step held the drain: %v", err)
 	}
 }
 

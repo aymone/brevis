@@ -150,10 +150,10 @@ func TestNumericLosesNoPrecision(t *testing.T) {
 	exato := int64(9007199254740993)
 	pelaFloat := int64(float64(exato))
 	if pelaFloat == exato {
-		t.Fatal("float64 representou 2^53+1 nesta plataforma; a escolha de string precisa " +
-			"ser revista, ou este teste deixou de provar o que diz")
+		t.Fatal("float64 represented 2^53+1 on this platform; the choice of string needs " +
+			"to be revisited, or this test no longer proves what it says")
 	}
 	if b, _ := json.Marshal(float64(exato)); string(b) == "9007199254740993" {
-		t.Error("o caminho por float64 nao perdeu precisao; o teste nao esta provando nada")
+		t.Error("the float64 path did not lose precision; the test is not proving anything")
 	}
 }

@@ -244,7 +244,7 @@ func TestStagesArriveThroughTheStepsLog(t *testing.T) {
 	}
 	var stages []app.RecordedStage
 	if err := json.Unmarshal(spy.stages, &stages); err != nil {
-		t.Fatalf("etapas ilegiveis: %v — %s", err, spy.stages)
+		t.Fatalf("unreadable stages: %v — %s", err, spy.stages)
 	}
 	if len(stages) != 1 || stages[0].TaskName != "extract" || stages[0].State != "done" {
 		t.Fatalf("etapas: %+v", stages)
@@ -265,7 +265,7 @@ func TestStagesArriveThroughTheStepsLog(t *testing.T) {
 	// E a saida de verdade continua inteira.
 	for _, esperada := range []string{"buscando a pagina 1", "pronto"} {
 		if !strings.Contains(spy.log, esperada) {
-			t.Errorf("a saida do programa se perdeu junto: %q sumiu de\n%s", esperada, spy.log)
+			t.Errorf("the program's output was lost with it: %q is missing from\n%s", esperada, spy.log)
 		}
 	}
 }

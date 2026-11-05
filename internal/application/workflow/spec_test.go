@@ -33,7 +33,7 @@ func TestParseExemploDailyReport(t *testing.T) {
 		t.Fatalf("edges = %d, wanted 2 (a 3-step chain)", len(w.Edges))
 	}
 	if w.Edges[0] != (dominio.Edge{From: "fetch_data", To: "build_report"}) {
-		t.Errorf("first aresta = %+v", w.Edges[0])
+		t.Errorf("first edge = %+v", w.Edges[0])
 	}
 
 	docker := w.Nodes[1]

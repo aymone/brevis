@@ -364,7 +364,7 @@ func (r *Result) Args() []any {
 }
 
 func (r *Result) String() string {
-	return fmt.Sprintf("%d records -> %d lines (%d ignored) em %s via %s, dedup %s, %s",
+	return fmt.Sprintf("%d records -> %d lines (%d ignored) into %s via %s, dedup %s, %s",
 		r.Records, r.Rows, r.Ignored, r.Table, r.Strategy, r.Dedup, r.Duration)
 }
 
