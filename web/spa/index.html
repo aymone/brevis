@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Brevis</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <!-- The faces above the fold, preloaded at the EXACT URLs the server sheet's @font-face names (the ?v= is the
+         file's content hash). Added by script because a <link> would be resolved by Vite at build time
+         and warn about a file it does not own. Without the preload the swap
+         after the first paint rewraps text on a phone (measured 0.025 CLS at 390px; under 0.001 on a desktop).
+         If a font file ever changes its hash changes and this only costs a duplicate fetch until updated; the
+         server writing these where it writes the app.css link (spa.go) would remove the hard-coded hash. -->
+    <script>
+      ["plex-sans-latin.woff2?v=056e4e2459f5", "plex-mono-latin.woff2?v=c36f509c0a8f"].forEach(function (f) {
+        var l = document.createElement("link");
+        l.rel = "preload"; l.as = "font"; l.type = "font/woff2"; l.crossOrigin = "anonymous"; l.href = "/assets/fonts/" + f;
+        document.head.appendChild(l);
+      });
+    </script>
+    <!--brevis:app-css-->
+    <!-- The theme before the first paint, as the server's pages do (base.templ): the
+         visitor's choice (or the system's) on <html>, so nothing flashes. -->
+    <script>
+      (function () {
+        var d = document.documentElement, p = "auto";
+        try { p = localStorage.getItem("brevis_theme") || "auto"; } catch (e) {}
+        if (p !== "light" && p !== "dark") p = "auto";
+        d.classList.add("js");
+        d.dataset.themePref = p;
+        try { d.dataset.navMode = localStorage.getItem("brevis_sidebar") === "short" ? "short" : "full"; } catch (e) { d.dataset.navMode = "full"; }
+        d.dataset.theme = p === "auto" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : p;
+      })();
+    </script>
+  </head>
+  <body class="h-full font-sans text-ink antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -53,32 +53,6 @@ func TestDatesFollowTheLanguage(t *testing.T) {
 	}
 }
 
-// RELATIVE TIME, up to a day, and a date after it -- the same boundary the
-// console has always drawn, in each language.
-func TestSinceSaysHowLongAgoInTheLanguage(t *testing.T) {
-	now := time.Date(2026, 10, 29, 12, 0, 0, 0, time.UTC)
-	for _, c := range []struct {
-		lang string
-		at   time.Time
-		want string
-	}{
-		{"en", now.Add(-20 * time.Second), "now"},
-		{"en", now.Add(-3 * time.Minute), "3 min ago"},
-		{"en", now.Add(5 * time.Minute), "in 5 min"},
-		{"en", now.Add(-2 * time.Hour), "2h ago"},
-		{"pt-BR", now.Add(-3 * time.Minute), "há 3 min"},
-		{"pt-BR", now.Add(5 * time.Minute), "em 5 min"},
-		{"pt-BR", now.Add(-20 * time.Second), "agora"},
-		{"es", now.Add(-3 * time.Minute), "hace 3 min"},
-		{"es", now.Add(5 * time.Minute), "en 5 min"},
-		{"pt-BR", now.Add(-50 * time.Hour), Date(in("pt-BR"), now.Add(-50*time.Hour).Local(), "short")},
-	} {
-		if got := Since(in(c.lang), now, c.at); got != c.want {
-			t.Errorf("%s %v: %q, want %q", c.lang, now.Sub(c.at), got, c.want)
-		}
-	}
-}
-
 // A DURATION KEEPS ITS UNITS -- ms, s, m, h read the same in all three -- and
 // takes the language's decimal mark.
 func TestElapsedTakesTheDecimalMark(t *testing.T) {

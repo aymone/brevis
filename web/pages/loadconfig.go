@@ -1,13 +1,12 @@
 package pages
 
 import (
-	"brevis.sh/brevis/web/i18n"
 	"context"
 	"slices"
 	"strconv"
 	"strings"
 
-	"brevis.sh/brevis/web/components"
+	"brevis.sh/brevis/web/i18n"
 )
 
 // LoadTabs is a step's configuration as a load's page shows it, in tabs
@@ -60,26 +59,6 @@ type TransformOp struct {
 // SchemaColumn is one declared column, its type when declared, and its role
 // when a setting names it: "partition", "cluster".
 type SchemaColumn struct{ Name, Type, Role string }
-
-// RowCount is how many of the configuration's rows the tabs hold: a common
-// setting stands for one row per source.
-func (t LoadTabs) RowCount() int {
-	n := len(t.SourceHead) + len(t.Common)*t.SourceCount + len(t.Destination) + len(t.SchemaRows)
-	for _, s := range t.Sources {
-		for _, c := range s.Cells {
-			if c != nil {
-				n++
-			}
-		}
-	}
-	for _, op := range t.Transform {
-		n += len(op.Rows)
-	}
-	for _, s := range t.Other {
-		n += len(s.Rows)
-	}
-	return n
-}
 
 // LoadConfigTabs regroups a step's configuration for its load's tabs.
 func LoadConfigTabs(v ConfigView) LoadTabs {
@@ -236,43 +215,6 @@ func (v LoadView) StepConfig() (WriterConfigView, bool) {
 	return WriterConfigView{}, false
 }
 
-// loadTabs are the tabs a configuration has: Summary and Destination always,
-// the others only with something in them, each with its count.
-func loadTabs(ctx context.Context, t LoadTabs) []components.Tab {
-	tabs := []components.Tab{{Key: "summary", Label: i18n.T(ctx, "config.tab.summary"), Selected: true}}
-	if len(t.SourceHead) > 0 || t.SourceCount > 0 {
-		label := i18n.T(ctx, "config.tab.sources")
-		if t.SourceCount > 0 {
-			label += " " + strconv.Itoa(t.SourceCount)
-		}
-		tabs = append(tabs, components.Tab{Key: "sources", Label: label})
-	}
-	if len(t.Transform) > 0 {
-		tabs = append(tabs, components.Tab{Key: "transform", Label: i18n.T(ctx, "config.tab.transform") + " " + strconv.Itoa(len(t.Transform))})
-	}
-	tabs = append(tabs, components.Tab{Key: "destination", Label: i18n.T(ctx, "config.tab.destination")})
-	if len(t.SchemaRows) > 0 {
-		label := i18n.T(ctx, "config.tab.schema")
-		if len(t.Schema) > 0 {
-			label += " " + strconv.Itoa(len(t.Schema))
-		}
-		tabs = append(tabs, components.Tab{Key: "schema", Label: label})
-	}
-	return tabs
-}
-
-func tabKeys(tabs []components.Tab) []string {
-	keys := make([]string, len(tabs))
-	for i, t := range tabs {
-		keys[i] = t.Key
-	}
-	return keys
-}
-
-func hasTab(tabs []components.Tab, key string) bool {
-	return slices.ContainsFunc(tabs, func(t components.Tab) bool { return t.Key == key })
-}
-
 // rowValue is the value of the row with this label, "" when there is none.
 func rowValue(rows []ConfigRow, label string) string {
 	for _, r := range rows {
@@ -297,14 +239,6 @@ func transformNames(t LoadTabs) string {
 	return strings.Join(names, " · ")
 }
 
-// cellTitle is a varying cell's whole value and its note.
-func cellTitle(r ConfigRow) string {
-	if r.Note == "" {
-		return r.Value
-	}
-	return r.Value + "\n" + r.Note
-}
-
 // schemaExtra are the declared settings the schema table does not already
 // say: everything but the column lists, and those too when they carry a note.
 func schemaExtra(rows []ConfigRow) []ConfigRow {
@@ -316,27 +250,6 @@ func schemaExtra(rows []ConfigRow) []ConfigRow {
 		out = append(out, r)
 	}
 	return out
-}
-
-// destinationIdentity is what the destination is, where and which object,
-// in the Destination tab.
-func destinationIdentity(ctx context.Context, v TargetView) []components.Def {
-	kind := v.Row.Kind
-	if v.Row.Legacy {
-		kind = i18n.T(ctx, "config.identity.legacy")
-	}
-	if kind == "" {
-		kind = "—"
-	}
-	where, what := SplitTarget(v.Row.Target)
-	if where == "" {
-		where = "—"
-	}
-	return []components.Def{
-		{Term: i18n.T(ctx, "config.identity.kind"), Value: kind, Mono: true},
-		{Term: i18n.T(ctx, "config.identity.where"), Value: where, Mono: true},
-		{Term: i18n.T(ctx, "config.identity.object"), Value: what, Mono: true},
-	}
 }
 
 // schemaRole is a column's roles in the reader's language: "partition,

@@ -50,19 +50,3 @@ func TestABucketOrATopicGetsNoTabs(t *testing.T) {
 		})
 	}
 }
-
-// A RELATION THE SERVICE CANNOT READ YET STILL GETS ITS TABS, with the
-// reason in them. `mysql://` is a table; nobody has written the dialect.
-// That is a sentence worth showing, and the opposite of a bucket.
-func TestARelationWithNoReaderKeepsItsTabs(t *testing.T) {
-	svc := (&sqlFake{status: http.StatusBadRequest,
-		body: `{"error":"mysql destinations cannot be read; bigquery and postgres can"}`}).start(t)
-	ui := consoleOf(t, sqlserve.New(svc.URL, ""), signedIn, "mysql://app/orders", "mysql")
-
-	body := render(t, ui, "/ingest/loads/bronze/load")
-	for _, want := range []string{"/sql?target="} {
-		if !strings.Contains(body, want) {
-			t.Errorf("a relation lost its %q", want)
-		}
-	}
-}

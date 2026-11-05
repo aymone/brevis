@@ -9,7 +9,8 @@ import (
 )
 
 // sources are the files that can ask for a message: the console's Go and
-// templates, and its script. Generated and test files are not.
+// templates, its script, and the React app's TypeScript (web/spa/src). Generated
+// and test files are not.
 func sources(t *testing.T) map[string]string {
 	t.Helper()
 	out := map[string]string{}
@@ -18,17 +19,24 @@ func sources(t *testing.T) map[string]string {
 			if err != nil || d.IsDir() {
 				return err
 			}
-			if strings.HasSuffix(p, "_test.go") || strings.HasSuffix(p, "_templ.go") || strings.Contains(p, "/vendor/") {
+			if strings.HasSuffix(p, "_test.go") || strings.Contains(p, "/vendor/") {
 				return nil
 			}
-			if ext := filepath.Ext(p); ext == ".go" || ext == ".templ" || (ext == ".js" && filepath.Base(p) == "ui.js") {
+			e := filepath.Ext(p)
+			spa := (e == ".ts" || e == ".tsx") && strings.Contains(p, "/spa/src/") && !strings.Contains(p, ".test.") && !strings.Contains(p, "/spa/src/test/")
+			if e == ".go" || spa {
 				raw, err := os.ReadFile(p)
 				if err != nil {
 					return err
 				}
 				// Comments are prose about the code -- an example call in a
 				// package doc is not a call.
-				out[p] = regexp.MustCompile(`(?m)^\s*//.*$`).ReplaceAllString(string(raw), "")
+				code := regexp.MustCompile(`(?m)^\s*//.*$`).ReplaceAllString(string(raw), "")
+				if spa {
+					// A doc comment's example (t("nav.projects")) is not a call either.
+					code = regexp.MustCompile(`(?s)/\*.*?\*/`).ReplaceAllString(code, "")
+				}
+				out[p] = code
 			}
 			return nil
 		})
@@ -53,10 +61,29 @@ func TestEveryKeyUsedExistsAndEveryKeyIsUsed(t *testing.T) {
 	src := sources(t)
 	all := strings.Join(mapValues(src), "\n")
 	literal := regexp.MustCompile(`i18n\.[TN]\(ctx,\s*"([a-z_.]+)"`)
-	script := regexp.MustCompile(`\bt\("([a-z_.]+)"`)
 	en := catalogs["en"]
+	// The React app asks through useT: t("a.b") and n("a.b", count) name a key
+	// whole; t(`a.${x}`) names a family by its prefix. The app's other keys sit in
+	// tables ({ key: "a.b" }, SORTABLE...) as quoted literals, which the unused
+	// check below finds by the quotes.
+	spaWhole := regexp.MustCompile(`\b[tn]\(\s*"([a-z_0-9.]+)"`)
+	spaFamily := regexp.MustCompile("\\b[tn]\\(\\s*`([a-z_0-9.]+)\\$\\{")
+	var spaPrefixes []string
 
 	for path, code := range src {
+		if strings.Contains(path, "/spa/src/") {
+			for _, m := range spaWhole.FindAllStringSubmatch(code, -1) {
+				if _, ok := en[m[1]]; !ok {
+					t.Errorf("%s asks for %s, which the catalog lacks", path, m[1])
+				}
+			}
+			for _, m := range spaFamily.FindAllStringSubmatch(code, -1) {
+				spaPrefixes = append(spaPrefixes, m[1])
+				if !anyKeyWithPrefix(en, m[1]) {
+					t.Errorf("%s asks for a key starting with %s, which the catalog lacks", path, m[1])
+				}
+			}
+		}
 		for _, m := range literal.FindAllStringSubmatch(code, -1) {
 			// A literal ending in a dot is a family's prefix, completed at
 			// run time ("nav." + key): the families below account for it.
@@ -67,28 +94,35 @@ func TestEveryKeyUsedExistsAndEveryKeyIsUsed(t *testing.T) {
 				t.Errorf("%s asks for %s, which the catalog lacks", path, m[1])
 			}
 		}
-		if strings.HasSuffix(path, "ui.js") {
-			for _, m := range script.FindAllStringSubmatch(code, -1) {
-				if !contains(ScriptKeys, m[1]) {
-					t.Errorf("ui.js asks for %s, which is not in ScriptKeys, so the page never hands it over", m[1])
-				}
-			}
-		}
-	}
-	for _, k := range ScriptKeys {
-		if _, ok := en[k]; !ok {
-			t.Errorf("ScriptKeys has %s, which the catalog lacks", k)
-		}
 	}
 
 	for key := range en {
-		if strings.Contains(all, `"`+key+`"`) || contains(ScriptKeys, key) {
+		// A family the SPA completes at run time (t(`a.${x}`)) uses every key under its prefix.
+		if strings.Contains(all, `"`+key+`"`) || hasPrefixIn(key, spaPrefixes) {
 			continue
 		}
 		if used := byFamily(key, all); !used {
 			t.Errorf("nothing asks for %s", key)
 		}
 	}
+}
+
+func anyKeyWithPrefix(c catalog, prefix string) bool {
+	for k := range c {
+		if strings.HasPrefix(k, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasPrefixIn(key string, prefixes []string) bool {
+	for _, p := range prefixes {
+		if strings.HasPrefix(key, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func byFamily(key, code string) bool {
@@ -126,15 +160,6 @@ func TestTheGlossarysFixedTermsAreNotTranslated(t *testing.T) {
 			}
 		}
 	}
-}
-
-func contains(list []string, s string) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
-	}
-	return false
 }
 
 func mapValues(m map[string]string) []string {

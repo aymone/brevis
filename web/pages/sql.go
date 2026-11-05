@@ -1,16 +1,12 @@
 package pages
 
 import (
-	"context"
-	"encoding/json"
 	"slices"
 	"strings"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
 	"brevis.sh/brevis/internal/infrastructure/sqlserve"
-	"brevis.sh/brevis/web/components"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // SQLView is the workbench.
@@ -141,11 +137,6 @@ type Branch struct {
 	Cols []sqlserve.Column
 }
 
-// Branch is what the active connection holds, for the page.
-func (v SQLView) Branch() Branch {
-	return Branch{Target: v.Target, Tree: v.Tree, Cut: v.TreeCut, Open: v.Open, Cols: v.Cols}
-}
-
 // Warehouses is the picker's choices: one per connection.
 func (v SQLView) Warehouses() []Warehouse { return Warehouses(v.Targets) }
 
@@ -205,28 +196,6 @@ func selectOf(schema, table string) string {
 	return "SELECT *\nFROM " + schema + "." + table + "\nLIMIT 100;"
 }
 
-// Active says this warehouse is the one whose listing is drawn.
-func (v SQLView) Active(w Warehouse) bool {
-	return v.Target != "" && (v.Target == w.Target || strings.HasPrefix(v.Target, w.Name+"/"))
-}
-
-// Running is the connection a query would run on, as the tree names it.
-//
-// THE CONNECTION AND NOT THE DESTINATION. `/v1/query` opens on the scheme
-// and the first segment and never looks at the rest of a target, so
-// `bigquery://acme` is the whole truth and `bigquery://acme/bronze/orders`
-// would name a table the statement may not even mention. It is also the
-// string the tree's root carries, so the label and the node agree -- which
-// is what lets the island set one from the other.
-func (v SQLView) Running() string {
-	for _, w := range v.Warehouses() {
-		if v.Active(w) {
-			return w.Name
-		}
-	}
-	return ""
-}
-
 // BuildTree groups a listing by schema, in the order the service gave it.
 //
 // THE SERVICE ORDERS, NOT THIS. Both dialects sort in SQL, where the
@@ -261,73 +230,6 @@ func BuildSQL(entries []postgres.CatalogEntry) SQLView {
 	return v
 }
 
-// Note is the line over the grid: what came back, what it read, how long --
-// "2 rows · 91.9 MB read · 523 ms" -- in the reader's words and numbers.
-func (v SQLView) Note(ctx context.Context) string {
-	if v.Result == nil {
-		return ""
-	}
-	if v.Result.Wrote {
-		return v.Changed(ctx) + " · " + v.Cost(ctx)
-	}
-	note := i18n.N(ctx, "sql.result.rows", len(v.Result.Rows)) + " · " + v.Cost(ctx)
-	if v.Result.Truncated {
-		note += " " + i18n.T(ctx, "sql.result.more")
-	}
-	return note
-}
-
-// Changed is what a statement that wrote did, in one sentence.
-//
-// THREE ANSWERS AND NOT TWO. "12 rows changed" and "0 rows changed" are the
-// same sentence with a different number, and both are a COUNT. "no rows to
-// count" is not a count at all -- a CREATE TABLE changed nothing and did not
-// fail, and printing zero for it reads as a failure to whoever ran it.
-func (v SQLView) Changed(ctx context.Context) string {
-	if v.Result == nil || !v.Result.Wrote {
-		return ""
-	}
-	if v.Result.Changed == nil {
-		return i18n.T(ctx, "sql.result.uncounted")
-	}
-	return i18n.N(ctx, "sql.result.changed", int(*v.Result.Changed))
-}
-
-// Cost is what the statement spent: "91.9 MB read · 523 ms".
-//
-// ONE FORMATTER, TWO READERS. History lists the same figures, and it is
-// built in the browser -- so the alternative was a second `bytesText` in
-// JavaScript. Two rounders disagree eventually.
-func (v SQLView) Cost(ctx context.Context) string {
-	if v.Result == nil {
-		return ""
-	}
-	return i18n.T(ctx, "sql.result.read", "bytes", bytesSaid(ctx, v.Result.Bytes)) + " · " +
-		i18n.Number(ctx, v.Result.Millis) + " ms"
-}
-
-// Ran says something happened, which is the difference between a screen
-// waiting for a first query and one showing the second.
-func (v SQLView) Ran() bool { return v.Result != nil || v.failed() }
-
-// failed says the statement came back with no answer, for whatever reason.
-func (v SQLView) failed() bool { return v.Err != "" || v.Refused != "" || v.ErrKey != "" }
-
-// Outcome is what the Recent rail records.
-//
-// A REFUSAL IS AN OUTCOME. A rail that only listed what succeeded would be a
-// rail somebody reads to conclude a query was never run -- and the refused
-// ones are the ones worth finding again.
-func (v SQLView) Outcome() string {
-	if v.Result != nil {
-		return "ok"
-	}
-	if v.failed() {
-		return "failed"
-	}
-	return ""
-}
-
 // Knows says the catalog lists this destination.
 //
 // ONE FUNCTION, TWO CALLERS, AND THAT IS THE POINT. `/sql`'s GET path had
@@ -354,87 +256,4 @@ func ConnectionOf(target string) string {
 	}
 	first, _, _ := strings.Cut(rest, "/")
 	return first
-}
-
-// JSON is the result as the service sent it, for the tab of that name.
-//
-// THE ROWS AND THE COLUMNS, AND NOT THE STATEMENT. A JSON view is for
-// pasting into something else; the query that produced it is the one thing
-// on this screen that must not travel, and a reader who wants it has it in
-// the box above.
-func (v SQLView) JSON() string {
-	if v.Result == nil {
-		return ""
-	}
-	out, err := json.MarshalIndent(struct {
-		Columns []string `json:"columns"`
-		Rows    [][]any  `json:"rows"`
-	}{v.Result.Columns, v.Result.Rows}, "", "  ")
-	if err != nil {
-		// Unreachable with these types, and an error here is not worth a
-		// screen: the tab beside this one holds the same answer.
-		return ""
-	}
-	return string(out)
-}
-
-// Empty says there is nothing to query, which is a sentence and not a blank
-// screen: a console with no relational destination has nothing to point this
-// at, and the reason is the pipelines rather than the service.
-func (v SQLView) Empty() bool { return len(v.Targets) == 0 }
-
-// EditorAssets is the island's load order, exported so it can be pinned.
-//
-// THE ORDER IS NOT STYLE. The SQL mode calls `CodeMirror.defineMode` the
-// instant it runs, and `CodeMirror` is what the first file defines; swapping
-// the two leaves a plain textarea and a console error. The DAG island carries
-// the same warning in prose -- "swapping two lines here leaves the screen
-// blank" -- and nothing has ever checked it.
-//
-// No Go test can watch a browser evaluate these. What a test CAN do is refuse
-// a reordering, which is the mistake the prose is about.
-func EditorAssets() []string { return editorAssets.JS }
-
-// openOf is the ARIA state of a relation's disclosure button, as a string
-// because that is what the attribute takes.
-//
-// ON Branch AND NOT SQLView: the fragment endpoint draws the same tree with
-// no page around it, and a helper that needed the whole view would have made
-// one of the two callers build a view it does not have.
-func openOf(b Branch, schema, table string) string {
-	if b.Open == schema+"."+table {
-		return "true"
-	}
-	return "false"
-}
-
-// warehouseLabel is a connection as the picker says it: the warehouse by its
-// maker's name, then the connection -- "Google BigQuery · acme".
-func warehouseLabel(ctx context.Context, w Warehouse) string {
-	scheme, rest, _ := strings.Cut(w.Name, "://")
-	return components.LogoTitle(ctx, kindLogo(scheme)) + " · " + rest
-}
-
-// unreadableSaid is the kinds the console cannot read, by their makers'
-// names: "Amazon Redshift, MySQL".
-func unreadableSaid(ctx context.Context, kinds []string) string {
-	names := make([]string, len(kinds))
-	for i, k := range kinds {
-		names[i] = components.LogoTitle(ctx, kindLogo(k))
-	}
-	return strings.Join(names, ", ")
-}
-
-// bytesSaid is a byte count as the reader writes numbers: "273.9 MB" in
-// English, "273,9 MB" in Portuguese. The units are the same everywhere.
-func bytesSaid(ctx context.Context, n int64) string {
-	for _, u := range []struct {
-		size int64
-		unit string
-	}{{1 << 40, "TB"}, {1 << 30, "GB"}, {1 << 20, "MB"}, {1 << 10, "kB"}} {
-		if n >= u.size {
-			return i18n.Decimal(ctx, float64(n)/float64(u.size), 1) + " " + u.unit
-		}
-	}
-	return i18n.Number(ctx, n) + " B"
 }

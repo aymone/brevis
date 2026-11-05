@@ -1,0 +1,9 @@
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79368185811699e+09
+# TYPE brevis_gateway_buffer_records gauge
+brevis_gateway_buffer_records{stream="clicks"} 0
+brevis_gateway_buffer_records{stream="orders"} 0
+# TYPE brevis_gateway_queue_batches gauge
+brevis_gateway_queue_batches{stream="clicks"} 0
+brevis_gateway_queue_batches{stream="orders"} 0

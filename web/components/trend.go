@@ -218,9 +218,6 @@ func TrendWindow(days []postgres.LoadDay) string {
 	return first.Format("2 Jan 2006") + " to " + last.Format("2 Jan 2006")
 }
 
-// TrendGeometry hands the template the viewBox it should use.
-func TrendGeometry() (int, int) { return trendW, trendH }
-
 // TrendDays is how far back the trend reads. Ninety rather than the calendar's
 // year: a chart with 364 points on 300 units of width draws under one point per
 // pixel, and "is it getting worse" is a question about the recent past.

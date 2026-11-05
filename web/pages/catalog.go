@@ -1,14 +1,11 @@
 package pages
 
 import (
-	"context"
-	"net/url"
 	"strings"
 	"time"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // CatalogScreen is /data (screen-catalog): every destination the ecosystem
@@ -33,40 +30,6 @@ type CatalogScreen struct {
 	// nobody writes.
 	Drawer  *TargetView
 	Missing string
-}
-
-// TargetHref is a destination's drawer, keeping the filter it is opened
-// from: closing it comes back to the same list.
-func (f DataFilter) TargetHref(target string) string {
-	g := f
-	g.Path = "/data/target"
-	base := g.With("", "")
-	sep := "?"
-	if strings.Contains(base, "?") {
-		sep = "&"
-	}
-	return base + sep + "u=" + url.QueryEscape(target)
-}
-
-// CloseHref is the list the drawer was opened from.
-func (v CatalogScreen) CloseHref() string {
-	f := v.Filter
-	f.Path = "/data"
-	return f.With("", "")
-}
-
-// rowHref is where a row goes: its destination's drawer, or -- for one its
-// manifest could not name, which has no URI to open -- the stream that
-// writes it.
-func (v CatalogScreen) rowHref(r DataRow) string {
-	if r.Target == "" {
-		for _, w := range r.Writers {
-			if g := w.Gateway; g != nil {
-				return Stream{Gateway: g.Name, Path: g.Stream}.Href()
-			}
-		}
-	}
-	return v.Filter.TargetHref(r.Target)
 }
 
 // Count is how many destinations a status choice would show.
@@ -163,51 +126,6 @@ func writerName(w postgres.CatalogWriter) string {
 	return w.Workflow + " · " + w.Node
 }
 
-// runQueued is whether a writer of the destination has a run queued or going,
-// which the row says under its status: the fix may already be on its way.
-func runQueued(r DataRow) bool {
-	for _, w := range r.Writers {
-		if w.RunInFlight != nil {
-			return true
-		}
-	}
-	return false
-}
-
-// autoTable says the destination is a gateway's table-per-event-type: its
-// URI ends in `*`.
-func autoTable(target string) bool { return strings.HasSuffix(target, "/*") }
-
-// catalogStatuses are the band's choices after All and Needs attention, in
-// the order of their gravity.
-var catalogStatuses = []catalog.Status{
-	catalog.Stale, catalog.Late, catalog.OnTime, catalog.Continuous,
-	catalog.Paused, catalog.Unscheduled, catalog.Unidentified,
-}
-
-// statusTip is the rule behind a status, as the band's tooltip says it.
-func statusTip(ctx context.Context, s string) string {
-	switch s {
-	case "attention":
-		return i18n.T(ctx, "catalog.tip.attention")
-	case "stale":
-		return i18n.T(ctx, "catalog.tip.stale")
-	case "late":
-		return i18n.T(ctx, "catalog.tip.late")
-	case "on_time":
-		return i18n.T(ctx, "catalog.tip.on_time")
-	case "continuous":
-		return i18n.T(ctx, "catalog.tip.continuous")
-	case "paused":
-		return i18n.T(ctx, "catalog.tip.paused")
-	case "unscheduled":
-		return i18n.T(ctx, "catalog.tip.unscheduled")
-	case "unidentified":
-		return i18n.T(ctx, "catalog.tip.unidentified")
-	}
-	return ""
-}
-
 // kindLogo is the logo a destination's kind is drawn with.
 func kindLogo(kind string) string {
 	switch kind {
@@ -217,43 +135,6 @@ func kindLogo(kind string) string {
 		return "file"
 	}
 	return kind
-}
-
-// freshnessWord is the state word's key for a catalog status: "unscheduled"
-// is said as "no schedule".
-func freshnessWord(s string) string {
-	if s == "unscheduled" {
-		return "no_schedule"
-	}
-	return s
-}
-
-// legacyFlip is the legacy switch's other position.
-func legacyFlip(on bool) string {
-	if on {
-		return ""
-	}
-	return "1"
-}
-
-// peakOf is the largest of a destination's recent counts, for scaling bars.
-func peakOf(counts []*int64) int64 {
-	var peak int64
-	for _, c := range counts {
-		if c != nil && *c > peak {
-			peak = *c
-		}
-	}
-	return peak
-}
-
-// barHeight is a count's bar as a share of the tallest, never under 12% so a
-// small load still shows.
-func barHeight(n, peak int64) int {
-	if peak <= 0 {
-		return 12
-	}
-	return max(12, int(n*100/peak))
 }
 
 // splitDestination cuts a destination for its row: everything up to the
@@ -269,12 +150,4 @@ func splitDestination(t string) (where, what string) {
 	}
 	i := strings.LastIndex(t, "/")
 	return t[:i+1], t[i+1:]
-}
-
-// statusKind is a catalog status as the Status component knows it.
-func statusKind(s string) string {
-	if s == "unscheduled" {
-		return "no_schedule"
-	}
-	return s
 }

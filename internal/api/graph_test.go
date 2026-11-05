@@ -1,7 +1,6 @@
 package api_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -20,7 +19,6 @@ import (
 	dom "brevis.sh/brevis/internal/domain/run"
 	wf "brevis.sh/brevis/internal/domain/workflow"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/assets"
 )
 
 // A diamond graph: b and c depend on a, d depends on both. The shape matters
@@ -689,72 +687,6 @@ func rawBody(t *testing.T, ui *api.UI, path string) string {
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
 	return rec.Body.String()
-}
-
-// TestTheIslandKnowsEveryNodeTypeTheAPIEmits.
-//
-// React Flow falls back to its DEFAULT node for a `type` it does not
-// recognise, and the default draws a plausible box with the step's name. So a
-// mismatch between the two sides of this contract does not break anything
-// visibly: it silently removes the status ring, the runtime chips, the SDK
-// badge, the instance count and the phases, and leaves a graph that still looks
-// like a graph.
-//
-// That happened. The rename from `bravis` to `brevis` on 2026-09-04 changed
-// internal/api/graph.go and not web/assets/dag.js, and for three days every
-// step rendered as a bare React Flow box with nothing on it. Nothing failed,
-// because nothing was checking.
-//
-// This is the check. It is cross-language and it is crude -- it reads the
-// island's source and looks for the keys -- and crude is the point: the two
-// files cannot share a constant, so the only thing that can hold them together
-// is something that reads both.
-func TestTheIslandKnowsEveryNodeTypeTheAPIEmits(t *testing.T) {
-	island, err := assets.FS.ReadFile("dag.js")
-	if err != nil {
-		t.Fatal(err)
-	}
-	registered := island[bytes.Index(island, []byte("var NODE_TYPES")):]
-	registered = registered[:bytes.IndexByte(registered, '\n')]
-
-	// A run that produces every type the API can emit: a step, a step with
-	// phases, and a group. It has to be a RUN graph, because phases only exist
-	// once something has announced them.
-	w := wf.Workflow{
-		Slug: "every_type",
-		Nodes: []wf.Node{
-			{ID: "a", Run: "echo a", Group: "loading"},
-			{ID: "b", Run: "echo b", Group: "loading"},
-		},
-		Edges: []wf.Edge{{From: "a", To: "b"}},
-	}
-	definition, err := json.Marshal(w)
-	if err != nil {
-		t.Fatal(err)
-	}
-	id := uuid.New()
-	ui := newUI(defsFake{w: w}, execsFake{
-		run: dom.Run{ID: id, WorkflowSlug: w.Slug, Status: dom.StatusRunning, Definition: definition},
-		states: map[string]postgres.NodeState{
-			"a": {NodeID: "a", Status: "success",
-				Stages: []postgres.Stage{{Name: "extract", State: "done"}}},
-		},
-	})
-	_, g := request(t, ui, "/api/runs/"+id.String()+"/graph")
-
-	seen := map[string]bool{}
-	for _, n := range g.Nodes {
-		seen[n.Type] = true
-	}
-	if len(seen) < 3 {
-		t.Fatalf("the fixture did not produce every type; it made %v", seen)
-	}
-	for kind := range seen {
-		if !bytes.Contains(registered, []byte(kind+":")) {
-			t.Errorf("the API emits node type %q and the island registers %s",
-				kind, registered)
-		}
-	}
 }
 
 // TestAGroupIsDrawnBehindItsSteps.

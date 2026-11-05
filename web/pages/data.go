@@ -191,52 +191,6 @@ func ParseDataFilter(q url.Values) DataFilter {
 	return f
 }
 
-// With is the link to this filter with one field changed. The fields are
-// always written in the same order, so one filter has exactly one URL.
-func (f DataFilter) With(field, value string) string {
-	switch field {
-	case "status":
-		f.Status = value
-	case "kind":
-		f.Kind = value
-	case "source":
-		f.Source = value
-	case "legacy":
-		f.Legacy = value == "1"
-	case "q":
-		f.Q = value
-	}
-	var parts []string
-	if f.Status != "" {
-		parts = append(parts, "status="+url.QueryEscape(f.Status))
-	}
-	if f.Kind != "" {
-		parts = append(parts, "kind="+url.QueryEscape(f.Kind))
-	}
-	if f.Source != "" {
-		parts = append(parts, "source="+url.QueryEscape(f.Source))
-	}
-	if f.Legacy {
-		parts = append(parts, "legacy=1")
-	}
-	if f.Q != "" {
-		parts = append(parts, "q="+url.QueryEscape(f.Q))
-	}
-	base := f.Path
-	if base == "" {
-		base = "/ingest/loads"
-	}
-	if len(parts) == 0 {
-		return base
-	}
-	return base + "?" + strings.Join(parts, "&")
-}
-
-// Active reports whether any field is set.
-func (f DataFilter) Active() bool {
-	return f.Status != "" || f.Kind != "" || f.Source != "" || f.Legacy || f.Q != ""
-}
-
 // SplitTarget cuts a URI into where and what -- `postgres://brevis_it/` and
 // `public/landing_orders` -- so a table of them can dim the part every row
 // shares. A legacy label (`bronze.payments`) splits at its last dot. Joined,

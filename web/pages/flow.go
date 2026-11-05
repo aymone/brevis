@@ -164,38 +164,3 @@ func joinWords(sep string, parts ...string) string {
 	}
 	return strings.Join(kept, sep)
 }
-
-// flowIcon is a node's glyph.
-func flowIcon(kind string) string {
-	switch kind {
-	case "source":
-		return "plug"
-	case "buffer":
-		return "rows-3"
-	case "dead_letter":
-		return "triangle-alert"
-	}
-	return "database"
-}
-
-// flowBorder marks the destination: the node the page is about. In ink, not
-// the accent, which is the screen's one primary action.
-func flowBorder(kind string) string {
-	if kind == "destination" {
-		return "border-ink-2"
-	}
-	return "border-line"
-}
-
-// flowTitle is a node's heading, by its kind, in the reader's language.
-func flowTitle(ctx context.Context, kind string) string {
-	switch kind {
-	case "source":
-		return i18n.T(ctx, "flow.source")
-	case "buffer":
-		return i18n.T(ctx, "flow.buffer")
-	case "dead_letter":
-		return i18n.T(ctx, "flow.dead_letter")
-	}
-	return i18n.T(ctx, "flow.destination")
-}

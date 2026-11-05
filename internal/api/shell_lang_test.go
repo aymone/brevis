@@ -16,37 +16,6 @@ func shellOf(body string) string {
 	return body[:main] + body[end:]
 }
 
-// THE SHELL SPEAKS THE READER'S LANGUAGE: the sections and their hints, the
-// switcher, the palette's opener, the account menu, the drawer's controls,
-// the theme and shortcut buttons, the shortcuts list and the palette.
-func TestTheShellIsDrawnInTheReadersLanguage(t *testing.T) {
-	ui := dataUI(catalogFake{}).WithEndpoints(endpointsFake{})
-	for lang, want := range map[string][]string{
-		"pt-BR": {
-			`aria-label="Monitorar"`, ">Visão geral<", ">Execuções<", ">Tempo real<", ">Cargas batch<",
-			`aria-label="Dados"`, ">Projetos<", "Buscar ou ir para…", "Documentação",
-			`aria-label="Fechar a navegação"`, `aria-label="Abrir a navegação"`,
-			`aria-label="Tema"`, `aria-label="Automático"`, "Atalhos de teclado",
-			"Ir para Visão geral", `placeholder="Buscar workflows, destinos, endpoints…"`,
-			"A saúde de tudo, o que falhou e o que dispara a seguir",
-			// The palette's footer: each key, then what it does.
-			">navegar<", ">abrir<", ">em nova aba<",
-		},
-		"es": {
-			`aria-label="Monitorear"`, ">Resumen<", ">Ejecuciones<", ">Tiempo real<",
-			`aria-label="Datos"`, ">Proyectos<", "Buscar o ir a…", "Documentación",
-			`aria-label="Tema"`, `aria-label="Automático"`, "Atajos de teclado", "Ir a Resumen",
-		},
-	} {
-		body := shellOf(pageIn(t, ui, "/ingest/loads", lang, "", false))
-		for _, w := range want {
-			if !strings.Contains(body, w) {
-				t.Errorf("%s: the shell lacks %s", lang, w)
-			}
-		}
-	}
-}
-
 // AND NO ENGLISH IS LEFT IN IT. Every sentence the shell said in English
 // before this module, looked for in the Portuguese shell: one that survives
 // is a string somebody forgot to move to the catalog.

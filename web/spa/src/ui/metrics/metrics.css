@@ -1,0 +1,66 @@
+/* Live volume (ui/metrics). Tokens only; every rule is prefixed mx-. Heights are fixed so no state moves the page. */
+
+.mx-strip { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 0; margin-bottom: 1rem; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); overflow: hidden; }
+.mx-main { grid-row: 1; padding: 12px 14px; min-height: 9.5rem; min-width: 0; }
+.mx-cells { grid-row: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0; background: var(--color-line-soft); border-left: 1px solid var(--color-line-soft); }
+.mx-cells > div { background: var(--color-surface); padding: 10px 14px; min-width: 0; }
+.mx-cells dt { font-size: 11.5px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mx-cells dd { margin: 3px 0 0; font-size: 18px; font-weight: var(--font-weight-semibold, 600); letter-spacing: -0.02em; color: var(--color-ink); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.mx-note { grid-column: 1 / -1; margin: 0; padding: 0 14px; box-sizing: border-box; height: 1.75rem; line-height: calc(1.75rem - 1px); border-top: 1px solid var(--color-line-soft); font-size: 11.5px; color: var(--color-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mx-label { margin: 0; font-size: 12px; color: var(--color-muted); }
+.mx-big { display: flex; align-items: baseline; gap: 6px; margin: 4px 0 6px; font-size: 30px; line-height: 1.1; font-weight: 600; letter-spacing: -0.03em; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+.mx-unit { font-size: 12.5px; font-weight: 400; letter-spacing: 0; color: var(--color-faint); }
+.mx-spark { display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+.mx-spark svg { max-width: 100%; height: 36px; }
+.mx-spark-ghost { display: block; width: 240px; max-width: 100%; height: 36px; border-radius: .3rem; }
+.mx-spark-cap { font-size: 11px; color: var(--color-faint); white-space: nowrap; }
+.mx-hot { color: var(--color-state-failed); }
+
+.mx-notice { font-size: 12.5px; line-height: 1.4; color: var(--color-muted); }
+.mx-notice p { margin: 2px 0 0; }
+.mx-notice .mx-notice-title { margin: 6px 0 2px; font-size: 13px; font-weight: 600; color: var(--color-ink); }
+.mx-copy { display: flex; align-items: center; gap: 4px; margin-top: 6px; min-width: 0; }
+.mx-copy code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 4px 8px; border: 1px solid var(--color-line-soft); border-radius: var(--radius-sm); background: var(--color-canvas); font-family: var(--font-mono); font-size: 11.5px; color: var(--color-ink-2); }
+
+/* A row's quiet cell: a width of its own, so the row is as tall and as wide with or without a source. */
+.mx-row { display: inline-flex; align-items: center; gap: 8px; height: 20px; min-width: 7.5rem; font-size: 12px; color: var(--color-ink-2); white-space: nowrap; }
+.mx-off { color: var(--color-faint); }
+.mx-rate { display: inline-block; min-width: 3.4rem; text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.mx-rate small { margin-left: 2px; font-family: inherit; font-size: 10.5px; color: var(--color-faint); }
+.mx-trend { display: block; flex: none; }
+
+/* The detail card. */
+.mx-panel { padding: 12px 14px 0; }
+.mx-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px 16px; margin: 0 0 12px; }
+.mx-fig dt { font-size: 11.5px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mx-fig dd { margin: 2px 0 0; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; color: var(--color-ink); font-variant-numeric: tabular-nums; line-height: 20px; height: 20px; white-space: nowrap; overflow: hidden; }
+.mx-fig dd small { line-height: 1; font-size: 11px; font-weight: 400; color: var(--color-faint); }
+.mx-box { position: relative; height: 11rem; overflow: hidden; }
+.mx-box-lat { height: 8.5rem; margin-top: 4px; }
+.mx-fill { display: block; width: 100%; height: 100%; border-radius: .3rem; }
+.mx-quiet { margin: 0; min-height: 1.25rem; font-size: 12px; line-height: 1.25rem; color: var(--color-muted); }
+.mx-panel .mx-note { margin: 4px -14px 0; }
+
+.mx-chart { margin: 0; }
+.mx-plot { position: relative; }
+.mx-plot svg { display: block; width: 100%; height: 100%; }
+.mx-ymax { position: absolute; top: 2px; left: 4px; font-size: 10.5px; color: var(--color-faint); font-variant-numeric: tabular-nums; pointer-events: none; }
+.mx-grid { stroke: var(--color-line-soft); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mx-axis { stroke: var(--color-line-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.mx-xaxis { display: flex; justify-content: space-between; height: 18px; line-height: 18px; font-size: 10.5px; color: var(--color-faint); }
+.mx-legend { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 0; padding: 0; list-style: none; min-height: 22px; font-size: 11.5px; color: var(--color-muted); }
+.mx-legend li { display: inline-flex; align-items: center; gap: 5px; }
+.mx-legend i { width: 9px; height: 9px; border-radius: 2px; }
+
+@media (max-width: 768px) {
+  .mx-strip { grid-template-columns: minmax(0, 1fr); }
+  .mx-main { min-height: 11rem; }
+  .mx-cells { grid-row: 2; border-left: 0; border-top: 1px solid var(--color-line-soft); }
+  .mx-note { grid-row: 3; }
+  .mx-box { height: 13rem; }
+  .mx-box-lat { height: 9rem; }
+}
+
+/* The list rows: the path on the left, the rate at the end of the same line. */
+.mx-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+@media (max-width: 1100px) { .mx-line .mx-trend { display: none; } .mx-row { min-width: 4.5rem; } }

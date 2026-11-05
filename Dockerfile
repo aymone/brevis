@@ -20,6 +20,8 @@ COPY . .
 # //go:embed fails here, in the build, and not in production with an unstyled
 # page.
 RUN test -f web/assets/app.css || { echo "web/assets/app.css is missing — run 'make generate'"; exit 1; }
+# The React app is embedded the same way (web/spa/dist, built by `make spa`).
+RUN test -f web/spa/dist/index.html || { echo "web/spa/dist is missing — run 'make generate'"; exit 1; }
 # The fonts and the UMD bundles are served from the binary. Without them the UI
 # loads, but with the system's typography and a blank DAG screen — silent
 # failures that only show up in the browser. Failing here, with a message, is
@@ -31,7 +33,6 @@ RUN test -f web/assets/app.css || { echo "web/assets/app.css is missing — run 
 # line kept naming `inter-latin.woff2`, and the release build failed after the
 # tag was already pushed. Reading the stylesheet cannot go stale.
 RUN set -eu; fonts=$(grep -oE 'url\([^)]*/assets/fonts/[^)]*\)' web/assets/app.css | sed -E 's|.*/assets/||; s|[")]||g' | sort -u); test -n "$fonts" || { echo "app.css asks for no font at all"; exit 1; }; for f in $fonts; do test -f "web/assets/$f" || { echo "app.css asks for web/assets/$f and it is not here"; exit 1; }; done; echo "fonts: $(echo "$fonts" | wc -w) present"
-RUN test -f web/assets/vendor/xyflow.js || { echo "web/assets/vendor is missing"; exit 1; }
 
 # The version stamped into the binary. `brevis version` inside the container is
 # the only reliable way to know what is running when the image's tag has been

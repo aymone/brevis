@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"strings"
 	"testing"
 	"time"
@@ -26,16 +25,6 @@ func TestFailingIsOrderedByWhatNeedsAPerson(t *testing.T) {
 	}
 	if strings.Join(order, ",") != "again_new,again_old,once_new,once_old" {
 		t.Errorf("ordered %v", order)
-	}
-}
-
-// Nothing the first time, the ordinal the second, a count from the third.
-func TestTheStreakIsSaidAsAReaderCountsIt(t *testing.T) {
-	ctx := context.Background()
-	for n, want := range map[int]string{0: "", 1: "", 2: "2nd time in a row", 3: "Failed 3 times in a row"} {
-		if got := streakText(ctx, n); got != want {
-			t.Errorf("streak %d says %q; wanted %q", n, got, want)
-		}
 	}
 }
 

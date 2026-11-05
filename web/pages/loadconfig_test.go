@@ -82,33 +82,6 @@ func TestASourceSettingSharedByAllIsSaidOnce(t *testing.T) {
 	}
 }
 
-// EVERY ROW LANDS IN EXACTLY ONE TAB: the config's rows in, the tabs' rows
-// out, the same count -- the split may group, it may not drop.
-func TestEveryConfigRowIsInOneTab(t *testing.T) {
-	v := BuildConfig(manySources(10, "5m"))
-	in := 0
-	for _, s := range v.Sections {
-		in += len(s.Rows)
-	}
-	tabs := LoadConfigTabs(v)
-	if out := tabs.RowCount(); out != in {
-		t.Errorf("rows in = %d, rows out = %d", in, out)
-	}
-	if len(tabs.Transform) != 2 || len(tabs.Transform[0].Rows) != 1 {
-		t.Errorf("transform = %+v", tabs.Transform)
-	}
-	if got := keysOf(tabs.Destination); !slices.Equal(got, []string{"driver", "dedup", "cluster_by"}) {
-		t.Errorf("destination = %v", got)
-	}
-	if tabs.Destination[1].Note != "by ingestion_id" {
-		t.Error("a destination row lost its note")
-	}
-	want := []SchemaColumn{{"date", "DATE", "partition"}, {"value", "NUMERIC", ""}, {"series_code", "STRING", "cluster"}}
-	if !slices.Equal(tabs.Schema, want) {
-		t.Errorf("schema = %+v", tabs.Schema)
-	}
-}
-
 // A SINGLE SOURCE IS ITS ROWS: no "common to 1", no table of one.
 func TestASingleSourceIsItsRows(t *testing.T) {
 	tabs := LoadConfigTabs(BuildConfig(&postgres.WriterConfig{Fields: []catalog.ManifestField{

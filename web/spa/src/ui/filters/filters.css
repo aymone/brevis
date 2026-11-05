@@ -1,0 +1,237 @@
+/* The filter kit's rules: only what the server's compiled sheet lacks (container
+   queries, masks, the portaled popover). Every colour, radius and font is the
+   console's own token; the `flt-` prefix keeps the rest of the app untouched.
+   See FilterBar.tsx for why each choice was made. */
+
+:root {
+  /* A recessed track and a raised selected segment, per theme: in dark the raised
+     segment is the LIGHTER one (surface-3 on canvas), in light it is the white one on
+     a tinted track. Same cue (lift + border + weight), two palettes. */
+  --flt-track: var(--color-canvas);
+  --flt-raised: var(--color-surface-3);
+  --flt-lift: 0 1px 2px color-mix(in srgb, var(--color-ink) 30%, transparent);
+}
+:root[data-theme="light"] {
+  --flt-track: var(--color-surface-2);
+  --flt-raised: var(--color-surface);
+  --flt-lift: 0 1px 2px color-mix(in srgb, var(--color-ink) 16%, transparent);
+}
+
+/* ---- the bar: a size container, so it reacts to the room it has, not to the window ---- */
+.flt-bar { container: flt / inline-size; position: relative; min-width: 0; }
+.flt-row {
+  --flt-h: 2rem;
+  display: flex; flex-wrap: nowrap; align-items: center; gap: .5rem; min-height: var(--flt-h, 2rem);
+  font-size: 13px;
+  /* Whatever the width, the row scrolls instead of wrapping or clipping a control; the 3px of
+     padding (taken back by the margin) keep the focus ring from being cut by the scroller. */
+  overflow-x: auto; scrollbar-width: none; padding: 3px; margin: -3px;
+}
+.flt-row::-webkit-scrollbar { display: none; }
+.flt-row[data-fade-r="true"]:not([data-fade-l="true"]), .flt-chips-scroll[data-fade-r="true"]:not([data-fade-l="true"]) { mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+.flt-row[data-fade-l="true"]:not([data-fade-r="true"]), .flt-chips-scroll[data-fade-l="true"]:not([data-fade-r="true"]) { mask-image: linear-gradient(90deg, transparent, #000 24px); }
+.flt-row[data-fade-l="true"][data-fade-r="true"], .flt-chips-scroll[data-fade-l="true"][data-fade-r="true"] { mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.flt-row > * { flex: none; }
+/* The spacer grows only after the search has reached its own maximum, so the search takes the room first. */
+.flt-gap { flex: .001 1 0 !important; min-width: 0; margin-left: -.5rem; /* it costs no gap of its own (and adds no scrollable overflow) */ }
+
+/* The shared control shape: search, dropdown button, segmented track, action button. */
+.flt-ctl {
+  display: inline-flex; align-items: center; gap: .375rem; height: var(--flt-h, 2rem); min-width: 0;
+  border: 1px solid var(--color-line); border-radius: var(--radius-card);
+  background: var(--color-surface); color: var(--color-ink);
+  font: inherit; font-size: 13px; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.flt-ctl:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--color-surface-2); border-color: var(--color-line-strong); }
+.flt-ctl:disabled, .flt-ctl[aria-disabled="true"] { opacity: .5; cursor: default; }
+/* One focus ring everywhere (the app's button ring), for keyboard and for inputs alike. */
+.flt-ctl:focus-visible, .flt-seg-item:focus-visible, .flt-opt:focus-visible, .flt-chip-x:focus-visible,
+.flt-link:focus-visible, .flt-tab:focus-visible, .flt-input:focus-visible {
+  outline: 2px solid var(--color-accent-strong); outline-offset: 2px;
+}
+.flt-btn { padding: 0 .75rem; font-weight: 500; }
+.flt-btn[aria-pressed="true"] { background: var(--flt-raised); border-color: var(--color-line-strong); box-shadow: var(--flt-lift); font-weight: 600; }
+
+/* ---- search ---- */
+.flt-search { flex: 1 1 14rem !important; min-width: 200px; max-width: 26rem; margin: 0; }
+.flt-search-box { position: relative; display: flex; align-items: center; min-width: 0; }
+.flt-input {
+  width: 100%; height: var(--flt-h, 2rem); padding: 0 4.25rem 0 2rem;
+  border: 1px solid var(--color-line); border-radius: var(--radius-card);
+  background: var(--color-surface); color: var(--color-ink); font: inherit; font-size: 13px;
+  transition: border-color .15s;
+}
+.flt-input::placeholder { color: var(--color-faint); }
+.flt-input:hover { border-color: var(--color-line-strong); }
+.flt-input::-webkit-search-cancel-button, .flt-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+.flt-search-icon { position: absolute; left: .625rem; color: var(--color-faint); pointer-events: none; display: flex; }
+.flt-search-end { position: absolute; right: .25rem; display: flex; align-items: center; gap: .25rem; }
+.flt-search-clear {
+  display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem;
+  border: 0; border-radius: var(--radius-card); background: transparent; color: var(--color-muted); cursor: pointer;
+}
+.flt-search-clear:hover { color: var(--color-ink); background: var(--color-surface-2); }
+.flt-search-clear:focus-visible { outline: 2px solid var(--color-accent-strong); outline-offset: 0; }
+.flt-kbd {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; margin-right: .25rem; padding: 0 .25rem;
+  border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface-2);
+  color: var(--color-muted); font: 11px/1 var(--font-mono, monospace); pointer-events: none;
+}
+.flt-input:focus ~ .flt-search-end .flt-kbd, .flt-input:not(:placeholder-shown) ~ .flt-search-end .flt-kbd { display: none; }
+@media (pointer: coarse) { .flt-kbd { display: none; } }
+
+/* ---- segmented: a recessed track; the chosen segment is raised (surface, border, shadow) AND bolder ---- */
+.flt-seg {
+  display: inline-flex; align-items: center; gap: 2px; height: var(--flt-h, 2rem); padding: 2px; max-width: 100%;
+  border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--flt-track);
+}
+.flt-seg-item {
+  display: inline-flex; align-items: center; gap: .375rem; height: 100%; padding: 0 .625rem; flex: none;
+  border: 1px solid transparent; border-radius: calc(var(--radius-card) - 2px); background: transparent;
+  color: var(--color-muted); font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer;
+  transition: background-color .15s, color .15s, border-color .15s;
+}
+.flt-seg-item:hover { color: var(--color-ink); }
+.flt-seg-item[aria-checked="true"] {
+  background: var(--flt-raised); border-color: var(--color-line-strong); box-shadow: var(--flt-lift);
+  color: var(--color-ink); font-weight: 600;
+}
+/* The bold twin keeps the width: choosing a segment never nudges its neighbours. */
+.flt-seg-label { display: inline-flex; flex-direction: column; align-items: center; }
+.flt-seg-label::after { content: attr(data-text); height: 0; overflow: hidden; visibility: hidden; font-weight: 600; user-select: none; }
+.flt-n { min-width: 2ch; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
+.flt-seg-item[aria-checked="true"] .flt-n { color: var(--color-ink-2); }
+.flt-ghost { color: transparent !important; }
+
+/* ---- dropdown button ---- */
+.flt-dd { padding: 0 .625rem; max-width: 16rem; }
+.flt-dd-label { color: var(--color-muted); }
+.flt-dd-value { color: var(--color-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.flt-dd[data-active="true"] { border-color: var(--color-line-strong); }
+.flt-dd[data-active="true"] .flt-dd-label { color: var(--color-ink); }
+.flt-dd[aria-expanded="true"] { background: var(--color-surface-2); border-color: var(--color-line-strong); }
+.flt-dd .flt-chev { color: var(--color-faint); transition: transform .15s; }
+.flt-dd[aria-expanded="true"] .flt-chev { transform: rotate(180deg); }
+.flt-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem;
+  border-radius: 999px; background: var(--color-ink); color: var(--color-canvas); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+/* ---- the popover (portaled, so the row's scroll cannot clip it and the page never moves) ---- */
+.flt-pop {
+  --flt-h: 2rem;
+  position: fixed; z-index: 60; display: flex; flex-direction: column; width: 16rem; max-width: calc(100vw - 16px);
+  border: 1px solid var(--color-line-strong); border-radius: var(--radius-card); background: var(--color-surface); color: var(--color-ink);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-ink) 22%, transparent); font-size: 13px; overflow: hidden;
+}
+.flt-pop-body { overflow-y: auto; overscroll-behavior: contain; padding: .25rem; }
+.flt-pop-search { padding: .375rem .375rem 0; }
+.flt-pop-search .flt-input { padding: 0 .5rem; }
+.flt-pop-head { padding: .5rem .625rem .125rem; font-size: 11.5px; font-weight: 600; color: var(--color-muted); }
+.flt-pop-foot { display: flex; justify-content: flex-end; padding: .25rem; border-top: 1px solid var(--color-line-soft); }
+.flt-pop-note { padding: .5rem .625rem; color: var(--color-muted); }
+.flt-list { list-style: none; margin: 0; padding: 0; }
+.flt-opt {
+  display: flex; align-items: center; gap: .5rem; min-height: 2rem; padding: .25rem .5rem; border-radius: calc(var(--radius-card) - 2px);
+  cursor: pointer; user-select: none;
+}
+.flt-opt:hover, .flt-opt:focus { background: var(--color-surface-2); outline: none; }
+.flt-opt:focus-visible { outline: 2px solid var(--color-accent-strong); outline-offset: -2px; }
+.flt-opt[aria-disabled="true"] { opacity: .5; cursor: default; }
+.flt-opt[aria-selected="true"] { font-weight: 600; }
+.flt-opt-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flt-opt-n { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--color-muted); }
+/* The mark of a choice: a box for many, a dot for one; both filled when chosen. */
+.flt-mark { display: inline-flex; align-items: center; justify-content: center; width: 1rem; height: 1rem; flex: none; border: 1.5px solid var(--color-line-strong); color: var(--color-canvas); }
+.flt-mark[data-kind="box"] { border-radius: 3px; }
+.flt-mark[data-kind="dot"] { border-radius: 50%; }
+.flt-opt[aria-selected="true"] .flt-mark { background: var(--color-ink); border-color: var(--color-ink); }
+.flt-mark svg { width: .7rem; height: .7rem; stroke-width: 3; }
+.flt-opt:not([aria-selected="true"]) .flt-mark svg { display: none; }
+.flt-link {
+  display: inline-block; padding: .25rem .5rem; border: 0; border-radius: var(--radius-card); background: none; font: inherit; font-size: 12.5px;
+  color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-line-strong); text-underline-offset: 2px; cursor: pointer; white-space: nowrap;
+}
+.flt-link:hover { text-decoration-color: var(--color-ink); }
+.flt-link::first-letter { text-transform: uppercase; }
+.flt-scrim { display: none; }
+
+/* A phone gets a bottom sheet: thumb-reachable, never off-screen, never under the keyboard's edge. */
+@media (max-width: 640px) {
+  .flt-pop { --flt-h: 2.5rem; left: 0 !important; right: 0; top: auto !important; bottom: 0 !important; width: auto !important; max-width: none; max-height: 75vh !important; border-radius: 12px 12px 0 0; }
+  .flt-opt { min-height: 2.75rem; }
+  .flt-scrim { display: block; position: fixed; inset: 0; z-index: 59; background: color-mix(in srgb, var(--color-ink) 40%, transparent); }
+}
+
+/* ---- chips and the one "Clear all" ---- */
+.flt-chips { display: flex; align-items: center; gap: .375rem; min-width: 0; }
+.flt-chips-scroll { display: flex; align-items: center; gap: .375rem; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.flt-chips-scroll::-webkit-scrollbar { display: none; }
+.flt-chip {
+  display: inline-flex; align-items: center; gap: .25rem; flex: none; height: calc(var(--flt-h, 2rem) - 6px); min-height: 1.5rem; max-width: 14rem; padding: 0 .125rem 0 .5rem;
+  border: 1px solid var(--color-line-strong); border-radius: 999px; background: var(--color-surface-2); color: var(--color-ink); font-size: 12.5px; white-space: nowrap;
+}
+.flt-chip-k { color: var(--color-muted); }
+.flt-chip-v { overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.flt-chip-x {
+  display: inline-flex; align-items: center; justify-content: center; width: 1.375rem; height: 1.375rem; flex: none; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--color-muted); cursor: pointer;
+}
+.flt-chip-x:hover { background: var(--color-surface-3); color: var(--color-ink); }
+
+/* ---- the result line: a reserved slot, so a filter changing the count never moves the page ---- */
+.flt-meta { display: flex; align-items: center; gap: .75rem; min-height: 1.75rem; margin-top: .25rem; font-size: 13px; color: var(--color-muted); min-width: 0; }
+.flt-count { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.flt-count b { color: var(--color-ink); font-weight: 600; }
+.flt-meta .flt-chips { flex: 1 1 auto; }
+
+/* ---- responsive behaviour, from the BAR's own width ---- */
+.flt-wide { display: contents; }
+.flt-wide > * { flex: none; }
+.flt-narrow, .flt-clear-meta { display: none; }
+/* "Clear all" takes the row's tail while the bar is wide and nothing is folded; otherwise it follows the chips in the result line. */
+@container flt (max-width: 1099px) { .flt-clear-row { display: none; } .flt-clear-meta { display: inline-block; } }
+/* FOLDED (set by FilterBar when the row measures wider than the bar, so it holds for any language's words,
+   not for one pixel width): the secondary dropdowns become ONE "Filters" button with its active count. */
+.flt-bar[data-fold="true"] .flt-wide { display: none; }
+.flt-bar[data-fold="true"] .flt-narrow { display: inline-flex; }
+.flt-bar[data-fold="true"] .flt-clear-row { display: none; }
+.flt-bar[data-fold="true"] .flt-clear-meta { display: inline-block; }
+.flt-bar[data-fold="true"] .flt-seg-item { padding: 0 .5rem; gap: .25rem; }
+/* Still too wide folded (long words, narrow bar): each segmented control becomes a single dropdown button (its compact twin). */
+.flt-seg-compact { display: none; }
+.flt-bar[data-tight="true"] .flt-seg { display: none; }
+.flt-bar[data-tight="true"] .flt-seg-compact { display: inline-flex; }
+/* Verbs with an icon keep only the icon when the bar is short of room (their name stays as the tooltip and accessible name). */
+@container flt (max-width: 899px) { .flt-btn-text { display: none; } .flt-btn:has(.flt-btn-text) { padding: 0; width: var(--flt-h, 2rem); justify-content: center; } }
+/* Narrow: 40px touch targets and a snapping row. */
+@container flt (max-width: 640px) {
+  .flt-row { --flt-h: 2.5rem; scroll-snap-type: x proximity; }
+  .flt-row > * { scroll-snap-align: start; }
+  .flt-search { flex: 0 0 min(14rem, 70cqw) !important; }
+  .flt-seg-item, .flt-dd { min-width: 2.5rem; }
+  .flt-chip-x { width: 2.5rem; height: 2.5rem; }
+  .flt-search-clear { width: 2.5rem; height: 2.5rem; }
+  .flt-chip { height: 2.5rem; padding-left: .75rem; }
+  .flt-link { min-height: 2.5rem; }
+}
+
+/* ---- tabs: the underline family (the segmented control is the filter family) ---- */
+.flt-tabs { display: flex; align-items: stretch; gap: .25rem; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--color-line-soft); }
+.flt-tabs::-webkit-scrollbar { display: none; }
+.flt-tab {
+  display: inline-flex; align-items: center; gap: .375rem; flex: none; min-height: 2.25rem; margin-bottom: -1px; padding: 0 .75rem;
+  border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--color-muted);
+  font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; transition: color .15s, border-color .15s;
+}
+.flt-tab:hover { color: var(--color-ink); border-bottom-color: var(--color-line-strong); }
+.flt-tab[aria-selected="true"] { color: var(--color-ink); border-bottom-color: var(--color-ink); font-weight: 600; }
+.flt-tab .flt-seg-label { align-items: flex-start; }
+.flt-tab .flt-n { min-width: 0; text-align: left; }
+a.flt-ctl { text-decoration: none; }
+@media (max-width: 640px) { .flt-tab { min-height: 2.75rem; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .flt-ctl, .flt-input, .flt-seg-item, .flt-tab, .flt-dd .flt-chev { transition: none; }
+}

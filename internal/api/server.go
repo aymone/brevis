@@ -7,11 +7,12 @@
 package api
 
 import (
-	"brevis.sh/brevis/internal/auth"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
+
+	"brevis.sh/brevis/internal/auth"
 )
 
 // Server carries the router and the dependencies readiness consults.
@@ -26,12 +27,10 @@ type Server struct {
 	gate *auth.Gate
 }
 
-// NewServer builds the router. The checkers are named so that /ready says WHICH
-// dependency failed, and not merely that something did.
-//
-// `ui` may be nil: a process that only serves health checks does not need the
-// pages, and requiring them would couple the server to the database for no
-// reason.
+// NewServer builds the router with no credential: an open console. The
+// checkers are named so that /ready says WHICH dependency failed, and not merely
+// that something did. `ui` may be nil: a process that only serves health checks
+// does not need the pages.
 func NewServer(log *slog.Logger, checkers map[string]Checker, ui *UI) *Server {
 	return NewServerAutenticado(log, checkers, ui, auth.Credential{}, false)
 }
@@ -59,7 +58,7 @@ func NewServerAutenticado(log *slog.Logger, checkers map[string]Checker, ui *UI,
 			log.Warn("BREVIS_AUTH_CLIENT_IP_HEADER is not set: behind a proxy every client shares one login-throttle key; set it to the header your proxy fills (e.g. X-Forwarded-For)")
 		}
 		if ui != nil {
-			ui.RegistrarLogin(s.mux, s.gate)
+			ui.RegistrarLoginAPI(s.mux, s.gate)
 		}
 	}
 	return s
@@ -132,6 +131,11 @@ type gravador struct {
 	http.ResponseWriter
 	status int
 }
+
+// Unwrap lets http.ResponseController reach the real connection: without it
+// Flush and SetWriteDeadline report "not supported" through this wrapper and a
+// server-sent stream would end right after its first write.
+func (g *gravador) Unwrap() http.ResponseWriter { return g.ResponseWriter }
 
 func (g *gravador) WriteHeader(codigo int) {
 	g.status = codigo

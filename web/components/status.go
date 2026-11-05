@@ -48,18 +48,6 @@ var statuses = map[string]status{
 	"live":         {"pulse", "text-state-success", "live"},
 }
 
-// statusOrder is the vocabulary in the order it is taught: a run's states,
-// then a destination's.
-var statusOrder = []string{
-	"success", "failed", "running", "queued", "retrying", "canceled", "pending", "skipped", "never_ran",
-	"on_time", "late", "stale", "paused", "continuous", "no_schedule", "unidentified", "live",
-}
-
-// StatusKinds is every kind Status draws, for the gallery.
-func StatusKinds() []string {
-	return append([]string(nil), statusOrder...)
-}
-
 // lookStatus is a kind's look; one nobody declared is drawn as itself, in the
 // neutral ring, rather than as some other state.
 func lookStatus(kind string) status {
@@ -93,14 +81,4 @@ func runKind(s string) string {
 		return "never_ran"
 	}
 	return s
-}
-
-// freshnessKind is a catalog status as a Status kind: anything the catalog
-// does not name is a destination with no schedule to be late against.
-func freshnessKind(s string) string {
-	switch s {
-	case "on_time", "late", "stale", "paused", "continuous", "unidentified":
-		return s
-	}
-	return "no_schedule"
 }

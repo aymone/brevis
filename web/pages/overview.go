@@ -39,36 +39,6 @@ func ParseWindow(key string) Window {
 	return overviewWindows[0]
 }
 
-// chartTitle names the chart by its grain.
-func chartTitle(ctx context.Context, w Window) string {
-	if w.Grain == postgres.ByDay {
-		return i18n.T(ctx, "chart.per_day")
-	}
-	return i18n.T(ctx, "chart.per_hour")
-}
-
-// windowLabel is a window as the reader's language says it: "last 7 days".
-func windowLabel(ctx context.Context, w Window) string {
-	switch w.Key {
-	case "7d":
-		return i18n.T(ctx, "window.7d")
-	case "30d":
-		return i18n.T(ctx, "window.30d")
-	}
-	return i18n.T(ctx, "window.24h")
-}
-
-// windowShort is a window on its toggle: "24h", "7 days".
-func windowShort(ctx context.Context, w Window) string {
-	switch w.Key {
-	case "7d":
-		return i18n.T(ctx, "window.short.7d")
-	case "30d":
-		return i18n.T(ctx, "window.short.30d")
-	}
-	return i18n.T(ctx, "window.short.24h")
-}
-
 // triggerWord is how a run was started, in the reader's language. A kind this
 // version does not know is shown as the engine wrote it.
 func triggerWord(ctx context.Context, t string) string {

@@ -1,0 +1,1 @@
+import{_ as e,g as t}from"./logo-DWs2URx5.js";function n(n,r){return t(n,e,r)}export{n as t};

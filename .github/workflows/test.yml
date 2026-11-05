@@ -134,6 +134,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # The React app (web/spa) is built by generated-check.sh; the image has
+      # no Node, the check does. 24 is the LTS the lockfile was resolved with.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/spa/package-lock.json
+
       - name: gofmt
         run: |
           arquivos=$(gofmt -l . | grep -v '^sdk/' || true)
@@ -160,7 +169,7 @@ jobs:
             || { echo "::error::rode 'go mod tidy' e commite"; exit 1; }
 
       # web/'s generated artifacts are versioned, because the image has neither
-      # Node nor templ. Checking here catches stale CSS at push time, and not
+      # Node. Checking here catches stale CSS at push time, and not
       # only when it is time to publish.
       - name: Generated artifacts
         run: ./.github/scripts/generated-check.sh
@@ -173,6 +182,205 @@ jobs:
         with:
           version: v2.13.2
           args: --timeout=5m
+
+  # THE CONSOLE'S OWN TESTS (web/spa). The React app had none: every check lived in
+  # throwaway scripts on one machine, and a hook placed after an early return blanked
+  # the Workflows page on a search with no result -- no gate in this file could see it.
+  #
+  # No `needs` and no `if`, like `gates`: it costs about a minute, needs no Go and no
+  # database, and a change that breaks the app without touching web/ (a renamed API
+  # field in internal/) is exactly what the type check is for.
+  #
+  # `npm ci` installs exactly the lockfile. The same step as generated-check.sh, so a
+  # devDependency added for the tests cannot change what the committed dist is built from:
+  # that script rebuilds dist from this tree and fails on any diff.
+  spa:
+    name: Console app (types, lint, unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web/spa
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/spa/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Types
+        run: npm run typecheck
+
+      # rules-of-hooks is an error: it is the rule that finds the blank-page bug above.
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+  # THE CONSOLE IN A REAL BROWSER, against the real engine: the embedded dist, the real
+  # API, the real event stream and a real scheduler running real (shell) workflows. What a
+  # unit test cannot see lives here: duplicate requests, layout shift, an idle screen that
+  # polls, a skeleton that comes back on a refetch.
+  #
+  # Same Postgres as the Integration job (the drivers compose), and its own database. The
+  # engine is BUILT and then run, not `go run`: a `go run` child outlives its parent and
+  # holds the port, and compiling inside the readiness loop would eat its budget.
+  #
+  # The job is REQUIRED and has no `continue-on-error`. E2E_REQUIRE makes a missing
+  # precondition (no engine, no workflow) fail the run instead of skipping the specs, which
+  # would turn a broken job into a green one. `retries: 1` (playwright.config.ts) is for a run
+  # that was a beat late; every threshold in the specs is fixed.
+  e2e:
+    name: Console e2e (Playwright)
+    needs: [changes]
+    if: needs.changes.outputs.engine == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Local mode: the process executor, which runs the shell workflows below, and the open console.
+      BREVIS_ENV: local
+      BREVIS_DATABASE_URL: postgres://brevis:brevis@localhost:55432/brevis_e2e?sslmode=disable
+      BREVIS_HTTP_ADDR: ":8098"
+      BREVIS_METRICS_ADDR: ""
+      BASE_URL: http://localhost:8098
+      E2E_REQUIRE: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/spa/package-lock.json
+
+      # postgres comes from Docker Hub, with the anonymous-limit problem the Integration
+      # job explains at length; same guard (a fork's PR has no secret and runs anonymous).
+      - name: Authenticate to Docker Hub
+        if: env.DOCKERHUB_USERNAME != ''
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Start Postgres
+        run: |
+          docker compose -f docker-compose.drivers.yml up -d postgres
+          ready=""
+          for i in $(seq 1 60); do
+            state=$(docker compose -f docker-compose.drivers.yml ps postgres --format '{{.Health}}')
+            if [ "$state" = "healthy" ]; then ready=1; break; fi
+            sleep 2
+          done
+          if [ -z "$ready" ]; then
+            echo "::error::postgres did not start; the e2e suite would not have run"
+            docker compose -f docker-compose.drivers.yml logs postgres
+            exit 1
+          fi
+          docker compose -f docker-compose.drivers.yml exec -T postgres createdb -U brevis brevis_e2e
+
+      - name: Build the engine
+        run: go build -o bin/brevis ./cmd/brevis
+
+      - name: Migrate and publish the workflows the specs use
+        run: |
+          bin/brevis migrate up
+          # hello and list_params are shell-only examples (the second has list parameters, which the
+          # run drawer's validation needs); e2e_nightly is the one with a schedule (the pause switch);
+          # e2e_single has one step (the fixme in shift.spec.ts).
+          bin/brevis publish examples/hello.yaml examples/list-params.yaml web/spa/e2e/fixtures/e2e_nightly.yaml web/spa/e2e/fixtures/e2e_single.yaml
+
+      # Background processes survive to the next step; the runner stops them with the job.
+      - name: Start the engine and the scheduler
+        run: |
+          nohup bin/brevis serve > serve.log 2>&1 &
+          nohup bin/brevis scheduler --interval 2s --concurrency 4 > scheduler.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fs -o /dev/null "$BASE_URL/health"; then
+              echo "engine up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the engine did not answer on $BASE_URL"
+          cat serve.log
+          exit 1
+
+      # A second engine, same database and no scheduler, with a credential: the sign-in spec
+      # (e2e/auth.spec.ts) needs a console that asks for one, and the open console above does not.
+      # The password is a throwaway; it exists for this job only.
+      - name: Start an engine that asks for a sign-in
+        run: |
+          pass="e2e-throwaway-$(openssl rand -hex 6)"
+          echo "E2E_AUTH_PASSWORD=$pass" >> "$GITHUB_ENV"
+          hash=$(printf '%s\n' "$pass" | bin/brevis hash 2>/dev/null | grep '^pbkdf2-sha256')
+          BREVIS_AUTH_USER=operator BREVIS_AUTH_PASSWORD_HASH="$hash" BREVIS_AUTH_SECRET="$(openssl rand -base64 48)" \
+            BREVIS_HTTP_ADDR=":8099" nohup bin/brevis serve > serve-auth.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fs -o /dev/null http://localhost:8099/health; then
+              echo "E2E_AUTH_URL=http://localhost:8099" >> "$GITHUB_ENV"
+              echo "E2E_AUTH_USER=operator" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the engine with a credential did not answer"
+          cat serve-auth.log
+          exit 1
+
+      - name: Install the app's dependencies
+        working-directory: web/spa
+        run: npm ci
+
+      # The browser is ~150 MB: cached by the lockfile (which pins the Playwright version). The
+      # system libraries it needs are apt packages and not part of that cache, so they install every run.
+      - name: Cache the browser
+        id: browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/spa/package-lock.json') }}
+
+      - name: Install Chromium
+        working-directory: web/spa
+        run: |
+          if [ "${{ steps.browser.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+
+      - name: Run the e2e suite
+        working-directory: web/spa
+        run: npm run e2e
+
+      - name: Keep the report, the traces and the engine's logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: |
+            web/spa/playwright-report
+            web/spa/test-results
+            serve.log
+            serve-auth.log
+            scheduler.log
+          retention-days: 14
 
   # THE GATES THAT LOOK AT THE WHOLE REPOSITORY, so no diff may switch them off.
   # Each reads files across modules (`git ls-files`, deployments/, docs/,
@@ -774,7 +982,7 @@ jobs:
       # names four and reads one, which is the exact shape this repository
       # keeps finding in its own gates. Run per module it is 20 + 11 + 10 + 1.
       #
-      # `@master` was the other half: this repository pins templ and Tailwind
+      # `@master` was the other half: this repository pins Tailwind
       # because `releases/latest` made two developers generate different CSS,
       # and a scanner that changes on its own is the same problem with a worse
       # failure mode, because its findings are what somebody acts on.

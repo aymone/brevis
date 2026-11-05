@@ -3,7 +3,7 @@
 #
 # CONTRIBUTING.md has said so since the sweep of 2026-09-06, and until
 # 2026-09-10 the only automated check was ui-language-check.sh, which covers
-# web/**/*.templ and only user-visible text. Everything else was policed by
+# the message catalog and only user-visible text. Everything else was policed by
 # reading, which found 19 Portuguese strings in production code -- including
 # ":rotating_light: Falha no pipeline", which went to a customer's Slack, and
 # two error messages in the PUBLIC SDK that consumers read.
@@ -25,7 +25,6 @@
 #     left for a sweep of their own rather than mixed into a release. Test
 #     COMMENTS are checked like any other: excluding the whole file was too
 #     broad, and it hid a Portuguese comment in process_test.go for a day.
-#   - *_templ.go. Generated; fix the .templ and regenerate.
 #   - The console's message catalogs, web/i18n/locales/*.json. JSON is not an
 #     extension this reads; the English one is checked by ui-language-check,
 #     and pt-BR.json and es.json are Portuguese and Spanish on purpose.
@@ -97,8 +96,8 @@ STRING = re.compile(r'"((?:[^"\\]|\\.){6,})"')
 COMENTARIO = re.compile(r"^\s*(//|#|--)\s*(.+)$")
 
 FORA = ("/vendor/", "/node_modules/", "/.git/", "/testdata/",
-        "_templ.go", "CHANGELOG.md", "CHANGELOG-motor.md", "NOTES.md")
-EXTS = {".go", ".md", ".yml", ".yaml", ".sh", ".templ"}
+        "CHANGELOG.md", "CHANGELOG-motor.md", "NOTES.md")
+EXTS = {".go", ".md", ".yml", ".yaml", ".sh"}
 # Makefile and Dockerfile carry operator-facing echoes and have no extension --
 # three Portuguese ones lived in the Makefile until 2026-09-10 because every
 # check keyed on a suffix.

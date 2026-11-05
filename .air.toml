@@ -1,25 +1,22 @@
 # Hot reload de desenvolvimento.
 #
-# A cadeia importa: `templ generate` ANTES do `go build`, senao o binario e
-# compilado com os _templ.go antigos e a mudanca no .templ nao aparece. O
-# `full_bin` sobe a API com as variaveis do ambiente local.
+# O CSS e gerado ANTES do `go build`, senao o binario embute o antigo. O
+# `full_bin` sobe a API com as variaveis do ambiente local. O app React tem o
+# proprio servidor de desenvolvimento (web/spa: `npm run dev`).
 root = "."
 tmp_dir = "tmp"
 
 [build]
   pre_cmd = [
-    "templ generate",
     "./bin/tailwindcss -i web/assets/app.src.css -o web/assets/app.css",
   ]
   cmd = "go build -o ./tmp/brevis ./cmd/brevis"
   bin = "./tmp/brevis"
   full_bin = "BREVIS_ENV=local BREVIS_LOG_LEVEL=debug ./tmp/brevis serve"
 
-  include_ext = ["go", "templ", "css", "sql", "yaml"]
+  include_ext = ["go", "css", "sql", "yaml"]
 
-  # `_templ.go` e gerado pelo `templ generate` do pre_cmd. Sem excluir, cada
-  # geracao dispara outro rebuild, e o air entra em laco infinito.
-  exclude_regex = ["_test\\.go$", "_templ\\.go$"]
+  exclude_regex = ["_test\\.go$"]
   exclude_dir  = ["tmp", "bin", "docs", ".git"]
 
   delay = 200

@@ -1,11 +1,6 @@
 package pages
 
 import (
-	"brevis.sh/brevis/web/i18n"
-	"context"
-	"errors"
-	"fmt"
-	"github.com/a-h/templ"
 	"net/url"
 	"sort"
 	"strings"
@@ -53,33 +48,6 @@ func ParseEndpointFilter(q url.Values) EndpointFilter {
 		f.State = s
 	}
 	return f
-}
-
-// With is the link to this filter with one field changed, the fields always
-// in the same order.
-func (f EndpointFilter) With(field, value string) string {
-	switch field {
-	case "api":
-		f.API = value
-	case "state":
-		f.State = value
-	case "q":
-		f.Q = value
-	}
-	var parts []string
-	if f.API != "" {
-		parts = append(parts, "api="+url.QueryEscape(f.API))
-	}
-	if f.State != "" {
-		parts = append(parts, "state="+url.QueryEscape(f.State))
-	}
-	if f.Q != "" {
-		parts = append(parts, "q="+url.QueryEscape(f.Q))
-	}
-	if len(parts) == 0 {
-		return "/data/endpoints"
-	}
-	return "/data/endpoints?" + strings.Join(parts, "&")
 }
 
 // EndpointRow is one published endpoint.
@@ -389,57 +357,6 @@ func (v EndpointView) BumpCommand() string {
 	return "brevis-sql generation bump --generations-from " + c.AddrFrom + " --dialect " + v.Manifest.Dialect + " " + strings.Join(names, " ")
 }
 
-// acceptsSaid is what a parameter accepts, in the reader's words.
-func acceptsSaid(ctx context.Context, p ParamView) string {
-	switch {
-	case p.Accepts != "":
-		return p.Accepts
-	case p.Type == "string" && p.MaxLen > 0:
-		return i18n.T(ctx, "endpoint.accepts.text", "n", i18n.Number(ctx, int64(p.MaxLen)))
-	case p.Type == "int" && p.Min != nil && p.Max != nil:
-		return i18n.T(ctx, "endpoint.accepts.range", "min", i18n.Number(ctx, *p.Min), "max", i18n.Number(ctx, *p.Max))
-	case p.Type == "int" && p.Min != nil:
-		return i18n.T(ctx, "endpoint.accepts.min", "min", i18n.Number(ctx, *p.Min))
-	case p.Type == "int" && p.Max != nil:
-		return i18n.T(ctx, "endpoint.accepts.max", "max", i18n.Number(ctx, *p.Max))
-	case p.Type == "bool":
-		return i18n.T(ctx, "endpoint.accepts.bool")
-	}
-	return ""
-}
-
-// bytesBilled is the endpoint's byte ceiling in words.
-func bytesBilled(ctx context.Context, v EndpointView) string {
-	if v.Limits.MaxBytesBilled <= 0 {
-		return i18n.T(ctx, "endpoint.limits.no_ceiling")
-	}
-	return bytesText(v.Limits.MaxBytesBilled)
-}
-
-// cacheTypeTitle is a cache's type as its makers write it.
-func cacheTypeTitle(t string) string {
-	if t == "redis" {
-		return "Redis"
-	}
-	return t
-}
-
-// Curl is how to call it, with the key as a placeholder: the console never
-// holds one, and a page that printed a real key would be a page to guard.
-func (v EndpointView) Curl() string {
-	q := []string{}
-	for _, f := range v.Form {
-		if f.Value != "" {
-			q = append(q, url.QueryEscape(f.Name)+"="+url.QueryEscape(f.Value))
-		}
-	}
-	u := v.CurlBase()
-	if len(q) > 0 {
-		u += "?" + strings.Join(q, "&")
-	}
-	return CurlHead + "'" + u + "'"
-}
-
 // CurlHead is the curl's fixed start. The key is a placeholder, always: the
 // console's own is never written into a page.
 const CurlHead = "curl -H 'Authorization: Bearer <key>' "
@@ -525,113 +442,4 @@ func TryValues(params []catalog.EndpointParam, q url.Values) url.Values {
 		}
 	}
 	return out
-}
-
-// thousands writes a count with its thousands separated -- 10,000, not 10000,
-// which somebody has to count the zeros of.
-func thousands(n int) string {
-	s := fmt.Sprint(n)
-	if n < 0 {
-		return "-" + thousands(-n)
-	}
-	for i := len(s) - 3; i > 0; i -= 3 {
-		s = s[:i] + "," + s[i:]
-	}
-	return s
-}
-
-// fieldClass is a Try it field: the shell's input, the height of a button.
-const fieldClass = "h-8 w-full min-w-0 rounded-card border border-line bg-surface px-2.5 text-[0.82rem] text-ink focus:border-accent-strong focus:outline-none"
-
-// curlAttrs tie the curl to Try it's form, when there is one to follow.
-func curlAttrs(v EndpointView) templ.Attributes {
-	if !v.CanRun {
-		return nil
-	}
-	return templ.Attributes{"data-curl-from": "try-it", "data-curl-base": v.CurlBase(), "data-curl-head": CurlHead}
-}
-
-// paramsSaid is an endpoint's parameters as a row says them: "8 · 2
-// required", or how many when none is required.
-func paramsSaid(ctx context.Context, r EndpointRow) string {
-	if len(r.Params) == 0 {
-		return i18n.T(ctx, "endpoints.params.none")
-	}
-	if n := len(r.Required); n > 0 {
-		return i18n.T(ctx, "endpoints.params.required", "n", fmt.Sprint(len(r.Params)), "required", fmt.Sprint(n))
-	}
-	return fmt.Sprint(len(r.Params))
-}
-
-// rebuiltSaid is when the table a row reads was rebuilt, and by whom.
-func rebuiltSaid(ctx context.Context, now time.Time, d *DataRow) string {
-	if d == nil || d.LastWhen == nil {
-		return ""
-	}
-	return i18n.T(ctx, "endpoints.rebuilt", "when", i18n.Since(ctx, now, *d.LastWhen), "by", WriterLine(*d))
-}
-
-// kindOf is the kind of a table an endpoint reads: its URI's scheme.
-func kindOf(target string) string {
-	scheme, _, ok := strings.Cut(target, "://")
-	if !ok {
-		return ""
-	}
-	return scheme
-}
-
-// publishEndpointYAML and publishEndpointCommands are Publish endpoint's
-// example: an API's file with one endpoint, and how it reaches the console.
-// The cache names the variable its address is read from, never the address.
-const publishEndpointYAML = `name: metrics-api
-connection: warehouse
-
-cache:
-  type: redis
-  addr_from: BREVIS_CACHE_ADDR
-  ttl: 6h
-
-endpoints:
-  #: Clicks per day, for the customer's dashboard.
-  - name: clicks
-    path: /v1/clicks
-    tenant: key
-    params:
-      start_date: {type: date, required: true}
-      end_date: {type: date, required: true}
-    sql_file: endpoints/clicks.sql`
-
-const publishEndpointCommands = `brevis-sql-api describe --config api.yaml --out manifest.json
-brevis endpoints publish manifest.json`
-
-// runErrSaid is why a run brought nothing back, in the reader's words: the
-// console's own failures by key, anything else as it came.
-func runErrSaid(ctx context.Context, err error) string {
-	for known, key := range map[error]string{
-		endpointcall.ErrNotConfigured: "endpoint.try.err.not_configured",
-		endpointcall.ErrUnbuilt:       "endpoint.try.err.unbuilt",
-		endpointcall.ErrUnreachable:   "endpoint.try.err.unreachable",
-		endpointcall.ErrUnreadable:    "endpoint.try.err.unreadable",
-		endpointcall.ErrTooLarge:      "endpoint.try.err.too_large",
-		endpointcall.ErrNotAnswer:     "endpoint.try.err.not_answer",
-	} {
-		if errors.Is(err, known) {
-			return i18n.T(ctx, key)
-		}
-	}
-	return err.Error()
-}
-
-// cacheSaid is what the cache did for an answer, as the API said it in
-// X-Brevis-Cache, and what that meant for the warehouse.
-func cacheSaid(ctx context.Context, cache string) string {
-	switch cache {
-	case "hit":
-		return i18n.T(ctx, "endpoint.try.cache.hit")
-	case "miss":
-		return i18n.T(ctx, "endpoint.try.cache.miss")
-	case "bypass":
-		return i18n.T(ctx, "endpoint.try.cache.bypass")
-	}
-	return ""
 }

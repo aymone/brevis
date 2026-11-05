@@ -9,20 +9,6 @@ import (
 	"brevis.sh/brevis/web/i18n"
 )
 
-// CronText says a schedule in words -- "every day at 04:00" -- for the few
-// shapes that cover most schedules, and "" for anything else, which the
-// screen then shows as the bare expression. It never guesses: a sentence
-// that is almost right under a schedule is how somebody misses the run that
-// mattered.
-//
-// The shapes: every N minutes (N dividing the hour), hourly at :MM, every
-// day, weekdays (1-5) and one day of the month (up to the 28th, which every
-// month has) at HH:MM. The hour is the schedule's own timezone's.
-//
-// In English: the screens that have not moved to the catalog yet call this;
-// CronTextIn is the same sentence in the reader's language.
-func CronText(expr string) string { return CronTextIn(context.Background(), expr) }
-
 // CronTextIn is CronText in the context's language.
 func CronTextIn(ctx context.Context, expr string) string {
 	f := strings.Fields(expr)

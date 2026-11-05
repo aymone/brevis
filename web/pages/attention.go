@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"context"
 	"sort"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/domain/diagnosis"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // AttentionShown is how many failing workflows "Needs your attention" draws.
@@ -104,29 +102,5 @@ func OrderFailing(fs []postgres.FailingWorkflow) []postgres.FailingWorkflow {
 		}
 		return out[i].FailedAt.After(out[j].FailedAt)
 	})
-	return out
-}
-
-// streakText says how many times in a row: nothing the first time, "2nd time
-// in a row" the second -- the one ordinal every language here has -- and a
-// count from the third on.
-func streakText(ctx context.Context, n int) string {
-	switch {
-	case n < 2:
-		return ""
-	case n == 2:
-		return i18n.T(ctx, "overview.second_time")
-	}
-	return i18n.N(ctx, "run.why.streak", n)
-}
-
-// sortedKeys are a map's keys in order, so a form's fields do not move
-// between two draws of the same item.
-func sortedKeys(m map[string]string) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
 	return out
 }

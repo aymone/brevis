@@ -2,29 +2,10 @@ package components
 
 import (
 	"context"
-	"embed"
-	"slices"
-	"strings"
 	"unicode"
 
 	"brevis.sh/brevis/web/i18n"
 )
-
-// The marks of the things Brevis connects to and the languages a step runs
-// in: Devicon's coloured originals (MIT, LICENSE-devicon) for the languages
-// and the two databases they have, Simple Icons' one-colour marks (CC0,
-// LICENSE-simple-icons) for the rest, and Brevis's own breve for brevis-sql.
-//
-// EMBEDDED, NOT FETCHED. The console runs where there is no internet, so each
-// mark is a file in logos/ compiled into the binary and written inline -- an
-// inline SVG also takes the theme's colours, which an <img> would not.
-//
-// The files came from the UI 2.0 prototype's logos.js, converted once; a mark
-// added later is a file here and a line below. logo_test.go holds that the
-// files are only drawings, with no id repeated between two of them.
-//
-//go:embed logos/*.svg
-var logoFiles embed.FS
 
 // logoPaint is how a mark is coloured.
 type logoPaint int
@@ -37,10 +18,6 @@ const (
 	paintBrand                    // Brevis's own mark, in the accent
 	paintOnWhite                  // its own colours, too dark for any dark tile: on white in both themes
 )
-
-func (p logoPaint) class() string {
-	return [...]string{"cg-one", "cg-multi", "cg-dark", "cg-light", "cg-brand text-accent-strong", "cg-multi cg-on-white"}[p]
-}
 
 // logo is one registered key: whose mark it is, how it is painted, and, for
 // a key with no mark, the monogram drawn instead.
@@ -88,27 +65,6 @@ var logos = map[string]logo{
 	"sftp":    {title: "SFTP", monogram: "SF"},
 }
 
-// logoSVG is each mark's file, read once.
-var logoSVG = func() map[string]string {
-	out := map[string]string{}
-	for key := range logos {
-		if raw, err := logoFiles.ReadFile("logos/" + key + ".svg"); err == nil {
-			out[key] = strings.TrimSpace(string(raw))
-		}
-	}
-	return out
-}()
-
-// LogoKeys is every registered key, for the gallery.
-func LogoKeys() []string {
-	keys := make([]string, 0, len(logos))
-	for k := range logos {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	return keys
-}
-
 // lookLogo is a key's entry; one nobody registered is its own monogram, the
 // first two letters of its name, so an unknown connector is still told apart
 // from its neighbours and never drawn as somebody else's mark.
@@ -142,24 +98,4 @@ func logoTitle(ctx context.Context, key string, l logo) string {
 		return i18n.T(ctx, "logo."+key)
 	}
 	return l.title
-}
-
-func logoSize(size int) string {
-	switch size {
-	case 28:
-		return "cg-28"
-	case 40:
-		return "cg-40"
-	}
-	return "cg-18"
-}
-
-func countMonograms() int {
-	n := 0
-	for _, l := range logos {
-		if l.monogram != "" {
-			n++
-		}
-	}
-	return n
 }

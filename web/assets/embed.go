@@ -23,29 +23,20 @@ import (
 	"time"
 )
 
-// FS holds the compiled CSS and the React island's scripts. `app.src.css` is
-// deliberately left out — it is Tailwind's input, not a served artifact.
+// FS holds the compiled CSS, the logo, the favicon and the fonts the console
+// links to. `app.src.css` is deliberately left out -- it is Tailwind's input,
+// not a served artifact. The React app's own files are web/spa/dist.
 //
-// `vendor/` keeps React, ReactDOM and React Flow as UMD builds (~350 KB).
-// Vendoring rather than pointing at a CDN is section 15's choice: no npm in the
-// build, no external network dependency at runtime, and the UI keeps working in
-// a cluster with no route to the internet.
-//
-// The fonts (IBM Plex Sans and Mono, ~92 KB) go in for the same reason as the
-// bundles: a UI that depends on Google Fonts changes typeface halfway down the
-// screen when the network does not answer.
+// The fonts (IBM Plex Sans and Mono, ~92 KB) go in so that a UI never depends
+// on Google Fonts: it would change typeface halfway down the screen when the
+// network does not answer.
 //
 // AN EXPLICIT LIST, and that is a trap worth naming: a new file under this
 // directory is NOT served until its name is added here, and the only sign is
-// a 404 at runtime. `/assets/sql.js` shipped that way for a few minutes while
-// four tests agreed the page referenced it.
+// a 404 at runtime. The list stays explicit anyway -- `embed *` would sweep up
+// `app.src.css`, every `_test.go` beside it and whatever somebody drops here next.
 //
-// The list stays explicit anyway -- `embed *` would sweep up `app.src.css`,
-// every `_test.go` beside it and whatever somebody drops here next. What
-// catches the omission now is a test that walks a rendered page and GETs
-// everything it asks for.
-//
-//go:embed app.css ui.js dag.js jsx-shim.js sql.js logo.svg favicon.svg vendor fonts
+//go:embed app.css logo.svg favicon.svg fonts
 var FS embed.FS
 
 // LogoSVG is the default mark, already read out of the embedded FS.
@@ -70,7 +61,7 @@ var LogoSVG = func() string {
 // THE VALIDATOR CAME FIRST. An embedded file's ModTime is the zero time, so
 // the stdlib's file server omits Last-Modified and sets no ETag: the response
 // carried no validator at all, a browser cached on a heuristic, and a UI fix
-// shipped without arriving -- `/assets/dag.js` had no version in its path, so
+// shipped without arriving -- `/assets/app.css` had no version in its path, so
 // an upgraded binary served new bytes at a URL some client was convinced it
 // already had. The tag is the CONTENT's digest, so it changes exactly when the
 // bytes do, and a `no-cache` response is a 304 with no body in steady state.

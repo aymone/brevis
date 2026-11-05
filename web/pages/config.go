@@ -1,12 +1,13 @@
 package pages
 
 import (
-	"brevis.sh/brevis/web/i18n"
 	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"brevis.sh/brevis/web/i18n"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -334,6 +335,3 @@ func NoteRest(note string) string {
 	_, rest, _ := strings.Cut(note, "\n")
 	return strings.TrimSpace(rest)
 }
-
-// boolText is a bool as an attribute value: data-defaulted="true".
-func boolText(b bool) string { return strconv.FormatBool(b) }

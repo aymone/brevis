@@ -102,13 +102,6 @@ func stageTone(state string) string {
 	return "pending"
 }
 
-func publishedText(n int) string {
-	if n == 1 {
-		return "1 value published"
-	}
-	return fmt.Sprintf("%d values published", n)
-}
-
 // RuntimeLabels is how a runtime's chip reads, as dag.js's LANG_LABEL writes
 // it (pinned by TestTheStageRulesMatchDagJs). An id not here reads as itself.
 var RuntimeLabels = map[string]string{

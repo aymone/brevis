@@ -105,9 +105,8 @@ text pair in either theme, the dimmest text on the secondary ground, is
 Four places, and no others: the one primary action on a screen, the bar beside
 the open section, the mark itself, and the focus ring. Links are ink,
 underlined; a selected tab is underlined in ink; bars, charts and the DAG's
-edges are neutral. A test in `web/pages/accent_test.go` reads every template and
-refuses any other use, because an accent spent on everything stops pointing at
-anything.
+edges are neutral. Nothing else gets it, because an accent spent on everything
+stops pointing at anything.
 
 **Every ratio here is measured, not asserted.** `--green-2` at 1.7:1 is a
 hairline and nothing else: never text, never the outline of a control. That is

@@ -1,0 +1,41 @@
+/* The Catalog list (the drawer's rules are in catalog.css). Colours are the server's tokens; every rule is prefixed ctl-. */
+
+/* The row is one link: the destination's anchor is stretched over the row (one tab stop, Enter opens the
+   drawer, ctrl-click works) and the row, not the anchor, draws the focus ring. */
+.ctl tbody > tr { position: relative; }
+.ctl-link { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; font-family: var(--font-mono); font-size: 12.5px; color: inherit; text-decoration: none; }
+.ctl-link::after { content: ""; position: absolute; inset: 0; }
+.ctl-link:focus-visible { outline: none; }
+.ctl tbody > tr:has(.ctl-link:focus-visible) { outline: 2px solid var(--color-accent-strong); outline-offset: -2px; background: var(--color-hover); }
+.ctl-link > .cg { flex-shrink: 0; }
+
+/* The writer is a second line under the destination; a row with none centers. */
+.ct.ctl > tbody > tr > td { vertical-align: middle; padding-top: 8px; padding-bottom: 8px; }
+.ctl-fill { width: 52%; max-width: 0; }
+.ctl-to { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ctl-where { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--color-faint); }
+.ctl-what { flex-shrink: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--font-weight-medium); color: var(--color-ink); }
+.ctl-chip { flex-shrink: 0; padding: 0 6px; line-height: 1rem; border: 1px solid var(--color-line); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 10.5px; color: var(--color-muted); }
+.ctl-sub { margin: 2px 0 0; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.125rem; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ctl-more { margin-left: 4px; font-family: var(--font-sans); color: var(--color-faint); }
+.ctl-last { white-space: nowrap; font-size: 12px; color: var(--color-muted); }
+.ctl-rows { text-align: right; white-space: nowrap; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--color-ink-2); }
+
+@media (max-width: 1100px) { .ctl-recent, .ct.ctl > thead th:nth-child(5) { display: none; } }
+
+/* A phone: each destination is a card (destination and its writer, status, then last load, rows and the last
+   loads as meta), whole and tappable, nothing to scroll sideways. The header stays for screen readers. */
+@media (max-width: 768px) {
+  .ctl, .ctl > tbody { display: block; }
+  .ctl > thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ctl > tbody { padding: 8px; display: grid; gap: 8px; }
+  .ctl > tbody > tr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "dest dest state" "last rows recent"; gap: 8px 12px; align-items: center; padding: 12px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); }
+  .ctl > tbody > tr:hover { background: var(--color-hover); }
+  .ct.ctl > tbody > tr > td { display: block; width: auto; max-width: none; height: auto; padding: 0; white-space: normal; overflow: visible; min-width: 0; }
+  .ct.ctl > tbody > tr > td:nth-child(1) { grid-area: dest; }
+  .ct.ctl > tbody > tr > td:nth-child(2) { grid-area: state; justify-self: end; }
+  .ct.ctl > tbody > tr > td:nth-child(3) { grid-area: last; }
+  .ct.ctl > tbody > tr > td:nth-child(4) { grid-area: rows; }
+  .ct.ctl > tbody > tr > td:nth-child(5) { grid-area: recent; display: block; }
+  .ct.ctl > tbody > tr > td:nth-child(6) { display: none; }
+}

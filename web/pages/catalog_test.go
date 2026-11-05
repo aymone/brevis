@@ -131,38 +131,6 @@ func TestADestinationIsDrawnUpToItsTable(t *testing.T) {
 	}
 }
 
-// THE CATALOG SPEAKS THE READER'S LANGUAGE (screen-catalog T1): the band,
-// its rules, the filters, the table, the empty states. Targets, workflows and
-// gateways are the data's own.
-func TestTheCatalogHasNoEnglishLeft(t *testing.T) {
-	v := BuildCatalog(catalogFixture(), DataFilter{Path: "/data"}, catalogNow)
-	text := visibleText(drawIn(t, "pt-BR", Catalog(v))) + " " +
-		visibleText(drawIn(t, "pt-BR", CatalogList(BuildCatalog(nil, DataFilter{Path: "/data"}, catalogNow)))) + " " +
-		visibleText(drawIn(t, "pt-BR", CatalogList(BuildCatalog(catalogFixture(), DataFilter{Path: "/data", Q: "zzz"}, catalogNow))))
-	for _, english := range []string{
-		"Data catalog", "Every destination", "Writes made outside", "Search", "All", "Needs attention",
-		"stale", "late", "on time", "continuous", "paused", "no schedule", "unidentified",
-		"Any kind", "Show legacy", "Destination", "Status", "Who writes", "Last load", "Rows", "Last loads",
-		"By gravity", "a run is queued", "does not report rows", "No destination", "clear filters",
-		"missed", "grace", "writes it as events",
-	} {
-		if at := strings.Index(text, english); at >= 0 {
-			t.Errorf("the Portuguese catalog still says %q: …%s…", english, text[max(0, at-60):min(len(text), at+40)])
-		}
-	}
-}
-
-// A DESTINATION ITS MANIFEST COULD NOT NAME is known by the stream that
-// writes it, not drawn as an empty row.
-func TestAnUnnamedDestinationIsKnownByItsStream(t *testing.T) {
-	entries := []postgres.CatalogEntry{{Kind: "bigquery", Writers: []postgres.CatalogWriter{
-		{Gateway: &postgres.GatewayWriter{Name: "edge", Stream: "/v1/legacy", Role: "sink"}}}}}
-	html := drawIn(t, "en", CatalogList(BuildCatalog(entries, DataFilter{Path: "/data"}, catalogNow)))
-	if !strings.Contains(html, "gateway edge · /v1/legacy") || !strings.Contains(html, `aria-label="Gateway HTTP"`) && !strings.Contains(html, "gateway") {
-		t.Errorf("the unnamed destination is not known by its stream")
-	}
-}
-
 // A WRITER'S REASON IS IN THE READER'S LANGUAGE (screen-catalog T3), for each
 // status that has one; on time and continuous need none.
 func TestAWritersReasonSpeaksEachLanguage(t *testing.T) {
@@ -186,28 +154,6 @@ func TestAWritersReasonSpeaksEachLanguage(t *testing.T) {
 		}
 		if got := (WriterView{Verdict: catalog.Verdict{Status: catalog.OnTime}}).Reason(ctx); got != "" {
 			t.Errorf("%s: on time has a reason: %q", lang, got)
-		}
-	}
-}
-
-// THE DRAWER SPEAKS THE READER'S LANGUAGE too: its frame, the writer's
-// reason, the bars' legend, the configuration's frame and the verbs.
-func TestTheCatalogDrawerHasNoEnglishLeft(t *testing.T) {
-	d := postgres.TargetDetail{CatalogEntry: catalogFixture()[2], Loads: []postgres.TargetLoad{
-		{RunID: "aaaaaaaa-0000-0000-0000-000000000001", Workflow: "vendors", Node: "fetch", LoadedAt: clock(8, 0), Rows: rows64(10)}}}
-	v := BuildCatalog(catalogFixture(), DataFilter{Path: "/data"}, catalogNow)
-	tv := BuildTarget(d, catalogNow)
-	tv.Tabs = true
-	v.Drawer = &tv
-	// BigQuery is the product's own name, and holds "Query".
-	text := strings.ReplaceAll(visibleText(drawIn(t, "pt-BR", TargetDrawer(v))), "BigQuery", "")
-	for _, english := range []string{
-		"Destination", "best writer", "Run queued", "Last loads", "each bar", "Read by",
-		"Configuration", "step", "did not describe", "Credentials", "Query", "Copy",
-		"missed its", "grace", "No load yet",
-	} {
-		if at := strings.Index(text, english); at >= 0 {
-			t.Errorf("the Portuguese drawer still says %q: …%s…", english, text[max(0, at-60):min(len(text), at+40)])
 		}
 	}
 }

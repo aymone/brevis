@@ -76,19 +76,6 @@ func PhasesOf(ctx context.Context, r run.Run, now time.Time) []Phase {
 	return []Phase{made, started, running, finished}
 }
 
-// phaseBar is a phase's bar colour.
-func phaseBar(state string) string {
-	switch state {
-	case "done":
-		return "bg-state-success"
-	case "current":
-		return "bg-state-running animate-pulse"
-	case "failed":
-		return "bg-state-failed"
-	}
-	return "bg-line-strong"
-}
-
 // autoItems are a run's auto params as the grid shows them, in the order and
 // with the words the cards had; an absent one is left out, as before.
 func autoItems(ctx context.Context, r run.Run) []components.KVItem {
@@ -126,14 +113,6 @@ func usedParams(r run.Run) []components.KVItem {
 	return out
 }
 
-// firstLine is an error's first line, for the line that opens to the rest.
-func firstLine(s string) string {
-	if i := strings.IndexByte(s, '\n'); i >= 0 {
-		return s[:i]
-	}
-	return s
-}
-
 // showsWhy is whether the head says why the run failed: a failed run, or a
 // retrying one with the failure that sent it back.
 func showsWhy(p RunPage) bool {
@@ -162,17 +141,6 @@ func whyExcerpt(c *diagnosis.Cause) string {
 		return strings.Join(c.Excerpt, "\n")
 	}
 	return c.Line
-}
-
-// runDuration is how long the run took, "in progress" while it runs.
-func runDuration(ctx context.Context, r run.Run) string {
-	if r.Status.InFlight() {
-		return i18n.T(ctx, "run.in_progress")
-	}
-	if r.StartedAt == nil || r.FinishedAt == nil {
-		return "—"
-	}
-	return i18n.Elapsed(ctx, r.FinishedAt.Sub(*r.StartedAt))
 }
 
 // contextState says why a step has no published context.

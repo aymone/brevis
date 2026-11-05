@@ -1,0 +1,11 @@
+# A workflow with ONE step, for the fixme in e2e/shift.spec.ts: the console draws a graph skeleton
+# with a view toggle while it loads, then (a one-step workflow has nothing to draw) a plain list
+# without the toggle, and the page shifts (CLS ~0.08). Published with the other fixtures; remove the
+# `fixme` when the skeleton follows the loaded shape.
+name: e2e_single
+type: chain
+tags: [e2e]
+
+steps:
+  - id: only
+    run: echo only

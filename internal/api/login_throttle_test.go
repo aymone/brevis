@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -29,11 +28,11 @@ func TestLoginDoesNotRunTheHashBeyondTheSlotsNorForALockedSource(t *testing.T) {
 		},
 	}
 	mux := http.NewServeMux()
-	dataUI(catalogFake{}).RegistrarLogin(mux, gate)
+	dataUI(catalogFake{}).RegistrarLoginAPI(mux, gate)
 
 	post := func(addr string) int {
-		req := httptest.NewRequest("POST", "/login", strings.NewReader(url.Values{"username": {"nobody"}, "password": {"secret-typed-in-the-wrong-box"}}.Encode()))
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req := httptest.NewRequest("POST", "/api/login", strings.NewReader(`{"user":"nobody","password":"secret-typed-in-the-wrong-box"}`))
+		req.Header.Set("Content-Type", "application/json")
 		req.RemoteAddr = addr
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)

@@ -16,6 +16,48 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ---
 
+## [Unreleased]
+
+### Added: a stream's health, from what the gateway measured
+
+- The Streams list and a stream's page say `healthy`, `quiet`, `degraded` or
+  `failing` (and `unknown` with the reason: no source, an unreachable one, the
+  first scrape, a stream the gateway never reported) instead of "no data" for
+  every stream. The rule is one pure function over the collector's minute
+  buckets, with each threshold named and explained in
+  `internal/metrics/health.go` and summarized in `docs/OBSERVABILITY.md`.
+- `health` on `/api/ingest/streams` and its detail gains `since`,
+  `windowMinutes`, the window's counts and the ratios behind the state;
+  `healthCounts` counts every state. Both screens refetch on the
+  `metrics:streams` topic, and the list puts failing and degraded streams first.
+- The collector also keeps retried and buried batches, refused-because-full
+  requests and requests that never decoded.
+- A stream whose health is `failing` is listed under "Needs your attention" on
+  the Overview, with a link to its page, and counts in the section's total.
+  `/api/overview/attention` gains `streams` and `streamsMore` (up to five are
+  listed); the Overview follows the `metrics:streams` topic while it is open.
+
+### Changed: the console lives at `/`, and the old server-rendered one is gone
+
+- The React console is served at the root: `/`, `/runs`, `/workflows`,
+  `/ingest/streams`, `/data`, `/sql`, `/login`... Any GET no engine route claims
+  is a client route and gets the app's shell. The app's own files moved from
+  `/app/assets/` to `/static/`, so they no longer share a name with the engine's
+  `/assets/` (stylesheet, fonts, logo).
+- `/app` and `/app/...` answer `308` to the same path without the prefix, query
+  kept, so bookmarks keep working. A signed-out visit to a page goes to
+  `/login?next=...`; `/api/*` still answers `401` JSON, and an unknown `/api/*`
+  path a JSON `404`.
+- Removed: the templ pages and their handlers (the HTML `/runs`, `/workflows`,
+  `/ingest/...`, `/data...`, `/sql`, `/projects`, the form login at `POST /login`
+  and `POST /logout`, `/nav/runs`, `/overview/attention`, `/lang`-style fragments
+  and the workbench's HTML tree), the old scripts under `/assets/` (`ui.js`,
+  `dag.js`, `sql.js`, `jsx-shim.js`, `vendor/`) and the `templ` dependency. The
+  JSON under `/api/*` is unchanged, as are `POST /workflows/{slug}/trigger`,
+  `GET /runs/{id}/log.txt` and `POST /preferences/lang`. `/api/sql/objects`,
+  `/api/sql/columns` and `/api/sql/estimate` (HTML for the old workbench) are gone.
+- `make generate` now builds the stylesheet and the React app only.
+
 ## [0.42.0] — 2026-11-02
 
 ### Added: an Iceberg table is a landing target

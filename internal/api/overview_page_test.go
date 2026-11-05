@@ -3,9 +3,6 @@ package api_test
 import (
 	"context"
 	"log/slog"
-	"net/http"
-	"strings"
-	"testing"
 	"time"
 
 	"brevis.sh/brevis/internal/api"
@@ -60,38 +57,4 @@ func overviewUI(f overviewReads) *api.UI {
 		}{}
 	}
 	return api.NewUI(f, nil, nil, nil, nil, nil, branding.Default(), slog.New(slog.DiscardHandler))
-}
-
-// THE OVERVIEW READS THE WINDOW IN ITS URL (screen-overview-v2 OV1): 24h by
-// the hour, 7d and 30d by the day, anything else the default.
-func TestTheOverviewReadsItsWindow(t *testing.T) {
-	for _, c := range []struct {
-		query string
-		span  time.Duration
-		grain postgres.Grain
-		n     int
-		label string
-	}{
-		{"", 24 * time.Hour, postgres.ByHour, 24, "last 24 hours"},
-		{"?window=7d", 7 * 24 * time.Hour, postgres.ByDay, 7, "last 7 days"},
-		{"?window=30d", 30 * 24 * time.Hour, postgres.ByDay, 30, "last 30 days"},
-		{"?window=1y", 24 * time.Hour, postgres.ByHour, 24, "last 24 hours"},
-	} {
-		f := overviewReads{}
-		f.asked = &struct {
-			span  time.Duration
-			grain postgres.Grain
-			n     int
-		}{}
-		code, body := get(t, overviewUI(f), "/"+c.query)
-		if code != http.StatusOK {
-			t.Fatalf("%q answered %d", c.query, code)
-		}
-		if f.asked.span != c.span || f.asked.grain != c.grain || f.asked.n != c.n {
-			t.Errorf("%q read %v by %v ×%d", c.query, f.asked.span, f.asked.grain, f.asked.n)
-		}
-		if !strings.Contains(body, c.label) {
-			t.Errorf("%q does not say %q", c.query, c.label)
-		}
-	}
 }

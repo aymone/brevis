@@ -227,22 +227,50 @@ type Gate struct {
 	once sync.Once
 }
 
-// livre lists what answers without a session.
+// free lists what answers without a session.
 func free(path string) bool {
 	switch path {
-	case "/health", "/ready", "/login", "/logout":
+	case "/health", "/ready":
+		return true
+	// THE LOGIN SCREEN, AND NOTHING ELSE OF THE CONSOLE. Each entry is the
+	// least the screen needs, and every one carries no operator data:
+	//   /login        the shell, so the browser can draw the form (the shell is
+	//                 one static HTML file; every other page stays gated and
+	//                 redirects here).
+	//   /api/login    the credential check itself, behind the Limiter.
+	//   /api/logout   so an expired or stale cookie can still be cleared.
+	//   /api/config   brand and version: the screen is branded.
+	//   /api/messages the catalog: the screen needs words. It is the same text
+	//                 every visitor of the public repository can read.
+	// /api/session is NOT here: it answers who you are, and an anonymous
+	// visitor gets the 401 that sends the app to this screen.
+	case "/login", "/api/login", "/api/logout", "/api/config", "/api/messages":
 		return true
 	}
-	// The assets are public by nature: the CSS, fonts and JS of the login screen
-	// itself. Protecting them would break the page that asks for the
-	// password.
-	return strings.HasPrefix(path, "/assets/")
+	// /static/ is the build's hashed JS and CSS: a bundle holds no secret (it
+	// is published with the source), and the shell above cannot run without
+	// it. /assets/ is the engine's own CSS, fonts and logo. Neither holds
+	// data, and protecting them would break the page that asks for the password.
+	return strings.HasPrefix(path, "/static/") || strings.HasPrefix(path, "/assets/")
 }
 
 func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
-	case !p.Cred.Enabled(), free(r.URL.Path):
+	case !p.Cred.Enabled():
 		p.Next.ServeHTTP(w, r)
+		return
+	case free(r.URL.Path):
+		// A public path is served either way, but the handler is told WHO is
+		// asking: a visitor with a valid session gets the operator in the
+		// context, an anonymous one is marked, so what a public endpoint says
+		// can differ (the config hides the engine's version from a stranger).
+		ctx := r.Context()
+		if cookie, err := r.Cookie(CookieName); err == nil && p.Cred.checkSession(cookie.Value, time.Now()) {
+			ctx = IntoContext(ctx, p.Cred.User)
+		} else {
+			ctx = context.WithValue(ctx, anonymousKey{}, true)
+		}
+		p.Next.ServeHTTP(w, r.WithContext(ctx))
 		return
 	}
 
@@ -252,6 +280,17 @@ func (p *Gate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// DATA IS NOT A PAGE. The app reads /api/* with fetch, and a redirect
+	// would be followed into a 200 HTML login page that looks like a broken
+	// response; a 401 with a JSON body is what the client acts on (it goes to
+	// its own login screen). Any method: a stale tab's POST gets the same.
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte(`{"error":"sign in"}` + "\n"))
+		return
+	}
 	// A POST without a session does not become a redirect to the login: the
 	// browser would lose the body and the operator would resend blindly after
 	// signing in. A 401 tells the truth about what happened.
@@ -403,6 +442,17 @@ type key struct{}
 // should not display a button that does nothing.
 func IntoContext(ctx context.Context, user string) context.Context {
 	return context.WithValue(ctx, key{}, user)
+}
+
+type anonymousKey struct{}
+
+// Anonymous reports that the console has a credential and this request has no
+// valid session, on a path the Gate lets through without one. False on an open
+// console (nobody is asked to sign in, so nobody is a stranger) and on every
+// request that did sign in.
+func Anonymous(ctx context.Context) bool {
+	v, _ := ctx.Value(anonymousKey{}).(bool)
+	return v
 }
 
 // De returns the request's operator, or empty when there is no session.

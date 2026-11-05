@@ -122,6 +122,12 @@ services:
       # example API is local and open, so no key.
       BREVIS_ENDPOINTS_URLS: ${BREVIS_ENDPOINTS_URLS:-example-api=http://endpoints:8080}
       BREVIS_ENDPOINTS_KEY: ${BREVIS_ENDPOINTS_KEY:-}
+      # The live volume of Streams and Endpoints: the metrics listeners of
+      # the gateway and of the example API, by their names and CONTAINER
+      # addresses (not the public ports). Unset, the screens say "no metrics
+      # source configured". docs/OBSERVABILITY.md.
+      BREVIS_GATEWAY_METRICS_URLS: ${BREVIS_GATEWAY_METRICS_URLS:-events_gateway=http://gateway:9090/metrics}
+      BREVIS_ENDPOINTS_METRICS_URLS: ${BREVIS_ENDPOINTS_METRICS_URLS:-example-api=http://endpoints:9090/metrics}
     ports: ["${BREVIS_API_PORT:-8080}:8080"]
     # The customer's visual identity. Commented out because the default
     # installation has no file at all — uncomment after copying

@@ -1,0 +1,76 @@
+/* THE DESIGN IS THE SERVER'S. /assets/app.css (loaded before this file) holds the
+   console's tokens -- the --color-* names internal/branding writes, the IBM Plex
+   faces, the dark and light themes on <html data-theme> -- so a client's brand.yaml
+   repaints this app exactly as it repaints the server pages. The short names below
+   are the app's own vocabulary and only ever ALIAS those tokens: no colour is
+   written twice. */
+:root {
+  --bg: var(--color-canvas);
+  --fg: var(--color-ink);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --card: var(--color-surface);
+  --sk: var(--color-surface-3);
+  --sk-hi: var(--color-surface-2);
+  --accent: var(--color-accent-strong);
+  --accent-bar: var(--color-accent-strong);
+
+  /* One state vocabulary. The alias groups are the names the screens grew while
+     they were built apart; they all land on the same six state tokens. */
+  --st-success: var(--color-state-success); --st-ok: var(--color-state-success);
+  --st-failed: var(--color-state-failed); --st-bad: var(--color-state-failed);
+  --st-running: var(--color-state-running); --st-run: var(--color-state-running); --st-info: var(--color-state-running);
+  --st-queued: var(--color-state-queued); --st-warn: var(--color-state-queued); --st-wait: var(--color-state-queued);
+  --st-retrying: var(--color-state-retrying);
+  --st-canceled: var(--color-state-canceled); --st-idle: var(--color-state-canceled); --st-off: var(--color-state-canceled);
+  --st-pending: var(--color-state-pending);
+  --st-skipped: var(--color-state-skipped);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); }
+.sk { display: block; border-radius: .3rem; background: linear-gradient(90deg, var(--sk) 25%, var(--sk-hi) 50%, var(--sk) 75%); background-size: 200% 100%; animation: sk 1.4s linear infinite; }
+.sk-text { display: grid; gap: .5rem; }
+/* A GHOST is the real markup drawn with placeholder values: every leaf (text, mark, bar) turns into
+   the skeleton look while the box it takes stays the real one, so a screen's loading shape and its
+   loaded shape have the same height by construction. Cells (td, th) keep their own box, never a slab. */
+.sk-ghost { pointer-events: none; user-select: none; }
+.sk-ghost *, .sk-ghost:not(:has(*)) { color: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+.sk-ghost :is(a, span, p, div, dd, dt, li, h2, h3, strong, svg, kbd, input, time, code, b, i, button, td):not(:has(*)), .sk-ghost:not(:has(*)), .sk-ghost svg { background: linear-gradient(90deg, var(--sk) 25%, var(--sk-hi) 50%, var(--sk) 75%) 0 0 / 200% 100%; border-radius: .3rem; animation: sk 1.4s linear infinite; }
+.sk-ghost :is(p, div, dd, dt, li):not(:has(*)), :is(p, div, dd, dt, li).sk-ghost:not(:has(*)) { width: fit-content; max-width: 100%; }
+.sk-ghost svg > * { visibility: hidden; }
+/* A table whose columns are pinned to last time's widths: placeholder text must not widen them. */
+.sk-pinned { table-layout: fixed; }
+/* ...and must not wrap: the row heights are pinned to the loaded rows, and a placeholder wider than its column would only make the row taller. */
+.sk-pinned td { white-space: nowrap; overflow: hidden; }
+.sk-pinned td * { flex-wrap: nowrap; }
+.sk-ghost [class*="cg-"] { background: var(--sk); animation: none; }
+@media (prefers-reduced-motion: reduce) { .sk-ghost * { animation: none !important; } }
+@keyframes sk { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .sk, .sk-ghost * { animation: none !important; } }
+
+/* A skeleton made of the real markup: the same element and classes as the loaded state with a placeholder
+   inside, so its height and width come from the real line box and cannot drift from it. No overflow rule
+   here: overflow would move the inline-block's baseline and change the line's height. */
+.sk-inline { display: inline-block; max-width: 100%; vertical-align: top; border-radius: .3rem; color: transparent !important; user-select: none; background: linear-gradient(90deg, var(--sk) 25%, var(--sk-hi) 50%, var(--sk) 75%); background-size: 200% 100%; animation: sk 1.4s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .sk-inline { animation: none; } }
+.muted { color: var(--muted); }
+.log-lines-min { min-height: 10rem; }
+/* A block drawn as the REAL markup with placeholder values, then hidden: its boxes still take their room (so
+   it wraps and measures like the loaded one at any width) and the wrapper shows the one skeleton look. */
+.sk-real { display: block; width: fit-content; max-width: 100%; border-radius: .3rem; background: linear-gradient(90deg, var(--sk) 25%, var(--sk-hi) 50%, var(--sk) 75%); background-size: 200% 100%; animation: sk 1.4s linear infinite; }
+.sk-real * { visibility: hidden; }
+
+/* Visually hidden text (.sr-only, absolutely positioned) inside a table that scrolls
+   sideways in its own box must be positioned against the TABLE: with no positioned
+   ancestor it is placed against the page, escapes the box's clipping and widens the
+   whole document (the overview's Recent runs did: 159px of sideways scroll on a phone). */
+main table { position: relative; }
+
+/* The server's sheet lets a fill page grow and scroll as one column below 960px
+   (flex: none), so the stacked Runs screen was list + the whole open run tall. Keep it the
+   height of the viewport there too: the list is bounded (max-h-[300px]) and scrolls, and the
+   open run's pane takes the rest and scrolls on its own. */
+@media (max-width: 959.98px) {
+  main[data-fill][data-fill] { overflow: hidden; }
+  main[data-fill][data-fill] > :last-child { flex: 1; }
+}

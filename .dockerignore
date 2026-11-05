@@ -1,0 +1,3 @@
+# The React app's dependencies (85 MB) are not part of any image: its build is
+# web/spa/dist, committed.
+web/spa/node_modules

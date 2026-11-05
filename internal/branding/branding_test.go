@@ -1,7 +1,6 @@
 package branding_test
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -174,18 +173,6 @@ func TestThePhrasePreservesTheLines(t *testing.T) {
 	}
 }
 
-// With no brand in the context -- a test rendering directly, a path that did not
-// go through render -- the screen still has to have a name.
-func TestAContextWithNoBrandReturnsTheDefault(t *testing.T) {
-	if branding.De(context.Background()).Title != "Brevis" {
-		t.Error("contexto vazio deveria devolver the default")
-	}
-	ctx := branding.IntoContext(context.Background(), branding.Brand{Title: "Acme"})
-	if branding.De(ctx).Title != "Acme" {
-		t.Error("the brand from the context was ignored")
-	}
-}
-
 // The attribution is not configurable: there is no YAML field able to remove
 // it.
 func TestTheAttributionDoesNotComeFromConfiguration(t *testing.T) {
@@ -267,20 +254,5 @@ theme:
 func TestAnInvalidLightColourIsRefused(t *testing.T) {
 	if _, err := branding.Load(writeFile(t, `theme_light: {ink: "#fff;} body{display:none"}`)); err == nil {
 		t.Error("an injected light colour was accepted")
-	}
-}
-
-// THE DOCUMENTATION IS READ IN THE READER'S LANGUAGE: English at the root,
-// every other under its own prefix.
-func TestDocsInFollowsTheLanguage(t *testing.T) {
-	for lang, want := range map[string]string{
-		"en":    "https://brevis.sh/docs/workflows/",
-		"pt-BR": "https://brevis.sh/pt/docs/workflows/",
-		"zh-CN": "https://brevis.sh/zh/docs/workflows/",
-		"fr":    "https://brevis.sh/fr/docs/workflows/",
-	} {
-		if got := branding.DocsIn(lang, "workflows/"); got != want {
-			t.Errorf("DocsIn(%q) = %q, want %q", lang, got, want)
-		}
 	}
 }

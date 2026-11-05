@@ -102,24 +102,6 @@ func targets(rows []DataRow) []string {
 	return out
 }
 
-// Links are stable and shareable: the same filter always writes the same URL,
-// and setting one field keeps the others.
-func TestFilterLinksAreStableAndKeepTheOtherFields(t *testing.T) {
-	f := DataFilter{Status: "attention", Kind: "s3"}
-	if got := f.With("kind", "postgres"); got != "/ingest/loads?status=attention&kind=postgres" {
-		t.Errorf("With(kind) = %q", got)
-	}
-	if got := f.With("status", ""); got != "/ingest/loads?kind=s3" {
-		t.Errorf("clearing status = %q", got)
-	}
-	if got := (DataFilter{}).With("legacy", "1"); got != "/ingest/loads?legacy=1" {
-		t.Errorf("legacy = %q", got)
-	}
-	if got := (DataFilter{}).With("status", ""); got != "/ingest/loads" {
-		t.Errorf("no filter = %q", got)
-	}
-}
-
 func TestTheFilterBarOffersOnlyKindsThatExist(t *testing.T) {
 	v := filterFixture()
 	if strings.Join(v.Kinds, ",") != "postgres,s3" || !v.HasLegacy {

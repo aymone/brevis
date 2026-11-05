@@ -12,7 +12,7 @@ import (
 
 // The served response has to carry a validator. Without one there is no way for
 // a client to ask "is my copy still good", and a UI fix ships without arriving:
-// /assets/dag.js has no version in its path, so an upgraded binary serves new
+// /assets/favicon.svg has no version in its path, so an upgraded binary serves new
 // bytes at a URL the browser believes it already holds.
 //
 // http.FileServerFS alone gave none: an embedded file's ModTime is zero, so it
@@ -22,10 +22,10 @@ func TestTheAssetsCanBeRevalidated(t *testing.T) {
 	srv := http.StripPrefix("/assets/", assets.Handler())
 
 	first := httptest.NewRecorder()
-	srv.ServeHTTP(first, httptest.NewRequest("GET", "/assets/dag.js", nil))
+	srv.ServeHTTP(first, httptest.NewRequest("GET", "/assets/favicon.svg", nil))
 
 	if first.Code != http.StatusOK {
-		t.Fatalf("GET dag.js = %d, want 200", first.Code)
+		t.Fatalf("GET favicon.svg = %d, want 200", first.Code)
 	}
 	tag := first.Header().Get("ETag")
 	if tag == "" {
@@ -39,7 +39,7 @@ func TestTheAssetsCanBeRevalidated(t *testing.T) {
 	}
 
 	// The point of the tag: the second request costs no bytes.
-	again := httptest.NewRequest("GET", "/assets/dag.js", nil)
+	again := httptest.NewRequest("GET", "/assets/favicon.svg", nil)
 	again.Header.Set("If-None-Match", tag)
 	second := httptest.NewRecorder()
 	srv.ServeHTTP(second, again)
@@ -57,7 +57,7 @@ func TestTheAssetsCanBeRevalidated(t *testing.T) {
 	css := httptest.NewRecorder()
 	srv.ServeHTTP(css, httptest.NewRequest("GET", "/assets/app.css", nil))
 	if other := css.Header().Get("ETag"); other == tag {
-		t.Errorf("dag.js and app.css share the ETag %s", tag)
+		t.Errorf("favicon.svg and app.css share the ETag %s", tag)
 	}
 }
 
@@ -78,9 +78,9 @@ func TestAVersionedURLIsCachedForeverAndOnlyTheCurrentOne(t *testing.T) {
 		return rec
 	}
 
-	u := assets.URL("dag.js")
-	if !strings.HasPrefix(u, "/assets/dag.js?v=") {
-		t.Fatalf("URL(dag.js) = %q, which carries no version", u)
+	u := assets.URL("favicon.svg")
+	if !strings.HasPrefix(u, "/assets/favicon.svg?v=") {
+		t.Fatalf("URL(favicon.svg) = %q, which carries no version", u)
 	}
 	cur := get(u)
 	if cur.Code != http.StatusOK || cur.Body.Len() == 0 {
@@ -89,10 +89,10 @@ func TestAVersionedURLIsCachedForeverAndOnlyTheCurrentOne(t *testing.T) {
 	if cc := cur.Header().Get("Cache-Control"); !strings.Contains(cc, "immutable") || !strings.Contains(cc, "max-age=31536000") {
 		t.Errorf("the current version is not cached for good: %q", cc)
 	}
-	if cc := get("/assets/dag.js?v=0000stale").Header().Get("Cache-Control"); cc != "no-cache" {
+	if cc := get("/assets/favicon.svg?v=0000stale").Header().Get("Cache-Control"); cc != "no-cache" {
 		t.Errorf("a stale version is promised a year: %q", cc)
 	}
-	if assets.URL("dag.js") == assets.URL("sql.js") {
+	if assets.URL("favicon.svg") == assets.URL("logo.svg") {
 		t.Error("two different files share a versioned URL")
 	}
 }

@@ -308,40 +308,6 @@ func (u *UI) respondGraph(w http.ResponseWriter, def wf.Workflow,
 	}
 }
 
-// graphSeed is the graph a page embeds for its island (nav-latency NL5): the
-// same bytes /api/.../graph would send, so the canvas draws on mount instead
-// of after one more round trip -- which painted it empty, then popped the
-// graph in. "" when there is none to draw (an invalid graph); the island then
-// fetches, and says why, as before. json.Marshal escapes <, > and &, so the
-// bytes are safe inside a <script>.
-func graphSeed(def wf.Workflow, states map[string]postgres.NodeState, runID, status string) string {
-	resp, err := buildGraph(def, states, runID, status)
-	if err != nil {
-		return ""
-	}
-	b, err := json.Marshal(resp)
-	if err != nil {
-		return ""
-	}
-	return string(b)
-}
-
-// runSeed is a run's graph for its page: the snapshot that ran, with each
-// step's state as /api/runs/{id}/graph would draw it. A state that cannot be
-// read draws the graph grey, as the API does; a snapshot that cannot be read
-// embeds nothing, and the island fetches.
-func (u *UI) runSeed(ctx context.Context, run dom.Run) string {
-	var def wf.Workflow
-	if err := json.Unmarshal(run.Definition, &def); err != nil {
-		return ""
-	}
-	states, err := u.execs.NodeStates(ctx, run.ID)
-	if err != nil {
-		states = nil
-	}
-	return graphSeed(def, states, run.ID.String(), string(run.Status))
-}
-
 // buildGraph lays a definition out, with each step's state when there is a
 // run: what /api/.../graph answers and what a page embeds.
 func buildGraph(def wf.Workflow, states map[string]postgres.NodeState, runID, status string) (graphResponse, error) {

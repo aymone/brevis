@@ -140,7 +140,7 @@ func TestEveryWorkflowThatFiresOnATagIsAccountedFor(t *testing.T) {
 // the engine for the first time, it found an open redirect in `?next=`,
 // which `internal/auth` now refuses and has a test for.
 //
-// `@master` is the other half. This repository pins templ and Tailwind
+// `@master` is the other half. This repository pins Tailwind
 // because `releases/latest` made two developers generate different CSS; a
 // scanner that changes on its own is the same problem with a worse failure
 // mode, because its findings are what somebody decides to act on.

@@ -1,0 +1,78 @@
+# HELP brevis_gateway_events_received_total events accepted into a stream's buffer
+# TYPE brevis_gateway_events_received_total counter
+brevis_gateway_events_received_total{stream="clicks",format="json"} 1116
+brevis_gateway_events_received_total{stream="orders",format="json"} 280
+# HELP brevis_gateway_events_rejected_total events refused before they were buffered
+# TYPE brevis_gateway_events_rejected_total counter
+brevis_gateway_events_rejected_total{stream="clicks",reason="no_source_key"} 197
+# HELP brevis_gateway_batches_total batches by what became of them
+# TYPE brevis_gateway_batches_total counter
+brevis_gateway_batches_total{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",outcome="delivered"} 106
+brevis_gateway_batches_total{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",outcome="delivered"} 105
+# HELP brevis_gateway_flushes_total batches handed to the pool by what triggered them
+# TYPE brevis_gateway_flushes_total counter
+brevis_gateway_flushes_total{stream="clicks",trigger="time"} 106
+brevis_gateway_flushes_total{stream="orders",trigger="time"} 105
+# HELP brevis_gateway_delivery_seconds how long one batch took to deliver, retries included
+# TYPE brevis_gateway_delivery_seconds histogram
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.005"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.01"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.025"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.05"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.1"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.25"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="0.5"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="1"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="2.5"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="5"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="10"} 106
+brevis_gateway_delivery_seconds_bucket{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/",le="+Inf"} 106
+brevis_gateway_delivery_seconds_sum{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/"} 0.059760372
+brevis_gateway_delivery_seconds_count{stream="clicks",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/clicks/"} 106
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.005"} 104
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.01"} 104
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.025"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.05"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.1"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.25"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="0.5"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="1"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="2.5"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="5"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="10"} 105
+brevis_gateway_delivery_seconds_bucket{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/",le="+Inf"} 105
+brevis_gateway_delivery_seconds_sum{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/"} 0.06143945899999998
+brevis_gateway_delivery_seconds_count{stream="orders",sink="files:/private/tmp/claude-501/-Users-costa-Brevis-brevis/57c8f35a-02ac-4138-9aa7-9c71e1972dc1/scratchpad/gw/out/orders/"} 105
+# HELP brevis_gateway_batch_records how many records were in a batch
+# TYPE brevis_gateway_batch_records histogram
+brevis_gateway_batch_records_bucket{stream="clicks",le="1"} 6
+brevis_gateway_batch_records_bucket{stream="clicks",le="5"} 24
+brevis_gateway_batch_records_bucket{stream="clicks",le="10"} 48
+brevis_gateway_batch_records_bucket{stream="clicks",le="50"} 106
+brevis_gateway_batch_records_bucket{stream="clicks",le="100"} 106
+brevis_gateway_batch_records_bucket{stream="clicks",le="500"} 106
+brevis_gateway_batch_records_bucket{stream="clicks",le="1000"} 106
+brevis_gateway_batch_records_bucket{stream="clicks",le="5000"} 106
+brevis_gateway_batch_records_bucket{stream="clicks",le="+Inf"} 106
+brevis_gateway_batch_records_sum{stream="clicks"} 1116
+brevis_gateway_batch_records_count{stream="clicks"} 106
+brevis_gateway_batch_records_bucket{stream="orders",le="1"} 80
+brevis_gateway_batch_records_bucket{stream="orders",le="5"} 80
+brevis_gateway_batch_records_bucket{stream="orders",le="10"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="50"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="100"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="500"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="1000"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="5000"} 105
+brevis_gateway_batch_records_bucket{stream="orders",le="+Inf"} 105
+brevis_gateway_batch_records_sum{stream="orders"} 280
+brevis_gateway_batch_records_count{stream="orders"} 105
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.793706730069865e+09
+# TYPE brevis_gateway_buffer_records gauge
+brevis_gateway_buffer_records{stream="clicks"} 0
+brevis_gateway_buffer_records{stream="orders"} 0
+# TYPE brevis_gateway_queue_batches gauge
+brevis_gateway_queue_batches{stream="clicks"} 0
+brevis_gateway_queue_batches{stream="orders"} 0

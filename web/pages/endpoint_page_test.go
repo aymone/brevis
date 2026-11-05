@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"strings"
 	"testing"
 
 	"brevis.sh/brevis/internal/domain/catalog"
@@ -61,27 +60,6 @@ func TestAnEndpointsLineageIsOneLinePerTable(t *testing.T) {
 	}
 }
 
-// AN ENDPOINT SERVING STALE DATA SAYS WHY, above everything else: the
-// writer's reason, that the endpoint serves the last good data, and the
-// table in the Catalog. One on time says nothing.
-func TestAStaleEndpointSaysWhy(t *testing.T) {
-	all, entries := endpointPageFixture()
-	page := drawIn(t, "en", Endpoint(BuildEndpoint(endpointNamed(all, "old"), entries, catalogNow)))
-	if !strings.Contains(page, "data-stale-warning") {
-		t.Fatal("no warning")
-	}
-	warning := page[strings.Index(page, "data-stale-warning"):]
-	warning = warning[:strings.Index(warning, "</section>")]
-	for _, want := range []string{"vendors", "last good data", `href="/data/target?u=bigquery%3A%2F%2Facme%2Fbronze%2Fold"`} {
-		if !strings.Contains(warning, want) {
-			t.Errorf("the warning lacks %q: %s", want, visibleText(warning))
-		}
-	}
-	if strings.Contains(drawIn(t, "en", Endpoint(BuildEndpoint(endpointNamed(all, "fresh"), entries, catalogNow))), "data-stale-warning") {
-		t.Error("an endpoint on time warns")
-	}
-}
-
 // CLEAR CACHE IS A COMMAND TO COPY (D5), built from what the API published:
 // the variable its cache's address is read from, its dialect, and the tables
 // read as a build keys them -- with no project on BigQuery, lowered on
@@ -101,67 +79,5 @@ func TestTheClearCacheCommandIsBuiltFromWhatWasPublished(t *testing.T) {
 	}
 	if got := BuildEndpoint(endpointNamed(all, "lost"), entries, catalogNow).BumpCommand(); got != "" {
 		t.Errorf("no cache on record: %s", got)
-	}
-}
-
-// THE CACHE CARD SAYS HOW LONG, WHEN IT IS CLEARED AND BY WHAT, and the
-// command to clear it by hand; an API published before its settings were
-// kept says to publish it again rather than claim there is no cache.
-func TestTheCacheCard(t *testing.T) {
-	all, entries := endpointPageFixture()
-	page := drawIn(t, "en", Endpoint(BuildEndpoint(endpointNamed(all, "fresh"), entries, catalogNow)))
-	card := page[strings.Index(page, `id="cache"`):]
-	card = card[:strings.Index(card, "</section>")]
-	for _, want := range []string{"15 minutes", "Redis", "bronze/fresh", `data-copy="#endpoint-bump"`,
-		"brevis-sql generation bump --generations-from BREVIS_CACHE_ADDR --dialect bigquery bronze.fresh"} {
-		if !strings.Contains(card, want) {
-			t.Errorf("the cache card lacks %q", want)
-		}
-	}
-	lost := drawIn(t, "en", Endpoint(BuildEndpoint(endpointNamed(all, "lost"), entries, catalogNow)))
-	card = lost[strings.Index(lost, `id="cache"`):]
-	card = card[:strings.Index(card, "</section>")]
-	if !strings.Contains(card, "publish the API again") || strings.Contains(card, "generation bump") {
-		t.Errorf("an API with no settings on record: %s", visibleText(card))
-	}
-}
-
-// THE HEAD: back to every endpoint, then GET · API · published · state above
-// the path.
-func TestAnEndpointsHead(t *testing.T) {
-	all, entries := endpointPageFixture()
-	page := drawIn(t, "en", Endpoint(BuildEndpoint(endpointNamed(all, "old"), entries, catalogNow)))
-	head := page[strings.Index(page, "data-page-header"):strings.Index(page, "<h1")]
-	for _, want := range []string{`href="/data/endpoints"`, "All endpoints", ">GET<", "metrics", "published 2h ago", "stale data"} {
-		if !strings.Contains(head, want) {
-			t.Errorf("the head lacks %q", want)
-		}
-	}
-}
-
-// AN ENDPOINT'S PAGE SPEAKS THE READER'S LANGUAGE; the path, the
-// parameters' names and types and the command are the machine's.
-func TestAnEndpointsPageHasNoEnglishLeft(t *testing.T) {
-	all, entries := endpointPageFixture()
-	params := []catalog.EndpointParam{
-		{Name: "q", Type: "string", MaxLen: 32}, {Name: "n", Type: "int", Min: rows64(1), Max: rows64(9)},
-		{Name: "on", Type: "bool"}, {Name: "day", Type: "date", Required: true},
-	}
-	old := endpointNamed(all, "old")
-	old.Endpoint.Params = params
-	var text string
-	for _, e := range []postgres.PublishedEndpoint{old, endpointNamed(all, "lost"), endpointNamed(all, "clicks")} {
-		page := regexpPre.ReplaceAllString(drawIn(t, "pt-BR", Endpoint(BuildEndpoint(e, entries, catalogNow))), " ")
-		text += visibleText(page)
-	}
-	for _, english := range []string{
-		"All endpoints", "published", "stale data", "Where the data comes from", "rebuilt", "last good data",
-		"Parameters", "Name", "Accepts", "Default", "required", "text, at most", "a whole number", "true or false",
-		"Limits", "Timeout", "Rows", "Bytes billed", "no ceiling", "Each request", "The same rows",
-		"Call it", "Time to live", "Cleared when", "Clear cache", "publish the API again", "Open in SQL", "None.",
-	} {
-		if at := strings.Index(text, english); at >= 0 {
-			t.Errorf("the Portuguese page still says %q: …%s…", english, text[max(0, at-60):min(len(text), at+40)])
-		}
 	}
 }

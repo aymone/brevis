@@ -1,0 +1,16 @@
+# Published by the e2e job (and by hand, see README.md) next to examples/hello.yaml and
+# examples/list-params.yaml. It exists for ONE reason: a workflow with a schedule, so the
+# Workflows screen has a pause/resume switch to test. Shell only, so it runs anywhere; the
+# schedule is far from any test run, and the specs never wait for it. TWO steps on purpose: a
+# one-step workflow draws a different page than its skeleton does (see e2e_single.yaml).
+name: e2e_nightly
+type: dag
+schedule: "0 4 * * *"
+tags: [e2e]
+
+steps:
+  - id: tick
+    run: echo tick
+  - id: tock
+    run: echo tock
+    depends_on: [tick]

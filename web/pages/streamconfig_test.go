@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 	"testing"
-	"time"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -108,44 +107,5 @@ dead_letter:
 	}
 	if got := ConfigYAML(&postgres.WriterConfig{Fields: []catalog.ManifestField{{Path: "a", Value: "true"}, {Path: "b", Value: ""}, {Path: "c", Value: "x: y"}}}); got != "a: \"true\"\nb: \"\"\nc: \"x: y\"\n" {
 		t.Errorf("quoting = %q", got)
-	}
-}
-
-// THE CONFIGURATION TAB, ON THE PAGE: Explained and YAML, both drawn -- one
-// at a time with a script -- and the history of publishes in one line.
-func TestAStreamsConfigurationTab(t *testing.T) {
-	s := StreamsOf(printFixtures(time.Now()))[0].Streams[0]
-	s.Config = publishedStream()
-	page := drawIn(t, "en", StreamPage(BuildStream(s, nil)))
-	cfg := page[strings.Index(page, `id="config"`):strings.Index(page, `id="deadletter"`)]
-	for _, want := range []string{
-		`data-config-view="explained"`, `data-view-set="explained"`, `data-view-set="yaml"`,
-		"Writes every", ">buffer.flush.every<", "Retries", "Event identity", "Others",
-		`id="stream-yaml"`, "brand_new: &#34;*all*&#34;", `data-copy="#stream-yaml"`, "made from what was published",
-		"default",
-	} {
-		if !strings.Contains(cfg, want) {
-			t.Errorf("the configuration tab has no %s", want)
-		}
-	}
-}
-
-// THE CONFIGURATION SPEAKS THE READER'S LANGUAGE (screen-streams T4): the
-// cards, the segment, the labels and the notes about the YAML; keys, values
-// and the file's own comments are the data's.
-func TestAStreamsConfigurationHasNoEnglishLeft(t *testing.T) {
-	s := StreamsOf(printFixtures(time.Now()))[0].Streams[0]
-	s.Config = publishedStream()
-	page := drawIn(t, "pt-BR", StreamPage(BuildStream(s, nil)))
-	cfg := visibleText(page[strings.Index(page, `id="config"`):strings.Index(page, `id="deadletter"`)])
-	for _, english := range []string{"Explained", "Writes every", "Retries", "Event identity", "Others", "Intake",
-		"made from what was published", "default", "History", "first published", "Attempts", "Provider"} {
-		if at := strings.Index(cfg, english); at >= 0 {
-			t.Errorf("the Portuguese configuration still says %q: …%s…", english, cfg[max(0, at-60):min(len(cfg), at+40)])
-		}
-	}
-	v1 := StreamsOf(printFixtures(time.Now()))[1].Streams[0] // zarv_ingestion_dev, no configuration
-	if text := visibleText(drawIn(t, "pt-BR", StreamPage(BuildStream(v1, nil)))); strings.Contains(text, "published without its configuration") {
-		t.Error("the version-1 note is still in English")
 	}
 }

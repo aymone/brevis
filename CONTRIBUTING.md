@@ -16,7 +16,7 @@ else, including this repository, is English only.
 A few names stay Portuguese on purpose, and each one says so where it lives:
 the on-disk and wire formats. The `Param` JSON keys, `postgres.Stage`'s tags, the
 migrations' columns, the checkpoint depot's file names, the graph payload
-`dag.js` reads, and `data-dica` / `grafico-*`. They are data, not prose, and
+the console reads, and `data-dica` / `grafico-*`. They are data, not prose, and
 renaming one is a migration rather than a translation.
 
 The two changelogs predate this rule in part and are kept as they were written:
@@ -56,7 +56,7 @@ repository name the incident that produced the line.
 go test ./...          # the engine, at the root
 cd sdk && go test ./...  # the SDK, a separate module
 
-make generate          # regenerates web/ (templ + Tailwind, both pinned)
+make generate          # regenerates web/ (Tailwind, pinned, and the React app)
 ```
 
 Two modules, two `go.mod`. The engine does not import the SDK, and

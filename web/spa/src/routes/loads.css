@@ -1,0 +1,53 @@
+/* The Loads list. Colours are the server's tokens; every rule is prefixed ldl-. */
+
+/* The row is one link: the step's anchor is stretched over the row (one tab stop, Enter opens the drawer,
+   ctrl-click works) and the row, not the anchor, draws the focus ring. */
+.ldl tbody > tr { position: relative; }
+.ldl-link { display: inline-flex; max-width: 100%; min-width: 0; gap: 6px; font-family: var(--font-mono); font-size: 13px; color: inherit; text-decoration: none; }
+.ldl-link::after { content: ""; position: absolute; inset: 0; }
+.ldl-link:focus-visible { outline: none; }
+.ldl tbody > tr:has(.ldl-link:focus-visible) { outline: 2px solid var(--color-accent-strong); outline-offset: -2px; background: var(--color-hover); }
+.ldl-wf, .ldl-step { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ldl-wf { color: var(--color-muted); flex-shrink: 1; }
+.ldl-wf::after { content: " \00b7"; }
+.ldl-step { color: var(--color-ink); font-weight: var(--font-weight-medium); }
+
+/* Two lines in the first two columns, so a row is as tall with a source as without. */
+.ct.ldl > tbody > tr > td { vertical-align: middle; padding-top: 8px; padding-bottom: 8px; }
+.ldl-fill { width: 34%; max-width: 0; }
+.ldl-fill-dest { width: 36%; max-width: 0; }
+.ldl-sub, .ldl-from { margin: 2px 0 0; font-size: 12px; line-height: 1.125rem; color: var(--color-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ldl-from { font-size: 11.5px; }
+.ldl-none { color: var(--color-faint); }
+.ldl-to { display: flex; align-items: center; gap: 6px; min-width: 0; margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.25rem; }
+.ldl-to > .cg, .ldl-to > svg { flex-shrink: 0; }
+.ldl-where { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--color-faint); }
+.ldl-what { flex-shrink: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-ink); }
+.ldl-chip { flex-shrink: 0; padding: 0 6px; line-height: 1rem; border: 1px solid var(--color-line); border-radius: var(--radius-sm); font-size: 10.5px; color: var(--color-muted); }
+.ldl-fixing { display: block; white-space: nowrap; position: relative; z-index: 1; font-size: 11.5px; line-height: 1rem; color: var(--color-state-running); }
+.ldl-fixing:hover { text-decoration: underline; }
+.ldl-last { white-space: nowrap; font-size: 12px; color: var(--color-muted); }
+.ldl-rows { text-align: right; white-space: nowrap; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--color-ink-2); }
+
+@media (max-width: 1100px) { .ldl-recent, .ct.ldl > thead th:nth-child(6) { display: none; } }
+
+/* A phone: each load is a card (load and status, destination and its source, then last load, rows and the
+   last loads as meta), whole and tappable, nothing to scroll sideways. The header stays for screen readers. */
+@media (max-width: 768px) {
+  .ldl, .ldl > tbody { display: block; }
+  .ldl > thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ldl > tbody { padding: 8px; display: grid; gap: 8px; }
+  .ldl > tbody > tr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "load load state" "dest dest dest" "last rows recent"; gap: 8px 12px; align-items: center; padding: 12px; border: 1px solid var(--color-line); border-radius: var(--radius-card); background: var(--color-surface); }
+  .ldl > tbody > tr:hover { background: var(--color-hover); }
+  .ct.ldl > tbody > tr > td { display: block; width: auto; max-width: none; height: auto; padding: 0; white-space: normal; overflow: visible; min-width: 0; }
+  /* The load's name is two short lines in a card (the workflow over the step), each giving way at its end. */
+  .ldl-link { flex-direction: column; gap: 0; }
+  .ldl-wf { font-size: 12px; }
+  .ldl-wf::after { content: none; }
+  .ct.ldl > tbody > tr > td:nth-child(1) { grid-area: load; }
+  .ct.ldl > tbody > tr > td:nth-child(2) { grid-area: dest; }
+  .ct.ldl > tbody > tr > td:nth-child(3) { grid-area: state; justify-self: end; }
+  .ct.ldl > tbody > tr > td:nth-child(4) { grid-area: last; }
+  .ct.ldl > tbody > tr > td:nth-child(5) { grid-area: rows; }
+  .ct.ldl > tbody > tr > td:nth-child(6) { grid-area: recent; display: block; }
+}

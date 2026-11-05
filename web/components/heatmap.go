@@ -173,15 +173,3 @@ func summarise(days []postgres.Day, today time.Time) CalendarSummary {
 	}
 	return s
 }
-
-// emptyOpacity keeps a day with no run visible as a grid square without letting
-// it read as data, and a day to come fainter still.
-func squareOpacity(s Square) string {
-	switch {
-	case s.Future:
-		return "0.35"
-	case s.Empty:
-		return "0.8"
-	}
-	return "1"
-}

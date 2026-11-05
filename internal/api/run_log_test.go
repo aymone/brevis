@@ -87,21 +87,6 @@ func TestTheLogOfNoRunIsRefused(t *testing.T) {
 	}
 }
 
-// THE RUN'S PAGE OFFERS IT, next to the step output, in the reader's language.
-func TestTheRunsPageLinksToItsLog(t *testing.T) {
-	ui := logUI(execsFake{
-		run:  dom.Run{ID: logRun, WorkflowSlug: "daily_sales", Status: dom.StatusFailed},
-		logs: []postgres.StepLog{{NodeID: "load", MapIndex: dom.Unmapped, Status: "failed", Log: "Error: boom"}},
-	})
-	href := `href="/runs/` + logRun.String() + `/log.txt"`
-	for lang, label := range map[string]string{"": ">Download log<", "pt-BR": ">Baixar log<", "es": ">Descargar log<"} {
-		body := pageIn(t, ui, "/runs/"+logRun.String(), lang, "", false)
-		if !strings.Contains(body, href) || !strings.Contains(body, label) {
-			t.Errorf("%s: the run's page has no %s link to its log", lang, label)
-		}
-	}
-}
-
 // THE LOG IS BEHIND THE SAME LOGIN AS EVERY PAGE: a log carries what a step
 // printed, and that can be a customer's data.
 func TestTheLogIsNotGivenToSomebodyNotSignedIn(t *testing.T) {

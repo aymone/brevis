@@ -13,7 +13,6 @@ package branding
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -99,24 +98,6 @@ const Attribution = "Powered by Brevis"
 // to a page that does not describe the thing they are operating. A customer's
 // own runbook is a different link, and would be a different field.
 const DocsURL = "https://brevis.sh/docs/"
-
-// DocsIn is a page of the documentation in the reader's language: the site
-// keeps English at the root and every other language under its own prefix
-// (Portuguese is /pt/, Simplified Chinese /zh/). path is "" for the index or
-// a page such as "workflows/".
-func DocsIn(lang, path string) string {
-	prefix := ""
-	switch lang {
-	case "en", "":
-	case "pt-BR":
-		prefix = "pt/"
-	case "zh-CN":
-		prefix = "zh/"
-	default:
-		prefix = lang + "/"
-	}
-	return "https://brevis.sh/" + prefix + "docs/" + path
-}
 
 // Default is the default identity, used when there is no brand file.
 func Default() Brand {
@@ -327,25 +308,4 @@ func (m Brand) Lines() []string {
 		}
 	}
 	return out
-}
-
-type key struct{}
-
-// IntoContext injeta a marca no contexto da requisicao.
-//
-// The context, and not a parameter on every template: every page needs the
-// brand, and adding it to ten components' signatures just to reach the base
-// layout would make each new screen a chance to forget.
-func IntoContext(ctx context.Context, m Brand) context.Context {
-	return context.WithValue(ctx, key{}, m)
-}
-
-// De recovers the brand. With no brand in the context — a test rendering
-// directly, a path that did not pass through the middleware — it returns the
-// default rather than a screen with no name at all.
-func De(ctx context.Context) Brand {
-	if m, ok := ctx.Value(key{}).(Brand); ok {
-		return m
-	}
-	return Default()
 }

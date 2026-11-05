@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,12 +17,12 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/a-h/templ"
+	"brevis.sh/brevis/internal/events"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"brevis.sh/brevis/internal/alerts"
-	appworkflow "brevis.sh/brevis/internal/application/workflow"
 	"brevis.sh/brevis/internal/auth"
 	"brevis.sh/brevis/internal/branding"
 	"brevis.sh/brevis/internal/domain/catalog"
@@ -33,12 +32,12 @@ import (
 	"brevis.sh/brevis/internal/infrastructure/endpointcall"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
 	"brevis.sh/brevis/internal/infrastructure/sqlserve"
+	"brevis.sh/brevis/internal/metrics"
 	"brevis.sh/brevis/internal/updates"
 	"brevis.sh/brevis/web/assets"
-	"brevis.sh/brevis/web/components"
 	"brevis.sh/brevis/web/i18n"
-	"brevis.sh/brevis/web/layouts"
 	"brevis.sh/brevis/web/pages"
+	"brevis.sh/brevis/web/spa"
 )
 
 // workflowWindow is the horizon of ONE workflow's numbers, and it is thirty
@@ -174,6 +173,11 @@ type UI struct {
 
 	// gallery serves /_components. See WithGallery.
 	gallery bool
+
+	// hub feeds GET /api/events. See WithChangeHub.
+	hub *events.Hub
+	// scrape is the live volume collector; nil serves "not configured".
+	scrape *metrics.Collector
 }
 
 // WithPreview points the console at a SQL service, and says whether this
@@ -257,20 +261,6 @@ func (u *UI) WithVersion(current string, src UpdateSource) *UI {
 	return u
 }
 
-// withVersion carries the version and the update, if any, to the layout.
-func (u *UI) withVersion(ctx context.Context) context.Context {
-	if u.version == "" {
-		return ctx
-	}
-	ctx = layouts.WithVersion(ctx, u.version)
-	if u.updates != nil {
-		if r, newer, ok := u.updates.Latest(); ok {
-			ctx = layouts.WithRelease(ctx, r.Tag, r.URL, r.Notes, r.Published, newer)
-		}
-	}
-	return ctx
-}
-
 // WithFailing turns on the list of failing workflows.
 func (u *UI) WithFailing(r FailingReader) *UI {
 	u.failing = r
@@ -324,243 +314,45 @@ func NewUI(l Leitura, d Definitions, e RunsChart, a Actions, al AlertsReader,
 
 // Registrar wires the routes into the mux.
 func (u *UI) Registrar(mux *http.ServeMux) {
-	mux.HandleFunc("GET /{$}", u.overview) // {$} matches the EXACT root, not the prefix
-	mux.HandleFunc("GET /overview/attention", u.overviewAttention)
-	mux.HandleFunc("GET /nav/runs", u.navRuns)
-	mux.HandleFunc("GET /runs", u.runs)
-	mux.HandleFunc("GET /workflows", u.workflows)
-	mux.HandleFunc("GET /projects", u.projetos)
-	mux.HandleFunc("GET /data", u.catalogPage)
-	// THE WORKBENCH, and both verbs on one path: a GET draws the box and a
-	// POST runs what is in it. The statement travels in the BODY, which is
-	// why there is no second route carrying it.
-	mux.HandleFunc("GET /sql", u.sql)
-	mux.HandleFunc("POST /sql", u.sql)
-	// A query parameter and not a path wildcard: ServeMux cleans `//` out of a
-	// path, and would redirect /data/bigquery://… to /data/bigquery:/….
-	mux.HandleFunc("GET /data/target", u.catalogTarget)
-	mux.HandleFunc("GET /ingest/loads", u.loads)
-	mux.HandleFunc("GET /ingest/streams", u.streams)
-	mux.HandleFunc("GET /ingest/streams/{gateway}/{path...}", u.stream)
-	mux.HandleFunc("GET /ingest/loads/{workflow}/{step}", u.loadDetail)
-	mux.HandleFunc("GET /data/endpoints", u.dataEndpoints)
-	mux.HandleFunc("GET /data/endpoints/{api}/{name}", u.dataEndpoint)
-	if u.gallery {
-		mux.HandleFunc("GET /_components", u.components)
-	}
 	// The command palette's index: everything the console lists, fetched once
 	// per page and filtered in the browser. JSON under /api, like the graph.
 	mux.HandleFunc("GET /api/palette", u.palette)
-	mux.HandleFunc("GET /runs/{id}/live", u.runLive)
-	mux.HandleFunc("GET /workflows/{slug}", u.workflow)
-	mux.HandleFunc("GET /runs/{id}", u.run)
+	u.registerEvents(mux)
+	// The three routes that are not data and not a page: the log as a download, the
+	// manual trigger as a form post (the Load drawer's button; also what a curl
+	// calls) and the language choice.
 	mux.HandleFunc("GET /runs/{id}/log.txt", u.runLog)
-	mux.HandleFunc("POST /runs/{id}/cancel", u.cancel)
-
-	// Effects by POST, not GET: a link that pauses a schedule would be fired by
-	// any browser prefetch or link crawler.
-	mux.HandleFunc("POST /workflows/{slug}/toggle", u.toggle)
 	mux.HandleFunc("POST /preferences/lang", u.chooseLang)
 	mux.HandleFunc("POST /workflows/{slug}/trigger", u.disparar)
 
-	// The JSON the React island fetches. It sits under /api so the URL makes
-	// clear what is a page and what is data -- the same path serves both.
+	// The JSON the graph fetches.
 	mux.HandleFunc("GET /api/workflows/{slug}/graph", u.workflowGraph)
 	mux.HandleFunc("GET /api/runs/{id}/graph", u.runGraph)
-	// The workbench's tree, drawn a branch at a time. See sql_api.go for why
-	// these answer HTML.
-	mux.HandleFunc("GET /api/sql/objects", u.sqlObjects)
-	mux.HandleFunc("GET /api/sql/columns", u.sqlColumns)
-	// POST, BECAUSE THIS ONE CARRIES SQL. The two above take a target and a
-	// relation; a statement must never travel in a URL. Registering the
-	// method also 405s a GET for free, which is the assertion a test makes.
-	mux.HandleFunc("POST /api/sql/estimate", u.sqlEstimate)
 
 	// Served from the embed, not from disk: the container is distroless and has
 	// no web/assets, and the binary has to work from any directory.
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", assets.Handler()))
-}
 
-// loads is Ingest → Batch loads (screen-loads): one row per step and
-// destination, worst first. The catalog read Catalog draws, plus every
-// step's configuration in one more query, for where each step reads; the
-// filter is Catalog's, on this URL.
-func (u *UI) loads(w http.ResponseWriter, r *http.Request) {
-	var entries []postgres.CatalogEntry
-	if u.catalog != nil {
-		var err error
-		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		configs, err := u.catalog.StepConfigs(r.Context())
-		if err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		pages.AttachStepConfigs(entries, configs)
-	}
-	f := pages.ParseDataFilter(r.URL.Query())
-	f.Path = "/ingest/loads"
-	v := pages.BuildLoads(entries, f, time.Now())
-	if fragment(r) == "answer" {
-		u.render(w, r, pages.LoadsList(v))
-		return
-	}
-	u.render(w, r, pages.Loads(v))
-}
-
-// streams is Ingest → Streams: every gateway stream with its sink and dead
-// letter, regrouped from the catalog read, its configuration from the one
-// read of every stream's.
-func (u *UI) streams(w http.ResponseWriter, r *http.Request) {
-	var entries []postgres.CatalogEntry
-	if u.catalog != nil {
-		var err error
-		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		configs, err := u.catalog.StreamConfigs(r.Context())
-		if err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		pages.AttachStreamConfigs(entries, configs)
-	}
-	v := pages.BuildStreams(entries, pages.ParseStreamFilter(r.URL.Query()))
-	if fragment(r) == "answer" {
-		u.render(w, r, pages.StreamsList(v))
-		return
-	}
-	u.render(w, r, pages.Streams(v))
-}
-
-// stream is one gateway stream's page: /ingest/streams/<gateway>/<path>, the
-// stream's path as the tail. Its sink's detail carries the configuration's
-// history; a stream nobody published is not found.
-func (u *UI) stream(w http.ResponseWriter, r *http.Request) {
-	if u.catalog == nil {
-		http.NotFound(w, r)
-		return
-	}
-	entries, err := u.catalog.Catalog(r.Context())
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	configs, err := u.catalog.StreamConfigs(r.Context())
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	pages.AttachStreamConfigs(entries, configs)
-	s := pages.FindStream(pages.StreamsOf(entries), r.PathValue("gateway"), "/"+r.PathValue("path"))
-	if s == nil {
-		http.NotFound(w, r)
-		return
-	}
-	var detail *postgres.TargetDetail
-	if s.Sink.URI != "" {
-		if detail, err = u.catalog.CatalogTarget(r.Context(), s.Sink.URI); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-	}
-	v := pages.BuildStream(*s, detail)
-	v.SQL = s.Sink.URI != "" && u.dataTools(s.Sink.URI)
-	if u.endpoints != nil && s.Sink.URI != "" {
-		readers, err := u.endpoints.Reading(r.Context(), s.Sink.URI)
-		if err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		v.ReadBy = pages.ReadersOf(readers)
-	}
-	u.render(w, r, pages.StreamPage(v))
-}
-
-// dataEndpoints is Data → Endpoints: every published endpoint, judged by the
-// catalog's read of the tables it reads.
-func (u *UI) dataEndpoints(w http.ResponseWriter, r *http.Request) {
-	var all []postgres.PublishedEndpoint
-	if u.endpoints != nil {
-		var err error
-		if all, err = u.endpoints.List(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-	}
-	var entries []postgres.CatalogEntry
-	if u.catalog != nil && len(all) > 0 {
-		var err error
-		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-	}
-	v := pages.BuildEndpoints(all, entries, pages.ParseEndpointFilter(r.URL.Query()), time.Now())
-	if fragment(r) == "answer" {
-		u.render(w, r, pages.EndpointsList(v))
-		return
-	}
-	u.render(w, r, pages.Endpoints(v))
-}
-
-// dataEndpoint is one endpoint's page.
-func (u *UI) dataEndpoint(w http.ResponseWriter, r *http.Request) {
-	if u.endpoints == nil {
-		http.NotFound(w, r)
-		return
-	}
-	e, found, err := u.endpoints.Get(r.Context(), r.PathValue("api"), r.PathValue("name"))
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	if !found {
-		http.NotFound(w, r)
-		return
-	}
-	var entries []postgres.CatalogEntry
-	if u.catalog != nil {
-		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		steps, err := u.catalog.StepConfigs(r.Context())
-		if err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		pages.AttachStepConfigs(entries, steps)
-	}
-	v := pages.BuildEndpoint(e, entries, time.Now())
-	v.CanRun = u.callsProtected && u.calls != nil && u.calls.Configured(e.API)
-	if v.CanRun {
-		q := r.URL.Query()
-		// RUN ONLY WHEN ASKED. A call is a warehouse query, and one per page
-		// view is a bill for rows nobody looked at -- the preview tab's rule.
-		if q.Get("run") == "1" {
-			v.Form = pages.TryForm(e.Endpoint.Params, q)
-			a, err := u.calls.Call(r.Context(), e.API, e.Path, pages.TryValues(e.Endpoint.Params, q))
-			if err != nil {
-				v.RunErr = err
-			} else {
-				v.Answer = &a
-			}
-		} else {
-			v.Form = pages.TryForm(e.Endpoint.Params, nil)
-		}
-		// THE ANSWER ALONE, when Try it asks for it: the form and the docs
-		// stay as they are, and only the answer pane is swapped. The same
-		// handler, the same refusals -- the header changes the shape only.
-		if fragment(r) == "answer" {
-			u.render(w, r, pages.EndpointAnswer(v))
-			return
-		}
-	}
-	u.render(w, r, pages.Endpoint(v))
+	// The console, last and least specific: "GET /" takes every GET that nothing
+	// above claimed (a client-side route), so each engine path wins over it.
+	// /app and /app/... are where the console lived before; they redirect.
+	mux.Handle("GET /", spa.Handler())
+	mux.HandleFunc("GET /app", spa.LegacyRedirect)
+	mux.HandleFunc("GET /app/{path...}", spa.LegacyRedirect)
+	mux.HandleFunc("GET /api/session", u.session)
+	mux.HandleFunc("GET /api/nav/runs", u.navRunsJSON)
+	mux.HandleFunc("GET /api/release", u.release)
+	mux.HandleFunc("GET /api/config", u.config)
+	mux.HandleFunc("GET /api/projects", u.projects)
+	mux.HandleFunc("GET /api/messages", u.messages)
+	u.registerSQLJSON(mux)
+	u.registerWorkflowsAPI(mux)
+	u.registerTriggerAPI(mux)
+	u.registerRunAPI(mux)
+	u.registerIngestAPI(mux)
+	u.registerOverviewAndRunsAPI(mux)
+	u.registerCatalogAPI(mux)
+	u.registerMetricsAPI(mux)
 }
 
 // targetCeiling matches the engine's own bound on a target. A legacy label
@@ -585,103 +377,6 @@ func (u *UI) targetTools(r *http.Request, v *pages.TargetView, target string) er
 	v.Tabs = u.dataTools(target)
 
 	return nil
-}
-
-// loadDetail is one step landing on one destination (screen-loads T4): the
-// loads list with its drawer drawn open, at the address its page had, so a
-// link works with no script; the row's script asks for the drawer alone
-// (X-Brevis-Fragment: load). A step that writes several asks which in the
-// drawer (?target=); one that writes nothing, or a destination it does not
-// write, is the list with a note.
-func (u *UI) loadDetail(w http.ResponseWriter, r *http.Request) {
-	workflow, step := r.PathValue("workflow"), r.PathValue("step")
-	if u.catalog == nil {
-		http.NotFound(w, r)
-		return
-	}
-	entries, err := u.catalog.Catalog(r.Context())
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	configs, err := u.catalog.StepConfigs(r.Context())
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	pages.AttachStepConfigs(entries, configs)
-	f := pages.ParseDataFilter(r.URL.Query())
-	f.Path = "/ingest/loads"
-	v := pages.BuildLoads(entries, f, time.Now())
-
-	var uris []string
-	for _, e := range entries {
-		for _, wr := range e.Writers {
-			if wr.Gateway == nil && wr.Workflow == workflow && wr.Node == step && !slices.Contains(uris, e.Target) {
-				uris = append(uris, e.Target)
-			}
-		}
-	}
-	target := r.URL.Query().Get("target")
-	if target == "" && len(uris) == 1 {
-		target = uris[0]
-	}
-	if len(uris) == 0 || target != "" && !slices.Contains(uris, target) {
-		if fragment(r) == "load" {
-			http.NotFound(w, r)
-			return
-		}
-		v.Missing = workflow + " · " + step
-		u.render(w, r, pages.Loads(v))
-		return
-	}
-
-	self := "/ingest/loads/" + url.PathEscape(workflow) + "/" + url.PathEscape(step)
-	load := &pages.LoadView{Workflow: workflow, Step: step}
-	if target != "" {
-		d, err := u.catalog.CatalogTarget(r.Context(), target)
-		if err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		if d == nil {
-			http.NotFound(w, r)
-			return
-		}
-		*load = pages.BuildLoad(*d, workflow, step, time.Now())
-		load.Read = u.rowsRead(r.Context(), *load, step)
-		if err := u.targetTools(r, &load.TargetView, target); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-		load.Source = pages.SourceOf(configs[postgres.StepKey{Workflow: workflow, Node: step, Target: target}])
-
-		// RUN NOW, AS THE WORKFLOWS LIST DOES IT: at once with no
-		// parameters, and to the Run drawer to ask them otherwise. Nothing
-		// to press where there is no scheduler to ask, or no definition to
-		// say which.
-		if u.actions != nil && u.defs != nil {
-			if def, err := u.defs.Definition(r.Context(), workflow); err == nil {
-				load.Run = "now"
-				if len(def.Params) > 0 {
-					load.Run = "params"
-				}
-			}
-		}
-		load.Back = r.URL.RequestURI()
-	}
-	if len(uris) > 1 {
-		for _, uri := range uris {
-			load.Choices = append(load.Choices, pages.LoadChoice{URI: uri,
-				Href: self + "?target=" + url.QueryEscape(uri), Current: uri == target})
-		}
-	}
-	v.Drawer = load
-	if fragment(r) == "load" {
-		u.render(w, r, pages.LoadDrawer(v))
-		return
-	}
-	u.render(w, r, pages.Loads(v))
 }
 
 // rowsRead asks the newest load's run what its step read (screen-load-v2
@@ -726,170 +421,6 @@ const (
 	statementCeiling = 64 << 10
 )
 
-// sql is the workbench: one path, two verbs.
-//
-// IT RUNS NOTHING ON A GET. A warehouse query for opening a screen would be a
-// bill for a page view, which is the rule the Preview tab already follows.
-func (u *UI) sql(w http.ResponseWriter, r *http.Request) {
-	if !u.preview.Configured() {
-		// The bar does not offer this section without a service; somebody
-		// typing the path gets the same answer rather than a dead box.
-		http.NotFound(w, r)
-		return
-	}
-	var entries []postgres.CatalogEntry
-	if u.catalog != nil {
-		var err error
-		if entries, err = u.catalog.Catalog(r.Context()); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-	}
-	v := pages.BuildSQL(entries)
-
-	// A TARGET IN A URL IS FINE AND A STATEMENT IS NOT. A destination page
-	// links here carrying itself, so nobody has to find the connection again
-	// in a picker -- and `/data/target?u=` already puts a target in a link.
-	//
-	// Only one the CATALOG knows is honoured: a parameter naming anything
-	// else is ignored rather than trusted, which is the rule `/data/target`
-	// follows by answering 404 to the same thing.
-	if want := r.URL.Query().Get("target"); want != "" && v.Knows(want) && pages.Queryable(want) {
-		v.Target = want
-		// AND A TABLE IS ITS FIRST LOOK, written in the box and run by
-		// nobody (screen-sql T1): built from a destination the catalog
-		// knows, never read from the link, so a statement still cannot
-		// travel in a URL.
-		if r.Method == http.MethodGet {
-			v.Statement, v.Preloaded = pages.SelectFor(want), true
-		}
-	}
-	// THE PICKER CHOOSES A CONNECTION AND WRITES NOTHING: its choices are
-	// destinations, and a SELECT of whichever table stood for the connection
-	// would be a statement nobody asked for.
-	if want := r.URL.Query().Get("connection"); want != "" && v.Knows(want) && pages.Queryable(want) {
-		v.Target = want
-	}
-
-	if r.Method == http.MethodPost {
-		// Bounded before it is parsed, matching `serve`'s own body limit.
-		r.Body = http.MaxBytesReader(w, r.Body, statementCeiling)
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "that statement is too long to run", http.StatusBadRequest)
-			return
-		}
-		// FROM THE BODY AND NEVER THE QUERY STRING, which is what keeps a
-		// statement out of a link. `PostFormValue` is what makes that true.
-		v.Target = r.PostFormValue("target")
-		v.Statement = strings.TrimSpace(r.PostFormValue("q"))
-
-		// AND THE BODY IS CHECKED AGAINST THE CATALOG, which it was not.
-		//
-		// The paragraph above says a target in a URL is honoured "only [if]
-		// one the CATALOG knows". That was true of the query string and
-		// false of the body: this line read `target` straight out of a POST
-		// and handed it to the service, which then answered a query AND a
-		// listing for it.
-		//
-		// What it was worth to somebody signed in: the service answers
-		// differently for a connection it holds and one it does not, so the
-		// body was a way to ask `serve` what it has been configured with,
-		// one guess at a time, with the catalog never consulted.
-		if v.Target != "" && !v.Knows(v.Target) {
-			v.ErrKey, v.Target = "sql.err.unknown", ""
-		}
-
-		// WHAT IS OPEN IN THE TREE, and what was just clicked.
-		//
-		// `open` rides with every submit so running a query does not close
-		// the relation somebody opened; `expand` is the tree's own button,
-		// and clicking the one already open CLOSES it, which is what a
-		// disclosure does.
-		// AND WHICH CONNECTION, which the tree's root node submits now that
-		// the picker is gone. Switching clears what is open: `Open` is a
-		// `schema.name` with no connection in it, so carrying it across
-		// would ask the new warehouse for the old one's relation.
-		if want := r.PostFormValue("connect"); want != "" && v.Knows(want) {
-			v.Target, v.ErrKey = want, ""
-			r.PostForm.Set("open", "")
-		}
-
-		v.Open = r.PostFormValue("open")
-		if want := r.PostFormValue("expand"); want != "" {
-			if want == v.Open {
-				v.Open = ""
-			} else {
-				v.Open = want
-			}
-		}
-
-		// EXPANDING IS NOT RUNNING. The tree's button submits the editor's
-		// own form -- which is how the half-written statement survives the
-		// click -- so without this, opening a table would also spend a
-		// query nobody asked for.
-		if r.PostFormValue("expand") == "" && r.PostFormValue("connect") == "" &&
-			v.Statement != "" && v.Target != "" {
-			res, err := u.preview.Query(r.Context(), v.Target, v.Statement, queryRows)
-			switch {
-			case errors.Is(err, sqlserve.ErrNoConnection):
-				v.ErrKey, v.ErrArg = "sql.err.no_connection", pages.ConnectionOf(v.Target)
-			case err != nil:
-				var refused *sqlserve.Refused
-				if errors.As(err, &refused) {
-					v.Refused = refused.Why
-				} else {
-					v.Err = err.Error()
-				}
-			default:
-				v.Result = &res
-			}
-		}
-	}
-	// THE ANSWER ALONE, when the island asks for it. A run that swaps only
-	// the answer pane draws nothing else, so the tree and the open relation's
-	// columns -- two metadata round trips -- would be work for a page nobody
-	// sees. Every refusal above has already been applied: the shape of the
-	// response is the only thing the header changes.
-	//
-	// ONLY ON A POST. A GET runs nothing, and the answer to opening a screen
-	// is the screen.
-	if r.Method == http.MethodPost && fragment(r) == "answer" {
-		u.render(w, r, pages.SQLAnswer(v))
-		return
-	}
-	if v.Target == "" {
-		v.Target = v.FirstQueryable()
-	}
-
-	// THE TREE IS ASKED FOR LAST, once the target is settled -- including
-	// the default -- because the listing belongs to a connection and the
-	// default is a connection like any other.
-	//
-	// A WAREHOUSE THAT CANNOT SAY IS NOT AN ERROR PAGE. `Relations` is an
-	// optional capability, the service answers 501 where a dialect lacks it,
-	// and an unreachable service is the same shape of absence. Either way
-	// the tree is not drawn and the box still runs queries: a console that
-	// broke without the tree would be a console that needs it.
-	if v.Target != "" {
-		if objs, err := u.preview.Objects(r.Context(), v.Target); err == nil {
-			v.Tree, v.TreeCut = pages.BuildTree(objs.Relations), objs.Truncated
-			v.Writable = objs.Writable
-		}
-	}
-
-	// AND THE OPEN RELATION'S COLUMNS, which is one more round trip and only
-	// for the node somebody opened -- CHECKPOINT D made columns lazy because
-	// a project-wide COLUMNS query is the one metadata answer that is
-	// genuinely large. A warehouse that cannot describe is not an error page
-	// either: the button says so where the columns would be.
-	if schema, name, ok := strings.Cut(v.Open, "."); ok && v.Target != "" {
-		if cols, err := u.preview.Columns(r.Context(), v.Target, schema, name); err == nil {
-			v.Cols = cols
-		}
-	}
-	u.render(w, r, pages.SQL(v))
-}
-
 // paletteItem is one thing the command palette can go to. Text is what a
 // search looks in, lower-cased here -- the list filter's contract -- so what
 // matches is decided in one place.
@@ -923,11 +454,10 @@ func paletteEntry(group, label, hint, href, icon string) paletteItem {
 // NO-STORE. It names everything this login can see, and it is fetched fresh
 // with each page that opens the palette.
 func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
-	ctx := layouts.WithSQL(r.Context(), u.preview.Configured())
 	// In the reader's language, like the page that asked for it.
-	ctx = i18n.WithLang(ctx, i18n.Negotiate(r))
+	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
 	items := []paletteItem{}
-	for _, s := range layouts.Sections(ctx) {
+	for _, s := range sections(ctx, u.preview.Configured()) {
 		items = append(items, paletteEntry("Sections", s.Name, s.Group, s.Href, s.Icon))
 	}
 	// Actions do something here rather than go somewhere. The theme is the
@@ -1004,54 +534,6 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (u *UI) components(w http.ResponseWriter, r *http.Request) {
-	u.render(w, r, pages.Gallery())
-}
-
-func (u *UI) overview(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	window := pages.ParseWindow(r.URL.Query().Get("window"))
-
-	ind, err := u.leitura.Indicators(ctx, window.Span)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	buckets, err := u.leitura.RunsPer(ctx, window.Grain, window.Buckets)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	recentes, err := u.leitura.LatestRuns(ctx, 20)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	pending, _, err := u.leitura.QueueDepth(ctx)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	schedules, err := u.leitura.Schedules(ctx)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-
-	u.render(w, r, pages.Overview(pages.OverviewData{
-		Window:    window,
-		Now:       time.Now(),
-		Ind:       ind,
-		Buckets:   buckets,
-		Proximas:  u.withLogos(ctx, nextRuns(schedules, time.Now(), 8, u.log)),
-		Recentes:  recentes,
-		Pending:   pending,
-		Attention: u.attention(ctx),
-		Events:    u.eventLog(ctx),
-		Logos:     u.runsLogos(ctx, recentes),
-	}))
-}
-
 // nextRuns computes each active schedule's next dispatch and returns
 // the soonest first.
 //
@@ -1085,110 +567,6 @@ func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limite int,
 		out = out[:limite]
 	}
 	return out
-}
-
-func (u *UI) runs(w http.ResponseWriter, r *http.Request) {
-	u.runsScreen(w, r, nil)
-}
-
-// run is the same screen with one run open: the address alerts and old links
-// carry. An id that names no run is a 404, before anything else is read.
-func (u *UI) run(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	if u.execs == nil {
-		http.NotFound(w, r)
-		return
-	}
-	if _, err := u.execs.Get(r.Context(), id); err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	u.runsScreen(w, r, &id)
-}
-
-// runsScreen draws Runs: the list as the filter asks, and the open run --
-// open, or the newest on the list when the address names none.
-func (u *UI) runsScreen(w http.ResponseWriter, r *http.Request, open *uuid.UUID) {
-	// Another run opened from the list: its pane alone, and nothing of the
-	// list is read -- the list on the screen is the one it was picked from.
-	if fragment(r) == "detail" && open != nil {
-		current, err := u.execs.Get(r.Context(), *open)
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		u.render(w, r, pages.RunPane(u.detail(r.Context(), current)))
-		return
-	}
-	q := r.URL.Query()
-	f := pages.RunFilter{
-		State:    validState(q.Get("state")),
-		Workflow: q.Get("workflow"),
-		De:       q.Get("from"),
-		Ate:      q.Get("to"),
-		Page:     page(q.Get("page")),
-		PerPage:  pages.DefaultPerPage,
-	}
-
-	de, ate := instant(f.De), instant(f.Ate)
-	if de == nil {
-		f.De = ""
-	}
-	if ate == nil {
-		f.Ate = ""
-	}
-	f.Label = periodLabel(de, ate)
-
-	query := postgres.RunFilter{
-		State: f.State, Workflow: f.Workflow, De: de, Ate: ate,
-		Limite: f.PerPage, Offset: (f.Page - 1) * f.PerPage,
-	}
-	// "Running" is in flight: a run waiting in the queue, or for its retry, is
-	// as unfinished as one whose step is going.
-	if f.State == "running" {
-		query.State, query.States = "", pages.InFlight
-	}
-	runs, total, counts, err := u.runsList(r.Context(), query)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	f.All = f.State == "" && q.Has("state")
-	// No state in the address: Running while anything is in flight, else All.
-	if !q.Has("state") && inFlight(counts) > 0 {
-		f.State = "running"
-		query.State, query.States = "", pages.InFlight
-		if runs, total, counts, err = u.runsList(r.Context(), query); err != nil {
-			u.failure(w, r, err)
-			return
-		}
-	}
-	screen := pages.RunsScreen{Runs: runs, Filter: f, Counts: counts, Total: total,
-		Logos: u.runsLogos(r.Context(), runs)}
-	// The open run: the one the address names, or the newest on the list.
-	if open == nil && len(runs) > 0 {
-		if id, err := uuid.Parse(runs[0].ID); err == nil {
-			open = &id
-		}
-	}
-	if open != nil && u.execs != nil {
-		current, err := u.execs.Get(r.Context(), *open)
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-		p := u.detail(r.Context(), current)
-		screen.Detail = &p
-	}
-	if fragment(r) == "rows" {
-		u.render(w, r, pages.RunsList(screen))
-		return
-	}
-	u.render(w, r, pages.Runs(screen))
 }
 
 // runsList reads the column: the page of runs, how many there are, and the
@@ -1275,62 +653,6 @@ func periodLabel(de, ate *time.Time) string {
 		return "until " + ate.Local().Format("Jan 02 15:04")
 	}
 	return ""
-}
-
-func (u *UI) workflows(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	all, err := u.leitura.Workflows(ctx)
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-
-	now := time.Now()
-	for i := range all {
-		all[i].NextRun = proximaDoWorkflow(all[i], now)
-	}
-
-	q := r.URL.Query()
-	f := pages.Filter{
-		Search:  strings.TrimSpace(q.Get("q")),
-		State:   validListState(q.Get("state")),
-		Active:  q.Get("active"),
-		Lang:    validLang(q.Get("lang")),
-		Tags:    tagsOf(q["tag"]),
-		Project: q.Get("project"),
-		Sort:    validOrder(q.Get("sort")),
-		Desc:    q.Get("dir") == "desc",
-		Page:    page(q.Get("page")),
-		PerPage: pages.DefaultPerPage,
-	}
-	if f.Active != "active" && f.Active != "paused" {
-		f.Active = ""
-	}
-
-	facts := u.listFacts(ctx)
-	filtered := filtrar(all, f, facts)
-	sortBy(filtered, f)
-	v := pages.WorkflowsScreen{
-		Filter: f, Rows: recortar(filtered, f), Tags: tagsDe(all),
-		Counts: contar(all, f, facts), Langs: langChoices(all, f, facts),
-		Total: len(all), Filtered: len(filtered),
-	}
-	// The strip of last runs is read for the page's rows only, in one query;
-	// what each row runs comes from the definitions the filter already read.
-	slugs := make([]string, len(v.Rows))
-	for i, wf := range v.Rows {
-		slugs[i] = wf.Slug
-	}
-	u.describeRows(ctx, &v, facts)
-	if v.Recent, err = u.leitura.RecentStates(ctx, slugs, pages.RecentRuns); err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	if fragment(r) == "answer" {
-		u.render(w, r, pages.WorkflowsList(v))
-		return
-	}
-	u.render(w, r, pages.Workflows(v))
 }
 
 // contar is how many workflows each state would show: the same filter with
@@ -1540,104 +862,6 @@ func tagsDe(ws []postgres.WorkflowSummary) []string {
 	return out
 }
 
-func (u *UI) projetos(w http.ResponseWriter, r *http.Request) {
-	ps, err := u.leitura.Projects(r.Context())
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	u.render(w, r, pages.Projects(ps))
-}
-
-// workflow is a workflow's page: a server-rendered header plus the DAG as an island.
-func (u *UI) workflow(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("slug")
-	def, err := u.defs.Definition(r.Context(), slug)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	// A missing history does not block the screen: the definition is the main
-	// content. A day -- a square of the calendar -- narrows it to that day.
-	day := dayOf(r.URL.Query().Get("day"))
-	latest, err := u.leitura.WorkflowHistory(r.Context(), slug, day, 10)
-	if err != nil {
-		u.log.Warn("the workflow's history is unavailable", "workflow", slug, "error", err)
-	}
-
-	// The statistics, and the same rule: each one degrades to nothing rather
-	// than taking the page down. A workflow's definition is readable with no
-	// database behind it, and that is the property worth keeping -- somebody
-	// looking at a broken installation is exactly who needs to read the graph.
-	stats := pages.WorkflowStats{Window: workflowWindow}
-	if ind, err := u.leitura.IndicatorsFor(r.Context(), workflowWindow, slug); err == nil {
-		stats.Ind = ind
-	} else {
-		u.log.Warn("the workflow's indicators are unavailable", "workflow", slug, "error", err)
-	}
-	// 53 weeks and the days of this one: the calendar's whole grid.
-	if days, err := u.leitura.RunsPerDay(r.Context(), slug, 53*7); err == nil {
-		stats.Days = days
-	} else {
-		u.log.Warn("the workflow's calendar is unavailable", "workflow", slug, "error", err)
-	}
-	if load, err := u.leitura.LoadTrend(r.Context(), slug, components.TrendDays); err == nil {
-		stats.Load = load
-	} else {
-		u.log.Warn("the workflow's load trend is unavailable", "workflow", slug, "error", err)
-	}
-
-	// The summary row says what the definition does not: the project, the
-	// schedule's timezone and whether it is paused. Missing, the eyebrow says
-	// less; the page still opens.
-	var sum *postgres.WorkflowSummary
-	if all, err := u.leitura.Workflows(r.Context()); err == nil {
-		for i := range all {
-			if all[i].Slug == slug {
-				sum = &all[i]
-				break
-			}
-		}
-	} else {
-		u.log.Warn("the workflow's summary is unavailable", "workflow", slug, "error", err)
-	}
-
-	now := time.Now()
-	if sum != nil {
-		sum.NextRun = proximaDoWorkflow(*sum, now)
-	}
-	page := pages.WorkflowPage{Def: def, Sum: sum, Latest: latest, Stats: stats, Now: now,
-		Langs: runsIn(def, 0), Day: day}
-	// The Definition tab: the published workflow as a file that publishes
-	// it. Without it the tab says so; the page still opens.
-	if y, err := appworkflow.YAML(def); err == nil {
-		page.YAML = string(y)
-	} else {
-		u.log.Warn("the workflow's YAML could not be written", "workflow", slug, "error", err)
-	}
-	// A one-step workflow shows its step as a line, and has no graph to embed.
-	if oneStep(def) {
-		page.Step = stepLineOf(def, nil)
-	} else {
-		u.stepsOf(r.Context(), def, &page)
-	}
-	u.render(w, r, pages.Workflow(page))
-}
-
-// run is a run's page. The header comes from the database on the server; the DAG
-// with each step's state arrives by fetch, and only that needs JavaScript.
-// detail is the open run with everything its page draws once: the graph it
-// embeds and the current workflow for Rerun. The live refresh reads runPage
-// alone.
-func (u *UI) detail(ctx context.Context, run run.Run) pages.RunPage {
-	p := u.runPage(ctx, run)
-	// A one-step run has its step as a line, and no graph to embed.
-	if p.Step == nil {
-		p.Graph = u.runSeed(ctx, run)
-	}
-	return p
-}
-
 // runLog is the run's whole log as one text file: every attempt of every
 // step, in the order they ran, each under a header that says which it is and
 // how it ended. The file to keep, or to send to whoever owns the step.
@@ -1695,45 +919,6 @@ func fileSafe(s string) string {
 		}
 		return '_'
 	}, s)
-}
-
-// runLive returns the run's two changing regions, already rendered.
-//
-// It is a FRAGMENT and not a JSON payload, and that is the decision worth
-// stating: the alternative is rendering a step's state a second time in
-// JavaScript, and two renderings of "what colour is retrying" is two places to
-// keep in step -- the shape this repository has been bitten by five times. The
-// server already knows how to draw these.
-//
-// It also reads the same data as `run`, deliberately. Sharing a helper between
-// the two would look tidier and would mean a page and its refresh could
-// disagree about what a run is; here they cannot, because they run the same
-// three queries and pass them to the same templates.
-func (u *UI) runLive(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	current, err := u.execs.Get(r.Context(), id)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	// No caching, at any layer. A refresh that a proxy answered from thirty
-	// seconds ago is a screen that lies about a run in flight, which is worse
-	// than one that does not refresh at all -- the second is visibly stale and
-	// the first is not.
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// In the reader's language, as the page it refreshes: drawn without it,
-	// the first refresh turned a Portuguese run page English. Only the
-	// language -- render would also take a flash meant for the next page.
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	if err := pages.RunLive(u.runPage(ctx, current)).Render(ctx, w); err != nil {
-		u.log.Warn("rendering the live fragment", "run", id, "error", err)
-	}
 }
 
 // runPage reads what the run page and its live refresh are both drawn from.
@@ -1813,55 +998,6 @@ func (u *UI) waitOf(ctx context.Context, current run.Run) *postgres.Wait {
 	return wait
 }
 
-func (u *UI) toggle(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("slug")
-	active1, err := u.actions.Toggle(r.Context(), slug, auth.De(r.Context()))
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	u.log.Info("schedule toggled", "workflow", slug, "active", active1)
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	message := i18n.T(ctx, "workflows.paused.toast", "workflow", slug)
-	if active1 {
-		message = i18n.T(ctx, "workflows.resumed.toast", "workflow", slug)
-	}
-	// The list's switch flips in place: its script asks for the outcome and
-	// the toast's words, and draws them. Anything else comes back to the page
-	// it came from, which says the same in a flash.
-	if fragment(r) == "toggle" {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(struct {
-			Active        bool
-			Message, Undo string
-		}{active1, message, i18n.T(ctx, "workflows.undo")})
-		return
-	}
-	layouts.SetFlash(w, "ok", message)
-	u.voltar(w, r)
-}
-
-// cancel stops a run, and comes back to it: its page says what became of it,
-// `canceled` or "Canceling…" while its dispatcher stops the steps.
-func (u *UI) cancel(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-	got, err := u.actions.Cancel(r.Context(), id, auth.De(r.Context()))
-	if errors.Is(err, postgres.ErrRunNotFound) {
-		http.NotFound(w, r)
-		return
-	}
-	if err != nil {
-		u.failure(w, r, err)
-		return
-	}
-	u.log.Info("run cancel asked", "run", id, "outcome", got.Outcome, "status", got.Status)
-	http.Redirect(w, r, "/runs/"+id.String(), http.StatusSeeOther)
-}
-
 // paramsFromForm reads the `param.`-prefixed fields of the trigger form.
 //
 // Values are joined with a comma, because that is how a `list|<type>` param
@@ -1917,32 +1053,14 @@ func (u *UI) disparar(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	back := localPath(r.PostForm.Get("back"))
 	next := "/runs/" + id.String()
-	switch {
-	case id == uuid.Nil:
+	if id == uuid.Nil {
 		// The idempotency key collided: two clicks in the same second become
 		// one run. Going back is the right behaviour -- there is no new run to
 		// go to.
 		u.log.Info("trigger ignored by idempotency", "workflow", slug)
-		next = back
-		if next == "" {
-			next = backTo(r)
-		}
-	case back != "":
-		// A run made from a list -- the Overview's "Needs your attention", the
-		// Workflows list -- goes back to it, saying the run was made and where
-		// to follow it: the list is what the reader is watching.
-		u.log.Info("manual run created", "workflow", slug, "run", id)
-		ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-		message, follow := i18n.T(ctx, "overview.rerun_created", "workflow", slug), i18n.T(ctx, "overview.follow")
-		// A run from a workflow or a load is a new one, not a rerun.
-		if strings.HasPrefix(back, "/workflows") || strings.HasPrefix(back, "/ingest/loads") {
-			message, follow = i18n.T(ctx, "workflows.run_created", "workflow", slug), i18n.T(ctx, "workflows.see_logs")
-		}
-		layouts.SetFlashLink(w, "run", message, follow, next)
-		next = back
-	default:
+		next = backTo(r)
+	} else {
 		u.log.Info("manual run created", "workflow", slug, "run", id)
 	}
 	// The Run dialog posts with its script, to stay open on a refusal: it is
@@ -2002,28 +1120,6 @@ func (u *UI) slotFromForm(ctx context.Context, slug, v string) (*time.Time, erro
 	return nil, fmt.Errorf("slot %q is not a time: use 2026-10-27T04:00:00Z, or 2026-10-27T04:00 in the schedule's zone", v)
 }
 
-// localPath is p when it is a path on this site, "" otherwise. A redirect
-// to wherever the form said is a phishing link with this console's name on
-// it: no scheme, no host, no "//" or "\" a browser reads as one.
-func localPath(p string) string {
-	if !strings.HasPrefix(p, "/") || strings.HasPrefix(p, "//") || strings.ContainsRune(p, '\\') {
-		return ""
-	}
-	if u, err := url.Parse(p); err != nil || u.Scheme != "" || u.Host != "" {
-		return ""
-	}
-	return p
-}
-
-// voltar returns the operator to the screen they clicked from, keeping the filters.
-//
-// 303 and not 302: after a POST, the 303 forces the browser to redo the
-// navigation as a GET, which is what prevents the "resend form?" prompt on
-// reload.
-func (u *UI) voltar(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, backTo(r), http.StatusSeeOther)
-}
-
 // backTo is the page the request came from, on this site, or the Workflows
 // list.
 func backTo(r *http.Request) string {
@@ -2057,61 +1153,6 @@ func parseMesmoHost(r *http.Request) string {
 	return path
 }
 
-func (u *UI) render(w http.ResponseWriter, r *http.Request, c templ.Component) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// The brand travels in the context: every template reaches it without it
-	// having to enter each page's signature.
-	// The brand and whether there is a SQL service both travel in the
-	// context: every template reaches them without entering each page's
-	// signature.
-	ctx := layouts.WithSQL(branding.IntoContext(r.Context(), u.brand), u.preview.Configured())
-	ctx = layouts.WithTheme(ctx, r)
-	ctx = i18n.WithLang(ctx, i18n.Negotiate(r))
-	ctx = layouts.WithRequestURI(ctx, r.URL.RequestURI())
-	ctx = layouts.TakeFlash(ctx, w, r)
-	ctx = u.withRunsBadges(ctx, r)
-	ctx = u.withVersion(ctx)
-	ctx = u.withAttention(ctx, r)
-	if err := c.Render(ctx, w); err != nil {
-		u.log.Error("rendering the page", "path", r.URL.Path, "error", err)
-	}
-}
-
-// withRunsBadges counts, for the sidebar's Runs badges, the workflows failing
-// (red) and the runs in flight (blue). A number for decoration cannot take a
-// page down: when one cannot be read, the error is logged and the page is
-// drawn without it.
-func (u *UI) withRunsBadges(ctx context.Context, r *http.Request) context.Context {
-	if u.failing != nil {
-		if failing, err := u.failing.FailingWorkflows(ctx); err != nil {
-			u.log.Error("counting the failing workflows", "path", r.URL.Path, "error", err)
-		} else {
-			ctx = layouts.WithFailing(ctx, len(failing))
-		}
-	}
-	if u.inFlight != nil {
-		if n, err := u.inFlight(ctx); err != nil {
-			u.log.Error("counting the runs in flight", "path", r.URL.Path, "error", err)
-		} else {
-			ctx = layouts.WithRunning(ctx, n)
-		}
-	}
-	return ctx
-}
-
-// navRuns is the Runs badges alone, for the sidebar to swap in: the page was
-// drawn once, and a run that starts or a workflow that breaks afterwards
-// should show without a reload.
-func (u *UI) navRuns(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	ctx = u.withRunsBadges(ctx, r)
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := layouts.RunsBadges().Render(ctx, w); err != nil {
-		u.log.Warn("rendering the Runs badges", "error", err)
-	}
-}
-
 // chooseLang remembers the reader's language and goes back to the page they
 // were on. A plain form POST, so it works with no script; `next` goes through
 // auth.Target, the login's own guard against an open redirect.
@@ -2137,63 +1178,4 @@ func fragment(r *http.Request) string {
 func (u *UI) failure(w http.ResponseWriter, r *http.Request, err error) {
 	u.log.Error("querying the ui's data", "path", r.URL.Path, "error", err)
 	http.Error(w, "internal error", http.StatusInternalServerError)
-}
-
-// RegistrarLogin wires the session routes. It is kept apart from Registrar
-// because it only exists when there is a credential: without one, a login screen
-// that always accepts would be worse than none.
-func (u *UI) RegistrarLogin(mux *http.ServeMux, gate *auth.Gate) {
-	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
-		u.render(w, r, pages.Login(pages.LoginData{
-			Target: auth.Target(r.URL.Query().Get(auth.NextParam)),
-		}))
-	})
-
-	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
-		target := auth.Target(r.FormValue(auth.NextParam))
-		user := r.FormValue("username")
-
-		// The origin is the connection's address unless the deployment names a
-		// header its proxy sets (BREVIS_AUTH_CLIENT_IP_HEADER): trusting one
-		// unconditionally would let anyone pick their own key. Without it,
-		// behind a proxy all clients share one lockout.
-		origin := auth.ClientKey(r, gate.Cred.ClientIPHeader)
-
-		out, retry := gate.Attempt(r.Context(), w, origin, user, r.FormValue("password"))
-		if out == auth.Locked || out == auth.Busy {
-			u.log.Warn("login throttled", "origin", origin)
-			w.Header().Set("Retry-After", strconv.Itoa(int(retry.Seconds())+1))
-			w.WriteHeader(http.StatusTooManyRequests)
-			u.render(w, r, pages.Login(pages.LoginData{
-				Target: target,
-				Err:    "Too many attempts. Try again in a moment.",
-			}))
-			return
-		}
-		if out != auth.Signed {
-			// Logged as a warning, with the origin: a burst of failures is the
-			// only sign somebody is guessing, and without a log it does not
-			// exist. Neither the password nor the username enters here: a
-			// password typed in the wrong box would land in the logs.
-			u.log.Warn("login refused", "origin", origin)
-
-			// 200, and not a redirect: the form comes back filled in with the
-			// destination and the error in the same response.
-			w.WriteHeader(http.StatusUnauthorized)
-			u.render(w, r, pages.Login(pages.LoginData{
-				Target: target,
-				Err:    "Invalid username or password.",
-			}))
-			return
-		}
-		u.log.Info("login", "user", user)
-		http.Redirect(w, r, target, http.StatusSeeOther)
-	})
-
-	// POST, not GET: an <img src="/logout"> on any page would drop the session
-	// of whoever opened it.
-	mux.HandleFunc("POST /logout", func(w http.ResponseWriter, r *http.Request) {
-		gate.SignOut(w)
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-	})
 }

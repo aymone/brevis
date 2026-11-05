@@ -136,34 +136,6 @@ func Date(ctx context.Context, t time.Time, layout string) string {
 	return t.Format(time.RFC3339)
 }
 
-// Since says how far t is from now, up to a day -- "3 min ago", "in 5 min",
-// "now" -- and the short date after it: "3 min ago" answers the operations
-// question, a date the audit one.
-func Since(ctx context.Context, now, t time.Time) string {
-	d := now.Sub(t)
-	switch {
-	case d < 0:
-		return T(ctx, "time.in", "span", span(-d))
-	case d < time.Minute:
-		return T(ctx, "time.now")
-	case d < 24*time.Hour:
-		return T(ctx, "time.ago", "span", span(d))
-	}
-	return Date(ctx, t.Local(), "short")
-}
-
-// span is a distance in its largest whole unit. The units read the same in
-// all three languages, so they are not in the catalog.
-func span(d time.Duration) string {
-	switch {
-	case d < time.Hour:
-		return fmt.Sprintf("%d min", int(d.Minutes()))
-	case d < 24*time.Hour:
-		return fmt.Sprintf("%dh", int(d.Hours()))
-	}
-	return fmt.Sprintf("%dd", int(d.Hours()/24))
-}
-
 // Elapsed is a duration in the unit its size calls for: "0.4s" says more than
 // "400ms" beside a column that takes minutes.
 func Elapsed(ctx context.Context, d time.Duration) string {

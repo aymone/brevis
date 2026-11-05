@@ -100,8 +100,15 @@ func TestTheCatalogsAreCompleteAndConsistent(t *testing.T) {
 				if form == "" {
 					t.Errorf("%s: %s is empty", lang, key)
 				}
-				if set(form) != set(want.forms()[i]) {
-					t.Errorf("%s: %s has placeholders %s, English has %s", lang, key, set(form), set(want.forms()[i]))
+				// A form English has no counterpart for (few, many) is held to its "other". So is
+				// Russian's "one": it also serves 21, 31..., so it carries {count} even where
+				// English writes "1 worker".
+				ref := want.forms()[min(i, 1)]
+				if lang == "ru" && want.plural() {
+					ref = want.forms()[1]
+				}
+				if set(form) != set(ref) {
+					t.Errorf("%s: %s has placeholders %s, English has %s", lang, key, set(form), set(ref))
 				}
 			}
 		}
@@ -119,4 +126,26 @@ func fmtSlice(s []string) string {
 		out += v + " "
 	}
 	return out
+}
+
+// THE REACT APP'S BUNDLE FALLS BACK TO ENGLISH, like the server: a key a
+// language lacks is English's, a plural stays {one, other}, and a language the
+// console does not speak is English.
+func TestTheBundleFallsBackToEnglishLikeTheServer(t *testing.T) {
+	en := Bundle("en")
+	for _, lang := range Langs {
+		b := Bundle(lang)
+		if len(b) != len(en) {
+			t.Errorf("%s: %d keys, English has %d; the fallback must fill every key", lang, len(b), len(en))
+		}
+	}
+	if got := Bundle("xx")["nav.projects"]; got != en["nav.projects"] {
+		t.Errorf("an unknown language gave %v, want English's %v", got, en["nav.projects"])
+	}
+	if _, ok := en["nav.catalog.attention"].(map[string]string); !ok {
+		t.Errorf("a plural key is %T, want {one, other}", en["nav.catalog.attention"])
+	}
+	if b1, e1 := BundleJSON("pt-BR"); len(b1) == 0 || e1 == "" {
+		t.Error("the encoded bundle has no body or no validator")
+	}
 }

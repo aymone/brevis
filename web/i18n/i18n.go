@@ -26,9 +26,10 @@
 // slot, dead letter, Workflows...); keys_test.go holds that, and that no key
 // is missing or unused. es.json still needs a native speaker's review.
 //
-// NO LIBRARY. The three languages share one plural rule (one for 1, other for
-// everything else), placeholders are named, and that is all this needs -- a
-// dependency would add packages to an engine whose size a gate watches.
+// NO LIBRARY. Every language but Russian has one plural rule (one for 1, other
+// for everything else); Russian's is category (plural.go). Placeholders are
+// named, and that is all this needs -- a dependency would add packages to an
+// engine whose size a gate watches.
 package i18n
 
 import (
@@ -46,19 +47,43 @@ var Langs = []string{"en", "es", "pt-BR", "fr", "de", "zh-CN", "ja", "ru", "ko",
 //go:embed locales/*.json
 var locales embed.FS
 
-// message is one key's text, or its two plural forms.
+// message is one key's text, or its plural forms: one and other always, few
+// and many only in a language whose rule has them (plural.go).
 type message struct {
-	text       string
-	one, other string
+	text                  string
+	one, few, many, other string
 }
 
 func (m message) plural() bool { return m.text == "" }
 
 func (m message) forms() []string {
-	if m.plural() {
-		return []string{m.one, m.other}
+	if !m.plural() {
+		return []string{m.text}
 	}
-	return []string{m.text}
+	out := []string{m.one, m.other}
+	for _, f := range []string{m.few, m.many} {
+		if f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// pick is the form for n in lang; a category the message has no form for reads as other.
+func (m message) pick(lang string, n int) string {
+	switch category(lang, n) {
+	case "one":
+		return m.one
+	case "few":
+		if m.few != "" {
+			return m.few
+		}
+	case "many":
+		if m.many != "" {
+			return m.many
+		}
+	}
+	return m.other
 }
 
 type catalog map[string]message
@@ -98,11 +123,11 @@ func parse(raw []byte) (catalog, error) {
 			c[key] = message{text: text}
 			continue
 		}
-		var forms struct{ One, Other string }
+		var forms struct{ One, Few, Many, Other string }
 		if err := json.Unmarshal(v, &forms); err != nil || forms.One == "" || forms.Other == "" {
-			return nil, fmt.Errorf("%s is neither a string nor {\"one\", \"other\"}", key)
+			return nil, fmt.Errorf("%s is neither a string nor {\"one\", \"other\"} (and optionally \"few\", \"many\")", key)
 		}
-		c[key] = message{one: forms.One, other: forms.Other}
+		c[key] = message{one: forms.One, few: forms.Few, many: forms.Many, other: forms.Other}
 	}
 	return c, nil
 }
@@ -170,10 +195,7 @@ func plural(cats map[string]catalog, ctx context.Context, key string, count int,
 	}
 	text := m.text
 	if m.plural() {
-		text = m.other
-		if count == 1 {
-			text = m.one
-		}
+		text = m.pick(Lang(ctx), count)
 	}
 	return fill(text, append([]any{"count", count}, args...))
 }
@@ -184,23 +206,4 @@ func fill(text string, args []any) string {
 		text = strings.ReplaceAll(text, "{"+fmt.Sprint(args[i])+"}", fmt.Sprint(args[i+1]))
 	}
 	return text
-}
-
-// ScriptKeys are the messages ui.js writes itself. The page hands them over
-// in its own language (Script), so the file holds no sentence of its own; a
-// key the script needs is added here and to the three catalogs.
-var ScriptKeys = []string{
-	"copy.done",
-	"palette.empty", "palette.loading", "palette.failed", "palette.open_run",
-	"palette.group.runs",
-	"run.live.following", "run.live.finished",
-}
-
-// Script is ScriptKeys in ctx's language, for the page's i18n block.
-func Script(ctx context.Context) map[string]string {
-	out := make(map[string]string, len(ScriptKeys))
-	for _, k := range ScriptKeys {
-		out[k] = T(ctx, k)
-	}
-	return out
 }

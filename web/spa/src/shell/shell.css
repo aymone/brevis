@@ -1,0 +1,4 @@
+/* The frame's own rules. Nearly everything else is the compiled sheet's
+   (/assets/app.css: .app-sidebar, .sb-*, .app-topbar, dialog.modal, .toast...),
+   so this file only seats the app in the window. Prefix: sh-. */
+#root { height: 100%; }

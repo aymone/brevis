@@ -124,41 +124,6 @@ func TestOneDayDrawsNoLine(t *testing.T) {
 	}
 }
 
-// A series that does not move draws through the MIDDLE. Scaling a constant to
-// the full height would turn rounding noise into a mountain range -- the chart
-// showing a crisis in a pipeline that did the same thing every day.
-func TestAConstantSeriesDrawsFlat(t *testing.T) {
-	series := Trend([]postgres.LoadDay{
-		loadDay(1, 1, 0, 0, 0, 12000),
-		loadDay(2, 1, 0, 0, 0, 12000),
-		loadDay(3, 1, 0, 0, 0, 12000),
-	})
-	_, h := TrendGeometry()
-	load := series[3]
-	ys := map[int]bool{}
-	for _, p := range load.Points {
-		ys[p.Y] = true
-	}
-	if len(ys) != 1 {
-		t.Errorf("an unchanging series drew %d different heights: %v", len(ys), load.Points)
-	}
-	// And it draws through the MIDDLE, which is the assertion with teeth.
-	//
-	// "All the same height" is satisfied by a line glued to the top edge, and
-	// that is exactly what dividing by a zero span produces: 0/0 is NaN, int(NaN)
-	// is 0, and every point lands on the padding. Every Y agrees, the box is not
-	// escaped, and the chart shows a pipeline pinned at its maximum forever.
-	middle := h / 2
-	for _, p := range load.Points {
-		if p.Y < middle-6 || p.Y > middle+6 {
-			t.Errorf("an unchanging series drew at y=%d, not near the middle (%d)", p.Y, middle)
-		}
-	}
-	if load.Delta != "steady" {
-		t.Errorf("delta = %q on a series that did not move", load.Delta)
-	}
-}
-
 // Nothing to divide by. A day whose rows are zero has no bytes-per-row, and an
 // infinity on a chart is worse than a gap.
 func TestNothingIsDividedByZero(t *testing.T) {
@@ -192,32 +157,6 @@ func TestNoHistoryIsEmptyAndNotZero(t *testing.T) {
 	}
 	if got := TrendWindow(nil); got != "" {
 		t.Errorf("TrendWindow(nil) = %q", got)
-	}
-}
-
-// Every point of the line stays inside the box it is drawn in. A coordinate
-// outside the viewBox is a line that leaves the card.
-func TestThePointsStayInsideTheViewBox(t *testing.T) {
-	w, h := TrendGeometry()
-	days := []postgres.LoadDay{}
-	for i := 1; i <= 30; i++ {
-		days = append(days, loadDay(i, 1, int64(i*i*100), int64(i*7), int64(i*300), int64(40000-i*900)))
-	}
-	for _, s := range Trend(days) {
-		if len(s.Points) != len(days) {
-			t.Errorf("%s drew %d points for %d days", s.Label, len(s.Points), len(days))
-		}
-		for _, p := range s.Points {
-			if p.X < 0 || p.X > w || p.Y < 0 || p.Y > h {
-				t.Errorf("%s: point %d,%d is outside the %dx%d box", s.Label, p.X, p.Y, w, h)
-			}
-		}
-		// The line spans the full width: the first day at the left edge, the
-		// last at the right. A chart that stops short reads as data that stops.
-		if s.Points[0].X != 0 || s.Points[len(s.Points)-1].X != w {
-			t.Errorf("%s spans %d..%d, not 0..%d",
-				s.Label, s.Points[0].X, s.Points[len(s.Points)-1].X, w)
-		}
 	}
 }
 

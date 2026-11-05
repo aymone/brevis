@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"context"
 	"time"
 
 	sch "brevis.sh/brevis/internal/domain/schedule"
@@ -44,3 +45,6 @@ func RecentSlots(cron, zone string, now time.Time, n int) []Slot {
 	}
 	return out
 }
+
+// SlotLabel is a slot as the Run drawer lists it, for the app's JSON.
+func SlotLabel(ctx context.Context, s Slot, zone string) string { return slotLabel(ctx, s, zone) }

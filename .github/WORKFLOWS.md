@@ -129,7 +129,7 @@ Configured under `Settings → Secrets and variables → Actions`.
 They run in CI and are runnable by hand, which is what keeps them useful:
 
 ```bash
-./.github/scripts/generated-check.sh   # web/'s templ and CSS are up to date
+./.github/scripts/generated-check.sh   # web/'s CSS and React build are up to date
 ./.github/scripts/engine-weight.sh     # the engine compiles no data driver
 ./.github/scripts/pruning-check.sh     # a consumer only compiles what it imports
 ./.github/scripts/consumer-check.sh local

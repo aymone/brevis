@@ -1,14 +1,12 @@
 package pages
 
 import (
-	"context"
 	"strconv"
 	"strings"
 
 	"brevis.sh/brevis/internal/domain/diagnosis"
 	"brevis.sh/brevis/internal/domain/run"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 )
 
 // logTail is how many of an attempt's last lines the Logs tab draws. A step
@@ -124,30 +122,4 @@ func RunLogOf(logs []postgres.StepLog, cause *diagnosis.Cause) RunLog {
 		out.Blocks = append(out.Blocks, b)
 	}
 	return out
-}
-
-// logLevels are the log's filter: every line, the warnings, the errors.
-var logLevels = []string{"all", "warn", "err"}
-
-// logLevelLabel names a level in the reader's language.
-func logLevelLabel(ctx context.Context, level string) string {
-	switch level {
-	case "warn":
-		return i18n.T(ctx, "run.log.level.warn")
-	case "err":
-		return i18n.T(ctx, "run.log.level.err")
-	}
-	return i18n.T(ctx, "run.log.level.all")
-}
-
-// logLevelClass is how a line of each level reads: a warning in the amber the
-// queued state already spends, an error on a red ground, so a scroll finds it.
-func logLevelClass(level string) string {
-	switch level {
-	case "warn":
-		return "text-warn"
-	case "err":
-		return "bg-state-failed/10 text-state-failed"
-	}
-	return "text-ink"
 }

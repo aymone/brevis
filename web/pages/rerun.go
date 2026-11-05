@@ -2,8 +2,6 @@ package pages
 
 import (
 	"brevis.sh/brevis/internal/domain/diagnosis"
-	"slices"
-	"time"
 
 	"brevis.sh/brevis/internal/alerts"
 	"brevis.sh/brevis/internal/domain/run"
@@ -39,62 +37,4 @@ type RunPage struct {
 	// to say. Streak is how many times in a row its workflow failed.
 	Cause  *diagnosis.Cause
 	Streak int
-}
-
-// RerunParams is the drawer's fields for a rerun: the workflow's params as it
-// declares them NOW, each defaulting to the value this run used. A param
-// declared since then keeps its own default. The names the run used that the
-// definition no longer declares come back apart, sorted, because the trigger
-// would refuse them and the operator should see what is not being sent.
-//
-// A copy: the workflow's own params are not touched.
-func RerunParams(w wf.Workflow, used map[string]string) ([]wf.Param, []string) {
-	params := make([]wf.Param, len(w.Params))
-	declared := make(map[string]bool, len(w.Params))
-	for i, p := range w.Params {
-		declared[p.Name] = true
-		if v, ok := used[p.Name]; ok {
-			p.Default = v
-		}
-		params[i] = p
-	}
-	var dropped []string
-	for name := range used {
-		if !declared[name] {
-			dropped = append(dropped, name)
-		}
-	}
-	slices.Sort(dropped)
-	return params, dropped
-}
-
-// drawerText is what changes between the drawer's two uses: running a
-// workflow, and rerunning one of its runs.
-type drawerText struct {
-	// Rerun is the drawer of a run's Rerun: its words, and no slot to
-	// choose -- a rerun runs now.
-	Rerun bool
-	// NoteSlot is the slot of the run being rerun, which a rerun does not
-	// read: the auto params follow the moment it is clicked, and an operator
-	// redoing "the 04:00" has to know it will not read 04:00's window.
-	NoteSlot *time.Time
-	// Dropped are the run's params the definition no longer declares.
-	Dropped []string
-	// Project is the workflow's, for the CLI line.
-	Project string
-	// Slot is the schedule the drawer offers a slot of; nil offers none.
-	Slot *RunNow
-}
-
-func rerunDrawerText(r run.Run, dropped []string) drawerText {
-	return drawerText{Rerun: true, NoteSlot: r.LogicalDate, Dropped: dropped}
-}
-
-// rerunWorkflow is the workflow as the rerun drawer draws it: the same, with
-// its params pre-filled from the run.
-func rerunWorkflow(p RunPage) (wf.Workflow, []string) {
-	w := *p.Workflow
-	params, dropped := RerunParams(w, p.Run.Params)
-	w.Params = params
-	return w, dropped
 }

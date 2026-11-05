@@ -2,7 +2,6 @@ package pages
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -34,45 +33,6 @@ func richPipeline() *postgres.WriterConfig {
 		{Fields: fields, At: at, RunID: "aaaaaaaa-0000-0000-0000-000000000001"},
 		{Fields: old, At: at.Add(-time.Hour), RunID: "aaaaaaaa-0000-0000-0000-000000000002"},
 	}}
-}
-
-func configDrawn(t *testing.T, lang string) string {
-	t.Helper()
-	w := hourlyWriter("orders", "load", clock(11, 5), true)
-	w.Config = richPipeline()
-	d := postgres.TargetDetail{CatalogEntry: postgres.CatalogEntry{Target: "bigquery://acme/bronze/orders", Kind: "bigquery",
-		Writers: []postgres.CatalogWriter{w}}}
-	l := BuildLoad(d, "orders", "load", catalogNow)
-	undescribed := BuildLoad(postgres.TargetDetail{CatalogEntry: postgres.CatalogEntry{Target: "s3://x/", Kind: "s3",
-		Writers: []postgres.CatalogWriter{hourlyWriter("py", "run", clock(11, 0), true)}}}, "py", "run", catalogNow)
-	return visibleText(drawIn(t, lang, loadConfiguration(l))) + " " + visibleText(drawIn(t, lang, loadChanges(l))) + " " +
-		visibleText(drawIn(t, lang, loadConfiguration(undescribed)))
-}
-
-// A LOAD'S CONFIGURATION SPEAKS THE READER'S LANGUAGE (screen-loads T5): the
-// frame, the tabs, the one-line summary, the stages, the flow, what the
-// sources share, the schema, the changes and the step that described
-// nothing. The settings' names and values are the data's own.
-func TestTheConfigurationHasNoEnglishLeft(t *testing.T) {
-	text := configDrawn(t, "pt-BR")
-	for _, english := range []string{
-		"Configuration", "Summary", "Sources", "Transform ", "Destination", "Schema",
-		"Reads", "applies", "transformation", "groups by", "writes to", "merged by", "re-run",
-		// "workers" alone is a setting's name, the data's own.
-		"sources ·", "2 workers", "stages", "Source ", "Common to", "every setting differs",
-		"Kind", "Where", "Object", "Column", "Type", "Role", "changes", "removed (was", "First recorded",
-		"did not describe", "Only the Go SDK", "definition",
-	} {
-		if at := strings.Index(text, english); at >= 0 {
-			t.Errorf("the Portuguese configuration still says %q: …%s…", english, text[max(0, at-60):min(len(text), at+40)])
-		}
-	}
-	// The data's own words stay as they are.
-	for _, data := range []string{"from.Many", "bigquery.Table", "compute(loaded_by)", "target.dedup", "dedup merge"} {
-		if !strings.Contains(text, data) {
-			t.Errorf("the configuration lost %q", data)
-		}
-	}
 }
 
 // THE SUMMARY IS ONE SENTENCE IN EACH LANGUAGE, a pipeline's and a stream's.

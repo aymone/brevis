@@ -1,10 +1,6 @@
 package pages
 
 import (
-	"os"
-	"regexp"
-	"slices"
-	"strings"
 	"testing"
 )
 
@@ -21,52 +17,5 @@ func TestStageNumbersAreTheGraphsTwo(t *testing.T) {
 	}
 	if StageNumbers(nil) != nil {
 		t.Error("no numbers is not nothing")
-	}
-}
-
-// THE GO SIDE AND dag.js CANNOT DRIFT: the highlight order and the stage
-// states' colours and the runtimes' labels are read out of the island and compared.
-func TestTheStageRulesMatchDagJs(t *testing.T) {
-	raw, err := os.ReadFile("../assets/dag.js")
-	if err != nil {
-		t.Fatal(err)
-	}
-	js := string(raw)
-	m := regexp.MustCompile(`var HIGHLIGHT = \[([^\]]*)\]`).FindStringSubmatch(js)
-	if m == nil {
-		t.Fatal("dag.js has no HIGHLIGHT")
-	}
-	var order []string
-	for _, k := range strings.Split(m[1], ",") {
-		order = append(order, strings.Trim(strings.TrimSpace(k), `"`))
-	}
-	if !slices.Equal(order, StageHighlight) {
-		t.Errorf("dag.js highlights %v, Go %v", order, StageHighlight)
-	}
-	c := regexp.MustCompile(`var STAGE_STATE_COLOURS = \{([^}]*)\}`).FindStringSubmatch(js)
-	if c == nil {
-		t.Fatal("dag.js has no STAGE_STATE_COLOURS")
-	}
-	pairs := regexp.MustCompile(`(\w+): "(\w+)"`).FindAllStringSubmatch(c[1], -1)
-	if len(pairs) != len(StageStates) {
-		t.Errorf("dag.js maps %d stage states, Go %d", len(pairs), len(StageStates))
-	}
-	for _, p := range pairs {
-		if StageStates[p[1]] != p[2] {
-			t.Errorf("stage state %s: dag.js %s, Go %s", p[1], p[2], StageStates[p[1]])
-		}
-	}
-	l := regexp.MustCompile(`(?s)var LANG_LABEL = \{(.*?)\};`).FindStringSubmatch(js)
-	if l == nil {
-		t.Fatal("dag.js has no LANG_LABEL")
-	}
-	labels := regexp.MustCompile(`(\w+): "([^"]+)"`).FindAllStringSubmatch(l[1], -1)
-	if len(labels) != len(RuntimeLabels) {
-		t.Errorf("dag.js labels %d runtimes, Go %d", len(labels), len(RuntimeLabels))
-	}
-	for _, p := range labels {
-		if RuntimeLabels[p[1]] != p[2] {
-			t.Errorf("runtime %s: dag.js %q, Go %q", p[1], p[2], RuntimeLabels[p[1]])
-		}
 	}
 }

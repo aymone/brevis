@@ -1,14 +1,13 @@
 package pages
 
 import (
-	"brevis.sh/brevis/web/i18n"
 	"context"
 	"fmt"
 	"net/url"
 	"slices"
-	"strconv"
-	"strings"
 	"time"
+
+	"brevis.sh/brevis/web/i18n"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -45,23 +44,6 @@ type TargetView struct {
 	ReadBy []EndpointRef
 }
 
-// NoConnectionFor is the sentence a destination gets when nothing is
-// declared for it.
-//
-// IT NAMES THE DATABASE AND THE FILE. `serve` answers "no connection is
-// declared for that destination" and names nothing on purpose -- its
-// refusals never echo their input. This page already draws the target at the
-// top, so it can say which, and a reader who is told only "no connection"
-// has to go and work out which one.
-func NoConnectionFor(target string) string {
-	first := target
-	if _, rest, ok := strings.Cut(target, "://"); ok {
-		first, _, _ = strings.Cut(rest, "/")
-	}
-	return fmt.Sprintf("No connection is declared for %q. Add it to brevis.yaml "+
-		"beside the SQL service and restart it.", first)
-}
-
 // WorkbenchHref opens `/sql` on this destination.
 //
 // A TARGET IN A URL IS FINE AND A STATEMENT IS NOT, which is the distinction
@@ -69,26 +51,6 @@ func NoConnectionFor(target string) string {
 // `/data/target?u=`, and a query in a link would be a query in a proxy log.
 func (v TargetView) WorkbenchHref() string {
 	return "/sql?target=" + url.QueryEscape(v.Row.Target)
-}
-
-// bytesText is a byte count somebody can judge at a glance.
-//
-// A SECOND COPY OF `serve`'s, and deliberately: the engine does not import
-// the sql module and never will -- that is what engine-weight.sh asserts --
-// so the alternative to eight lines here is the number in full, which
-// somebody would have to count the digits of.
-func bytesText(n int64) string {
-	switch {
-	case n >= 1<<40:
-		return fmt.Sprintf("%.1f TB", float64(n)/(1<<40))
-	case n >= 1<<30:
-		return fmt.Sprintf("%.1f GB", float64(n)/(1<<30))
-	case n >= 1<<20:
-		return fmt.Sprintf("%.1f MB", float64(n)/(1<<20))
-	case n >= 1<<10:
-		return fmt.Sprintf("%.1f kB", float64(n)/(1<<10))
-	}
-	return fmt.Sprintf("%d B", n)
 }
 
 // Cell is one value, as a grid shows it.
@@ -109,49 +71,6 @@ func Cell(v any) string {
 		return s
 	}
 	return fmt.Sprint(v)
-}
-
-// Numeric says a cell should line up as a number, read FROM WHAT IT WILL
-// SAY and not from its Go type.
-//
-// MEASURED AGAINST BOTH WAREHOUSES. BigQuery's REST API returns every scalar
-// as a JSON string -- `SELECT 1, 1.5, true, NULL, "txt"` comes back
-// `["1", "1.5", "true", null, "txt"]`, asked of the live API -- while
-// Postgres hands over typed values that cross the wire as JSON numbers. A
-// rule reading the Go type would line up one warehouse's integers and leave
-// the other's ragged, for the same query against the same data.
-//
-// So a string of digits lines up, which is also what a spreadsheet does with
-// one. The cost is an identifier made of digits lining up too, and that is
-// the right answer in a grid anyway.
-func Numeric(v any) bool {
-	s := Cell(v)
-	if s == "" || v == nil {
-		return false
-	}
-	// `ParseFloat` accepts "Inf", "NaN" and "1e9"; the first two are words
-	// in a text column far more often than they are numbers.
-	switch s[0] {
-	case '-', '+', '.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-	default:
-		return false
-	}
-	_, err := strconv.ParseFloat(s, 64)
-	return err == nil
-}
-
-// Total is what the pager may claim, which is not always a count.
-//
-// A LIMIT MAKES THE ROWS IN HAND A FLOOR. "1-50 of 500" is a sentence
-// somebody reads a MAX off and is wrong about; the `+` is the same fact
-// without the lie, and it is the same reason the note under the grid has
-// always ended "— there are more".
-func Total(rows int, truncated bool) string {
-	n := strconv.Itoa(rows)
-	if truncated {
-		return n + "+"
-	}
-	return n
 }
 
 // BuildTarget judges the destination as the list does, and lays out its loads.
@@ -221,12 +140,4 @@ func (w WriterView) Reason(ctx context.Context) string {
 		return i18n.T(ctx, "catalog.why.manual")
 	}
 	return ""
-}
-
-// shortID is the first block of a run id, enough to tell runs apart in a table.
-func shortID(id string) string {
-	if len(id) > 8 {
-		return id[:8]
-	}
-	return id
 }

@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"brevis.sh/brevis/web/i18n"
 	"context"
 	"fmt"
 	"net/url"
@@ -9,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"brevis.sh/brevis/web/i18n"
 
 	"brevis.sh/brevis/internal/domain/catalog"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
@@ -299,33 +300,6 @@ type LoadsView struct {
 	Missing string
 }
 
-// CloseHref is the list the drawer was opened from, as it was filtered.
-func (v LoadsView) CloseHref() string { return v.Filter.With("", "") }
-
-// keepFilter is a load's address with the list's filter after it, so that
-// closing its drawer comes back to the same list.
-func (v LoadsView) keepFilter(href string) string {
-	_, query, ok := strings.Cut(v.CloseHref(), "?")
-	if !ok {
-		return href
-	}
-	if strings.Contains(href, "?") {
-		return href + "&" + query
-	}
-	return href + "?" + query
-}
-
-// rowHref is where a row goes: its load's drawer, keeping the filter.
-func (v LoadsView) rowHref(t LoadTarget) string { return v.keepFilter(t.Href()) }
-
-// Count is how many loads a band choice would show: "" for all, "attention",
-// or a status.
-func (v LoadsView) Count(status string) int { return v.counts[status] }
-
-// loadStatuses are the band's statuses, in the Catalog's order, without the
-// gateway's: a step is never continuous, nor its destination unidentified.
-var loadStatuses = []catalog.Status{catalog.Stale, catalog.Late, catalog.OnTime, catalog.Paused, catalog.Unscheduled}
-
 // sourceOrder is the origin filter's order: the SDK's own kinds, somebody
 // else's driver, then none declared.
 var sourceOrder = []string{"http", "file", "database", "other", "none"}
@@ -506,36 +480,19 @@ func ParseStreamFilter(q url.Values) StreamFilter {
 	return f
 }
 
-// With is the link to this filter with one field changed, the fields always
-// in the same order.
-func (f StreamFilter) With(field, value string) string {
-	switch field {
-	case "kind":
-		f.Kind = value
-	case "q":
-		f.Q = value
-	}
-	var parts []string
-	if f.Kind != "" {
-		parts = append(parts, "kind="+url.QueryEscape(f.Kind))
-	}
-	if f.Q != "" {
-		parts = append(parts, "q="+url.QueryEscape(f.Q))
-	}
-	if len(parts) == 0 {
-		return "/ingest/streams"
-	}
-	return "/ingest/streams?" + strings.Join(parts, "&")
-}
-
 // StreamsView is /ingest/streams as drawn (screen-streams): the streams the
 // filter keeps, one row each, and the counts of every stream whatever is
 // shown.
 type StreamsView struct {
 	Rows                            []Stream
 	Total, Gateways, WithDeadLetter int
-	Kinds                           []string
-	Filter                          StreamFilter
+	// HealthCounts is every stream's health state, whatever the filter shows.
+	HealthCounts map[string]int
+	// Healths is each stream's health by Stream.Key, the live one when the
+	// builder was given a source.
+	Healths map[string]StreamHealth
+	Kinds   []string
+	Filter  StreamFilter
 }
 
 // SearchText is what a search looks in, lower-cased: the gateway, the path,
@@ -551,16 +508,18 @@ func (s Stream) SearchText() string {
 // Key is the stream's identity as one string, for the page's markup.
 func (s Stream) Key() string { return s.Gateway + " " + s.Path }
 
-// BuildStreams is every stream under the filter, by gateway and path: the
-// kind and the search drop what they exclude, on the server, so a filtered
-// list is a link. The counts are every stream's.
-func BuildStreams(entries []postgres.CatalogEntry, f StreamFilter) StreamsView {
-	v := StreamsView{Filter: f}
+// BuildStreamsWith is BuildStreams with the health of each stream said by
+// health, which is how the live metrics reach the list and its counts.
+func BuildStreamsWith(entries []postgres.CatalogEntry, f StreamFilter, health func(Stream) StreamHealth) StreamsView {
+	v := StreamsView{Filter: f, HealthCounts: map[string]int{}, Healths: map[string]StreamHealth{}}
 	q := strings.ToLower(f.Q)
 	for _, g := range StreamsOf(entries) {
 		v.Gateways++
 		for _, s := range g.Streams {
 			v.Total++
+			h := health(s)
+			v.HealthCounts[h.State]++
+			v.Healths[s.Key()] = h
 			if s.DeadLetter != nil {
 				v.WithDeadLetter++
 			}
@@ -667,6 +626,10 @@ func placeName(ctx context.Context, p Place) string {
 // StreamView is one stream's page.
 type StreamView struct {
 	Stream
+
+	// Live is the stream's health from the source, when there is one; the
+	// static Health is used otherwise.
+	Live *StreamHealth
 
 	// Configured is the stream's configuration card -- settings by section,
 	// the file's notes and the history of changes -- read from the sink's
@@ -895,36 +858,6 @@ func (v StreamView) TestCurlHead() string {
 		`' -H "Authorization: Bearer $GATEWAY_TOKEN" --data-binary @- <<'EOF'`
 }
 
-// TestCurl is the whole command for the example body; ui.js rebuilds it the
-// same way as the body is edited.
-func (v StreamView) TestCurl() string {
-	return v.TestCurlHead() + "\n" + v.TestBody() + "\nEOF"
-}
-
-// hashTabsCSS shows one panel of a hash-tabbed host (`#host`) from the first
-// paint: the one <html data-hash> names -- written by the head before the
-// body is drawn -- and the first when it names none of these. The tab bar's
-// marks follow, so the underline does not jump when ui.js catches up. Rules
-// per key, because CSS cannot match an attribute on <html> against one on
-// a panel; the keys are the page's own.
-func hashTabsCSS(host string, keys ...string) string {
-	if len(keys) == 0 {
-		return ""
-	}
-	first, h := keys[0], "#"+host
-	var b strings.Builder
-	b.WriteString(".js " + h + " [data-tab-panel]{display:none}")
-	b.WriteString(".js " + h + ` [data-tab-panel="` + first + `"]{display:block}`)
-	for _, k := range keys[1:] {
-		on := `.js[data-hash="` + k + `"] `
-		b.WriteString(on + h + ` [data-tab-panel="` + first + `"]{display:none}`)
-		b.WriteString(on + h + ` [data-tab-panel="` + k + `"]{display:block}`)
-		b.WriteString(on + h + ` [data-tab="` + first + `"]{border-color:transparent;color:var(--color-muted)}`)
-		b.WriteString(on + h + ` [data-tab="` + k + `"]{border-color:var(--color-ink);color:var(--color-ink)}`)
-	}
-	return b.String()
-}
-
 // RowsRead is how many rows a load's step read, from its stages in that
 // load's run (screen-load-v2 LV2): the landing records only what was
 // written. The first map's `in` is what entered the pipeline; with no map,
@@ -983,64 +916,3 @@ func loadWhen(ctx context.Context, w *WriterView) string {
 func (v LoadView) ReadNothing() bool {
 	return v.Row.LastRows != nil && *v.Row.LastRows == 0 && v.Read != nil && *v.Read > 0
 }
-
-// howStep, howTitle and howText are the "how it works" footer's words.
-func howStep(ctx context.Context, i int) string {
-	switch i {
-	case 0:
-		return i18n.T(ctx, "streams.how.1")
-	case 1:
-		return i18n.T(ctx, "streams.how.2")
-	}
-	return i18n.T(ctx, "streams.how.3")
-}
-
-func howTitle(ctx context.Context, step string) string {
-	switch step {
-	case "post":
-		return i18n.T(ctx, "streams.how.post")
-	case "batch":
-		return i18n.T(ctx, "streams.how.batch")
-	}
-	return i18n.T(ctx, "streams.how.write")
-}
-
-func howText(ctx context.Context, step string) string {
-	switch step {
-	case "post":
-		return i18n.T(ctx, "streams.how.post.text")
-	case "batch":
-		return i18n.T(ctx, "streams.how.batch.text")
-	}
-	return i18n.T(ctx, "streams.how.write.text")
-}
-
-// newStreamYAML and newStreamCommands are New stream's example: a stream as
-// the gateway's file declares one, and how it reaches the console. Every
-// stream has a dead letter -- the gateway refuses one without -- so the
-// example has one too.
-const newStreamYAML = `streams:
-  #: What this stream is for, shown under its path.
-  - name: orders
-    path: /v1/orders
-    format: json
-    identity:
-      provider: acme
-      entity: order
-      source_key: order_id
-      record_ts: created_at
-    buffer:
-      flush:
-        every: 1m
-        records: 2000
-    sink:
-      type: bigquery
-      project: acme-prod
-      dataset: bronze
-      table: orders
-    dead_letter:
-      type: files
-      path: gs://acme-dead-letter/orders/`
-
-const newStreamCommands = `gateway describe -out gateway.json gateway.yaml
-brevis gateway publish gateway.json`

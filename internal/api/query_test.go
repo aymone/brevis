@@ -35,26 +35,6 @@ func (f *sqlFake) start(t *testing.T) *httptest.Server {
 // page posts nothing now, and `runSQL` in sql_test.go submits the workbench's
 // own. Dead test code is still code, and the linter is what noticed.
 
-// THE WORKBENCH, AND ONLY WHERE THERE IS A SERVICE TO ASK. A load's drawer
-// links to it carrying the destination (screen-loads T4: the preview tab is
-// gone, and a query belongs to the workbench).
-func TestTheWorkbenchLinkIsThereWhenAServiceIsAndNotWhenItIsNot(t *testing.T) {
-	svc := (&sqlFake{body: `{}`}).start(t)
-	with := render(t, withPreview(t, sqlserve.New(svc.URL, "")), "/ingest/loads/bronze/load")
-	for _, want := range []string{"/sql?target="} {
-		if !strings.Contains(with, want) {
-			t.Errorf("a console with a service offers no %q", want)
-		}
-	}
-
-	without := render(t, withPreview(t, nil), "/ingest/loads/bronze/load")
-	for _, gone := range []string{"/sql?target="} {
-		if strings.Contains(without, gone) {
-			t.Errorf("a console with no service still offers %q", gone)
-		}
-	}
-}
-
 // A CONSOLE WITH NO LOGIN DOES NOT OFFER THE WAREHOUSE.
 //
 // CHECKPOINT B's F4. The console can run with no credential at all, and
@@ -86,37 +66,5 @@ func TestAnUnprotectedConsoleOffersNoTabs(t *testing.T) {
 	render(t, open, "/ingest/loads/bronze/load?tab=preview")
 	if asked {
 		t.Error("an unprotected console reached the warehouse")
-	}
-}
-
-// THE LINK IS INSIDE THE PAGE, not under it.
-//
-// `@panels(v)` sat AFTER the layout's closing brace, so templ emitted it
-// outside `<main>` entirely: past the sidebar, past the user menu, at full
-// viewport width. V1 shipped it that way with `@preview(v)` and this carried
-// the same line over when it was renamed, which is how a working feature read
-// as a broken one for a day.
-//
-// `</main>` is the anchor because it is what the layout actually closes with,
-// and a position test is the only kind that can see this at all -- every
-// other assertion in this file passes with the markup in the wrong place.
-func TestTheTabsRenderInsideThePageLayout(t *testing.T) {
-	svc := (&sqlFake{body: `{"columns":["k"],"rows":[["1"]]}`}).start(t)
-	body := render(t, withPreview(t, sqlserve.New(svc.URL, "")),
-		"/ingest/loads/bronze/load?tab=preview")
-
-	closing := strings.Index(body, "</main>")
-	if closing < 0 {
-		t.Fatal("the layout no longer closes with </main>; this test needs a new anchor")
-	}
-	for _, want := range []string{"/sql?target="} {
-		at := strings.Index(body, want)
-		if at < 0 {
-			t.Errorf("%q is not on the page at all", want)
-			continue
-		}
-		if at > closing {
-			t.Errorf("%q renders after </main>, which puts it outside the page", want)
-		}
 	}
 }

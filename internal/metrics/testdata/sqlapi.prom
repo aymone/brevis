@@ -1,0 +1,79 @@
+# HELP brevis_sql_api_requests_total Requests answered, by endpoint and status.
+# TYPE brevis_sql_api_requests_total counter
+brevis_sql_api_requests_total{endpoint="orders",status="200"} 106
+brevis_sql_api_requests_total{endpoint="sales",status="200"} 92
+brevis_sql_api_requests_total{endpoint="sales",status="400"} 13
+# HELP brevis_sql_api_cache_requests_total Requests with a cache, by endpoint and result.
+# TYPE brevis_sql_api_cache_requests_total counter
+# HELP brevis_sql_api_rows_total Rows returned, by endpoint.
+# TYPE brevis_sql_api_rows_total counter
+brevis_sql_api_rows_total{endpoint="orders"} 106
+brevis_sql_api_rows_total{endpoint="sales"} 92
+# HELP brevis_sql_api_bytes_billed_total Bytes the warehouse reported scanning, by endpoint.
+# TYPE brevis_sql_api_bytes_billed_total counter
+brevis_sql_api_bytes_billed_total{endpoint="orders"} 0
+brevis_sql_api_bytes_billed_total{endpoint="sales"} 0
+# HELP brevis_sql_api_request_seconds Time to answer a request, by endpoint.
+# TYPE brevis_sql_api_request_seconds histogram
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.005"} 0
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.01"} 39
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.025"} 99
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.05"} 102
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.1"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.25"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="0.5"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="1"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="2.5"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="5"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="10"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="orders",le="+Inf"} 106
+brevis_sql_api_request_seconds_sum{endpoint="orders"} 1.561670379
+brevis_sql_api_request_seconds_count{endpoint="orders"} 106
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.005"} 13
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.01"} 48
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.025"} 97
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.05"} 100
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.1"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.25"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="0.5"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="1"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="2.5"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="5"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="10"} 105
+brevis_sql_api_request_seconds_bucket{endpoint="sales",le="+Inf"} 105
+brevis_sql_api_request_seconds_sum{endpoint="sales"} 1.4270496210000003
+brevis_sql_api_request_seconds_count{endpoint="sales"} 105
+# HELP brevis_sql_api_warehouse_seconds Time the warehouse took, by endpoint.
+# TYPE brevis_sql_api_warehouse_seconds histogram
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.005"} 0
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.01"} 40
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.025"} 99
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.05"} 102
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.1"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.25"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="0.5"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="1"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="2.5"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="5"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="10"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="orders",le="+Inf"} 106
+brevis_sql_api_warehouse_seconds_sum{endpoint="orders"} 1.548925866
+brevis_sql_api_warehouse_seconds_count{endpoint="orders"} 106
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.005"} 0
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.01"} 36
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.025"} 84
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.05"} 87
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.1"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.25"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="0.5"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="1"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="2.5"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="5"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="10"} 92
+brevis_sql_api_warehouse_seconds_bucket{endpoint="sales",le="+Inf"} 92
+brevis_sql_api_warehouse_seconds_sum{endpoint="sales"} 1.417778542
+brevis_sql_api_warehouse_seconds_count{endpoint="sales"} 92
+# HELP brevis_sql_api_hook_total Hook runs, by endpoint, hook and outcome.
+# TYPE brevis_sql_api_hook_total counter
+# HELP brevis_sql_api_hook_seconds Time a hook took, by endpoint and hook.
+# TYPE brevis_sql_api_hook_seconds histogram

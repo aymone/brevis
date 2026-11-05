@@ -2,12 +2,10 @@ package api
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"brevis.sh/brevis/internal/domain/diagnosis"
 	"brevis.sh/brevis/internal/infrastructure/postgres"
-	"brevis.sh/brevis/web/i18n"
 	"brevis.sh/brevis/web/pages"
 )
 
@@ -120,18 +118,6 @@ func (u *UI) inFlightBySlug(ctx context.Context) map[string]string {
 		}
 	}
 	return out
-}
-
-// overviewAttention is "Needs your attention" alone, for the page to follow.
-// In the reader's language and drawn directly: render would also take a
-// flash meant for the next page.
-func (u *UI) overviewAttention(w http.ResponseWriter, r *http.Request) {
-	ctx := i18n.WithLang(r.Context(), i18n.Negotiate(r))
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := pages.AttentionLive(u.attention(ctx), time.Now()).Render(ctx, w); err != nil {
-		u.log.Warn("rendering the attention fragment", "error", err)
-	}
 }
 
 // lateTargets are the catalog's destinations whose data stopped coming,

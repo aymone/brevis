@@ -1,0 +1,81 @@
+/* The catalog and its drawer. Colours are the tokens of ui/status.css. */
+.dc-honest { max-width: 48rem; margin: -.5rem 0 1rem; font-size: .75rem; }
+.dc-band { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; min-height: 2rem; }
+.dc-pill { display: inline-flex; align-items: center; gap: .5rem; height: 2rem; padding: 0 .8rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .8rem; text-decoration: none; }
+.dc-pill:hover { border-color: var(--muted); }
+.dc-pill[aria-current="true"] { border-color: var(--fg); color: var(--fg); }
+.dc-pill strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.dc-pill:focus-visible, .dc-target:focus-visible, .dc-switch:focus-visible { outline: 2px solid var(--st-info); outline-offset: 2px; }
+.dc-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: .75rem; min-height: 2rem; }
+.dc-switch { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .8rem; text-decoration: none; }
+.dc-switch-track { position: relative; width: 1.9rem; height: 1.1rem; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+.dc-switch-knob { position: absolute; top: 1px; left: 1px; width: .8rem; height: .8rem; border-radius: 50%; background: var(--muted); transition: transform .12s; }
+.dc-switch[aria-checked="true"] .dc-switch-track { background: var(--st-info); border-color: var(--st-info); }
+.dc-switch[aria-checked="true"] .dc-switch-knob { background: #fff; transform: translateX(.8rem); }
+@media (prefers-reduced-motion: reduce) { .dc-switch-knob { transition: none; } }
+.dc-target { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: inherit; font: .78rem ui-monospace, monospace; text-decoration: none; overflow-wrap: anywhere; }
+.dc-target:hover strong { text-decoration: underline; }
+.dc-where { color: var(--muted); }
+.dc-writer { font-size: .75rem; overflow-wrap: anywhere; }
+.dc-nowrap { white-space: nowrap; }
+.dc-queued { display: block; margin-top: .15rem; color: var(--muted); }
+.chip { margin-left: .4rem; padding: 0 .35rem; border: 1px solid var(--line); border-radius: .25rem; color: var(--muted); font: .65rem ui-monospace, monospace; }
+.dc-recent { display: inline-flex; align-items: flex-end; gap: 1px; height: 1.25rem; }
+.dc-bar { display: block; width: 4px; border-radius: 1px; background: var(--accent-bar); }
+.dc-bar-none { height: 100%; background: none; border: 1px solid var(--muted); }
+.dc-order { margin: .6rem 0 0; font-size: .72rem; }
+.dc-empty { padding: 3rem 1.5rem; border: 1px dashed var(--line); border-radius: .6rem; text-align: center; color: var(--muted); }
+.dc-missing { margin: .75rem 0; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--card); color: var(--muted); font-size: .8rem; }
+.lz-title { margin-bottom: 1rem; }
+
+/* The drawer: from the right edge on a wide screen, the whole screen on a phone. */
+.dc-drawer { position: fixed; inset: 0 0 0 auto; width: min(36rem, 100vw); max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.dc-drawer::backdrop { background: rgb(0 0 0 / .4); }
+.dc-drawer-in { display: flex; flex-direction: column; height: 100%; }
+.dc-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--line); }
+.dc-kicker { margin: 0; color: var(--muted); font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.dc-uri { margin: .15rem 0 .35rem; font: 600 .85rem ui-monospace, monospace; overflow-wrap: anywhere; }
+.dc-drawer-body { flex: 1; display: grid; align-content: start; gap: 1rem; padding: 1rem 1.1rem; overflow-y: auto; }
+.dc-drawer-foot { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; padding: .75rem 1.1rem; border-top: 1px solid var(--line); }
+.dc-close { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 2rem; height: 2rem; border-radius: .4rem; color: var(--muted); font-size: 1.1rem; text-decoration: none; }
+.dc-close:hover { background: var(--card); color: var(--fg); }
+.dc-writer-card { border: 1px solid var(--line); border-radius: .5rem; }
+.dc-writer-head { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .6rem; padding: .6rem .8rem; border-bottom: 1px solid var(--line); }
+.dc-writer-head a { color: inherit; font: 500 .78rem ui-monospace, monospace; }
+.dc-writer-head .dc-run { margin-left: auto; padding: 0 .5rem; border: 1px solid var(--line); border-radius: .35rem; font: .72rem system-ui; text-decoration: none; }
+.dc-why { margin: 0; padding: .6rem .8rem; font-size: .78rem; }
+.dc-h3 { margin: 0 0 .5rem; font-size: .8rem; font-weight: 600; }
+.dc-legend { margin: .4rem 0 0; font-size: .7rem; }
+.dc-loads { display: block; width: min(100%, 24rem); height: 2.75rem; }
+.dc-readby { margin: 0; padding: 0; list-style: none; display: grid; gap: .3rem; font-size: .78rem; }
+.dc-readby a { color: inherit; font-family: ui-monospace, monospace; }
+.dc-fine { margin: 0; font-size: .7rem; }
+
+/* The configuration of each writer. */
+.cfg { display: grid; gap: .5rem; }
+.cfg-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
+.cfg-head h3 { margin: 0; font-size: .82rem; }
+.cfg-head span { font-size: .72rem; }
+.cfg-box { border: 1px solid var(--line); border-radius: .5rem; }
+.cfg-box > * { padding: .65rem .8rem; }
+.cfg-box > * + * { border-top: 1px solid var(--line); }
+.cfg-box h4 { margin: 0 0 .4rem; font-size: .75rem; }
+.cfg-row { display: grid; gap: .1rem .75rem; padding: .15rem 0; font-size: .72rem; }
+@media (min-width: 560px) { .cfg-row { grid-template-columns: 11rem 1fr; } }
+.cfg-row .k { color: var(--muted); font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+.cfg-row .v { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+.cfg-def { margin-left: .4rem; padding: 0 .3rem; border: 1px solid var(--line); border-radius: .25rem; color: var(--muted); font: .62rem system-ui; }
+.cfg-note { font-size: .72rem; color: var(--muted); white-space: pre-wrap; }
+.cfg-note summary { cursor: pointer; }
+.cfg-flow { display: flex; flex-direction: column; gap: .6rem; }
+@media (min-width: 700px) { .cfg-flow { flex-direction: row; } }
+.cfg-flow ol { display: contents; margin: 0; padding: 0; list-style: none; }
+.cfg-node { flex: 1; min-width: 0; padding: .5rem .65rem; border: 1px solid var(--line); border-radius: .4rem; }
+.cfg-node.dest { border-color: var(--muted); }
+.cfg-node.dead { border-style: dashed; border-color: var(--st-bad); }
+.cfg-node p { margin: 0; }
+.cfg-node .t { color: var(--muted); font-size: .64rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.cfg-node .m { margin-top: .25rem; font: .74rem ui-monospace, monospace; overflow-wrap: anywhere; }
+.cfg-node .d { margin-top: .15rem; color: var(--muted); font-size: .7rem; }
+.cfg-changes { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; font-size: .72rem; }
+.cfg-changes ul { margin: .25rem 0 0; padding-left: 1rem; }

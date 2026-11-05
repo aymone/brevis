@@ -336,7 +336,7 @@ func TestTheIdsAreStableKeys(t *testing.T) {
 
 	for _, id := range append(append([]string{}, rt.Runtimes...), rt.Tools...) {
 		if !labels[id] {
-			t.Errorf("%q has no entry in LANG_LABEL in web/assets/dag.js; the chip would render the raw id", id)
+			t.Errorf("%q has no entry in LANG in web/spa/src/ui/lang.ts; the chip would render the raw id", id)
 		}
 		if !documented[id] {
 			t.Errorf("%q is not in the vocabulary table in docs/RUNTIME.md, which is what publish refusals point at", id)
@@ -350,9 +350,9 @@ func TestTheIdsAreStableKeys(t *testing.T) {
 	}
 }
 
-// jsLabelKeys reads the ids out of LANG_LABEL.
+// jsLabelKeys reads the ids out of LANG, the console's label table.
 func jsLabelKeys(t *testing.T) map[string]bool {
-	return keysIn(t, "web/assets/dag.js", `var LANG_LABEL = {`, "};", `(?m)([a-z0-9]+):\s*"`)
+	return keysIn(t, "web/spa/src/ui/lang.ts", "const LANG: Record<string, string> = {", "};", `(?m)([a-z0-9]+):\s*"`)
 }
 
 // cssLangTokens reads the --color-lang-* custom properties.

@@ -365,3 +365,24 @@ func TestLoadRejectsBadPoolAndRetentionSettings(t *testing.T) {
 		})
 	}
 }
+
+func TestTheMetricsSourcesAreOptionalAndTheIntervalIsBounded(t *testing.T) {
+	t.Setenv("BREVIS_DATABASE_URL", "postgres://u:p@localhost:5432/db")
+	t.Setenv("BREVIS_GATEWAY_METRICS_URLS", "")
+	t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", "")
+	c, err := Load()
+	if err != nil || c.GatewayMetricsURLs != "" || c.EndpointsMetricsURLs != "" || c.MetricsScrapeInterval != 0 {
+		t.Fatalf("nothing set must mean nothing configured: %+v %v", c, err)
+	}
+	t.Setenv("BREVIS_GATEWAY_METRICS_URLS", "gw=http://g:9090/metrics")
+	t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", "10s")
+	if c, err = Load(); err != nil || c.GatewayMetricsURLs == "" || c.MetricsScrapeInterval != 10*time.Second {
+		t.Fatalf("%+v %v", c, err)
+	}
+	for _, bad := range []string{"fast", "0s", "500ms", "2h", "-5s"} {
+		t.Setenv("BREVIS_METRICS_SCRAPE_INTERVAL", bad)
+		if _, err := Load(); err == nil || !strings.Contains(err.Error(), "BREVIS_METRICS_SCRAPE_INTERVAL") {
+			t.Errorf("%q accepted: %v", bad, err)
+		}
+	}
+}
