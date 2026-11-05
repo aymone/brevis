@@ -18,6 +18,28 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+## [0.43.0] — 2026-11-05
+
+### Changed: the server has no language
+
+- Every API failure answers `{"error": "<code>", ...data}` (a code from a
+  fixed list in `internal/api/apierror.go`), never a sentence; `detail` carries
+  only text that came from a downstream system. The sign-in gate answers
+  `sign_in_required`. Trigger validation answers `422 invalid_params` with a
+  `fields` map of codes and data. A script that matched on the old English or
+  Portuguese error text must match the code.
+- Everything a screen says is a message key plus data, said by the console in
+  the reader's language (11 catalogs, reviewed file by file). Durations carry
+  their units in that language too.
+
+### Fixed
+
+- The Overview's failing-workflows list is read once per 3 s however many tabs
+  are open, instead of once per tab.
+- Step cancel no longer breaks on a host with a day-first locale (the
+  start time of `ps` is read in the C locale).
+- The old drawer links `#publicar` and `#novo` still open their drawers.
+
 ### Changed: every identifier is English, and the schema moves (migration 00033)
 
 **Upgrade note: stop the old replicas before this release migrates.** Migration
