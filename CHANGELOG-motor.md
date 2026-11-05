@@ -18,6 +18,8 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+## [0.44.0] — 2026-11-05
+
 ### Changed: the live volume finds its sources by pod annotation, and is collected by the scheduler
 
 - **`BREVIS_GATEWAY_METRICS_URLS` and `BREVIS_ENDPOINTS_METRICS_URLS` are gone.**
