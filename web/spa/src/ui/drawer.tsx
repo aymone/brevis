@@ -3,6 +3,16 @@ import { useLocation, useNavigate } from "react-router";
 import { useT } from "../i18n";
 import { Icon } from "./icon";
 
+// A link to a drawer written before its id was English still opens it. shortcut: bookmarks and shared links from
+// releases before 0.43 name `#publicar` (publish) and `#novo` (new); drop this table when those links are history.
+const LEGACY_DRAWERS: Record<string, string> = { publicar: "publish", novo: "new" };
+
+/** The drawer a URL hash names ("#publicar" is the Publish drawer), "" for none. */
+export function drawerOf(hash: string): string {
+  const id = hash.replace(/^#/, "");
+  return LEGACY_DRAWERS[id] ?? id;
+}
+
 /**
  * A drawer's open state lives in the URL hash (`#publish`), as the server's
  * links did: a link opens it, the opener only sets the hash, and Back/close
@@ -11,7 +21,7 @@ import { Icon } from "./icon";
 export function useDrawer(id: string) {
   const { pathname, search, hash } = useLocation();
   const navigate = useNavigate();
-  const open = hash === `#${id}`;
+  const open = drawerOf(hash) === id;
   const go = (h: string) => navigate({ pathname, search, hash: h }, { replace: true });
   return { open, show: () => go(`#${id}`), hide: () => open && go("") };
 }
