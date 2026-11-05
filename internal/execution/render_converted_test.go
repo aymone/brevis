@@ -10,7 +10,7 @@ import (
 // The commands the converter generates have to RENDER with the real defaults. A
 // template that only fails at run time costs somebody a night.
 func TestConvertedCommandsRender(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name     string
 		command  string
 		params   map[string]string
@@ -44,7 +44,7 @@ func TestConvertedCommandsRender(t *testing.T) {
 		},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got, err := execution.Render(c.command, c.params)
 			if err != nil {

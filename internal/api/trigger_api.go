@@ -199,7 +199,7 @@ func (u *UI) triggerJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := u.actions.Disparar(ctx, slug, time.Now(), params, slot)
+	id, err := u.actions.Trigger(ctx, slug, time.Now(), params, slot)
 	if err != nil {
 		u.log.Warn("trigger refused", "workflow", slug, "error", err)
 		// The scheduler refusing the slot (not on the cron, in the future) is the slot field's; any other

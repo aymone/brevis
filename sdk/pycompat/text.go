@@ -211,16 +211,16 @@ func forcesExponent(f float64) bool {
 // is what Python does. A port written by hand will get None right and the zero
 // wrong.
 func TextOrEmpty(v any) (string, error) {
-	if falsoNoPython(v) {
+	if falseInPython(v) {
 		return "", nil
 	}
 	return Text(v)
 }
 
-// falsoNoPython implements the truthiness of the types a JSON record produces.
+// falseInPython implements the truthiness of the types a JSON record produces.
 // Anything else -- some arbitrary object -- is truthy in Python by default, and
 // here falls through to Text, which refuses what it cannot render.
-func falsoNoPython(v any) bool {
+func falseInPython(v any) bool {
 	switch t := v.(type) {
 	case nil:
 		return true

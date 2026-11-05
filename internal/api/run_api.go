@@ -74,7 +74,7 @@ func (u *UI) cancelJSON(w http.ResponseWriter, r *http.Request) {
 		runFail(w, http.StatusNotFound, codeNotFound)
 		return
 	}
-	got, err := u.actions.Cancel(r.Context(), id, auth.De(r.Context()))
+	got, err := u.actions.Cancel(r.Context(), id, auth.OperatorOf(r.Context()))
 	if errors.Is(err, postgres.ErrRunNotFound) {
 		runFail(w, http.StatusNotFound, codeNotFound)
 		return

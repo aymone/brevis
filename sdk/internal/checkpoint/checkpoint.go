@@ -9,9 +9,9 @@
 //
 //	{At}/{run_id}/{pipeline}/part-00000.ndjson
 //	{At}/{run_id}/{pipeline}/part-00001.ndjson
-//	{At}/{run_id}/{pipeline}/_completo
+//	{At}/{run_id}/{pipeline}/_complete
 //
-// `_completo` is written LAST, and it is what authorises a resume. Without it
+// `_complete` is written LAST, and it is what authorises a resume. Without it
 // the depot is an interrupted extract, and resuming from an interrupted extract
 // would load half the data in silence -- the worst way to fail.
 package checkpoint
@@ -29,19 +29,25 @@ import (
 	core "brevis.sh/brevis/sdk/internal/core"
 )
 
-// The names below are the ON-DISK FORMAT, and they stay in Portuguese on
-// purpose while the code around them is English.
+// The names below are the ON-DISK FORMAT.
 //
-// They are data, not prose. A depot written by a released SDK holds
-// `_completo` and `part-00000.ndjson`; a build looking for `_complete` finds
-// nothing, logs "no usable checkpoint" and re-extracts -- which spends exactly
-// the vendor quota this package exists to save. Renaming them is a migration,
-// and it is not one worth doing for a word.
+// They are data, not prose. A depot written by an SDK before they went English
+// holds `_completo` and `parte-00000.ndjson`; a build that looked only for
+// `_complete` would find nothing, log "no usable checkpoint" and re-extract --
+// which spends exactly the vendor quota this package exists to save. So the
+// manifest is READ under either name (and either spelling of its keys), and
+// everything this build writes is English. The parts are found by the names the
+// manifest lists, so a depot's old `parte-` files resume as they are.
+//
+// shortcut: legacyManifestFile and the Portuguese manifest keys can go once no
+// depot written by an SDK before this rename can still be resumed, that is,
+// after the retention of the depots (a run is resumed within its own attempts).
 const (
-	manifestFile    = "_completo"
-	startFile       = "_inicio"
-	partPattern     = "parte-%05d.ndjson"
-	manifestVersion = 1
+	manifestFile       = "_complete"
+	legacyManifestFile = "_completo"
+	startFile          = "_start"
+	partPattern        = "part-%05d.ndjson"
+	manifestVersion    = 1
 
 	// bytesPerPart bounds the writer's memory, not the extract's size: the
 	// buffer is flushed on crossing it, so a 40 GB extract goes through here
@@ -68,18 +74,51 @@ const (
 	NumbersLiteral = "literal"
 )
 
-// Manifest is the `_completo` object.
+// Manifest is the `_complete` object.
 //
-// The json tags are the on-disk format and stay as they were written; see the
-// note on manifestFile above.
+// The json tags are the on-disk format; UnmarshalJSON also reads the spelling
+// the format had before it went English (versao, registros, partes, numeros,
+// gravado_em).
 type Manifest struct {
-	Version   int      `json:"versao"`
-	Records   int64    `json:"registros"`
-	Parts     []string `json:"partes"`
-	Numbers   string   `json:"numeros"`
+	Version   int      `json:"version"`
+	Records   int64    `json:"records"`
+	Parts     []string `json:"parts"`
+	Numbers   string   `json:"numbers"`
 	Pipeline  string   `json:"pipeline,omitempty"`
 	Run       string   `json:"run,omitempty"`
-	WrittenAt string   `json:"gravado_em"`
+	WrittenAt string   `json:"written_at"`
+}
+
+// UnmarshalJSON reads a manifest under either spelling of its keys.
+func (m *Manifest) UnmarshalJSON(b []byte) error {
+	type plain Manifest
+	aux := struct {
+		*plain
+		VersionOld   *int      `json:"versao"`
+		RecordsOld   *int64    `json:"registros"`
+		PartsOld     *[]string `json:"partes"`
+		NumbersOld   *string   `json:"numeros"`
+		WrittenAtOld *string   `json:"gravado_em"`
+	}{plain: (*plain)(m)}
+	if err := json.Unmarshal(b, &aux); err != nil {
+		return err
+	}
+	if aux.VersionOld != nil && m.Version == 0 {
+		m.Version = *aux.VersionOld
+	}
+	if aux.RecordsOld != nil && m.Records == 0 {
+		m.Records = *aux.RecordsOld
+	}
+	if aux.PartsOld != nil && m.Parts == nil {
+		m.Parts = *aux.PartsOld
+	}
+	if aux.NumbersOld != nil && m.Numbers == "" {
+		m.Numbers = *aux.NumbersOld
+	}
+	if aux.WrittenAtOld != nil && m.WrittenAt == "" {
+		m.WrittenAt = *aux.WrittenAtOld
+	}
+	return nil
 }
 
 // Depot is a checkpoint directory, on disk or in an object store.
@@ -122,7 +161,7 @@ func New(path string, store core.Store) (*Depot, error) {
 	}, nil
 }
 
-// Caminho is the whole depot, in the form you paste into a browser.
+// Path is the whole depot, in the form you paste into a browser.
 func (d *Depot) Path() string {
 	if d.scheme == "" {
 		return d.prefix
@@ -140,7 +179,7 @@ func (d *Depot) key(name string) string { return d.prefix + name }
 func (d *Depot) Reserve(ctx context.Context, pipeline, run string) error {
 	marker, err := json.Marshal(map[string]string{
 		"pipeline": pipeline, "run": run,
-		"iniciado_em": time.Now().UTC().Format(time.RFC3339),
+		"started_at": time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		return err
@@ -148,13 +187,18 @@ func (d *Depot) Reserve(ctx context.Context, pipeline, run string) error {
 	return d.store.Create(ctx, d.bucket, d.key(startFile), bytes.NewReader(marker))
 }
 
-// Manifest reads `_completo`. Missing or unreadable returns an error: the
-// caller treats both the same way -- redo the extract -- and the message goes to
-// the log so it does not become a "redone, and never said why".
+// Manifest reads `_complete`, or `_completo` in a depot an earlier SDK wrote.
+// Missing or unreadable returns an error: the caller treats both the same way
+// -- redo the extract -- and the message goes to the log so it does not become
+// a "redone, and never said why".
 func (d *Depot) Manifest(ctx context.Context) (*Manifest, error) {
 	r, err := d.store.Open(ctx, d.bucket, d.key(manifestFile))
 	if err != nil {
-		return nil, err
+		legacy, lerr := d.store.Open(ctx, d.bucket, d.key(legacyManifestFile))
+		if lerr != nil {
+			return nil, err
+		}
+		r = legacy
 	}
 	defer func() { _ = r.Close() }()
 

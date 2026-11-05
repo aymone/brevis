@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const comTypo = `name: warn_demo
+const withTypo = `name: warn_demo
 type: dag
 steps:
   - id: one
@@ -26,7 +26,7 @@ steps:
 func TestEveryCommandThatReadsAWorkflowSaysWhatItIgnored(t *testing.T) {
 	dir := t.TempDir()
 	file := filepath.Join(dir, "w.yaml")
-	if err := os.WriteFile(file, []byte(comTypo), 0o600); err != nil {
+	if err := os.WriteFile(file, []byte(withTypo), 0o600); err != nil {
 		t.Fatal(err)
 	}
 

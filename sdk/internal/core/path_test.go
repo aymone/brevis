@@ -3,7 +3,7 @@ package core
 import "testing"
 
 func TestParseLocation(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		in                              string
 		scheme, bucket, prefix, pattern string
 	}{
@@ -15,7 +15,7 @@ func TestParseLocation(t *testing.T) {
 		{"gs://b/landing/parte-0001.ndjson", "gs", "b", "landing/", "parte-0001.ndjson"},
 		{"file:///tmp/x/*.json", "", "", "/tmp/x/", "*.json"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		got, err := ParseLocation(c.in)
 		if err != nil {
 			t.Errorf("%q: %v", c.in, err)

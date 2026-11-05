@@ -20,7 +20,7 @@ type Subscription struct {
 
 // Subscriptions are the workflows that declare a trigger.
 //
-// READ FROM THE PUBLISHED DOCUMENT, and only from there. `definicao` is what
+// READ FROM THE PUBLISHED DOCUMENT, and only from there. `definition` is what
 // `publish` stored, so the trigger the scheduler acts on is the one in the
 // file that was published -- a column of its own would be a second place for
 // it to disagree with the document.
@@ -35,10 +35,10 @@ type Subscription struct {
 // `jsonb_array_length` on a scalar RAISES rather than returning zero.
 func (r *WorkflowRepo) Subscriptions(ctx context.Context) ([]Subscription, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT slug, definicao -> 'Trigger'
+		SELECT slug, definition -> 'Trigger'
 		FROM workflows
-		WHERE CASE WHEN jsonb_typeof(definicao -> 'Trigger' -> 'OnLanded') = 'array'
-		           THEN jsonb_array_length(definicao -> 'Trigger' -> 'OnLanded') > 0
+		WHERE CASE WHEN jsonb_typeof(definition -> 'Trigger' -> 'OnLanded') = 'array'
+		           THEN jsonb_array_length(definition -> 'Trigger' -> 'OnLanded') > 0
 		           ELSE false END`)
 	if err != nil {
 		return nil, err

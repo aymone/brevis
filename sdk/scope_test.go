@@ -50,15 +50,15 @@ func TestTheSnapshotDoesNotDependOnThePositionInTheChain(t *testing.T) {
 		line = env.Payload.(map[string]any)
 	}
 
-	retrato, ok := line["payload"].(map[string]any)
+	snapshot, ok := line["payload"].(map[string]any)
 	if !ok {
 		t.Fatalf("no snapshot: %v", line)
 	}
-	if _, contaminado := retrato["derivado"]; contaminado {
-		t.Errorf("the snapshot carries a field the chain wrote: %v", retrato)
+	if _, tainted := snapshot["derivado"]; tainted {
+		t.Errorf("the snapshot carries a field the chain wrote: %v", snapshot)
 	}
-	if retrato["id"] != "1" {
-		t.Errorf("the snapshot lost the field's original name: %v", retrato)
+	if snapshot["id"] != "1" {
+		t.Errorf("the snapshot lost the field's original name: %v", snapshot)
 	}
 	if line["source_key"] != "1" {
 		t.Errorf("the chain did not run on the record: %v", line)
@@ -80,17 +80,17 @@ func TestTheSnapshotRefusesToOverwriteWhatTheSourceSent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var visto error
+	var seen error
 	for _, err := range data.Records {
 		if err != nil {
-			visto = err
+			seen = err
 		}
 	}
-	if visto == nil {
+	if seen == nil {
 		t.Fatal("wrote the snapshot over a field of the source")
 	}
-	if !strings.Contains(visto.Error(), "payload") {
-		t.Errorf("the error does not name the field: %v", visto)
+	if !strings.Contains(seen.Error(), "payload") {
+		t.Errorf("the error does not name the field: %v", seen)
 	}
 }
 
@@ -137,15 +137,15 @@ func TestTheNamespaceChangesTheID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	meu := uuid.MustParse("11111111-2222-3333-4444-555555555555")
-	outro, err := sdk.Namespace(meu).IngestionID()(record())
+	mine := uuid.MustParse("11111111-2222-3333-4444-555555555555")
+	another, err := sdk.Namespace(mine).IngestionID()(record())
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	defaultID := fallback.(map[string]any)[sdk.ColumnIngestionID].(string)
-	idOutro := outro.(map[string]any)[sdk.ColumnIngestionID].(string)
-	if defaultID == idOutro {
+	otherID := another.(map[string]any)[sdk.ColumnIngestionID].(string)
+	if defaultID == otherID {
 		t.Error("different namespaces produced the same id; so the namespace is not used")
 	}
 }
@@ -166,19 +166,19 @@ func TestTheDefaultNamespaceHasNotChanged(t *testing.T) {
 	// This value has been the same since v0.1.x, checked against Python's
 	// uuid.uuid5. If it changes, every row already written has lost its
 	// identity.
-	const congelado = "7e18f9f9-37c4-5033-abce-def940db4cba"
-	if got != congelado {
-		t.Errorf("the default id changed: %s, was %s", got, congelado)
+	const frozen = "7e18f9f9-37c4-5033-abce-def940db4cba"
+	if got != frozen {
+		t.Errorf("the default id changed: %s, was %s", got, frozen)
 	}
 }
 
 // TestAChosenNamespaceIsDeterministic: choosing a namespace must not introduce
 // variation between runs.
 func TestAChosenNamespaceIsDeterministic(t *testing.T) {
-	meu := sdk.Namespace(uuid.MustParse("11111111-2222-3333-4444-555555555555"))
+	mine := sdk.Namespace(uuid.MustParse("11111111-2222-3333-4444-555555555555"))
 	var previous string
 	for i := 0; i < 5; i++ {
-		output, err := meu.IngestionID()(map[string]any{
+		output, err := mine.IngestionID()(map[string]any{
 			"provider": "a", "entity": "b", "source_key": "c", "record_ts": "d",
 		})
 		if err != nil {
@@ -194,8 +194,8 @@ func TestAChosenNamespaceIsDeterministic(t *testing.T) {
 
 // countingTarget records every batch it receives.
 type countingTarget struct {
-	levas  [][]int
-	failAt int // > 0: a leva N falha
+	batches [][]int
+	failAt  int // > 0: a leva N falha
 }
 
 func (d *countingTarget) Describe() string { return "destino de teste" }
@@ -205,8 +205,8 @@ func (d *countingTarget) Write(_ context.Context, envs []sdk.Envelope, _ sdk.Wri
 	for _, e := range envs {
 		ids = append(ids, e.Payload.(map[string]any)["i"].(int))
 	}
-	d.levas = append(d.levas, ids)
-	if d.failAt > 0 && len(d.levas) == d.failAt {
+	d.batches = append(d.batches, ids)
+	if d.failAt > 0 && len(d.batches) == d.failAt {
 		return &sdk.LoadResult{RowsLoaded: 0}, fmt.Errorf("batch %d failed", d.failAt)
 	}
 	return &sdk.LoadResult{RowsLoaded: int64(len(envs))}, nil
@@ -223,11 +223,11 @@ func TestFlushEveryWritesInBatches(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(target.levas) != 4 {
-		t.Fatalf("%d batches, want 4 (3+3+3+1)", len(target.levas))
+	if len(target.batches) != 4 {
+		t.Fatalf("%d batches, want 4 (3+3+3+1)", len(target.batches))
 	}
-	if len(target.levas[3]) != 1 {
-		t.Errorf("the last batch has %d, want 1", len(target.levas[3]))
+	if len(target.batches[3]) != 1 {
+		t.Errorf("the last batch has %d, want 1", len(target.batches[3]))
 	}
 
 	// The Result sums the batches. A Rows counting only the last one would lie
@@ -243,8 +243,8 @@ func TestFlushEveryZeroAccumulatesEverything(t *testing.T) {
 	if _, err := sdk.Load(context.Background(), dataOf(t, 10), sdk.Target{To: target}); err != nil {
 		t.Fatal(err)
 	}
-	if len(target.levas) != 1 || len(target.levas[0]) != 10 {
-		t.Errorf("batches = %v; without FlushEvery the load is a single one", target.levas)
+	if len(target.batches) != 1 || len(target.batches[0]) != 10 {
+		t.Errorf("batches = %v; without FlushEvery the load is a single one", target.batches)
 	}
 }
 

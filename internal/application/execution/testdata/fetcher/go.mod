@@ -4,7 +4,7 @@
 // to keep lean.
 module testfetcher
 
-go 1.25.0
+go 1.26.0
 
 require brevis.sh/brevis/sdk v0.0.0
 

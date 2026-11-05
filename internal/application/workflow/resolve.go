@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	dominio "brevis.sh/brevis/internal/domain/workflow"
+	domain "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // Resolve expands every `uses:` across a set of workflows.
@@ -22,13 +22,13 @@ import (
 // is the whole point: a step that TRIGGERED a child run and waited would hold a
 // slot from the same per-process semaphore the child needs, and hang under
 // load.
-func Resolve(all []dominio.Workflow) ([]dominio.Workflow, error) {
-	bySlug := make(map[string]dominio.Workflow, len(all))
+func Resolve(all []domain.Workflow) ([]domain.Workflow, error) {
+	bySlug := make(map[string]domain.Workflow, len(all))
 	for _, w := range all {
 		bySlug[w.Slug] = w
 	}
 
-	out := make([]dominio.Workflow, 0, len(all))
+	out := make([]domain.Workflow, 0, len(all))
 	for _, w := range all {
 		flat, err := expand(w, bySlug, nil)
 		if err != nil {
@@ -44,7 +44,7 @@ func Resolve(all []dominio.Workflow) ([]dominio.Workflow, error) {
 	}
 	// A rule about the set, like `uses:`, so it is asked here: the one call
 	// `validate` and `publish` share.
-	if err := dominio.CheckGroups(out); err != nil {
+	if err := domain.CheckGroups(out); err != nil {
 		return nil, err
 	}
 	return out, nil
@@ -56,7 +56,7 @@ func Resolve(all []dominio.Workflow) ([]dominio.Workflow, error) {
 // workflow that uses itself, directly or through three others, would otherwise
 // expand until the process runs out of memory -- and the error would be a stack
 // overflow rather than the name of the file somebody has to fix.
-func expand(w dominio.Workflow, bySlug map[string]dominio.Workflow, visiting []string) (dominio.Workflow, error) {
+func expand(w domain.Workflow, bySlug map[string]domain.Workflow, visiting []string) (domain.Workflow, error) {
 	for _, seen := range visiting {
 		if seen == w.Slug {
 			return w, fmt.Errorf("`uses` goes in a circle: %s -> %s",
@@ -64,8 +64,8 @@ func expand(w dominio.Workflow, bySlug map[string]dominio.Workflow, visiting []s
 		}
 	}
 
-	var nodes []dominio.Node
-	var inner []dominio.Edge
+	var nodes []domain.Node
+	var inner []domain.Edge
 	// Where each expanded step BEGINS and ENDS, kept here because it is only
 	// knowable from the child's own edges -- the parent's say nothing about
 	// what is inside a step it has not opened yet.
@@ -115,7 +115,7 @@ func expand(w dominio.Workflow, bySlug map[string]dominio.Workflow, visiting []s
 // They are what makes the expansion mean what the file said: whatever depended
 // on `mlops` depends on the WHOLE of it, and `mlops` starts when its own
 // dependencies are done.
-func boundaries(host string, child dominio.Workflow) (roots, leaves []string) {
+func boundaries(host string, child domain.Workflow) (roots, leaves []string) {
 	hasIncoming, hasOutgoing := map[string]bool{}, map[string]bool{}
 	for _, e := range child.Edges {
 		hasIncoming[e.To] = true
@@ -139,8 +139,8 @@ func boundaries(host string, child dominio.Workflow) (roots, leaves []string) {
 // An arrow INTO the step becomes one into each of the child's roots; an arrow
 // OUT of it becomes one out of each of its leaves. An edge between two expanded
 // steps becomes every leaf of the first to every root of the second.
-func rewire(edges []dominio.Edge, roots, leaves map[string][]string) []dominio.Edge {
-	var out []dominio.Edge
+func rewire(edges []domain.Edge, roots, leaves map[string][]string) []domain.Edge {
+	var out []domain.Edge
 	for _, e := range edges {
 		fromLeaves, fromHost := leaves[e.From]
 		toRoots, toHost := roots[e.To]
@@ -149,16 +149,16 @@ func rewire(edges []dominio.Edge, roots, leaves map[string][]string) []dominio.E
 			out = append(out, e)
 		case fromHost && !toHost:
 			for _, leaf := range fromLeaves {
-				out = append(out, dominio.Edge{From: leaf, To: e.To, Label: e.Label})
+				out = append(out, domain.Edge{From: leaf, To: e.To, Label: e.Label})
 			}
 		case !fromHost && toHost:
 			for _, root := range toRoots {
-				out = append(out, dominio.Edge{From: e.From, To: root, Label: e.Label})
+				out = append(out, domain.Edge{From: e.From, To: root, Label: e.Label})
 			}
 		default:
 			for _, leaf := range fromLeaves {
 				for _, root := range toRoots {
-					out = append(out, dominio.Edge{From: leaf, To: root, Label: e.Label})
+					out = append(out, domain.Edge{From: leaf, To: root, Label: e.Label})
 				}
 			}
 		}
@@ -173,13 +173,13 @@ func rewire(edges []dominio.Edge, roots, leaves map[string][]string) []dominio.E
 // `secrets:` and `resources:` are materialised onto it. Without that the steps
 // would land in the parent and start inheriting the PARENT's image -- the same
 // YAML producing a different container depending on who used it.
-func inline(host dominio.Node, child dominio.Workflow) ([]dominio.Node, []dominio.Edge) {
-	nodes := make([]dominio.Node, 0, len(child.Nodes))
+func inline(host domain.Node, child domain.Workflow) ([]domain.Node, []domain.Edge) {
+	nodes := make([]domain.Node, 0, len(child.Nodes))
 	for _, n := range child.Nodes {
 		n.Image = child.ImageFor(n)
 		n.Resources = child.ResourcesFor(n)
-		n.Env = child.EnvDe(n)
-		n.Secrets = child.SecretsDe(n)
+		n.Env = child.EnvOf(n)
+		n.Secrets = child.SecretsOf(n)
 
 		// The group is the host step's id, so the child arrives as one
 		// collapsible box on the graph -- which is what somebody writing
@@ -200,9 +200,9 @@ func inline(host dominio.Node, child dominio.Workflow) ([]dominio.Node, []domini
 		nodes = append(nodes, n)
 	}
 
-	edges := make([]dominio.Edge, 0, len(child.Edges))
+	edges := make([]domain.Edge, 0, len(child.Edges))
 	for _, e := range child.Edges {
-		edges = append(edges, dominio.Edge{
+		edges = append(edges, domain.Edge{
 			From:  host.ID + "." + e.From,
 			To:    host.ID + "." + e.To,
 			Label: e.Label,
@@ -218,7 +218,7 @@ func prefix(host, value string) string {
 	return host + "." + value
 }
 
-func known(bySlug map[string]dominio.Workflow) string {
+func known(bySlug map[string]domain.Workflow) string {
 	out := make([]string, 0, len(bySlug))
 	for slug := range bySlug {
 		out = append(out, slug)

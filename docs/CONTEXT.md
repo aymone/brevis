@@ -75,7 +75,7 @@ What happens instead, with a step running in its own pod:
 4. scheduler   was ALREADY reading that status to get the exit code.
                The context arrives on the same call.
 
-5. scheduler   writes it to Postgres: task_runs.saida
+5. scheduler   writes it to Postgres: task_runs.output
 
 6. API pod     reads it from Postgres when somebody opens the run screen
 ```
@@ -187,7 +187,7 @@ attempt's output described work that did not finish.
 
 **A run that resumes reads it back from the database.** The engine skips a step
 that already succeeded, and the step below still gets what it published — which
-is why the context is stored in `task_runs.saida` and not held in memory.
+is why the context is stored in `task_runs.output` and not held in memory.
 
 ## On the screen
 

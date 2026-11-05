@@ -273,7 +273,7 @@ well.
 
 ### It is a query, not a rollup table
 
-Aggregating the window scans `runs` and digs into `task_runs.etapas` per row.
+Aggregating the window scans `runs` and digs into `task_runs.stages` per row.
 The alternative is a rollup written as each run finishes, which would make this
 read cheap and would also add a write to the hottest path in the system plus a
 second source of truth for numbers that already exist — and can therefore drift

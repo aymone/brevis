@@ -366,20 +366,20 @@ func TestIngestionIDReadsItAfterTheRename(t *testing.T) {
 		"provider": "p", "entity": "e", "source_key": "k", "time": "2026-01-01T00:00",
 	}
 
-	renomeado, err := Rename(map[string]string{"time": "observed_at"})(line)
+	renamed, err := Rename(map[string]string{"time": "observed_at"})(line)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// The old name no longer exists, and the error says so.
-	if _, err := IngestionID("provider", "entity", "source_key", "time")(renomeado); err == nil {
+	if _, err := IngestionID("provider", "entity", "source_key", "time")(renamed); err == nil {
 		t.Fatal("naming the old field after a rename has to fail")
 	} else if !strings.Contains(err.Error(), "observed_at") {
 		t.Errorf("the error must list what the row has: %v", err)
 	}
 
 	// Com o nome novo, funciona.
-	if _, err := IngestionID("provider", "entity", "source_key", "observed_at")(renomeado); err != nil {
+	if _, err := IngestionID("provider", "entity", "source_key", "observed_at")(renamed); err != nil {
 		t.Errorf("with the new name it should work: %v", err)
 	}
 }
@@ -401,7 +401,7 @@ func TestRenameDoesNotChain(t *testing.T) {
 			t.Fatal(err)
 		}
 		m := out.(map[string]any)
-		if _, tem := m["b"]; !tem {
+		if _, has := m["b"]; !has {
 			t.Fatalf("the value ended up in %v; renaming a->b must not chain into b->c", m)
 		}
 	}
@@ -484,7 +484,7 @@ func TestComputeTextMatchesTheWrapperItReplaces(t *testing.T) {
 		return map[string]any{"a": "1", "b": 2.0, "time": "2026-01-01T00:00"}
 	}
 
-	novo, err := ComputeText("source_key", Key("a", "b"))(line())
+	fresh, err := ComputeText("source_key", Key("a", "b"))(line())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -494,9 +494,9 @@ func TestComputeTextMatchesTheWrapperItReplaces(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if novo.(map[string]any)["source_key"] != old.(map[string]any)["source_key"] {
+	if fresh.(map[string]any)["source_key"] != old.(map[string]any)["source_key"] {
 		t.Errorf("the key changed: %v against %v",
-			novo.(map[string]any)["source_key"], old.(map[string]any)["source_key"])
+			fresh.(map[string]any)["source_key"], old.(map[string]any)["source_key"])
 	}
 }
 

@@ -21,7 +21,7 @@ func testKey(t *testing.T) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func storePronto(t *testing.T) (FileStore, string) {
+func readyStore(t *testing.T) (FileStore, string) {
 	t.Helper()
 	// t.TempDir comes back 0755 on this platform, and the store refuses a loose
 	// directory -- which is the requested behaviour, so the test adjusts to it.
@@ -37,7 +37,7 @@ func storePronto(t *testing.T) (FileStore, string) {
 // TestItStoresAndReturns: the happy path, and the only one the consumer will
 // ever see.
 func TestItStoresAndReturns(t *testing.T) {
-	s, dir := storePronto(t)
+	s, dir := readyStore(t)
 
 	const value = "session=eyJhbGciOiJkaXIi..QUJDRA=="
 	if err := s.Save(value); err != nil {
@@ -52,22 +52,22 @@ func TestItStoresAndReturns(t *testing.T) {
 	}
 
 	// And the value is not in the clear in the file.
-	bruto, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
+	raw, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(bruto), "eyJhbGciOiJkaXIi") {
+	if strings.Contains(string(raw), "eyJhbGciOiJkaXIi") {
 		t.Error("the credential is in the clear in the file")
 	}
-	if !strings.HasPrefix(string(bruto), formatEncrypted+"\n") {
-		t.Errorf("the file does not start with the version: %q", bruto[:min(20, len(bruto))])
+	if !strings.HasPrefix(string(raw), formatEncrypted+"\n") {
+		t.Errorf("the file does not start with the version: %q", raw[:min(20, len(raw))])
 	}
 }
 
 // TestAbsentIsNotAnError: there being no stored value is a normal state -- the
 // very first run. The caller falls back to the seed.
 func TestAbsentIsNotAnError(t *testing.T) {
-	s, _ := storePronto(t)
+	s, _ := readyStore(t)
 	got, err := s.Load()
 	if err != nil {
 		t.Fatalf("Load of a missing file returned an error: %v", err)
@@ -81,18 +81,18 @@ func TestAbsentIsNotAnError(t *testing.T) {
 // cipher, and it is the most common mistake of whoever implements this for the
 // first time.
 func TestTheNonceDoesNotRepeat(t *testing.T) {
-	s, dir := storePronto(t)
+	s, dir := readyStore(t)
 
 	vistos := map[string]bool{}
 	for i := 0; i < 50; i++ {
 		if err := s.Save("mesmo-valor-sempre"); err != nil {
 			t.Fatal(err)
 		}
-		bruto, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
+		raw, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, body, _ := firstLine(bruto)
+		_, body, _ := firstLine(raw)
 		nonce := string(body[:12])
 		if vistos[nonce] {
 			t.Fatalf("nonce repeated in write %d", i)
@@ -127,12 +127,12 @@ func TestWithoutAKeyItWritesInTheClear(t *testing.T) {
 		t.Fatalf("Load = (%q, %v)", got, err)
 	}
 
-	bruto, err := os.ReadFile(filepath.Join(dir, "x.cred"))
+	raw, err := os.ReadFile(filepath.Join(dir, "x.cred"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(string(bruto), formatPlaintext+"\n") {
-		t.Errorf("the plain text also needs a version on the first line: %q", bruto)
+	if !strings.HasPrefix(string(raw), formatPlaintext+"\n") {
+		t.Errorf("the plain text also needs a version on the first line: %q", raw)
 	}
 }
 
@@ -166,19 +166,19 @@ func TestPlaintextWarnsOnlyOnce(t *testing.T) {
 // TestWithAKeyItDoesNotWriteInTheClear: the other side of it -- the option to
 // encrypt has to actually encrypt.
 func TestWithAKeyItDoesNotWriteInTheClear(t *testing.T) {
-	s, dir := storePronto(t)
+	s, dir := readyStore(t)
 	if err := s.Save("session=abc=="); err != nil {
 		t.Fatal(err)
 	}
-	bruto, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
+	raw, err := os.ReadFile(filepath.Join(dir, "gabriel-session.cred"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(bruto), "session=abc==") {
+	if strings.Contains(string(raw), "session=abc==") {
 		t.Error("with a key, it wrote in the clear")
 	}
-	if !strings.HasPrefix(string(bruto), formatEncrypted+"\n") {
-		t.Errorf("wrong header: %q", bruto[:min(20, len(bruto))])
+	if !strings.HasPrefix(string(raw), formatEncrypted+"\n") {
+		t.Errorf("wrong header: %q", raw[:min(20, len(raw))])
 	}
 }
 
@@ -186,7 +186,7 @@ func TestWithAKeyItDoesNotWriteInTheClear(t *testing.T) {
 // somebody removes the key, the store holds a value this process cannot read.
 // Falling back to the seed is right; returning garbage would be worse.
 func TestEncryptedWithoutAKeyFallsBackToTheSeed(t *testing.T) {
-	s, dir := storePronto(t)
+	s, dir := readyStore(t)
 	if err := s.Save("segredo"); err != nil {
 		t.Fatal(err)
 	}
@@ -211,13 +211,13 @@ func TestAKeyOfTheWrongLength(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv(EnvCredentialDir, dir)
-	for _, ruim := range []string{
+	for _, bad := range []string{
 		base64.StdEncoding.EncodeToString([]byte("curta")),
 		"isto nao e base64!!",
 	} {
-		t.Setenv(EnvCredentialKey, ruim)
+		t.Setenv(EnvCredentialKey, bad)
 		if err := (FileStore{Name: "x"}).CheckStore(); err == nil {
-			t.Errorf("accepted the key %q", ruim)
+			t.Errorf("accepted the key %q", bad)
 		}
 	}
 }
@@ -293,17 +293,17 @@ func TestPermissions(t *testing.T) {
 // for none at all, and a future version on a shared volume is a normal scenario
 // during a rollout.
 func TestAnUnreadableFileFallsBackToTheSeed(t *testing.T) {
-	casos := map[string][]byte{
+	cases := map[string][]byte{
 		"versao futura": []byte("brevis-cred/9\nqualquer coisa aqui dentro"),
 		"sem versao":    []byte("nao tem newline nenhum"),
 		"truncado":      []byte(formatEncrypted + "\ncurto"),
 		"nao decifra":   append([]byte(formatEncrypted+"\n"), make([]byte, 60)...),
 		"arquivo vazio": {},
 	}
-	for name, conteudo := range casos {
+	for name, content := range cases {
 		t.Run(name, func(t *testing.T) {
-			s, dir := storePronto(t)
-			if err := os.WriteFile(filepath.Join(dir, "gabriel-session.cred"), conteudo, 0o600); err != nil {
+			s, dir := readyStore(t)
+			if err := os.WriteFile(filepath.Join(dir, "gabriel-session.cred"), content, 0o600); err != nil {
 				t.Fatal(err)
 			}
 			got, err := s.Load()
@@ -347,17 +347,17 @@ func TestASwappedKeyDoesNotDecrypt(t *testing.T) {
 // TestAdulteracaoEDetectada: GCM autentica. Um byte trocado no texto cifrado
 // has to invalidate, and not produce garbage that becomes a credential.
 func TestTamperingIsDetected(t *testing.T) {
-	s, dir := storePronto(t)
+	s, dir := readyStore(t)
 	if err := s.Save("segredo"); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "gabriel-session.cred")
-	bruto, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	bruto[len(bruto)-1] ^= 0xff
-	if err := os.WriteFile(path, bruto, 0o600); err != nil {
+	raw[len(raw)-1] ^= 0xff
+	if err := os.WriteFile(path, raw, 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -372,9 +372,9 @@ func TestANameThatIsAPathIsRefused(t *testing.T) {
 	t.Setenv(EnvCredentialDir, t.TempDir())
 	t.Setenv(EnvCredentialKey, testKey(t))
 
-	for _, ruim := range []string{"", "../fora", "sub/dir", ".", ".."} {
-		if err := (FileStore{Name: ruim}).CheckStore(); err == nil {
-			t.Errorf("accepted Name = %q", ruim)
+	for _, bad := range []string{"", "../fora", "sub/dir", ".", ".."} {
+		if err := (FileStore{Name: bad}).CheckStore(); err == nil {
+			t.Errorf("accepted Name = %q", bad)
 		}
 	}
 }
@@ -382,14 +382,14 @@ func TestANameThatIsAPathIsRefused(t *testing.T) {
 // TestConcurrentWritesDoNotCorrupt: the last writer wins, and that is the
 // documented choice -- but the file has to stay readable, never half-written.
 func TestConcurrentWritesDoNotCorrupt(t *testing.T) {
-	s, _ := storePronto(t)
+	s, _ := readyStore(t)
 
-	pronto := make(chan struct{})
+	ready := make(chan struct{})
 	end := make(chan struct{})
 	for i := 0; i < 8; i++ {
 		go func(i int) {
 			defer func() { end <- struct{}{} }()
-			<-pronto
+			<-ready
 			for j := 0; j < 30; j++ {
 				if err := s.Save(strings.Repeat("v", i+1)); err != nil {
 					t.Errorf("Save: %v", err)
@@ -409,7 +409,7 @@ func TestConcurrentWritesDoNotCorrupt(t *testing.T) {
 			}
 		}(i)
 	}
-	close(pronto)
+	close(ready)
 	for i := 0; i < 8; i++ {
 		<-end
 	}
@@ -419,14 +419,14 @@ func TestConcurrentWritesDoNotCorrupt(t *testing.T) {
 // anything. A stored value is the result of the last rotation; the seed is what
 // somebody pasted in once, and it may have expired already.
 func TestTheStoreComesBeforeTheSeed(t *testing.T) {
-	s, _ := storePronto(t)
+	s, _ := readyStore(t)
 	if err := s.Save("do-store"); err != nil {
 		t.Fatal(err)
 	}
 
-	var sementeUsada bool
+	var seedUsed bool
 	c := &Credential{
-		Value:   func(context.Context) (string, error) { sementeUsada = true; return "da-semente", nil },
+		Value:   func(context.Context) (string, error) { seedUsed = true; return "da-semente", nil },
 		Apply:   AsCookie,
 		Refresh: &Refresh{URL: "http://x", Store: s},
 	}
@@ -438,14 +438,14 @@ func TestTheStoreComesBeforeTheSeed(t *testing.T) {
 	if got != "do-store" {
 		t.Errorf("Get = %q, want the store's value", got)
 	}
-	if sementeUsada {
+	if seedUsed {
 		t.Error("the seed was called even though there was a stored value")
 	}
 }
 
 // TestWithNoStoredValueItUsesTheSeed: the very first run.
 func TestWithNoStoredValueItUsesTheSeed(t *testing.T) {
-	s, _ := storePronto(t)
+	s, _ := readyStore(t)
 
 	c := &Credential{
 		Value:   func(context.Context) (string, error) { return "da-semente", nil },

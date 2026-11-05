@@ -56,7 +56,7 @@ type endings struct {
 	msg    map[string]string
 }
 
-func (e *endings) TerminarTask(ctx context.Context, _ uuid.UUID, step dom.StepKey, _ int,
+func (e *endings) FinishTask(ctx context.Context, _ uuid.UUID, step dom.StepKey, _ int,
 	status dom.Status, _ *int, failure string, _ string) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -87,7 +87,7 @@ func oneStep() wf.Workflow {
 func TestAStepWithNoVerdictIsNotASuccess(t *testing.T) {
 	rows := &endings{spyPersister: &spyPersister{}}
 	err := app.Runner{
-		RunID: uuid.New(), Persist: rows, Report: &coletor{}, Processo: &mute{},
+		RunID: uuid.New(), Persist: rows, Report: &collector{}, Process: &mute{},
 	}.Run(context.Background(), oneStep())
 
 	if err == nil {
@@ -109,7 +109,7 @@ func TestAnInterruptedStepEndsCanceledAndIsRecorded(t *testing.T) {
 	time.AfterFunc(20*time.Millisecond, cancel)
 
 	err := app.Runner{
-		RunID: uuid.New(), Persist: rows, Report: &coletor{}, Processo: exec, MaxAttempts: 3,
+		RunID: uuid.New(), Persist: rows, Report: &collector{}, Process: exec, MaxAttempts: 3,
 	}.Run(ctx, oneStep())
 
 	if err == nil {
@@ -162,7 +162,7 @@ func TestARunCutBetweenLevelsSaysItWasInterrupted(t *testing.T) {
 	exec := &lastWord{cancel: cancel}
 
 	err := app.Runner{
-		RunID: uuid.New(), Persist: rows, Report: &coletor{}, Processo: exec,
+		RunID: uuid.New(), Persist: rows, Report: &collector{}, Process: exec,
 	}.Run(ctx, twoLevels())
 
 	var interrupted app.ErrInterrupted
@@ -184,8 +184,8 @@ func TestARunCutInsideALevelSaysItWasInterrupted(t *testing.T) {
 	time.AfterFunc(20*time.Millisecond, cancel)
 
 	err := app.Runner{
-		RunID: uuid.New(), Persist: &endings{spyPersister: &spyPersister{}}, Report: &coletor{},
-		Processo: &mute{waitForCancel: true},
+		RunID: uuid.New(), Persist: &endings{spyPersister: &spyPersister{}}, Report: &collector{},
+		Process: &mute{waitForCancel: true},
 	}.Run(ctx, oneStep())
 
 	var interrupted app.ErrInterrupted
@@ -209,8 +209,8 @@ func (timedOut) Execute(context.Context, execution.TaskExec) (<-chan execution.E
 // requeued forever without spending an attempt.
 func TestAFailureMentioningAContextIsNotAnInterruption(t *testing.T) {
 	err := app.Runner{
-		RunID: uuid.New(), Persist: &endings{spyPersister: &spyPersister{}}, Report: &coletor{},
-		Processo: timedOut{},
+		RunID: uuid.New(), Persist: &endings{spyPersister: &spyPersister{}}, Report: &collector{},
+		Process: timedOut{},
 	}.Run(context.Background(), oneStep())
 
 	var interrupted app.ErrInterrupted
@@ -258,7 +258,7 @@ func TestAShutdownStopsAHostStepOnItsAgent(t *testing.T) {
 	time.AfterFunc(50*time.Millisecond, cancel)
 
 	err := app.Runner{
-		RunID: uuid.New(), Persist: rows, Report: &coletor{},
+		RunID: uuid.New(), Persist: rows, Report: &collector{},
 		Hosts: map[string]execution.Executor{
 			"box": &remote.Executor{Agent: agent, Host: "box", LeaseLimit: time.Minute},
 		},

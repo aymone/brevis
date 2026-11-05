@@ -107,7 +107,7 @@ func TestConcurrentTogglesEachRecordTheirChange(t *testing.T) {
 	var on bool
 	if err := pool.QueryRow(ctx, `
 		SELECT count(*) FILTER (WHERE kind = 'schedule.paused'), count(*) FILTER (WHERE kind = 'schedule.resumed'),
-		       (SELECT ativo FROM schedules WHERE workflow_slug = 'daily')
+		       (SELECT active FROM schedules WHERE workflow_slug = 'daily')
 		FROM events`).Scan(&paused, &resumed, &on); err != nil {
 		t.Fatal(err)
 	}

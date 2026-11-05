@@ -30,10 +30,11 @@
 #   - The console's message catalogs, web/i18n/locales/*.json. JSON is not an
 #     extension this reads; the English one is checked by ui-language-check,
 #     and pt-BR.json and es.json are Portuguese and Spanish on purpose.
-#   - The on-disk and wire formats listed in CONTRIBUTING.md -- the graph
-#     payload keys dag.js reads, postgres.Stage's tags, the migrations'
-#     columns, the checkpoint depot's file names. They are data, not prose,
-#     and renaming one is a migration rather than a translation.
+#   - The legacy spellings code reads for data an older release wrote -- the
+#     stage keys of postgres.Stage, the old checkpoint depot's names, the
+#     `Nome`/`Tipo`/`Descricao` param keys. Identifiers, keys and file names
+#     are English since migration 00033; these are single words read for
+#     compatibility, each documented where it lives.
 set -uo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
@@ -164,15 +165,13 @@ ALLOW = [
     # The language switcher names each language in ITS OWN language, which is
     # what a reader who cannot read the current one needs to find it.
     ("web/i18n/negotiate.go", None),
-    # SQL text: the column and table names are the Portuguese identifiers
-    # CONTRIBUTING.md keeps (criado_em, etapas, tentativas ...). They are
-    # judged by the SQL_RE skip below, not by path.
+    # SQL text: judged by the SQL_RE skip below, not by path. The schema is
+    # English since migration 00033; the old migrations still name the old
+    # columns, because they ran on a schema that spoke Portuguese.
     # The SDK's legacy stage keys ({"tipo":"etapa"}, v0.47.0 and earlier) are a
     # wire format read for compatibility; single words, so they never reach the
     # two-word rule, and this file also quotes the old payloads in prose.
     ("internal/application/execution/stages.go", None),
-    # The depot manifest's keys are an on-disk format (iniciado_em, ...).
-    ("sdk/internal/checkpoint/checkpoint.go", ["iniciado_em"]),
     # `marca` is a Portuguese alias of the `brand` command, kept so a script
     # that spoke it does not break; a flag/alias name, not prose.
     ("cmd/brevis/main.go", ["marca"]),

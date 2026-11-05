@@ -15,7 +15,7 @@ import (
 func TestCampoJSONStillReadsWhatJSONTokenReads(t *testing.T) {
 	body := []byte(`{"data":{"accessToken":"abc123"}}`)
 
-	novo, err := from.JSONToken("data.accessToken")(body)
+	fresh, err := from.JSONToken("data.accessToken")(body)
 	if err != nil {
 		t.Fatalf("JSONToken: %v", err)
 	}
@@ -24,10 +24,10 @@ func TestCampoJSONStillReadsWhatJSONTokenReads(t *testing.T) {
 		t.Fatalf("CampoJSON: %v", err)
 	}
 
-	if novo != old {
-		t.Fatalf("the alias diverged: JSONToken=%q CampoJSON=%q", novo, old)
+	if fresh != old {
+		t.Fatalf("the alias diverged: JSONToken=%q CampoJSON=%q", fresh, old)
 	}
-	if novo != "abc123" {
-		t.Fatalf("read %q, want %q", novo, "abc123")
+	if fresh != "abc123" {
+		t.Fatalf("read %q, want %q", fresh, "abc123")
 	}
 }

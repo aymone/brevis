@@ -88,7 +88,7 @@ func TestTheConfigCarriesTheBrandTheVersionAndTheServices(t *testing.T) {
 }
 
 type projectsFake struct {
-	api.Leitura
+	api.Reads
 	ps  []postgres.ProjectSummary
 	err error
 }

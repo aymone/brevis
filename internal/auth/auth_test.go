@@ -147,11 +147,11 @@ func TestProbesAndAssetsPassWithNoSession(t *testing.T) {
 
 func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 	cred := credential(t, "operador", "senha-de-teste-longa")
-	var visto string
+	var seen string
 	gate := &auth.Gate{
 		Cred: cred,
 		Next: http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-			visto = auth.De(r.Context())
+			seen = auth.OperatorOf(r.Context())
 		}),
 	}
 
@@ -166,8 +166,8 @@ func TestAValidSessionPassesAndCarriesTheUser(t *testing.T) {
 	rec := httptest.NewRecorder()
 	gate.ServeHTTP(rec, req)
 
-	if visto != "operador" {
-		t.Errorf("operator in the context = %q; want %q", visto, "operador")
+	if seen != "operador" {
+		t.Errorf("operator in the context = %q; want %q", seen, "operador")
 	}
 	if rec.Code == http.StatusSeeOther {
 		t.Error("the valid session was sent to the login")
@@ -201,15 +201,15 @@ func TestAForgedCookieDoesNotGetIn(t *testing.T) {
 // Trocar o segredo derruba as sessoes — e a alavanca de emergencia.
 func TestChangingTheSecretInvalidatesSessions(t *testing.T) {
 	cred := credential(t, "operador", "senha-de-teste-longa")
-	emissor := &auth.Gate{Cred: cred, Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})}
+	issuer := &auth.Gate{Cred: cred, Next: http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})}
 	rec := httptest.NewRecorder()
-	emissor.SignIn(rec, "operador", "senha-de-teste-longa")
+	issuer.SignIn(rec, "operador", "senha-de-teste-longa")
 	cookie := rec.Result().Cookies()[0]
 
-	novo := cred
-	novo.Secret = []byte("outro-segredo-completamente-diferente-32")
+	fresh := cred
+	fresh.Secret = []byte("outro-segredo-completamente-diferente-32")
 	gate := &auth.Gate{
-		Cred: novo,
+		Cred: fresh,
 		Next: http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			t.Error("the session survived the secret being changed")
 		}),
@@ -221,14 +221,14 @@ func TestChangingTheSecretInvalidatesSessions(t *testing.T) {
 
 // `/login?next=https://malicious` must not send the operator off-site.
 func TestAnExternalDestinationIsDiscarded(t *testing.T) {
-	for bruto, expected := range map[string]string{
+	for raw, expected := range map[string]string{
 		"https://malicioso.example": "/",
 		"//malicioso.example":       "/",
 		"/runs?pagina=2":            "/runs?pagina=2",
 		"":                          "/",
 	} {
-		if d := auth.Target(bruto); d != expected {
-			t.Errorf("Target(%q) = %q; want %q", bruto, d, expected)
+		if d := auth.Target(raw); d != expected {
+			t.Errorf("Target(%q) = %q; want %q", raw, d, expected)
 		}
 	}
 }
@@ -240,8 +240,8 @@ func TestAHalfCredentialIsRefused(t *testing.T) {
 	if err := (auth.Credential{Hash: "pbkdf2-sha256$1$a$b"}).Validate(); err == nil {
 		t.Error("a hash with no user was accepted")
 	}
-	curto := auth.Credential{User: "o", Hash: "pbkdf2-sha256$1$a$b", Secret: []byte("curto")}
-	if err := curto.Validate(); err == nil {
+	short := auth.Credential{User: "o", Hash: "pbkdf2-sha256$1$a$b", Secret: []byte("curto")}
+	if err := short.Validate(); err == nil {
 		t.Error("a secret that is too short was accepted")
 	}
 }

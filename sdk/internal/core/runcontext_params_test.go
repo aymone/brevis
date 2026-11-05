@@ -19,7 +19,7 @@ func TestParamList(t *testing.T) {
 		"numbers": "1,7,30",
 	}}
 
-	casos := map[string]struct {
+	cases := map[string]struct {
 		name string
 		want []string
 	}{
@@ -34,7 +34,7 @@ func TestParamList(t *testing.T) {
 		// than this package which width and which error handling it wants.
 		"integers stay strings": {"numbers", []string{"1", "7", "30"}},
 	}
-	for why, c := range casos {
+	for why, c := range cases {
 		if got := rc.ParamList(c.name); !reflect.DeepEqual(got, c.want) {
 			t.Errorf("%s: ParamList(%q) = %#v, want %#v", why, c.name, got, c.want)
 		}

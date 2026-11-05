@@ -15,9 +15,9 @@ import (
 // JSON by hand is how you produce a file the server reads differently, and
 // here is worse -- the same rule composes a KEY.
 func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
-	casos := []struct {
-		s           string
-		soSemantico bool
+	cases := []struct {
+		s            string
+		onlySemantic bool
 	}{
 		{"", false}, {"simples", false}, {"com espaço", false},
 		{`aspas "no meio"`, false},
@@ -30,7 +30,7 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 		{"válido " + string([]byte{0xff}) + " misturado", true},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		name := strings.Map(func(r rune) rune {
 			if r < 0x20 {
 				return '_'
@@ -44,28 +44,28 @@ func TestAppendJSONStringAgreesWithTheEncoder(t *testing.T) {
 			if err := enc.Encode(c.s); err != nil {
 				t.Fatal(err)
 			}
-			quero := strings.TrimSuffix(buf.String(), "\n")
+			want := strings.TrimSuffix(buf.String(), "\n")
 
 			got := string(AppendJSONString(nil, c.s))
-			if got == quero {
+			if got == want {
 				return
 			}
-			if !c.soSemantico {
-				t.Fatalf("%q:\n  mine     %s\n  Encoder  %s", c.s, got, quero)
+			if !c.onlySemantic {
+				t.Fatalf("%q:\n  mine     %s\n  Encoder  %s", c.s, got, want)
 			}
 
 			// Invalid UTF-8: 1.25's encoding/json escapes the U+FFFD and
 			// 1.27 writes the bytes. Both forms are the same code point, and
 			// the equality that counts there is of the value.
-			var meu, dele string
-			if err := json.Unmarshal([]byte(got), &meu); err != nil {
+			var mine, dele string
+			if err := json.Unmarshal([]byte(got), &mine); err != nil {
 				t.Fatalf("my output is not even valid JSON: %s", got)
 			}
-			if err := json.Unmarshal([]byte(quero), &dele); err != nil {
-				t.Fatalf("the encoder's output does not decode: %s", quero)
+			if err := json.Unmarshal([]byte(want), &dele); err != nil {
+				t.Fatalf("the encoder's output does not decode: %s", want)
 			}
-			if meu != dele {
-				t.Errorf("%q decodes differently:\n  mine    %q\n  Encoder %q", c.s, meu, dele)
+			if mine != dele {
+				t.Errorf("%q decodes differently:\n  mine    %q\n  Encoder %q", c.s, mine, dele)
 			}
 		})
 	}

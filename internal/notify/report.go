@@ -105,7 +105,7 @@ func (r Report) Slowest(limit int) []WorkflowInsight {
 	return out
 }
 
-// Reporter delivers a Report. A separate interface from Notificador because the
+// Reporter delivers a Report. A separate interface from Notifier because the
 // two carry different promises: a lost alert is somebody not being woken up, a
 // missed report is a week without a summary.
 type Reporter interface {
@@ -135,17 +135,17 @@ func (s *Slack) reportMessage(r Report) map[string]any {
 		summary = "*No run in this window.* Either nothing was scheduled, or nothing ran."
 	}
 
-	blocks := []bloco{
-		{"type": "header", "text": bloco{
+	blocks := []block{
+		{"type": "header", "text": block{
 			"type": "plain_text", "emoji": true,
 			"text": ":bar_chart: Brevis — pipelines" + s.environmentSuffix(),
 		}},
-		{"type": "context", "elements": []bloco{{"type": "mrkdwn", "text": window}}},
-		{"type": "section", "text": bloco{"type": "mrkdwn", "text": summary}},
+		{"type": "context", "elements": []block{{"type": "mrkdwn", "text": window}}},
+		{"type": "section", "text": block{"type": "mrkdwn", "text": summary}},
 	}
 
 	if worst := r.Worst(5); len(worst) > 0 {
-		blocks = append(blocks, bloco{"type": "section", "text": bloco{
+		blocks = append(blocks, block{"type": "section", "text": block{
 			"type": "mrkdwn", "text": "*Failed most:*\n" + list(worst, func(w WorkflowInsight) string {
 				return fmt.Sprintf("`%s` — %d of %d", w.Slug, w.Failed, w.Runs)
 			}),
@@ -153,7 +153,7 @@ func (s *Slack) reportMessage(r Report) map[string]any {
 	}
 
 	if slowest := r.Slowest(5); len(slowest) > 0 && slowest[0].Max > 0 {
-		blocks = append(blocks, bloco{"type": "section", "text": bloco{
+		blocks = append(blocks, block{"type": "section", "text": block{
 			"type": "mrkdwn", "text": "*Took longest:*\n" + list(slowest, func(w WorkflowInsight) string {
 				return fmt.Sprintf("`%s` — max %s, avg %s", w.Slug,
 					duration(w.Max), duration(w.Avg))
@@ -162,7 +162,7 @@ func (s *Slack) reportMessage(r Report) map[string]any {
 	}
 
 	if moved := volume(r); moved != "" {
-		blocks = append(blocks, bloco{"type": "section", "text": bloco{
+		blocks = append(blocks, block{"type": "section", "text": block{
 			"type": "mrkdwn", "text": "*Moved:*\n" + moved,
 		}})
 	}
@@ -173,7 +173,7 @@ func (s *Slack) reportMessage(r Report) map[string]any {
 	// engine does not collect them, and the honest source is the cluster's own
 	// metrics. Saying so is what keeps somebody from reading their absence as
 	// "nothing to report".
-	blocks = append(blocks, bloco{"type": "context", "elements": []bloco{
+	blocks = append(blocks, block{"type": "context", "elements": []block{
 		{"type": "mrkdwn", "text": "Infrastructure numbers are not in here — they live in your collector, scraped from `/metrics`."},
 	}})
 

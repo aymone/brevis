@@ -291,11 +291,11 @@ func writeTheme(b *strings.Builder, t Theme) {
 // withAlpha appends the alpha channel to a 6-digit colour. Short formats, or ones
 // that already carry alpha, are returned untouched — mixing channels would give
 // a wrong colour instead of a visible error.
-func withAlpha(colour, alfa string) string {
+func withAlpha(colour, alpha string) string {
 	if len(colour) != 7 {
 		return colour
 	}
-	return colour + alfa
+	return colour + alpha
 }
 
 // Lines splits the sentence for the template. The break is the author's, and

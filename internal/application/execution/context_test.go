@@ -34,12 +34,12 @@ func (c *capturer) Execute(ctx context.Context, t execution.TaskExec) (<-chan ex
 }
 
 // history answers whatever the test tells it to.
-type historico struct {
-	jaTeve bool
-	err    error
-	slug   string
-	nodeID string
-	exceto uuid.UUID
+type history struct {
+	alreadyHad bool
+	err        error
+	slug       string
+	nodeID     string
+	except     uuid.UUID
 
 	// settled is what an earlier attempt of the SAME run already finished, for
 	// the retry tests. Empty is the normal case: a first attempt has settled
@@ -51,16 +51,16 @@ type historico struct {
 	handovers map[dom.StepKey]execution.Handover
 }
 
-func (h *historico) StepHasSucceeded(ctx context.Context, slug, nodeID string, exceto uuid.UUID) (bool, error) {
-	h.slug, h.nodeID, h.exceto = slug, nodeID, exceto
-	return h.jaTeve, h.err
+func (h *history) StepHasSucceeded(ctx context.Context, slug, nodeID string, except uuid.UUID) (bool, error) {
+	h.slug, h.nodeID, h.except = slug, nodeID, except
+	return h.alreadyHad, h.err
 }
 
-func (h *historico) AlreadySucceeded(context.Context, uuid.UUID) (map[dom.StepKey]bool, error) {
+func (h *history) AlreadySucceeded(context.Context, uuid.UUID) (map[dom.StepKey]bool, error) {
 	return h.settled, h.err
 }
 
-func (h *historico) Handovers(context.Context, uuid.UUID) (map[dom.StepKey]execution.Handover, error) {
+func (h *history) Handovers(context.Context, uuid.UUID) (map[dom.StepKey]execution.Handover, error) {
 	return h.handovers, h.err
 }
 
@@ -74,7 +74,7 @@ func oneStepWorkflow() wf.Workflow {
 func runStep(t *testing.T, r app.Runner) execution.TaskExec {
 	t.Helper()
 	cap := &capturer{}
-	r.Processo = cap
+	r.Process = cap
 	if err := r.Run(context.Background(), oneStepWorkflow()); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -90,7 +90,7 @@ func TestTheStepsEnvironmentCarriesTheRunsContext(t *testing.T) {
 		Params:      map[string]string{"load_full": "true"},
 		Trigger:     "backfill",
 		LogicalDate: &when,
-		History:     &historico{jaTeve: false},
+		History:     &history{alreadyHad: false},
 	})
 
 	if task.Env["BREVIS_RUN_ID"] != id.String() {
@@ -118,7 +118,7 @@ func TestTheStepsEnvironmentCarriesTheRunsContext(t *testing.T) {
 func TestTheFirstRunIsPerStepNotPerWorkflow(t *testing.T) {
 	// A workflow with three fetchers writing into three tables would create only
 	// the first step's if the question were about the whole workflow.
-	h := &historico{jaTeve: false}
+	h := &history{alreadyHad: false}
 	id := uuid.New()
 
 	runStep(t, app.Runner{RunID: id, History: h})
@@ -127,13 +127,13 @@ func TestTheFirstRunIsPerStepNotPerWorkflow(t *testing.T) {
 		t.Errorf("the question has to be per (workflow, step): %q / %q", h.slug, h.nodeID)
 	}
 	// The current run itself must not count as a previous success.
-	if h.exceto != id {
-		t.Errorf("the current run has to be excluded from the query: %v", h.exceto)
+	if h.except != id {
+		t.Errorf("the current run has to be excluded from the query: %v", h.except)
 	}
 }
 
 func TestAStepWithAPreviousSuccessIsNotTheFirst(t *testing.T) {
-	task := runStep(t, app.Runner{RunID: uuid.New(), History: &historico{jaTeve: true}})
+	task := runStep(t, app.Runner{RunID: uuid.New(), History: &history{alreadyHad: true}})
 
 	if task.Env["BREVIS_RUN_FIRST"] != "false" {
 		t.Errorf("there was a success already, so it is not the first: %q", task.Env["BREVIS_RUN_FIRST"])
@@ -151,7 +151,7 @@ func TestWithNoHistoryItInventsNoFirstRun(t *testing.T) {
 }
 
 func TestAQueryFailureDoesNotBecomeATableCreation(t *testing.T) {
-	h := &historico{err: context.DeadlineExceeded}
+	h := &history{err: context.DeadlineExceeded}
 	task := runStep(t, app.Runner{RunID: uuid.New(), History: h})
 
 	if task.Env["BREVIS_RUN_FIRST"] != "false" {
@@ -163,7 +163,7 @@ func TestTheRunnersEnvironmentWinsACollision(t *testing.T) {
 	// If somebody set the variable in the runner's configuration, they meant to.
 	task := runStep(t, app.Runner{
 		RunID:   uuid.New(),
-		History: &historico{jaTeve: false},
+		History: &history{alreadyHad: false},
 		Env:     map[string]string{"BREVIS_RUN_FIRST": "false", "OUTRA": "coisa"},
 	})
 
@@ -179,12 +179,12 @@ func TestTheRunnersEnvironmentWinsACollision(t *testing.T) {
 }
 
 func TestWithNoParamsItInjectsNoEmptyVariable(t *testing.T) {
-	task := runStep(t, app.Runner{RunID: uuid.New(), History: &historico{}})
+	task := runStep(t, app.Runner{RunID: uuid.New(), History: &history{}})
 
-	if _, existe := task.Env["BREVIS_RUN_PARAMS"]; existe {
+	if _, exists := task.Env["BREVIS_RUN_PARAMS"]; exists {
 		t.Error("with no params the variable should not exist rather than exist empty")
 	}
-	if _, existe := task.Env["BREVIS_RUN_TRIGGER"]; existe {
+	if _, exists := task.Env["BREVIS_RUN_TRIGGER"]; exists {
 		t.Error("same for no trigger")
 	}
 }
@@ -197,11 +197,11 @@ func TestWithNoRunIDItInventsNoManagedRun(t *testing.T) {
 	// um id inventado.
 	task := runStep(t, app.Runner{
 		Params:  map[string]string{"create_table": "true"},
-		History: &historico{jaTeve: false},
+		History: &history{alreadyHad: false},
 	})
 
 	for _, v := range []string{"BREVIS_RUN_ID", "BREVIS_RUN_FIRST", "BREVIS_RUN_ATTEMPT"} {
-		if _, existe := task.Env[v]; existe {
+		if _, exists := task.Env[v]; exists {
 			t.Errorf("%s should not exist without a real run: %q", v, task.Env[v])
 		}
 	}
@@ -216,7 +216,7 @@ func TestTheAttemptStartsAtZeroAsInTheDatabase(t *testing.T) {
 	// The task_runs.attempt column has DEFAULT 0, and the pod's name derives
 	// from it.
 	// Diverging here would make the step report an attempt that does not exist.
-	task := runStep(t, app.Runner{RunID: uuid.New(), History: &historico{}})
+	task := runStep(t, app.Runner{RunID: uuid.New(), History: &history{}})
 
 	if task.Env["BREVIS_RUN_ATTEMPT"] != "0" {
 		t.Errorf("first attempt = %q, expected \"0\"", task.Env["BREVIS_RUN_ATTEMPT"])
@@ -239,7 +239,7 @@ func TestTheDispatchersPath(t *testing.T) {
 		Params:      map[string]string{"load_full": "true"},
 		Trigger:     "schedule",
 		LogicalDate: &when,
-		History:     &historico{jaTeve: false},
+		History:     &history{alreadyHad: false},
 		Env:         map[string]string{"PATH": "/usr/bin", "HOME": "/root"},
 	})
 

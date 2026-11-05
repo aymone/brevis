@@ -74,7 +74,7 @@ func TestFailingWorkflowsAreTheOnesWhoseLastFinishedRunFailed(t *testing.T) {
 	declared(t, pool, "sales", "long", "recent", "older", "recovered", "paused", "busy", "never_ran", "canceled_last")
 	declared(t, pool, "copy", "long") // the same slug in another project is the same runs
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO schedules (id, workflow_slug, cron, ativo) VALUES (gen_random_uuid(), 'paused', '0 4 * * *', false)`); err != nil {
+		INSERT INTO schedules (id, workflow_slug, cron, active) VALUES (gen_random_uuid(), 'paused', '0 4 * * *', false)`); err != nil {
 		t.Fatal(err)
 	}
 
@@ -121,12 +121,12 @@ func TestLogsDaRunCarriesWhenEachAttemptStarted(t *testing.T) {
 	id := finished(t, pool, "daily", dom.StatusFailed, time.Hour)
 	at := time.Date(2026, 10, 28, 3, 12, 0, 0, time.UTC)
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO task_runs (id, run_id, node_id, status, attempt, iniciado_em) VALUES
+		INSERT INTO task_runs (id, run_id, node_id, status, attempt, started_at) VALUES
 		  (gen_random_uuid(), $1, 'load', 'failed', 1, $2),
 		  (gen_random_uuid(), $1, 'report', 'pending', 0, NULL)`, id, at); err != nil {
 		t.Fatal(err)
 	}
-	logs, err := postgres.NewRunRepo(pool).LogsDaRun(ctx, id)
+	logs, err := postgres.NewRunRepo(pool).RunLogs(ctx, id)
 	if err != nil || len(logs) != 2 {
 		t.Fatalf("LogsDaRun = %+v, %v", logs, err)
 	}
@@ -145,7 +145,7 @@ func BenchmarkFailingWorkflows(b *testing.B) {
 		INSERT INTO projects (id, slug, name) VALUES (gen_random_uuid(), 'bench', 'bench');
 		INSERT INTO workflows (id, project_id, slug, name)
 		SELECT gen_random_uuid(), (SELECT id FROM projects), 'wf_' || g, 'wf_' || g FROM generate_series(1, 1000) g;
-		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definicao, criado_em, terminado_em)
+		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definition, created_at, finished_at)
 		SELECT gen_random_uuid(), 'wf_' || w, 'bench-' || w || '-' || d,
 		  CASE
 		    WHEN d = 50 AND w % 97 = 0 THEN 'running'

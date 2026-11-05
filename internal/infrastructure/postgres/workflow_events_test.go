@@ -63,7 +63,7 @@ func TestPublishingAWorkflowIsRecordedOnlyWhenItChanges(t *testing.T) {
 		daily("", "load v2"),          // the schedule went away
 		daily("", "load v2"),          // the same
 	} {
-		if err := repo.Publicar(ctx, w, sales, "cli"); err != nil {
+		if err := repo.Publish(ctx, w, sales, "cli"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -106,7 +106,7 @@ func TestAFailedPublishLeavesNoEvent(t *testing.T) {
 		_, _ = pool.Exec(ctx, `DROP TRIGGER refuse ON schedules; DROP FUNCTION refuse_schedule()`)
 	})
 
-	if err := postgres.NewWorkflowRepo(pool).Publicar(ctx, daily("0 4 * * *", "load"), sales, "cli"); err == nil {
+	if err := postgres.NewWorkflowRepo(pool).Publish(ctx, daily("0 4 * * *", "load"), sales, "cli"); err == nil {
 		t.Fatal("the publish did not fail")
 	}
 	if got := recorded(t, pool); got != "" {
@@ -123,7 +123,7 @@ func TestPruningRecordsEachWorkflowRemoved(t *testing.T) {
 	for _, slug := range []string{"keep", "old_a", "old_b"} {
 		w := daily("", "load")
 		w.Slug, w.Name = slug, slug
-		if err := repo.Publicar(ctx, w, sales, "cli"); err != nil {
+		if err := repo.Publish(ctx, w, sales, "cli"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -131,7 +131,7 @@ func TestPruningRecordsEachWorkflowRemoved(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	removed, err := repo.Podar(ctx, sales, []string{"keep"}, "cli")
+	removed, err := repo.Prune(ctx, sales, []string{"keep"}, "cli")
 	if err != nil || len(removed) != 2 {
 		t.Fatalf("Prune = %v, %v", removed, err)
 	}

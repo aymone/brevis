@@ -7,17 +7,16 @@ import (
 
 // TestTheManifestKeysAreTheOnDiskFormat pins the manifest's JSON keys.
 //
-// They are Portuguese while the code around them is English, and that looks
-// like an oversight, which is exactly why this test exists: a rename here does
-// not fail to compile and does not fail loudly at runtime.
+// A rename here does not fail to compile and does not fail loudly at runtime,
+// which is exactly why this test exists.
 //
 // What it costs, per key:
 //
-//   - "registros": the count check goes silent, and a truncated depot loads
+//   - "records": the count check goes silent, and a truncated depot loads
 //     fewer rows than the first attempt did;
-//   - "partes": every resume finds an empty depot and re-extracts, spending
+//   - "parts": every resume finds an empty depot and re-extracts, spending
 //     the vendor quota this package exists to save;
-//   - "numeros": UseNumber is never turned on, `19.0` comes back as `19`, and
+//   - "numbers": UseNumber is never turned on, `19.0` comes back as `19`, and
 //     every ingestion_id of the resumed attempt differs from the first one's.
 //     No error, no log -- a duplicated row after the next merge.
 //
@@ -26,7 +25,7 @@ import (
 func TestTheManifestKeysAreTheOnDiskFormat(t *testing.T) {
 	b, err := json.Marshal(Manifest{
 		Version: manifestVersion, Records: 2,
-		Parts: []string{"parte-00000.ndjson"}, Numbers: NumbersLiteral,
+		Parts: []string{"part-00000.ndjson"}, Numbers: NumbersLiteral,
 		Pipeline: "p", Run: "r", WrittenAt: "2026-09-06T00:00:00Z",
 	})
 	if err != nil {
@@ -38,18 +37,37 @@ func TestTheManifestKeysAreTheOnDiskFormat(t *testing.T) {
 		t.Fatalf("unmarshal: %v", err)
 	}
 
-	for _, key := range []string{"versao", "registros", "partes", "numeros", "gravado_em"} {
+	for _, key := range []string{"version", "records", "parts", "numbers", "written_at"} {
 		if _, ok := got[key]; !ok {
-			t.Errorf("the manifest no longer writes %q; a depot written by a released "+
-				"SDK stops being readable, and the failure is silent. Full manifest: %s",
-				key, b)
+			t.Errorf("the manifest no longer writes %q. Full manifest: %s", key, b)
 		}
 	}
-
-	if manifestFile != "_completo" {
-		t.Errorf("the manifest file is %q, and a released SDK wrote _completo", manifestFile)
+	if len(got) != 7 {
+		t.Errorf("the manifest has %d keys, want 7: %s", len(got), b)
 	}
-	if partPattern != "parte-%05d.ndjson" {
-		t.Errorf("the part pattern is %q, and a released SDK wrote parte-%%05d.ndjson", partPattern)
+
+	if manifestFile != "_complete" {
+		t.Errorf("the manifest file is %q, want _complete", manifestFile)
+	}
+	if partPattern != "part-%05d.ndjson" {
+		t.Errorf("the part pattern is %q, want part-%%05d.ndjson", partPattern)
+	}
+}
+
+// A depot written by an SDK before the keys went English holds `_completo` and
+// Portuguese keys; it must still be read, or a resume across the upgrade
+// re-extracts and spends the vendor's quota again.
+func TestAManifestWrittenBeforeTheRenameStillReads(t *testing.T) {
+	old := `{"versao":1,"registros":2,"partes":["parte-00000.ndjson"],"numeros":"literal","pipeline":"p","run":"r","gravado_em":"2026-09-06T00:00:00Z"}`
+	var m Manifest
+	if err := json.Unmarshal([]byte(old), &m); err != nil {
+		t.Fatal(err)
+	}
+	if m.Version != manifestVersion || m.Records != 2 || len(m.Parts) != 1 || m.Parts[0] != "parte-00000.ndjson" ||
+		m.Numbers != NumbersLiteral || m.Pipeline != "p" || m.Run != "r" || m.WrittenAt != "2026-09-06T00:00:00Z" {
+		t.Errorf("read %+v", m)
+	}
+	if legacyManifestFile != "_completo" {
+		t.Errorf("the legacy manifest file is %q, and an earlier SDK wrote _completo", legacyManifestFile)
 	}
 }

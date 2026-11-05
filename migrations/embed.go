@@ -1,4 +1,4 @@
-// Package migrations embute o SQL de schema no binario.
+// Package migrations embeds the schema SQL in the binary.
 //
 // The embed lives here, and not in the postgres package, because `//go:embed`
 // only reaches files in the package's own directory — it does not take `../`.

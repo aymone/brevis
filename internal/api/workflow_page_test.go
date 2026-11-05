@@ -11,9 +11,9 @@ import (
 // its project and schedule state), its runs and its numbers.
 type workflowReads struct {
 	readsFake
-	ind  postgres.Indicators
-	runs []postgres.RunSummary
-	days []postgres.Day
+	indicators postgres.Indicators
+	runs       []postgres.RunSummary
+	days       []postgres.Day
 	// day is the day the history was asked for, when one was.
 	day **time.Time
 }
@@ -25,7 +25,7 @@ func (f workflowReads) WorkflowHistory(_ context.Context, _ string, day *time.Ti
 	return f.runs, nil
 }
 func (f workflowReads) IndicatorsFor(context.Context, time.Duration, string) (postgres.Indicators, error) {
-	return f.ind, nil
+	return f.indicators, nil
 }
 func (f workflowReads) RunsPerDay(context.Context, string, int) ([]postgres.Day, error) {
 	return f.days, nil

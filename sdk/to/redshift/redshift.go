@@ -160,7 +160,7 @@ func (t Table) Write(ctx context.Context, envelopes []core.Envelope, opt core.Wr
 			// DELETE would trade a small problem for a big one. The warning is
 			// what says it stayed.
 			if err := t.remove(ctx, loc.Bucket, key); err != nil {
-				avisarSobra(ctx, uri, err)
+				warnLeftover(ctx, uri, err)
 			}
 		}()
 	}
@@ -268,8 +268,8 @@ func EncodeNDJSON(envelopes []core.Envelope, columns []string) ([]byte, error) {
 		buf.WriteByte('{')
 		first := true
 		for j, c := range columns {
-			v, tem := obj[c]
-			if !tem {
+			v, has := obj[c]
+			if !has {
 				// A missing column does not become null: with FORMAT AS JSON
 				// 'auto' the absence leaves the column NULL, and writing an
 				// explicit null would cost bytes without changing anything.

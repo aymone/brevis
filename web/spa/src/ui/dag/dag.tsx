@@ -40,7 +40,7 @@ function columnLabels(nodes: GNode[], word: string): GNode[] {
   const xs = new Set<number>();
   let top = Infinity;
   for (const n of nodes) {
-    if (n.parentId || n.type === "grupo" || n.type === "stage") continue;
+    if (n.parentId || n.type === "group" || n.type === "stage") continue;
     xs.add(n.position.x);
     top = Math.min(top, n.position.y);
   }
@@ -108,9 +108,9 @@ function Inspector({ node, stages, close }: { node: GNode; stages: GNode[]; clos
   const rows: [string, string][] = [
     [t("graph.insp.step"), node.id],
     [t("graph.insp.state"), t(`state.${tone(d.status)}`)],
-    ...(d.acao ? [[t("graph.insp.command"), words(d.acao)] as [string, string]] : []),
-    ...(d.duracao_ms ? [[t("graph.insp.duration"), duration(d.duracao_ms)] as [string, string]] : []),
-    ...(typeof d.tentativa === "number" ? [[t("graph.insp.attempt"), String(d.tentativa + 1)] as [string, string]] : []),
+    ...(d.action ? [[t("graph.insp.command"), words(d.action)] as [string, string]] : []),
+    ...(d.duration_ms ? [[t("graph.insp.duration"), duration(d.duration_ms)] as [string, string]] : []),
+    ...(typeof d.attempt === "number" ? [[t("graph.insp.attempt"), String(d.attempt + 1)] as [string, string]] : []),
     ...(typeof d.exit_code === "number" ? [[t("graph.insp.exit_code"), String(d.exit_code)] as [string, string]] : []),
     ...(d.runtime ? [[t("graph.insp.runtime"), `${langLabel(d.runtime)} (${sourceWord(d.runtime_source)})`] as [string, string]] : []),
     ...(d.tools?.length ? [[t("graph.insp.tools"), (d.tools as string[]).map(langLabel).join(", ")] as [string, string]] : []),
@@ -143,10 +143,10 @@ function Inspector({ node, stages, close }: { node: GNode; stages: GNode[]; clos
         <div className="stages">
           <h4>{d.sdk ? t("graph.insp.stages_sdk", { sdk: d.sdk }) : t("graph.insp.stages")}</h4>
           {stages.map((s) => (
-            <div key={s.id} className="stage-row" style={{ color: `var(--st-${stageTone(s.data.estado)})` }}>
-              <b>{words(s.data.rotulo || s.data.nome)}</b>
+            <div key={s.id} className="stage-row" style={{ color: `var(--st-${stageTone(s.data.state)})` }}>
+              <b>{words(s.data.label || s.data.name)}</b>
               <span className="muted">{s.data.ms !== null && s.data.ms !== undefined ? duration(s.data.ms) : "—"}</span>
-              {Object.entries((s.data.numeros ?? {}) as Record<string, unknown>).map(([k, v]) => (
+              {Object.entries((s.data.numbers ?? {}) as Record<string, unknown>).map(([k, v]) => (
                 <span key={k} className="mono" style={{ color: "var(--fg)" }}>
                   {k}={String(v)}
                 </span>
@@ -155,7 +155,7 @@ function Inspector({ node, stages, close }: { node: GNode; stages: GNode[]; clos
           ))}
         </div>
       )}
-      {d.erro && <pre>{d.erro}</pre>}
+      {d.error && <pre>{d.error}</pre>}
     </aside>
   );
 }
@@ -227,10 +227,10 @@ export default function Dag({ src, runId, onPick }: Props) {
     const withStages = new Set(all.flatMap((n) => (n.parentId ? [n.parentId] : [])));
     // A collapsed group swallows its steps (and their phases); edges into it point at the box.
     const hidden = new Map<string, string>();
-    for (const n of all) if (n.type === "grupo" && collapsed[n.id]) hidden.set(String(n.data.label), n.id);
+    for (const n of all) if (n.type === "group" && collapsed[n.id]) hidden.set(String(n.data.label), n.id);
     const swallowed = new Map<string, string>();
     for (const n of all) {
-      const grp = n.data?.grupo as string | undefined;
+      const grp = n.data?.group as string | undefined;
       if (grp && hidden.has(grp)) swallowed.set(n.id, hidden.get(grp)!);
     }
 
@@ -238,11 +238,11 @@ export default function Dag({ src, runId, onPick }: Props) {
     for (const n of all) {
       if (n.parentId && collapsed[n.parentId]) continue;
       if (swallowed.has(n.id) || (n.parentId && swallowed.has(n.parentId))) continue;
-      if (n.type === "grupo") {
-        const members = all.filter((o) => o.data?.grupo === n.data.label).length;
+      if (n.type === "group") {
+        const members = all.filter((o) => o.data?.group === n.data.label).length;
         nodes.push({
           ...n,
-          data: { ...n.data, membros: members, collapsed: !!collapsed[n.id], onToggle: () => toggle(n.id) },
+          data: { ...n.data, members: members, collapsed: !!collapsed[n.id], onToggle: () => toggle(n.id) },
           style: collapsed[n.id] ? { width: NODE_W, height: 46 } : n.style,
         });
       } else if (withStages.has(n.id)) {
@@ -254,7 +254,7 @@ export default function Dag({ src, runId, onPick }: Props) {
     const sel = selected ? all.find((n) => n.id === selected) : undefined;
     const path = sel ? ties(g.edges ?? []).around(sel.parentId ?? sel.id) : null;
     if (path) {
-      nodes = nodes.map((n) => (n.type === "grupo" || path.has(n.parentId ?? n.id) ? n : { ...n, style: { ...n.style, opacity: 0.35 } }));
+      nodes = nodes.map((n) => (n.type === "group" || path.has(n.parentId ?? n.id) ? n : { ...n, style: { ...n.style, opacity: 0.35 } }));
     }
     const labels = columnLabels(all, stageWord);
     const edges = (g.edges ?? [])

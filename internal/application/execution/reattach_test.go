@@ -79,14 +79,14 @@ type attempts struct {
 	msg     map[int]string
 }
 
-func (a *attempts) IniciarTask(_ context.Context, _ uuid.UUID, _ dom.StepKey, attempt int) error {
+func (a *attempts) StartTask(_ context.Context, _ uuid.UUID, _ dom.StepKey, attempt int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.started = append(a.started, attempt)
 	return nil
 }
 
-func (a *attempts) TerminarTask(_ context.Context, _ uuid.UUID, _ dom.StepKey, attempt int,
+func (a *attempts) FinishTask(_ context.Context, _ uuid.UUID, _ dom.StepKey, attempt int,
 	status dom.Status, _ *int, failure string, _ string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -99,23 +99,23 @@ func (a *attempts) TerminarTask(_ context.Context, _ uuid.UUID, _ dom.StepKey, a
 
 // resumeAfterHandover is the next scheduler's run: one host step, handed over
 // at attempt 1 by the scheduler before.
-func resumeAfterHandover(t *testing.T, exec *following) (*attempts, *coletor, error) {
+func resumeAfterHandover(t *testing.T, exec *following) (*attempts, *collector, error) {
 	t.Helper()
 	rows := &attempts{spyPersister: &spyPersister{}}
-	report := &coletor{}
+	report := &collector{}
 	h := execution.Handover{Instance: "http://agent-0:9443", ExecutionID: "daily:long:x:r0:a1", Attempt: 1, After: 7}
 	err := app.Runner{
 		RunID: uuid.New(), Persist: rows, Report: report, MaxAttempts: 3,
-		History: &historico{handovers: map[dom.StepKey]execution.Handover{dom.Step("long"): h}},
+		History: &history{handovers: map[dom.StepKey]execution.Handover{dom.Step("long"): h}},
 		Hosts:   map[string]execution.Executor{"box": exec},
 	}.Run(context.Background(), wf.Workflow{Slug: "daily", Nodes: []wf.Node{{ID: "long", Host: "box", Run: "sleep 600"}}})
 	return rows, report, err
 }
 
-func said(c *coletor, text string) bool {
+func said(c *collector, text string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	for _, e := range c.eventos {
+	for _, e := range c.events {
 		if strings.Contains(e.Message, text) {
 			return true
 		}
@@ -261,7 +261,7 @@ func TestAStepOutlivesItsSchedulerAndIsFollowedToItsEnd(t *testing.T) {
 			// The scheduler that stops: a SIGTERM while the step sleeps.
 			ctx, sigterm := context.WithCancelCause(context.Background())
 			time.AfterFunc(300*time.Millisecond, func() { sigterm(execution.ErrShutdown) })
-			err := app.Runner{RunID: runID, Persist: rows, History: rows, Report: &coletor{}, Hosts: hosts}.Run(ctx, w)
+			err := app.Runner{RunID: runID, Persist: rows, History: rows, Report: &collector{}, Hosts: hosts}.Run(ctx, w)
 			var interrupted app.ErrInterrupted
 			if !errors.As(err, &interrupted) {
 				t.Fatalf("the first scheduler's run returned %v; wanted ErrInterrupted", err)
@@ -274,7 +274,7 @@ func TestAStepOutlivesItsSchedulerAndIsFollowedToItsEnd(t *testing.T) {
 			// step has ENDED on its agent, so what is followed is the outcome
 			// the agent kept (#128), and a small ring has lost the start.
 			time.Sleep(1500 * time.Millisecond)
-			report := &coletor{}
+			report := &collector{}
 			err = app.Runner{RunID: runID, Persist: rows, History: rows, Report: report, Hosts: hosts}.
 				Run(context.Background(), w)
 			if c.lost {

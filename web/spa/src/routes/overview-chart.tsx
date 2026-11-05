@@ -85,8 +85,8 @@ export function RunsChart({ buckets, grain }: { buckets?: Bucket[]; grain: "hour
             const hs = h(b.succeeded), hf = h(b.failed), ho = h(b.running + b.queued);
             const ys = util - hs, yf = ys - hf, yo = yf - ho;
             return (
-              <Link key={b.start} to={link(b)} className="grafico-alvo">
-                <rect className="grafico-faixa" x={band} y="0" width={Math.floor(step)} height={H - BOTTOM} rx="3" />
+              <Link key={b.start} to={link(b)} className="chart-target">
+                <rect className="chart-band" x={band} y="0" width={Math.floor(step)} height={H - BOTTOM} rx="3" />
                 <rect x={x} y={ys} width={width} height={hs} rx="2" fill="var(--color-state-success)" />
                 <rect x={x} y={yf} width={width} height={hf} rx="2" fill="var(--color-state-failed)" />
                 <rect x={x} y={yo} width={width} height={ho} rx="2" fill="var(--color-state-running)" />

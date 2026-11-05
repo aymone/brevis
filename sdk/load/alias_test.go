@@ -18,12 +18,12 @@ func TestDeprecatedNamesStillResolve(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PlanoDeCriacao: %v", err)
 	}
-	novo, err := CreationPlan(cfg, "d.t")
+	fresh, err := CreationPlan(cfg, "d.t")
 	if err != nil {
 		t.Fatalf("CreationPlan: %v", err)
 	}
-	if old != novo {
-		t.Fatalf("the alias diverged: PlanoDeCriacao=%v CreationPlan=%v", old, novo)
+	if old != fresh {
+		t.Fatalf("the alias diverged: PlanoDeCriacao=%v CreationPlan=%v", old, fresh)
 	}
 	if CriarPorSQL != CreateFromSQL || CriarPorSchema != CreateFromSchema {
 		t.Fatal("the constant aliases diverged from what they alias")

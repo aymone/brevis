@@ -15,12 +15,12 @@ import (
 	wf "brevis.sh/brevis/internal/domain/workflow"
 )
 
-// WorkflowRepo persiste a definicao publicada de um workflow.
+// WorkflowRepo persists the published definition of a workflow.
 type WorkflowRepo struct{ pool *Pool }
 
 func NewWorkflowRepo(p *Pool) *WorkflowRepo { return &WorkflowRepo{pool: p} }
 
-// Publicar writes the workflow and its schedule in one transaction.
+// Publish writes the workflow and its schedule in one transaction.
 //
 // Both things together, and not in separate calls: publishing the graph without
 // the schedule would leave a workflow that never fires, and the schedule without
@@ -31,7 +31,7 @@ func NewWorkflowRepo(p *Pool) *WorkflowRepo { return &WorkflowRepo{pool: p} }
 // schedule -- is in the events feed, in the same transaction, with actor as
 // who did it. One that changed nothing is not: a CI republishing everything on
 // every deploy must not fill the feed.
-func (r *WorkflowRepo) Publicar(ctx context.Context, w wf.Workflow, projeto uuid.UUID, actor string) error {
+func (r *WorkflowRepo) Publish(ctx context.Context, w wf.Workflow, project uuid.UUID, actor string) error {
 	def, err := json.Marshal(w)
 	if err != nil {
 		return err
@@ -47,34 +47,34 @@ func (r *WorkflowRepo) Publicar(ctx context.Context, w wf.Workflow, projeto uuid
 	// publish of the same workflow compares against this one's result.
 	var exists, graphChanged, scheduleChanged bool
 	err = tx.QueryRow(ctx, `
-		SELECT true, w.definicao IS DISTINCT FROM $3::jsonb,
+		SELECT true, w.definition IS DISTINCT FROM $3::jsonb,
 		       s.cron IS DISTINCT FROM NULLIF($4, '')
 		FROM workflows w LEFT JOIN schedules s ON s.workflow_slug = w.slug
 		WHERE w.project_id = $1 AND w.slug = $2
-		FOR UPDATE OF w`, projeto, w.Slug, def, w.Schedule).Scan(&exists, &graphChanged, &scheduleChanged)
+		FOR UPDATE OF w`, project, w.Slug, def, w.Schedule).Scan(&exists, &graphChanged, &scheduleChanged)
 	if errors.Is(err, pgx.ErrNoRows) {
 		scheduleChanged = w.Schedule != ""
 	} else if err != nil {
 		return err
 	}
 	if !exists || graphChanged || scheduleChanged {
-		var project string
-		if err := tx.QueryRow(ctx, `SELECT slug FROM projects WHERE id = $1`, projeto).Scan(&project); err != nil {
+		var projectSlug string
+		if err := tx.QueryRow(ctx, `SELECT slug FROM projects WHERE id = $1`, project).Scan(&projectSlug); err != nil {
 			return err
 		}
 		if err := recordEvent(ctx, tx, events.WorkflowPublished, w.Slug, actor, map[string]any{
-			"project": project, "new": !exists, "schedule_changed": scheduleChanged,
+			"project": projectSlug, "new": !exists, "schedule_changed": scheduleChanged,
 		}); err != nil {
 			return err
 		}
 	}
 
 	_, err = tx.Exec(ctx, `
-		INSERT INTO workflows (id, project_id, slug, name, definicao)
+		INSERT INTO workflows (id, project_id, slug, name, definition)
 		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (project_id, slug) DO UPDATE
-		SET name = EXCLUDED.name, definicao = EXCLUDED.definicao, updated_at = now()`,
-		uuid.New(), projeto, w.Slug, w.Name, def)
+		SET name = EXCLUDED.name, definition = EXCLUDED.definition, updated_at = now()`,
+		uuid.New(), project, w.Slug, w.Name, def)
 	if err != nil {
 		return fmt.Errorf("publishing workflow %q: %w", w.Slug, err)
 	}
@@ -88,15 +88,15 @@ func (r *WorkflowRepo) Publicar(ctx context.Context, w wf.Workflow, projeto uuid
 		return tx.Commit(ctx)
 	}
 
-	// `ultimo_slot` is NOT overwritten on update: republishing a workflow must
+	// `last_slot` is NOT overwritten on update: republishing a workflow must
 	// not
 	// make the scheduler recreate slots that were already materialized.
 	_, err = tx.Exec(ctx, `
-		INSERT INTO schedules (id, workflow_slug, cron, timezone, catchup, ativo)
+		INSERT INTO schedules (id, workflow_slug, cron, timezone, catchup, active)
 		VALUES ($1, $2, $3, $4, $5, true)
 		ON CONFLICT (workflow_slug) DO UPDATE
 		SET cron = EXCLUDED.cron, timezone = EXCLUDED.timezone,
-		    catchup = EXCLUDED.catchup, atualizado_em = now()`,
+		    catchup = EXCLUDED.catchup, updated_at = now()`,
 		uuid.New(), w.Slug, w.Schedule, "UTC", false)
 	if err != nil {
 		return fmt.Errorf("publishing the schedule for %q: %w", w.Slug, err)
@@ -106,20 +106,20 @@ func (r *WorkflowRepo) Publicar(ctx context.Context, w wf.Workflow, projeto uuid
 
 // Definition le o grafo publicado.
 func (r *WorkflowRepo) Definition(ctx context.Context, slug string) (wf.Workflow, error) {
-	var bruto []byte
+	var raw []byte
 	if err := r.pool.QueryRow(ctx,
-		`SELECT definicao FROM workflows WHERE slug = $1`, slug).Scan(&bruto); err != nil {
+		`SELECT definition FROM workflows WHERE slug = $1`, slug).Scan(&raw); err != nil {
 		return wf.Workflow{}, fmt.Errorf("workflow %q: %w", slug, err)
 	}
 	var w wf.Workflow
-	return w, json.Unmarshal(bruto, &w)
+	return w, json.Unmarshal(raw, &w)
 }
 
 // Definitions is every published workflow's current definition, by slug, in
 // one query: what a page that shows many workflows reads instead of one
 // Definition per row.
 func (r *WorkflowRepo) Definitions(ctx context.Context) (map[string]wf.Workflow, error) {
-	rows, err := r.pool.Query(ctx, `SELECT slug, definicao FROM workflows`)
+	rows, err := r.pool.Query(ctx, `SELECT slug, definition FROM workflows`)
 	if err != nil {
 		return nil, err
 	}
@@ -128,12 +128,12 @@ func (r *WorkflowRepo) Definitions(ctx context.Context) (map[string]wf.Workflow,
 	out := map[string]wf.Workflow{}
 	for rows.Next() {
 		var slug string
-		var bruto []byte
-		if err := rows.Scan(&slug, &bruto); err != nil {
+		var raw []byte
+		if err := rows.Scan(&slug, &raw); err != nil {
 			return nil, err
 		}
 		var w wf.Workflow
-		if err := json.Unmarshal(bruto, &w); err != nil {
+		if err := json.Unmarshal(raw, &w); err != nil {
 			return nil, fmt.Errorf("workflow %q: %w", slug, err)
 		}
 		out[slug] = w
@@ -150,14 +150,14 @@ func (r *WorkflowRepo) Definitions(ctx context.Context) (map[string]wf.Workflow,
 // publishing a folder one file at a time is a way around it (#32). Left out:
 // the workflows this publish replaces, and with `prune` every other workflow
 // of the project, which the prune removes. Other projects' stay members.
-func (r *WorkflowRepo) PublishedGroupMembers(ctx context.Context, projeto uuid.UUID,
+func (r *WorkflowRepo) PublishedGroupMembers(ctx context.Context, project uuid.UUID,
 	publishing []string, prune bool) ([]wf.Workflow, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT slug, definicao->>'Group', COALESCE((definicao->>'MaxActive')::int, 0)
+		SELECT slug, definition->>'Group', COALESCE((definition->>'MaxActive')::int, 0)
 		FROM workflows
-		WHERE COALESCE(definicao->>'Group', '') <> ''
+		WHERE COALESCE(definition->>'Group', '') <> ''
 		  AND NOT (project_id = $1 AND ($3 OR slug = ANY($2)))
-		ORDER BY slug`, projeto, publishing, prune)
+		ORDER BY slug`, project, publishing, prune)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (r *WorkflowRepo) PublishedGroupMembers(ctx context.Context, projeto uuid.U
 	return out, rows.Err()
 }
 
-// Podar removes from the project the workflows that are NOT in the list, along
+// Prune removes from the project the workflows that are NOT in the list, along
 // with their
 // agendas. Devolve os slugs removidos.
 //
@@ -190,7 +190,7 @@ func (r *WorkflowRepo) PublishedGroupMembers(ctx context.Context, projeto uuid.U
 //
 // Each removal is in the events feed, written by the same statement that
 // deletes, with actor as who did it.
-func (r *WorkflowRepo) Podar(ctx context.Context, projeto uuid.UUID, manter []string, actor string) ([]string, error) {
+func (r *WorkflowRepo) Prune(ctx context.Context, project uuid.UUID, manter []string, actor string) ([]string, error) {
 	rows, err := r.pool.Query(ctx, `
 		WITH gone AS (
 		    DELETE FROM workflows
@@ -201,7 +201,7 @@ func (r *WorkflowRepo) Podar(ctx context.Context, projeto uuid.UUID, manter []st
 		    SELECT $3, slug, $4, jsonb_build_object('project', (SELECT slug FROM projects WHERE id = $1))
 		    FROM gone
 		)
-		SELECT slug FROM gone`, projeto, manter, events.WorkflowRemoved, actor)
+		SELECT slug FROM gone`, project, manter, events.WorkflowRemoved, actor)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +245,8 @@ func NewScheduleRepo(p *Pool) *ScheduleRepo { return &ScheduleRepo{pool: p} }
 // Ativas lists the schedules the scheduler has to evaluate.
 func (r *ScheduleRepo) Active(ctx context.Context) ([]sch.Schedule, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT workflow_slug, cron, timezone, catchup, ativo, ultimo_slot
-		FROM schedules WHERE ativo`)
+		SELECT workflow_slug, cron, timezone, catchup, active, last_slot
+		FROM schedules WHERE active`)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +268,7 @@ func (r *ScheduleRepo) Active(ctx context.Context) ([]sch.Schedule, error) {
 func (r *ScheduleRepo) Of(ctx context.Context, slug string) (sch.Schedule, bool, error) {
 	var s sch.Schedule
 	err := r.pool.QueryRow(ctx, `
-		SELECT workflow_slug, cron, timezone, catchup, ativo, ultimo_slot
+		SELECT workflow_slug, cron, timezone, catchup, active, last_slot
 		FROM schedules WHERE workflow_slug = $1`, slug).
 		Scan(&s.WorkflowSlug, &s.Cron, &s.Timezone, &s.Catchup, &s.Active, &s.LastSlot)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -279,7 +279,7 @@ func (r *ScheduleRepo) Of(ctx context.Context, slug string) (sch.Schedule, bool,
 
 // AdvanceSlot records how far the schedule has been materialized.
 //
-// The condition `ultimo_slot IS NULL OR ultimo_slot < $2` makes the operation
+// The condition `last_slot IS NULL OR last_slot < $2` makes the operation
 // idempotent and safe under concurrency: two schedulers evaluating the same
 // schedule never make the marker go backwards.
 // SetActive pauses or resumes a schedule and returns the resulting state.
@@ -294,12 +294,12 @@ func (r *ScheduleRepo) Of(ctx context.Context, slug string) (sch.Schedule, bool,
 //
 // actor is who did it, for the events feed: the console's operator, or "cli".
 func (r *ScheduleRepo) SetActive(ctx context.Context, slug string, active1 bool, actor string) (bool, error) {
-	return r.flip(ctx, "$3", "s.ativo IS DISTINCT FROM $3", slug, actor, active1)
+	return r.flip(ctx, "$3", "s.active IS DISTINCT FROM $3", slug, actor, active1)
 }
 
 // Toggle flips the current state in a single round trip to the database.
 func (r *ScheduleRepo) Toggle(ctx context.Context, slug, actor string) (bool, error) {
-	return r.flip(ctx, "NOT s.ativo", "true", slug, actor)
+	return r.flip(ctx, "NOT s.active", "true", slug, actor)
 }
 
 // flip sets the schedule's state to `to` when `changes` holds -- both SQL
@@ -316,18 +316,18 @@ func (r *ScheduleRepo) flip(ctx context.Context, to, changes, slug, actor string
 	var on bool
 	err := r.pool.QueryRow(ctx, `
 		WITH after AS (
-		    UPDATE schedules s SET ativo = `+to+`, atualizado_em = now()
+		    UPDATE schedules s SET active = `+to+`, updated_at = now()
 		    WHERE s.workflow_slug = $1 AND `+changes+`
-		    RETURNING s.ativo
+		    RETURNING s.active
 		), recorded AS (
 		    INSERT INTO events (kind, subject, actor)
-		    SELECT CASE WHEN ativo THEN '`+string(events.ScheduleResumed)+`'
+		    SELECT CASE WHEN active THEN '`+string(events.ScheduleResumed)+`'
 		                ELSE '`+string(events.SchedulePaused)+`' END, $1, $2
 		    FROM after
 		)
-		SELECT ativo FROM after
+		SELECT active FROM after
 		UNION ALL
-		SELECT ativo FROM schedules WHERE workflow_slug = $1 AND NOT EXISTS (SELECT 1 FROM after)`,
+		SELECT active FROM schedules WHERE workflow_slug = $1 AND NOT EXISTS (SELECT 1 FROM after)`,
 		append([]any{slug, actor}, args...)...).Scan(&on)
 	return on, err
 }
@@ -335,8 +335,8 @@ func (r *ScheduleRepo) flip(ctx context.Context, to, changes, slug, actor string
 func (r *ScheduleRepo) AdvanceSlot(ctx context.Context, slug string, slot time.Time) error {
 	_, err := r.pool.Exec(ctx, `
 		UPDATE schedules
-		SET ultimo_slot = $2, atualizado_em = now()
-		WHERE workflow_slug = $1 AND (ultimo_slot IS NULL OR ultimo_slot < $2)`,
+		SET last_slot = $2, updated_at = now()
+		WHERE workflow_slug = $1 AND (last_slot IS NULL OR last_slot < $2)`,
 		slug, slot)
 	return err
 }

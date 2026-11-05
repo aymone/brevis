@@ -34,7 +34,7 @@ func TestALocalSecretComesFromTheEnginesEnvironment(t *testing.T) {
 // TestAMissingSecretFailsBeforeRunning: string vazia viraria um cookie vazio e
 // a 401 further down, blaming the API for a variable nobody exported.
 func TestAMissingSecretFailsBeforeRunning(t *testing.T) {
-	casos := map[string]func(*testing.T){
+	cases := map[string]func(*testing.T){
 		// Setenv registers the cleanup; Unsetenv right after leaves the variable
 		// genuinely absent and the original value comes back at the end of the
 		// test.
@@ -46,9 +46,9 @@ func TestAMissingSecretFailsBeforeRunning(t *testing.T) {
 		},
 		"vazia": func(t *testing.T) { t.Setenv("GABRIEL_SESSION_COOKIE", "") },
 	}
-	for name, preparar := range casos {
+	for name, prepare := range cases {
 		t.Run(name, func(t *testing.T) {
-			preparar(t)
+			prepare(t)
 
 			_, err := taskEnvironment(execution.TaskExec{
 				NodeID:  "fetch_occurrences",
@@ -57,9 +57,9 @@ func TestAMissingSecretFailsBeforeRunning(t *testing.T) {
 			if err == nil {
 				t.Fatal("a missing secret got through")
 			}
-			for _, exigido := range []string{"GABRIEL_SESSION_COOKIE", "fetch_occurrences", "gabriel-session/cookie"} {
-				if !strings.Contains(err.Error(), exigido) {
-					t.Errorf("the error does not say %q: %v", exigido, err)
+			for _, required := range []string{"GABRIEL_SESSION_COOKIE", "fetch_occurrences", "gabriel-session/cookie"} {
+				if !strings.Contains(err.Error(), required) {
+					t.Errorf("the error does not say %q: %v", required, err)
 				}
 			}
 		})
@@ -101,9 +101,9 @@ func TestASecretOverridesTheLiteral(t *testing.T) {
 	}
 }
 
-func contains(env []string, procurado string) bool {
+func contains(env []string, wanted string) bool {
 	for _, kv := range env {
-		if kv == procurado {
+		if kv == wanted {
 			return true
 		}
 	}

@@ -148,7 +148,7 @@ func CountOf(field string) Aggregator {
 func Sum(field string) Aggregator {
 	type state struct {
 		total float64
-		viu   bool
+		saw   bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{} },
@@ -158,12 +158,12 @@ func Sum(field string) Aggregator {
 				return err
 			}
 			e := acc.(*state)
-			e.total, e.viu = e.total+n, true
+			e.total, e.saw = e.total+n, true
 			return nil
 		},
 		Value: func(acc any) (any, error) {
 			e := acc.(*state)
-			if !e.viu {
+			if !e.saw {
 				return nil, nil // a group with no values at all: null, not zero
 			}
 			return e.total, nil
@@ -201,15 +201,15 @@ func Mean(field string) Aggregator {
 }
 
 // Min is the smallest value of the field. Max is the largest.
-func Min(field string) Aggregator { return extremo(field, -1).named("min") }
+func Min(field string) Aggregator { return extreme(field, -1).named("min") }
 
 // Max is the largest value of the field.
-func Max(field string) Aggregator { return extremo(field, +1).named("max") }
+func Max(field string) Aggregator { return extreme(field, +1).named("max") }
 
-func extremo(field string, sinal int) Aggregator {
+func extreme(field string, sinal int) Aggregator {
 	type state struct {
 		value any
-		viu   bool
+		saw   bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{} },
@@ -219,8 +219,8 @@ func extremo(field string, sinal int) Aggregator {
 				return nil
 			}
 			e := acc.(*state)
-			if !e.viu {
-				e.value, e.viu = v, true
+			if !e.saw {
+				e.value, e.saw = v, true
 				return nil
 			}
 			cmp, err := compare(v, e.value, field)
@@ -250,7 +250,7 @@ func Last(field string) Aggregator { return endOf(field, false).named("last") }
 func endOf(field string, first bool) Aggregator {
 	type state struct {
 		value any
-		viu   bool
+		saw   bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{} },
@@ -260,10 +260,10 @@ func endOf(field string, first bool) Aggregator {
 				return nil
 			}
 			e := acc.(*state)
-			if first && e.viu {
+			if first && e.saw {
 				return nil
 			}
-			e.value, e.viu = v, true
+			e.value, e.saw = v, true
 			return nil
 		},
 		Value: func(acc any) (any, error) { return acc.(*state).value, nil },
@@ -279,16 +279,16 @@ func endOf(field string, first bool) Aggregator {
 // It is the one that is usually missing, and its absence is what makes people
 // keep the rows so they can pick later -- which is exactly what the
 // constant-memory rule forbids.
-func MinBy(value, key string) Aggregator { return porExtremo(value, key, -1).named("min_by") }
+func MinBy(value, key string) Aggregator { return byExtreme(value, key, -1).named("min_by") }
 
 // MaxBy returns the `value` of the row where `key` is largest.
-func MaxBy(value, key string) Aggregator { return porExtremo(value, key, +1).named("max_by") }
+func MaxBy(value, key string) Aggregator { return byExtreme(value, key, +1).named("max_by") }
 
-func porExtremo(valueField, keyField string, sinal int) Aggregator {
+func byExtreme(valueField, keyField string, sinal int) Aggregator {
 	type state struct {
 		key   any
 		value any
-		viu   bool
+		saw   bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{} },
@@ -298,8 +298,8 @@ func porExtremo(valueField, keyField string, sinal int) Aggregator {
 				return nil
 			}
 			e := acc.(*state)
-			if !e.viu {
-				e.key, e.value, e.viu = k, r[valueField], true
+			if !e.saw {
+				e.key, e.value, e.saw = k, r[valueField], true
 				return nil
 			}
 			cmp, err := compare(k, e.key, keyField)
@@ -326,7 +326,7 @@ func Variance(field string) Aggregator { return welford(field, false).named("var
 // StdDev is the sample standard deviation of the field.
 func StdDev(field string) Aggregator { return welford(field, true).named("std_dev") }
 
-func welford(field string, raiz bool) Aggregator {
+func welford(field string, root bool) Aggregator {
 	type state struct {
 		n    float64
 		medi float64
@@ -352,7 +352,7 @@ func welford(field string, raiz bool) Aggregator {
 				return nil, nil // the sample variance of one point does not exist
 			}
 			v := e.m2 / (e.n - 1)
-			if raiz {
+			if root {
 				return math.Sqrt(v), nil
 			}
 			return v, nil
@@ -370,7 +370,7 @@ func All(field string) Aggregator { return boolAgg(field, true).named("all") }
 func boolAgg(field string, all bool) Aggregator {
 	type state struct {
 		v   bool
-		viu bool
+		saw bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{v: all} },
@@ -385,7 +385,7 @@ func boolAgg(field string, all bool) Aggregator {
 					"Any and All read booleans", field, v, v)
 			}
 			e := acc.(*state)
-			e.viu = true
+			e.saw = true
 			if all {
 				e.v = e.v && b
 			} else {
@@ -395,7 +395,7 @@ func boolAgg(field string, all bool) Aggregator {
 		},
 		Value: func(acc any) (any, error) {
 			e := acc.(*state)
-			if !e.viu {
+			if !e.saw {
 				return nil, nil
 			}
 			return e.v, nil
@@ -408,7 +408,7 @@ func boolAgg(field string, all bool) Aggregator {
 func Range(field string) Aggregator {
 	type state struct {
 		min, max float64
-		viu      bool
+		saw      bool
 	}
 	a := Custom(Accumulator{
 		Init: func() any { return &state{} },
@@ -418,8 +418,8 @@ func Range(field string) Aggregator {
 				return err
 			}
 			e := acc.(*state)
-			if !e.viu {
-				e.min, e.max, e.viu = n, n, true
+			if !e.saw {
+				e.min, e.max, e.saw = n, n, true
 				return nil
 			}
 			e.min, e.max = math.Min(e.min, n), math.Max(e.max, n)
@@ -427,7 +427,7 @@ func Range(field string) Aggregator {
 		},
 		Value: func(acc any) (any, error) {
 			e := acc.(*state)
-			if !e.viu {
+			if !e.saw {
 				return nil, nil
 			}
 			return e.max - e.min, nil
@@ -545,7 +545,7 @@ func (d *Reduce) validate() error {
 			"drop it, or say what it computes")
 	}
 	for _, field := range d.By.fields {
-		if _, colide := d.Agg[field]; colide {
+		if _, collides := d.Agg[field]; collides {
 			return fmt.Errorf("%q is both a group field and an aggregator name; "+
 				"the column would have two values", field)
 		}

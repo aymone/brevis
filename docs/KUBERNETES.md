@@ -651,7 +651,7 @@ The claim counts by the run's **concurrency key** rather than its workflow:
 `COALESCE('g:' || group, 'w:' || workflow_slug)`. A workflow with no group keeps
 contending with itself, as before; the prefixes stop a group called `daily`
 from sharing a limit with the workflow `daily`. The group is a snapshot on the
-run (`runs.grupo_concorrencia`), like the limit, so editing a file does not
+run (`runs.concurrency_group`), like the limit, so editing a file does not
 change what is already queued.
 
 - **Manual runs join the group.** A click outranks scheduled work in the
@@ -755,7 +755,7 @@ Four decisions:
 ### The outbox, and why there is a third pod
 
 `deployments/kubernetes/alert.yaml` runs `brevis alert`, which claims from the
-`alertas` table and delivers.
+`alerts` table and delivers.
 
 It is there because of where an alert is WRITTEN. Before it, the dispatcher
 called Slack directly and, when the call failed, logged and carried on — the

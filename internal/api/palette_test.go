@@ -17,7 +17,7 @@ import (
 // readsFake answers the two reads the palette needs; anything else it is asked
 // panics, which is also how a test learns the index reads more than it says.
 type readsFake struct {
-	api.Leitura
+	api.Reads
 	workflows []postgres.WorkflowSummary
 	projects  []postgres.ProjectSummary
 

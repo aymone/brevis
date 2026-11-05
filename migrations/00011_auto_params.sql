@@ -20,7 +20,7 @@
 ALTER TABLE runs ADD COLUMN auto_params JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 COMMENT ON COLUMN runs.auto_params IS
-  'Parametros automaticos da run: adjusted_at, interval, delay, previous_error. Snapshot do inicio da tentativa.';
+  'Automatic parameters of the run: adjusted_at, interval, delay, previous_error. A snapshot taken when the attempt started.';
 
 -- +goose Down
 ALTER TABLE runs DROP COLUMN auto_params;

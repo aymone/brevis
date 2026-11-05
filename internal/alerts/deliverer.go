@@ -68,7 +68,7 @@ func (c *Config) defaults() {
 type Deliverer struct {
 	cfg      Config
 	outbox   *Outbox
-	channels map[string]notify.Notificador
+	channels map[string]notify.Notifier
 	log      *slog.Logger
 
 	// Metrics is optional, as everywhere else.
@@ -77,7 +77,7 @@ type Deliverer struct {
 
 // NewDeliverer builds the loop. `channels` maps a channel name to what talks to
 // it; a name absent from the map is a permanent failure rather than a retry.
-func NewDeliverer(cfg Config, o *Outbox, channels map[string]notify.Notificador, log *slog.Logger) *Deliverer {
+func NewDeliverer(cfg Config, o *Outbox, channels map[string]notify.Notifier, log *slog.Logger) *Deliverer {
 	cfg.defaults()
 	return &Deliverer{cfg: cfg, outbox: o, channels: channels, log: log}
 }

@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	dominio "brevis.sh/brevis/internal/domain/workflow"
+	domain "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // SpecOf is a published workflow written back as the file: the inverse of
@@ -13,7 +13,7 @@ import (
 // not the file, so this is not the file the author wrote -- no comments, keys
 // in the format's order -- but publishing it publishes the same workflow,
 // which TestEveryExampleRoundTripsThroughItsYAML holds.
-func SpecOf(w dominio.Workflow) Spec {
+func SpecOf(w domain.Workflow) Spec {
 	s := Spec{
 		Name: w.Slug, Description: w.Description, Schedule: w.Schedule,
 		Tags: w.Tags, Image: w.Image, Resources: resourceSpecOf(w.Resources),
@@ -21,8 +21,8 @@ func SpecOf(w dominio.Workflow) Spec {
 		Concurrency: ConcurrencySpec{Limit: w.MaxActive, Group: w.Group},
 		Trigger:     TriggerSpec{OnLanded: w.Trigger.OnLanded, Debounce: w.Trigger.Debounce},
 	}
-	if w.Kind == dominio.KindChain {
-		s.Type = string(dominio.KindChain)
+	if w.Kind == domain.KindChain {
+		s.Type = string(domain.KindChain)
 	}
 	for _, p := range w.Params {
 		s.Params = append(s.Params, ParamSpec{
@@ -42,7 +42,7 @@ func SpecOf(w dominio.Workflow) Spec {
 			st.OnError = &OnErrorSpec{Type: n.OnError.Type, When: n.OnError.When}
 		}
 		// A chain's edges are its order; a DAG's are each step's depends_on.
-		if w.Kind != dominio.KindChain {
+		if w.Kind != domain.KindChain {
 			for _, e := range w.Edges {
 				if e.To == n.ID {
 					st.DependsOn = append(st.DependsOn, Dependency{Step: e.From, Label: e.Label})
@@ -54,7 +54,7 @@ func SpecOf(w dominio.Workflow) Spec {
 	return s
 }
 
-func resourceSpecOf(r dominio.Resources) ResourceSpec {
+func resourceSpecOf(r domain.Resources) ResourceSpec {
 	var s ResourceSpec
 	s.CPU, s.Memory = r.CPU, r.Memory
 	s.Limits.CPU, s.Limits.Memory = r.CPULimit, r.MemoryLimit
@@ -63,7 +63,7 @@ func resourceSpecOf(r dominio.Resources) ResourceSpec {
 
 // YAML is a published workflow as the file that publishes it, indented as
 // the examples are.
-func YAML(w dominio.Workflow) ([]byte, error) {
+func YAML(w domain.Workflow) ([]byte, error) {
 	var b bytes.Buffer
 	enc := yaml.NewEncoder(&b)
 	enc.SetIndent(2)

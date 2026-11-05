@@ -14,7 +14,7 @@ import (
 
 func consoleServer(t *testing.T, cred auth.Credential) *api.Server {
 	t.Helper()
-	return api.NewServerAutenticado(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, dataUI(catalogFake{}), cred, true)
+	return api.NewServerWithAuth(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, dataUI(catalogFake{}), cred, true)
 }
 
 func serve(s *api.Server, method, target string) *httptest.ResponseRecorder {

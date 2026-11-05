@@ -18,6 +18,44 @@ The engine's tag is `vX.Y.Z`, with no prefix; the SDK's carries `sdk/`.
 
 ## [Unreleased]
 
+### Changed: every identifier is English, and the schema moves (migration 00033)
+
+**Upgrade note: stop the old replicas before this release migrates.** Migration
+`00033_english_schema.sql` renames the table `alertas` to `alerts` and the
+Portuguese columns, indexes, constraint and sequence that came with it
+(`criado_em` -> `created_at`, `iniciado_em` -> `started_at`, `terminado_em` ->
+`finished_at`, `erro` -> `error`, `definicao` -> `definition`, `etapas` ->
+`stages`, `saida` -> `output`, `sdk_versao` -> `sdk_version`, `ativo` -> `active`,
+`ultimo_slot` -> `last_slot`, `max_ativos` -> `max_active`, `grupo_concorrencia`
+-> `concurrency_group`, the claim columns of `queue_items` and `alerts`, the
+`load_metrics` counters, and six indexes). Each statement is a catalog change
+with no data moved, but a pod still running the previous release asks for the
+old names, so this one is not a rolling update. `brevis migrate down` reverses
+it. A SQL view, dashboard or script of yours that reads the engine's tables
+needs the new names.
+
+- The column comments that were Portuguese are English now, on existing
+  databases too (the migration restates them), and the migration files
+  `00005`, `00006`, `00007`, `00008`, `00009`, `00012`, `00022`, `00023` and
+  `00024` have English names. `goose` records only the version, so an existing
+  database sees nothing.
+- Keys the engine writes are English, and every one is still READ in both
+  spellings, so rows and documents written by an older release keep working:
+  the phases in `task_runs.stages` (`index`, `name`, `state`, `at`, `numbers`,
+  were `indice`, `nome`, `estado`, `em`, `numeros`) and a workflow param in
+  `workflows.definition` / `runs.definition` (`Name`, `Type`, `Description`,
+  were `Nome`, `Tipo`, `Descricao`). Nothing rewrites the old rows.
+- The console's graph payload (`/api/workflows/{slug}/graph`,
+  `/api/runs/{id}/graph`) uses English keys (`action`, `label`, `group`,
+  `name`, `state`, `numbers`, `error`, `attempt`, `duration_ms`, `instances`,
+  `instances_ok`; node types `phase` and `group`). It is the console's own
+  payload and ships in the same binary, so nothing in this repository still
+  reads the old keys; a script that scraped it must follow.
+- `brevis marca` is still accepted as a deprecated alias of `brevis brand`; it
+  goes in v1.
+- Internal Go identifiers (methods, fields, helpers) are English; they are not
+  an API.
+
 ### Fixed: everything the backend says is American English
 
 - Run-log lines and errors that were still Portuguese now read in English:

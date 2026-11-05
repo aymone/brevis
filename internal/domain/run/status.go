@@ -174,27 +174,27 @@ func allowed(graph map[Status][]Status, from, to Status) bool {
 // ErrInvalidTransition carries both states so the error says what happened, and
 // not merely that something was refused.
 type ErrInvalidTransition struct {
-	De, Para Status
+	From, To Status
 }
 
 func (e ErrInvalidTransition) Error() string {
-	return fmt.Sprintf("invalid transition: %s -> %s", e.De, e.Para)
+	return fmt.Sprintf("invalid transition: %s -> %s", e.From, e.To)
 }
 
 // Validate returns an error when a RUN's transition does not exist in the
 // graph.
-func Validate(de, para Status) error { return check(transitions, de, para) }
+func Validate(from, to Status) error { return check(transitions, from, to) }
 
 // ValidateStep is the same for a STEP. A step that has not started is
 // StatusPending, which is where a skipped one comes from.
-func ValidateStep(de, para Status) error { return check(stepTransitions, de, para) }
+func ValidateStep(from, to Status) error { return check(stepTransitions, from, to) }
 
-func check(graph map[Status][]Status, de, para Status) error {
-	if _, known := graph[de]; !known {
-		return fmt.Errorf("unknown state: %q", de)
+func check(graph map[Status][]Status, from, to Status) error {
+	if _, known := graph[from]; !known {
+		return fmt.Errorf("unknown state: %q", from)
 	}
-	if !allowed(graph, de, para) {
-		return ErrInvalidTransition{De: de, Para: para}
+	if !allowed(graph, from, to) {
+		return ErrInvalidTransition{From: from, To: to}
 	}
 	return nil
 }

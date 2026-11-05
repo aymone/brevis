@@ -15,10 +15,10 @@ import (
 // for months. What closes an invariant is not deciding it: it is being able to
 // exercise it.
 func TestI2CreationPlanNeverInfers(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name    string
 		cfg     *core.LoadConfig
-		quero   HowToCreate
+		want    HowToCreate
 		failure bool
 	}{
 		{
@@ -46,16 +46,16 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 		},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got, err := CreationPlan(c.cfg, "d.t")
 			if c.failure {
 				if err == nil {
 					t.Fatal("accepted creating a table without the types -- autodetect is back")
 				}
-				for _, quero := range []string{"Target.Schema", "CreateSQL", "does not infer"} {
-					if !strings.Contains(err.Error(), quero) {
-						t.Errorf("the error does not say %q: %v", quero, err)
+				for _, want := range []string{"Target.Schema", "CreateSQL", "does not infer"} {
+					if !strings.Contains(err.Error(), want) {
+						t.Errorf("the error does not say %q: %v", want, err)
 					}
 				}
 				return
@@ -63,8 +63,8 @@ func TestI2CreationPlanNeverInfers(t *testing.T) {
 			if err != nil {
 				t.Fatalf("CreationPlan: %v", err)
 			}
-			if got != c.quero {
-				t.Errorf("= %v, want %v", got, c.quero)
+			if got != c.want {
+				t.Errorf("= %v, want %v", got, c.want)
 			}
 		})
 	}

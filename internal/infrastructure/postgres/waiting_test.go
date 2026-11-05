@@ -14,7 +14,7 @@ import (
 )
 
 // waitingRun queues one run. claimed puts it in flight the way the claim does
-// -- reivindicado_em set -- at `since`; later makes it unavailable until then.
+// -- claimed_at set -- at `since`; later makes it unavailable until then.
 func waitingRun(t *testing.T, pool *postgres.Pool, slug, group string, limit, priority int,
 	claimed bool, since time.Time, later time.Duration) uuid.UUID {
 	t.Helper()
@@ -27,7 +27,7 @@ func waitingRun(t *testing.T, pool *postgres.Pool, slug, group string, limit, pr
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	var claimedAt any
@@ -35,7 +35,7 @@ func waitingRun(t *testing.T, pool *postgres.Pool, slug, group string, limit, pr
 		claimedAt = since
 	}
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO queue_items (run_id, prioridade, disponivel_em, reivindicado_em, reivindicado_por)
+		INSERT INTO queue_items (run_id, priority, available_at, claimed_at, claimed_by)
 		VALUES ($1, $2, now() + $3::interval, $4, CASE WHEN $4::timestamptz IS NULL THEN NULL ELSE 'w' END)`,
 		r.ID, priority, fmt.Sprintf("%d milliseconds", later.Milliseconds()), claimedAt); err != nil {
 		t.Fatal(err)

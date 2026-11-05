@@ -53,7 +53,7 @@ func triggerAPIUI(spy api.Actions) *api.UI {
 // foldedSpy is a scheduler whose idempotency key already holds a run.
 type foldedSpy struct{ triggerSpy }
 
-func (foldedSpy) Disparar(context.Context, string, time.Time, map[string]string, *time.Time) (uuid.UUID, error) {
+func (foldedSpy) Trigger(context.Context, string, time.Time, map[string]string, *time.Time) (uuid.UUID, error) {
 	return uuid.Nil, nil
 }
 

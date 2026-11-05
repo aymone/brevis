@@ -195,14 +195,14 @@ func recentEventsQuery(q EventQuery) (string, []any, error) {
 			return "", nil, err
 		}
 		branches = append(branches, fmt.Sprintf(`(
-		    SELECT terminado_em, %d, id::text,
+		    SELECT finished_at, %d, id::text,
 		           CASE status WHEN 'success' THEN '%s' WHEN 'failed' THEN '%s' ELSE '%s' END,
 		           workflow_slug, CASE status WHEN 'canceled' THEN canceled_by ELSE '' END,
 		           id AS run_id, trigger_type, '{}'::jsonb
 		    FROM runs r
-		    WHERE terminado_em IS NOT NULL AND status IN ('success', 'failed', 'canceled')
-		      AND (terminado_em, r.id) < (%s, %s)
-		    ORDER BY terminado_em DESC, r.id DESC LIMIT %s)`,
+		    WHERE finished_at IS NOT NULL AND status IN ('success', 'failed', 'canceled')
+		      AND (finished_at, r.id) < (%s, %s)
+		    ORDER BY finished_at DESC, r.id DESC LIMIT %s)`,
 			rankFinished, events.RunSucceeded, events.RunFailed, events.RunCanceled, atP, a.add(fin), limP))
 
 		start, err := bound(rankStarted, allRun, noRun, byUUID)
@@ -210,10 +210,10 @@ func recentEventsQuery(q EventQuery) (string, []any, error) {
 			return "", nil, err
 		}
 		branches = append(branches, fmt.Sprintf(`(
-		    SELECT iniciado_em, %d, id::text, '%s', workflow_slug, '', id AS run_id, trigger_type, '{}'::jsonb
+		    SELECT started_at, %d, id::text, '%s', workflow_slug, '', id AS run_id, trigger_type, '{}'::jsonb
 		    FROM runs r
-		    WHERE iniciado_em IS NOT NULL AND (iniciado_em, r.id) < (%s, %s)
-		    ORDER BY iniciado_em DESC, r.id DESC LIMIT %s)`,
+		    WHERE started_at IS NOT NULL AND (started_at, r.id) < (%s, %s)
+		    ORDER BY started_at DESC, r.id DESC LIMIT %s)`,
 			rankStarted, events.RunStarted, atP, a.add(start), limP))
 	}
 	sql := `SELECT * FROM (` + strings.Join(branches, "\n\t\tUNION ALL ") + `) feed

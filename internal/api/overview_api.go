@@ -90,32 +90,32 @@ func (u *UI) overviewAPI(w http.ResponseWriter, r *http.Request) {
 		u.log.Error("reading the overview", "what", what, "error", err)
 		apiError(w, http.StatusInternalServerError, codeUnavailable)
 	}
-	if u.leitura == nil {
+	if u.reads == nil {
 		apiError(w, http.StatusServiceUnavailable, codeUnavailable)
 		return
 	}
 
-	ind, err := u.leitura.Indicators(ctx, window.Span)
+	indicators, err := u.reads.Indicators(ctx, window.Span)
 	if err != nil {
 		fail("indicators", err)
 		return
 	}
-	buckets, err := u.leitura.RunsPer(ctx, window.Grain, window.Buckets)
+	buckets, err := u.reads.RunsPer(ctx, window.Grain, window.Buckets)
 	if err != nil {
 		fail("buckets", err)
 		return
 	}
-	recent, err := u.leitura.LatestRuns(ctx, 20)
+	recent, err := u.reads.LatestRuns(ctx, 20)
 	if err != nil {
 		fail("recent runs", err)
 		return
 	}
-	pending, _, err := u.leitura.QueueDepth(ctx)
+	pending, _, err := u.reads.QueueDepth(ctx)
 	if err != nil {
 		fail("queue", err)
 		return
 	}
-	schedules, err := u.leitura.Schedules(ctx)
+	schedules, err := u.reads.Schedules(ctx)
 	if err != nil {
 		fail("schedules", err)
 		return
@@ -125,8 +125,8 @@ func (u *UI) overviewAPI(w http.ResponseWriter, r *http.Request) {
 	out := overviewView{
 		Window: window.Key, Grain: "hour", Now: now, Queued: pending,
 		Indicators: indicatorsView{
-			Total: ind.Total, Succeeded: ind.Succeeded, Failed: ind.Failed, Running: ind.Running,
-			Pending: ind.Pending, Retried: ind.Retried, MeanDurationMs: ind.MeanDuration.Milliseconds(),
+			Total: indicators.Total, Succeeded: indicators.Succeeded, Failed: indicators.Failed, Running: indicators.Running,
+			Pending: indicators.Pending, Retried: indicators.Retried, MeanDurationMs: indicators.MeanDuration.Milliseconds(),
 		},
 		Buckets: make([]bucketView, 0, len(buckets)),
 		Next:    []nextRunView{},

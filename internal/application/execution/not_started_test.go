@@ -60,7 +60,7 @@ func (f *fates) startsOf(node string) int {
 
 func runFates(f *fates, w wf.Workflow) error {
 	return app.Runner{
-		Processo: f, Report: &coletor{},
+		Process: f, Report: &collector{},
 		MaxAttempts: 3, BackoffBase: time.Millisecond,
 	}.Run(context.Background(), w)
 }

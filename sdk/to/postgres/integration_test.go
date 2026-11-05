@@ -66,7 +66,7 @@ const defaultColumns = `
 	source_key TEXT,
 	valor NUMERIC(18,2)`
 
-func loteDeTeste(n int) []sdk.Envelope {
+func testBatch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
 	now := time.Now().UTC().Format(time.RFC3339)
 	for i := range out {
@@ -88,7 +88,7 @@ func TestIntegrationARowActuallyGoesIn(t *testing.T) {
 	name := table(t, conn, defaultColumns)
 
 	res, err := topg.Table{DSN: dsn(t), Name: name}.Write(
-		context.Background(), loteDeTeste(3), sdk.WriteOptions{})
+		context.Background(), testBatch(3), sdk.WriteOptions{})
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -117,14 +117,14 @@ func TestIntegrationTheTablesOrderIsWhatCounts(t *testing.T) {
 		ingestion_loaded_at TIMESTAMPTZ NOT NULL,
 		ingestion_id TEXT NOT NULL`)
 
-	lote := []sdk.Envelope{env(map[string]any{
+	batch := []sdk.Envelope{env(map[string]any{
 		"ingestion_id":        "abc",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
 		"provider":            "acme",
 		"valor":               "99.90",
 	})}
 	if _, err := (topg.Table{DSN: dsn(t), Name: name}).Write(
-		context.Background(), lote, sdk.WriteOptions{}); err != nil {
+		context.Background(), batch, sdk.WriteOptions{}); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
@@ -150,10 +150,10 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 	}
 
 	target := topg.Table{DSN: dsn(t), Name: name}
-	lote := loteDeTeste(5)
+	batch := testBatch(5)
 	opt := sdk.WriteOptions{Dedup: sdk.DedupMerge}
 
-	first, err := target.Write(context.Background(), lote, opt)
+	first, err := target.Write(context.Background(), batch, opt)
 	if err != nil {
 		t.Fatalf("first load: %v", err)
 	}
@@ -161,13 +161,13 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 		t.Errorf("first: %d loaded, %d ignored", first.RowsLoaded, first.RowsIgnored)
 	}
 
-	segunda, err := target.Write(context.Background(), lote, opt)
+	second, err := target.Write(context.Background(), batch, opt)
 	if err != nil {
 		t.Fatalf("second load: %v", err)
 	}
-	if segunda.RowsLoaded != 0 || segunda.RowsIgnored != 5 {
+	if second.RowsLoaded != 0 || second.RowsIgnored != 5 {
 		t.Errorf("second: %d loaded, %d ignored -- expected 0 and 5",
-			segunda.RowsLoaded, segunda.RowsIgnored)
+			second.RowsLoaded, second.RowsIgnored)
 	}
 
 	var n int
@@ -186,13 +186,13 @@ func TestIntegrationDedupWithoutAnIndexRefuses(t *testing.T) {
 	name := table(t, conn, defaultColumns)
 
 	_, err := topg.Table{DSN: dsn(t), Name: name}.Write(
-		context.Background(), loteDeTeste(1), sdk.WriteOptions{Dedup: sdk.DedupMerge})
+		context.Background(), testBatch(1), sdk.WriteOptions{Dedup: sdk.DedupMerge})
 	if err == nil {
 		t.Fatal("dedup without a unique index got through")
 	}
-	for _, exigido := range []string{"unique index", "CREATE UNIQUE INDEX"} {
-		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("the error does not say %q: %v", exigido, err)
+	for _, required := range []string{"unique index", "CREATE UNIQUE INDEX"} {
+		if !strings.Contains(err.Error(), required) {
+			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }
@@ -205,22 +205,22 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 	conn := connect(t)
 	name := table(t, conn, defaultColumns)
 
-	lote := []sdk.Envelope{env(map[string]any{
+	batch := []sdk.Envelope{env(map[string]any{
 		"ingestion_id":        "x",
 		"ingestion_loaded_at": time.Now().UTC().Format(time.RFC3339),
 		"coluna_inexistente":  1,
 	})}
-	_, err := topg.Table{DSN: dsn(t), Name: name}.Write(context.Background(), lote, sdk.WriteOptions{})
+	_, err := topg.Table{DSN: dsn(t), Name: name}.Write(context.Background(), batch, sdk.WriteOptions{})
 	if err == nil {
 		t.Fatal("a field without a column got through")
 	}
-	for _, exigido := range []string{
+	for _, required := range []string{
 		"coluna_inexistente",
 		"add the column to the table, or remove the field in Transform",
 	} {
-		if !strings.Contains(err.Error(), exigido) {
+		if !strings.Contains(err.Error(), required) {
 			t.Errorf("the error does not say %q -- most likely the server refused it, "+
-				"and not Reconcile: %v", exigido, err)
+				"and not Reconcile: %v", required, err)
 		}
 	}
 }
@@ -230,13 +230,13 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 // out of one reading.
 func TestIntegrationAMissingTableSaysHowToCreateIt(t *testing.T) {
 	_, err := topg.Table{DSN: dsn(t), Name: "nao_existe_mesmo"}.Write(
-		context.Background(), loteDeTeste(1), sdk.WriteOptions{})
+		context.Background(), testBatch(1), sdk.WriteOptions{})
 	if err == nil {
 		t.Fatal("a missing table got through")
 	}
-	for _, exigido := range []string{"does not exist", "ingestion_id", "source_key"} {
-		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("the error does not say %q: %v", exigido, err)
+	for _, required := range []string{"does not exist", "ingestion_id", "source_key"} {
+		if !strings.Contains(err.Error(), required) {
+			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }
@@ -262,15 +262,15 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 	}
 
 	start := time.Now()
-	recebeu := false
+	received := false
 	for _, err := range seq {
 		if err != nil {
 			t.Fatal(err)
 		}
-		recebeu = true
+		received = true
 		break // one row only, on purpose: it is what exposes the buffer
 	}
-	if !recebeu {
+	if !received {
 		t.Fatal("no rows")
 	}
 
@@ -320,9 +320,9 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 		"identificador": "178d0b49-dece-5738-b8eb-f5cae2221aea",
 		"vazio":         nil,
 	}
-	for field, quero := range expected {
-		if got := line[field]; got != quero {
-			t.Errorf("%s = %#v, want %#v", field, got, quero)
+	for field, want := range expected {
+		if got := line[field]; got != want {
+			t.Errorf("%s = %#v, want %#v", field, got, want)
 		}
 	}
 	if _, ok := line["documento"].(map[string]any); !ok {
@@ -403,10 +403,10 @@ func TestIntegrationPostgresToPostgres(t *testing.T) {
 		t.Errorf("first load: %d rows, want 100", first.Rows)
 	}
 
-	segunda := runIt()
-	if segunda.Rows != 0 || segunda.Ignored != 100 {
+	second := runIt()
+	if second.Rows != 0 || second.Ignored != 100 {
 		t.Errorf("second load: %d loaded and %d ignored -- the same batch should be all dedup",
-			segunda.Rows, segunda.Ignored)
+			second.Rows, second.Ignored)
 	}
 
 	var n int

@@ -23,11 +23,11 @@ func (r *ReadRepo) Insights(ctx context.Context, from, to time.Time, env string)
 
 	// The runs, their outcomes and their durations.
 	//
-	// The duration is measured from CRIADO_EM, not from iniciado_em: "how long
+	// The duration is measured from CREATED_AT, not from started_at: "how long
 	// did my pipeline take" includes the wait in the queue, and a number that
 	// excludes queue time looks healthy exactly when the queue is the problem.
 	//
-	// terminado_em IS NOT NULL is what keeps a run still going out of the
+	// finished_at IS NOT NULL is what keeps a run still going out of the
 	// averages. Counting it as zero would drag every one of them down at the
 	// moment something is stuck.
 	rows, err := r.pool.Query(ctx, `
@@ -35,14 +35,14 @@ func (r *ReadRepo) Insights(ctx context.Context, from, to time.Time, env string)
 			workflow_slug,
 			count(*)                                          AS runs,
 			count(*) FILTER (WHERE status = 'failed')         AS failed,
-			COALESCE(min(EXTRACT(EPOCH FROM terminado_em - criado_em))
-			         FILTER (WHERE terminado_em IS NOT NULL), 0) AS min_s,
-			COALESCE(avg(EXTRACT(EPOCH FROM terminado_em - criado_em))
-			         FILTER (WHERE terminado_em IS NOT NULL), 0) AS avg_s,
-			COALESCE(max(EXTRACT(EPOCH FROM terminado_em - criado_em))
-			         FILTER (WHERE terminado_em IS NOT NULL), 0) AS max_s
+			COALESCE(min(EXTRACT(EPOCH FROM finished_at - created_at))
+			         FILTER (WHERE finished_at IS NOT NULL), 0) AS min_s,
+			COALESCE(avg(EXTRACT(EPOCH FROM finished_at - created_at))
+			         FILTER (WHERE finished_at IS NOT NULL), 0) AS avg_s,
+			COALESCE(max(EXTRACT(EPOCH FROM finished_at - created_at))
+			         FILTER (WHERE finished_at IS NOT NULL), 0) AS max_s
 		FROM runs
-		WHERE criado_em >= $1 AND criado_em < $2
+		WHERE created_at >= $1 AND created_at < $2
 		GROUP BY workflow_slug`, from, to)
 	if err != nil {
 		return rep, fmt.Errorf("aggregating the runs: %w", err)
@@ -95,12 +95,12 @@ func (r *ReadRepo) volume(ctx context.Context, from, to time.Time,
 	rows, err := r.pool.Query(ctx, `
 		SELECT
 			r.workflow_slug,
-			COALESCE(sum((e->'numeros'->>'rows')::numeric), 0)::bigint  AS linhas,
-			COALESCE(sum((e->'numeros'->>'bytes')::numeric), 0)::bigint AS bytes
+			COALESCE(sum((COALESCE(e->'numbers', e->'numeros')->>'rows')::numeric), 0)::bigint  AS rows,
+			COALESCE(sum((COALESCE(e->'numbers', e->'numeros')->>'bytes')::numeric), 0)::bigint AS bytes
 		FROM runs r
 		JOIN task_runs t ON t.run_id = r.id AND t.status = 'success'
-		CROSS JOIN LATERAL jsonb_array_elements(t.etapas) AS e
-		WHERE r.criado_em >= $1 AND r.criado_em < $2
+		CROSS JOIN LATERAL jsonb_array_elements(t.stages) AS e
+		WHERE r.created_at >= $1 AND r.created_at < $2
 		GROUP BY r.workflow_slug`, from, to)
 	if err != nil {
 		return fmt.Errorf("aggregating the volume: %w", err)
@@ -109,12 +109,12 @@ func (r *ReadRepo) volume(ctx context.Context, from, to time.Time,
 
 	for rows.Next() {
 		var slug string
-		var linhas, bytes int64
-		if err := rows.Scan(&slug, &linhas, &bytes); err != nil {
+		var rowCount, bytes int64
+		if err := rows.Scan(&slug, &rowCount, &bytes); err != nil {
 			return err
 		}
 		if w, ok := into[slug]; ok {
-			w.Rows, w.Bytes = linhas, bytes
+			w.Rows, w.Bytes = rowCount, bytes
 		}
 	}
 	return rows.Err()

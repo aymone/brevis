@@ -17,7 +17,7 @@ import (
 // TestAuthAppliesTheSecret: the four ways of putting the credential on the
 // request.
 func TestAuthAppliesTheSecret(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name     string
 		applyTo  core.Applier
 		secret   string
@@ -29,11 +29,11 @@ func TestAuthAppliesTheSecret(t *testing.T) {
 		{"cookie nomeado", core.AsCookieNamed("session"), "abc==", "Cookie", "session=abc=="},
 		{"header proprio", core.AsHeader("X-API-Key"), "abc", "X-API-Key", "abc"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			var visto string
+			var seen string
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				visto = r.Header.Get(c.header)
+				seen = r.Header.Get(c.header)
 				_, _ = fmt.Fprint(w, `{"ok":1}`)
 			}))
 			defer srv.Close()
@@ -44,8 +44,8 @@ func TestAuthAppliesTheSecret(t *testing.T) {
 				Apply: c.applyTo,
 			}})
 
-			if visto != c.expected {
-				t.Errorf("%s = %q, want %q", c.header, visto, c.expected)
+			if seen != c.expected {
+				t.Errorf("%s = %q, want %q", c.header, seen, c.expected)
 			}
 		})
 	}
@@ -187,10 +187,10 @@ func TestWithoutTTLItDoesNotCache(t *testing.T) {
 // TestAuthRefusesConfigurationThatCannotWork: each of these would pass and
 // become a 401, or a written field that does nothing.
 func TestAuthRefusesConfigurationThatCannotWork(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name string
 		cred *core.Credential
-		diz  string
+		says string
 	}{
 		{"sem Value", &core.Credential{Apply: core.AsBearer}, "Value"},
 		{"sem Apply", &core.Credential{Value: core.FromEnv("PATH")}, "Apply"},
@@ -203,14 +203,14 @@ func TestAuthRefusesConfigurationThatCannotWork(t *testing.T) {
 			Refresh: &core.Refresh{URL: "http://x", WarnAfter: time.Hour},
 		}, "ExpiresAt"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			_, err := JSON(context.Background(), core.Source{URL: "http://x", Auth: c.cred}, nil)
 			if err == nil {
 				t.Fatal("passou")
 			}
-			if !strings.Contains(err.Error(), c.diz) {
-				t.Errorf("the error does not point to %q: %v", c.diz, err)
+			if !strings.Contains(err.Error(), c.says) {
+				t.Errorf("the error does not point to %q: %v", c.says, err)
 			}
 		})
 	}
@@ -239,7 +239,7 @@ func TestAuthDoesNotMutateTheCallersHeader(t *testing.T) {
 		Apply: core.AsBearer,
 	}})
 
-	if _, tem := h["Authorization"]; tem {
+	if _, has := h["Authorization"]; has {
 		t.Errorf("the secret stayed in the caller's header: %v", h)
 	}
 }

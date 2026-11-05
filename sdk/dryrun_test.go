@@ -28,9 +28,9 @@ func captureOutput(t *testing.T, f func() error) (string, error) {
 	return string(output), failure
 }
 
-// pipelineDeEstagios is the shape the defect report described: a source whose
+// stagesPipeline is the shape the defect report described: a source whose
 // rows are reduced by an aggregation, with identity computed afterwards.
-func pipelineDeEstagios(box *[]Envelope) *Pipeline {
+func stagesPipeline(box *[]Envelope) *Pipeline {
 	rows := []any{
 		map[string]any{"area": "north", "year": "2026", "n": "10"},
 		map[string]any{"area": "north", "year": "2026", "n": "5"},
@@ -39,7 +39,7 @@ func pipelineDeEstagios(box *[]Envelope) *Pipeline {
 	}
 	return &Pipeline{
 		Name:   "fetcher",
-		Source: Source{From: countedSource{records: rows, leituras: new(int)}},
+		Source: Source{From: countedSource{records: rows, reads: new(int)}},
 		Stages: []Stage{
 			Aggregate(Reduce{
 				By:  GroupBy("area", "year"),
@@ -71,13 +71,13 @@ func pipelineDeEstagios(box *[]Envelope) *Pipeline {
 // different question is worse than none.
 func TestDryRunProducesExactlyWhatTheRunWouldLand(t *testing.T) {
 	var doRun []Envelope
-	if _, err := runIt(t, pipelineDeEstagios(&doRun)); err != nil {
+	if _, err := runIt(t, stagesPipeline(&doRun)); err != nil {
 		t.Fatalf("run: %v", err)
 	}
 
 	var doDry []Envelope
 	output, err := captureOutput(t, func() error {
-		return runDryRun(context.Background(), pipelineDeEstagios(&doDry), 100)
+		return runDryRun(context.Background(), stagesPipeline(&doDry), 100)
 	})
 	if err != nil {
 		t.Fatalf("dry-run: %v\n%s", err, output)
@@ -91,16 +91,16 @@ func TestDryRunProducesExactlyWhatTheRunWouldLand(t *testing.T) {
 	}
 
 	// The dry-run does not write, so what it produced is what it printed.
-	impressos := printedRecords(t, output)
-	if len(impressos) != len(doRun) {
+	printed := printedRecords(t, output)
+	if len(printed) != len(doRun) {
 		t.Fatalf("dry-run printed %d records, the run landed %d:\n%s",
-			len(impressos), len(doRun), output)
+			len(printed), len(doRun), output)
 	}
 	for i, expected := range doRun {
-		querido, _ := json.Marshal(expected.Payload)
-		got, _ := json.Marshal(impressos[i])
-		if string(querido) != string(got) {
-			t.Errorf("record %d differs:\n  run:     %s\n  dry-run: %s", i, querido, got)
+		wantedList, _ := json.Marshal(expected.Payload)
+		got, _ := json.Marshal(printed[i])
+		if string(wantedList) != string(got) {
+			t.Errorf("record %d differs:\n  run:     %s\n  dry-run: %s", i, wantedList, got)
 		}
 	}
 }
@@ -110,7 +110,7 @@ func TestDryRunProducesExactlyWhatTheRunWouldLand(t *testing.T) {
 func TestDryRunPrintsWhatEachStageDid(t *testing.T) {
 	var box []Envelope
 	output, err := captureOutput(t, func() error {
-		return runDryRun(context.Background(), pipelineDeEstagios(&box), 100)
+		return runDryRun(context.Background(), stagesPipeline(&box), 100)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -130,7 +130,7 @@ func TestDryRunPrintsWhatEachStageDid(t *testing.T) {
 // whole point of checking before writing.
 func TestDryRunRefusesWhatTheRunWouldRefuse(t *testing.T) {
 	var box []Envelope
-	casos := map[string]func(*Pipeline){
+	cases := map[string]func(*Pipeline){
 		"Stages next to Transform": func(p *Pipeline) {
 			p.Transform = []Transformer{Without("x")}
 		},
@@ -138,9 +138,9 @@ func TestDryRunRefusesWhatTheRunWouldRefuse(t *testing.T) {
 			p.Stages = []Stage{Aggregate(Reduce{By: GroupBy("area"), Agg: map[string]Aggregator{"m": Median("n")}})}
 		},
 	}
-	for name, quebrar := range casos {
-		p := pipelineDeEstagios(&box)
-		quebrar(p)
+	for name, breaker := range cases {
+		p := stagesPipeline(&box)
+		breaker(p)
 
 		_, errRun := runIt(t, p)
 		if errRun == nil {
@@ -208,8 +208,8 @@ func TestRecordsLogicCanBeTestedWithoutARequest(t *testing.T) {
 
 	// preserveNumbers is not a detail: with it off, `19` and `19.0` are the same
 	// float64, and a key composed from them differs from production's.
-	comLiteral := NewResponse(200, []byte(`{"id":19.0}`), true)
-	doc, err := comLiteral.Object()
+	withLiteral := NewResponse(200, []byte(`{"id":19.0}`), true)
+	doc, err := withLiteral.Object()
 	if err != nil {
 		t.Fatal(err)
 	}

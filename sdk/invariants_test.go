@@ -33,9 +33,9 @@ func TestI2SchemaRequiresAType(t *testing.T) {
 	if err == nil {
 		t.Fatal("a column without a Type got through")
 	}
-	for _, quero := range []string{"a", "Type", "TypeString"} {
-		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("the error does not say %q: %v", quero, err)
+	for _, want := range []string{"a", "Type", "TypeString"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error does not say %q: %v", want, err)
 		}
 	}
 }
@@ -62,8 +62,8 @@ func TestI2ColumnsAndSchemaTogetherIsRefused(t *testing.T) {
 // vendor with a quota that is the difference between one metadata query and the
 // whole quota window spent to find out that a column does not match.
 func TestI3ChecksBeforeTheExtract(t *testing.T) {
-	var extraiu bool
-	source := recordingSource{&extraiu}
+	var extracted bool
+	source := recordingSource{&extracted}
 
 	p := sdk.Pipeline{
 		Name:   "i3",
@@ -77,7 +77,7 @@ func TestI3ChecksBeforeTheExtract(t *testing.T) {
 	if err == nil {
 		t.Fatal("the destination refused and the run carried on")
 	}
-	if extraiu {
+	if extracted {
 		t.Error("the extract ran before the check -- exactly the quota that I3 saves")
 	}
 	if !strings.Contains(err.Error(), "before the extract") {

@@ -13,9 +13,9 @@ import (
 	core "brevis.sh/brevis/sdk/internal/core"
 )
 
-func escreve(t *testing.T, dir, name, conteudo string) {
+func writeFile(t *testing.T, dir, name, content string) {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(dir, name), []byte(conteudo), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -38,7 +38,7 @@ func le(t *testing.T, f Files) ([]core.Envelope, error) {
 
 func TestFilesLeNDJSONLocal(t *testing.T) {
 	dir := t.TempDir()
-	escreve(t, dir, "a.ndjson", "{\"id\":1}\n{\"id\":2}\n")
+	writeFile(t, dir, "a.ndjson", "{\"id\":1}\n{\"id\":2}\n")
 
 	got, err := le(t, Files{Path: filepath.Join(dir, "*.ndjson")})
 	if err != nil {
@@ -51,11 +51,11 @@ func TestFilesLeNDJSONLocal(t *testing.T) {
 
 // The order is a contract: a positional Key depends on it, and without it the
 // same record's ingestion_id changes between runs.
-func TestFilesLeEmOrdemDeterminística(t *testing.T) {
+func TestFilesReadsInDeterministicOrder(t *testing.T) {
 	dir := t.TempDir()
-	escreve(t, dir, "c.ndjson", `{"n":"c"}`+"\n")
-	escreve(t, dir, "a.ndjson", `{"n":"a"}`+"\n")
-	escreve(t, dir, "b.ndjson", `{"n":"b"}`+"\n")
+	writeFile(t, dir, "c.ndjson", `{"n":"c"}`+"\n")
+	writeFile(t, dir, "a.ndjson", `{"n":"a"}`+"\n")
+	writeFile(t, dir, "b.ndjson", `{"n":"b"}`+"\n")
 
 	for i := 0; i < 5; i++ {
 		got, err := le(t, Files{Path: filepath.Join(dir, "*.ndjson")})
@@ -74,7 +74,7 @@ func TestFilesLeEmOrdemDeterminística(t *testing.T) {
 
 func TestFilesReadsCSVWithAHeader(t *testing.T) {
 	dir := t.TempDir()
-	escreve(t, dir, "p.csv", "nome,idade\nana,30\nbeto,41\n")
+	writeFile(t, dir, "p.csv", "nome,idade\nana,30\nbeto,41\n")
 
 	got, err := le(t, Files{Path: filepath.Join(dir, "*.csv"), Format: core.FormatCSV})
 	if err != nil {
@@ -93,7 +93,7 @@ func TestFilesReadsCSVWithAHeader(t *testing.T) {
 
 func TestFilesDecompressesGzipByExtension(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "a.ndjson.gz"), gzipado(t, "{\"id\":1}\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "a.ndjson.gz"), gzipped(t, "{\"id\":1}\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -110,7 +110,7 @@ func TestFilesDecompressesGzipByExtension(t *testing.T) {
 // further down.
 func TestFilesInvalidGzipNamesTheFile(t *testing.T) {
 	dir := t.TempDir()
-	escreve(t, dir, "mentira.ndjson.gz", "isto nao e gzip")
+	writeFile(t, dir, "mentira.ndjson.gz", "isto nao e gzip")
 
 	_, err := le(t, Files{Path: filepath.Join(dir, "*.gz")})
 	if err == nil {
@@ -139,15 +139,15 @@ func TestFilesRefusesAPathWithNoStore(t *testing.T) {
 	if err == nil {
 		t.Fatal("an s3:// path without a Store cannot be read")
 	}
-	for _, quer := range []string{"s3", "Store"} {
-		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("the error does not mention %q: %v", quer, err)
+	for _, wants := range []string{"s3", "Store"} {
+		if !strings.Contains(err.Error(), wants) {
+			t.Errorf("the error does not mention %q: %v", wants, err)
 		}
 	}
 }
 
 func TestFilesRefusesAStoreForAnotherScheme(t *testing.T) {
-	_, err := Files{Path: "gs://b/x/*.ndjson", Store: falso{"s3"}}.
+	_, err := Files{Path: "gs://b/x/*.ndjson", Store: fake{"s3"}}.
 		Read(context.Background(), core.ReadOptions{})
 	if err == nil {
 		t.Fatal("an S3 Store does not serve a gs:// path")
@@ -160,7 +160,7 @@ func TestFilesRefusesAStoreForAnotherScheme(t *testing.T) {
 func TestFilesCountsTheBytesRead(t *testing.T) {
 	dir := t.TempDir()
 	body := "{\"id\":1}\n{\"id\":2}\n"
-	escreve(t, dir, "a.ndjson", body)
+	writeFile(t, dir, "a.ndjson", body)
 
 	stats := &core.Stats{}
 	seq, err := Files{Path: filepath.Join(dir, "*.ndjson")}.
@@ -183,7 +183,7 @@ func TestFilesCountsTheBytesRead(t *testing.T) {
 // ReadOptions.Preview would be a dead field here.
 func TestFilesHonraOPreview(t *testing.T) {
 	dir := t.TempDir()
-	escreve(t, dir, "a.ndjson", "{\"id\":1,\"n\":\"alfa\"}\n{\"id\":2,\"n\":\"beta\"}\n")
+	writeFile(t, dir, "a.ndjson", "{\"id\":1,\"n\":\"alfa\"}\n{\"id\":2,\"n\":\"beta\"}\n")
 
 	var out strings.Builder
 	seq, err := Files{Path: filepath.Join(dir, "*.ndjson")}.Read(context.Background(),
@@ -199,14 +199,14 @@ func TestFilesHonraOPreview(t *testing.T) {
 	}
 }
 
-type falso struct{ esquema string }
+type fake struct{ schema string }
 
-func (f falso) Scheme() string                                              { return f.esquema }
-func (f falso) List(context.Context, string, string) ([]string, error)      { return nil, nil }
-func (f falso) Open(context.Context, string, string) (io.ReadCloser, error) { return nil, nil }
-func (f falso) Create(context.Context, string, string, io.Reader) error     { return nil }
+func (f fake) Scheme() string                                              { return f.schema }
+func (f fake) List(context.Context, string, string) ([]string, error)      { return nil, nil }
+func (f fake) Open(context.Context, string, string) (io.ReadCloser, error) { return nil, nil }
+func (f fake) Create(context.Context, string, string, io.Reader) error     { return nil }
 
-func gzipado(t *testing.T, s string) []byte {
+func gzipped(t *testing.T, s string) []byte {
 	t.Helper()
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)

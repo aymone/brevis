@@ -83,11 +83,11 @@ func TestARenewedCookieSurvivesIntoTheNextPage(t *testing.T) {
 // thing. If both go, the server receives two values for the same name and
 // escolhe um deles -- silenciosamente o errado.
 func TestTheCookieDoesNotGoTwice(t *testing.T) {
-	var bruto string
+	var raw string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bruto = r.Header.Get("Cookie")
+		raw = r.Header.Get("Cookie")
 		http.SetCookie(w, &http.Cookie{Name: "session-token", Value: "renovado==", Path: "/"})
-		if strings.Contains(bruto, "renovado") {
+		if strings.Contains(raw, "renovado") {
 			_, _ = fmt.Fprint(w, `{"results":[]}`)
 			return
 		}
@@ -102,8 +102,8 @@ func TestTheCookieDoesNotGoTwice(t *testing.T) {
 		Header:  map[string][]string{"Cookie": {"session-token=" + paddedJWT}},
 	})
 
-	if n := strings.Count(bruto, "session-token="); n != 1 {
-		t.Errorf("session-token appears %d times in the header: %q", n, bruto)
+	if n := strings.Count(raw, "session-token="); n != 1 {
+		t.Errorf("session-token appears %d times in the header: %q", n, raw)
 	}
 }
 
@@ -159,9 +159,9 @@ func drain(t *testing.T, s core.Source) {
 // The stdlib's jar does not apply the prefix rule. This test exists for the day
 // that changes.
 func TestASecurePrefixedCookieDoesNotVanishSilently(t *testing.T) {
-	var visto string
+	var seen string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		visto = r.Header.Get("Cookie")
+		seen = r.Header.Get("Cookie")
 		_, _ = fmt.Fprint(w, `{"ok":1}`)
 	}))
 	defer srv.Close()
@@ -173,7 +173,7 @@ func TestASecurePrefixedCookieDoesNotVanishSilently(t *testing.T) {
 		Apply: core.AsCookie,
 	}})
 
-	if visto == "" {
+	if seen == "" {
 		t.Fatal("the __Secure- cookie vanished before reaching the server")
 	}
 }

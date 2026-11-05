@@ -59,7 +59,7 @@ func handOverOneStep(t *testing.T, persist app.Persister, exec *handingOver) err
 	ctx, cancel := context.WithCancelCause(context.Background())
 	time.AfterFunc(30*time.Millisecond, func() { cancel(execution.ErrShutdown) })
 	return app.Runner{
-		RunID: uuid.New(), Persist: persist, Report: &coletor{},
+		RunID: uuid.New(), Persist: persist, Report: &collector{},
 		Hosts: map[string]execution.Executor{"box": exec},
 	}.Run(ctx, wf.Workflow{Slug: "daily", Nodes: []wf.Node{{ID: "long", Host: "box", Run: "sleep 600"}}})
 }

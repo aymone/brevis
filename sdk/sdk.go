@@ -96,19 +96,19 @@ func Extract(ctx context.Context, source Source) (*Data, error) {
 	}
 
 	if source.Snapshot != "" {
-		lines = comRetrato(lines, source.Snapshot)
+		lines = withSnapshot(lines, source.Snapshot)
 	}
 
 	return &Data{Records: lines, source: source, start: start, stats: stats}, nil
 }
 
-// comRetrato records the row as the source delivered it, under the requested
+// withSnapshot records the row as the source delivered it, under the requested
 // name.
 //
 // It runs HERE, between the read and the Transform, and not as a transformer:
 // that way it does not depend on a position in the chain, and no ordering can
 // contaminate the snapshot with fields the chain itself wrote.
-func comRetrato(rows iter.Seq2[Envelope, error], name string) iter.Seq2[Envelope, error] {
+func withSnapshot(rows iter.Seq2[Envelope, error], name string) iter.Seq2[Envelope, error] {
 	return func(yield func(Envelope, error) bool) {
 		for env, err := range rows {
 			if err != nil {
@@ -128,18 +128,18 @@ func comRetrato(rows iter.Seq2[Envelope, error], name string) iter.Seq2[Envelope
 				}
 				continue
 			}
-			if _, ocupado := obj[name]; ocupado {
+			if _, taken := obj[name]; taken {
 				yield(Envelope{}, fmt.Errorf("Source.Snapshot wants to write the snapshot to %q, "+
 					"and src already sends a field with that name -- overwriting it would "+
 					"lose what came from src. Pick another name", name))
 				return
 			}
 
-			retrato := make(map[string]any, len(obj))
+			snapshot := make(map[string]any, len(obj))
 			for k, v := range obj {
-				retrato[k] = v
+				snapshot[k] = v
 			}
-			obj[name] = retrato
+			obj[name] = snapshot
 
 			if !yield(env, nil) {
 				return
@@ -170,7 +170,7 @@ func loadWith(ctx context.Context, data *Data, target Target, run RunContext) (*
 	}
 
 	if target.FlushEvery > 0 {
-		return loadEmLevas(ctx, data, target, run, start)
+		return loadInBatches(ctx, data, target, run, start)
 	}
 
 	envelopes, err := collect(data, target)
@@ -243,19 +243,19 @@ func collect(data *Data, _ Target) ([]Envelope, error) {
 	return envelopes, nil
 }
 
-// loadEmLevas writes every FlushEvery records, so a long read has bounded
+// loadInBatches writes every FlushEvery records, so a long read has bounded
 // memory.
 //
 // The load stops being atomic, and the field says so. Here is what the code does
 // about it: a batch that fails STOPS, and the Result returned carries what the
 // earlier batches already wrote -- because hiding that 40,000 rows went in would
 // be worse than saying so.
-func loadEmLevas(ctx context.Context, data *Data, target Target, run RunContext, start time.Time) (*Result, error) {
+func loadInBatches(ctx context.Context, data *Data, target Target, run RunContext, start time.Time) (*Result, error) {
 	res := &Result{Table: target.To.Describe(), Target: locate(target.To)}
 	opts := target.options(run)
 
-	leva := make([]Envelope, 0, target.FlushEvery)
-	var levas int
+	batch := make([]Envelope, 0, target.FlushEvery)
+	var batches int
 
 	// The sample fills across batches and prints ONCE -- when it is full, or
 	// when the stream ends with fewer rows than asked for. Printing per batch
@@ -272,21 +272,21 @@ func loadEmLevas(ctx context.Context, data *Data, target Target, run RunContext,
 	}
 
 	write := func() error {
-		if len(leva) == 0 {
+		if len(batch) == 0 {
 			return nil
 		}
-		levas++
+		batches++
 		if pv != nil {
-			pv.take(leva)
+			pv.take(batch)
 			show(false)
 		}
 		start := time.Now()
-		lr, err := target.To.Write(ctx, leva, opts)
+		lr, err := target.To.Write(ctx, batch, opts)
 		res.LoadTime += time.Since(start)
 		if lr != nil {
 			add(res, lr)
 		}
-		leva = leva[:0]
+		batch = batch[:0]
 		return err
 	}
 
@@ -297,8 +297,8 @@ func loadEmLevas(ctx context.Context, data *Data, target Target, run RunContext,
 			return res, err
 		}
 		res.Records++
-		leva = append(leva, env)
-		if len(leva) >= target.FlushEvery {
+		batch = append(batch, env)
+		if len(batch) >= target.FlushEvery {
 			if err := write(); err != nil {
 				res.ExtractTime = time.Since(data.start)
 				res.Duration = time.Since(start)

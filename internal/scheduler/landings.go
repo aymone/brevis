@@ -49,7 +49,7 @@ func (s *Scheduler) landingCycle(ctx context.Context, now time.Time) (int, error
 	}
 	if !planted {
 		// PLANTED AT now(), NEVER AT THE EPOCH. The same rule
-		// `schedules.ultimo_slot` learned the hard way -- a marker left unset
+		// `schedules.last_slot` learned the hard way -- a marker left unset
 		// makes the first cycle materialise from the beginning of time. Here
 		// that would be one run per debounce window for the whole history of
 		// the landings table.
@@ -151,7 +151,7 @@ func (s *Scheduler) enqueueLanded(ctx context.Context, slug string, window time.
 	if err != nil {
 		return false, err
 	}
-	bruto, err := json.Marshal(def)
+	raw, err := json.Marshal(def)
 	if err != nil {
 		return false, err
 	}
@@ -166,7 +166,7 @@ func (s *Scheduler) enqueueLanded(ctx context.Context, slug string, window time.
 	// `slug:landed:window` is the NORMAL outcome here -- it is how ten
 	// landings in a window become one run -- and asking the database first
 	// would be a second round trip for an answer the insert already gives.
-	return s.createAndEnqueue(ctx, slug, bruto, window,
+	return s.createAndEnqueue(ctx, slug, raw, window,
 		sch.TriggerLanded, 0, defaults, def.MaxActive, def.Group, targets...)
 }
 

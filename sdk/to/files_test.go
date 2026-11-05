@@ -12,7 +12,7 @@ import (
 	core "brevis.sh/brevis/sdk/internal/core"
 )
 
-func lote(n int) []core.Envelope {
+func batch(n int) []core.Envelope {
 	out := make([]core.Envelope, n)
 	for i := range out {
 		out[i] = core.Envelope{
@@ -24,7 +24,7 @@ func lote(n int) []core.Envelope {
 	return out
 }
 
-func unico(t *testing.T, dir string) string {
+func only(t *testing.T, dir string) string {
 	t.Helper()
 	var found []string
 	_ = filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
@@ -42,7 +42,7 @@ func unico(t *testing.T, dir string) string {
 func TestFilesWritesNDJSON(t *testing.T) {
 	dir := t.TempDir()
 
-	res, err := Files{Path: dir + "/"}.Write(context.Background(), lote(3), core.WriteOptions{})
+	res, err := Files{Path: dir + "/"}.Write(context.Background(), batch(3), core.WriteOptions{})
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestFilesWritesNDJSON(t *testing.T) {
 		t.Errorf("RowsLoaded = %d", res.RowsLoaded)
 	}
 
-	body, err := os.ReadFile(unico(t, dir))
+	body, err := os.ReadFile(only(t, dir))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,11 +71,11 @@ func TestFilesWritesNDJSON(t *testing.T) {
 // destination.
 func TestFilesAddsNothingWithoutMetadata(t *testing.T) {
 	dir := t.TempDir()
-	if _, err := (Files{Path: dir + "/"}).Write(context.Background(), lote(1), core.WriteOptions{}); err != nil {
+	if _, err := (Files{Path: dir + "/"}).Write(context.Background(), batch(1), core.WriteOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	body, _ := os.ReadFile(unico(t, dir))
+	body, _ := os.ReadFile(only(t, dir))
 	var row map[string]any
 	_ = json.Unmarshal([]byte(strings.TrimSpace(string(body))), &row)
 
@@ -83,20 +83,20 @@ func TestFilesAddsNothingWithoutMetadata(t *testing.T) {
 		t.Errorf("the record has %d fields, want the caller's 2: %v", len(row), row)
 	}
 	for _, forbidden := range []string{"ingestion_id", "provider", "entity", "source_key", "payload"} {
-		if _, tem := row[forbidden]; tem {
+		if _, has := row[forbidden]; has {
 			t.Errorf("the SDK wrote %q without being asked", forbidden)
 		}
 	}
 }
 
-func TestFilesComprime(t *testing.T) {
+func TestFilesCompress(t *testing.T) {
 	dir := t.TempDir()
 	if _, err := (Files{Path: dir + "/", Compress: true}).
-		Write(context.Background(), lote(2), core.WriteOptions{}); err != nil {
+		Write(context.Background(), batch(2), core.WriteOptions{}); err != nil {
 		t.Fatal(err)
 	}
 
-	path := unico(t, dir)
+	path := only(t, dir)
 	if !strings.HasSuffix(path, ".gz") {
 		t.Errorf("the file did not end in .gz: %s", path)
 	}
@@ -114,7 +114,7 @@ func TestFilesComprime(t *testing.T) {
 // worse than an error.
 func TestFilesRefusesAFormatItDoesNotWrite(t *testing.T) {
 	_, err := Files{Path: t.TempDir() + "/", Format: "parquet"}.
-		Write(context.Background(), lote(1), core.WriteOptions{})
+		Write(context.Background(), batch(1), core.WriteOptions{})
 	if err == nil {
 		t.Fatal("to.Files writes NDJSON and CSV; parquet has to be refused")
 	}
@@ -125,7 +125,7 @@ func TestFilesRefusesAFormatItDoesNotWrite(t *testing.T) {
 
 // The declaration holds on every destination, not only on BigQuery.
 func TestFilesChecksColumns(t *testing.T) {
-	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), lote(1),
+	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), batch(1),
 		core.WriteOptions{Columns: []string{"sku", "quantidade", "faltando"}})
 	if err == nil {
 		t.Fatal("a declared column that is not delivered has to be an error here too")
@@ -146,7 +146,7 @@ func TestFilesWritesCSVWithTheUnionOfTheFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	body, _ := os.ReadFile(unico(t, dir))
+	body, _ := os.ReadFile(only(t, dir))
 	lines := strings.Split(strings.TrimSpace(string(body)), "\n")
 	if lines[0] != "a,b" {
 		t.Errorf("header = %q, want the sorted union", lines[0])
@@ -162,7 +162,7 @@ func TestFilesDoesNotOverwriteThePreviousBatch(t *testing.T) {
 	dir := t.TempDir()
 	d := Files{Path: dir + "/"}
 	for i := 0; i < 2; i++ {
-		if _, err := d.Write(context.Background(), lote(1), core.WriteOptions{}); err != nil {
+		if _, err := d.Write(context.Background(), batch(1), core.WriteOptions{}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -177,7 +177,7 @@ func TestFilesDoesNotOverwriteThePreviousBatch(t *testing.T) {
 // is atomic on the same filesystem.
 func TestFilesLeavesNoTemporaryFile(t *testing.T) {
 	dir := t.TempDir()
-	if _, err := (Files{Path: dir + "/"}).Write(context.Background(), lote(1), core.WriteOptions{}); err != nil {
+	if _, err := (Files{Path: dir + "/"}).Write(context.Background(), batch(1), core.WriteOptions{}); err != nil {
 		t.Fatal(err)
 	}
 	entries, _ := os.ReadDir(dir)
@@ -189,7 +189,7 @@ func TestFilesLeavesNoTemporaryFile(t *testing.T) {
 }
 
 func TestFilesRefusesAPathWithNoStore(t *testing.T) {
-	_, err := Files{Path: "gs://b/x/"}.Write(context.Background(), lote(1), core.WriteOptions{})
+	_, err := Files{Path: "gs://b/x/"}.Write(context.Background(), batch(1), core.WriteOptions{})
 	if err == nil {
 		t.Fatal("a gs:// path without a Store cannot be written")
 	}
@@ -201,14 +201,14 @@ func TestFilesRefusesAPathWithNoStore(t *testing.T) {
 // A directory has no key to match on, and a flag ignored in silence is worse
 // than an error.
 func TestFilesRefusesDedup(t *testing.T) {
-	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), lote(1),
+	_, err := Files{Path: t.TempDir() + "/"}.Write(context.Background(), batch(1),
 		core.WriteOptions{Dedup: core.DedupMerge})
 	if err == nil {
 		t.Fatal("to.Files cannot deduplicate; accepting the flag would mean ignoring it")
 	}
-	for _, quer := range []string{"to.Files", "Dedup"} {
-		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("the error must name %q: %v", quer, err)
+	for _, wants := range []string{"to.Files", "Dedup"} {
+		if !strings.Contains(err.Error(), wants) {
+			t.Errorf("the error must name %q: %v", wants, err)
 		}
 	}
 }
@@ -226,7 +226,7 @@ func TestFilesPartitionsByTheRowsColumn(t *testing.T) {
 		Write(context.Background(), records, core.WriteOptions{}); err != nil {
 		t.Fatal(err)
 	}
-	if path := unico(t, dir); !strings.Contains(path, "ingestion_loaded_at=2026-09-04") {
+	if path := only(t, dir); !strings.Contains(path, "ingestion_loaded_at=2026-09-04") {
 		t.Errorf("the path was not partitioned: %s", path)
 	}
 }

@@ -7,14 +7,14 @@ import "testing"
 // against another implementation of ours -- two implementations of ours can
 // change together and the test still pass.
 func TestComputeIngestionIDAgainstPython(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		provider, entity, sourceKey, recordTS, expected string
 	}{
 		// uuid.uuid5(UUID("e3a4f8c0-1b9d-4ea0-9c2e-77f6a6c4a4d7"), "p|e|k|2026-01-01T00:00:00Z")
 		{"p", "e", "k", "2026-01-01T00:00:00Z", "178d0b49-dece-5738-b8eb-f5cae222a1ea"},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		got, err := ComputeIngestionID(c.provider, c.entity, c.sourceKey, c.recordTS)
 		if err != nil {
 			t.Fatalf("ComputeIngestionID: %v", err)
@@ -31,12 +31,12 @@ func TestComputeIngestionIDAgainstPython(t *testing.T) {
 // can arrive through either path.
 func TestEnvelopeUsaAMesmaFormula(t *testing.T) {
 	env := Envelope{Provider: "p", Entity: "e", SourceKey: "k", RecordTS: "t"}
-	pelaEnvelope, err := env.IngestionID()
+	byEnvelope, err := env.IngestionID()
 	if err != nil {
 		t.Fatal(err)
 	}
-	direto, _ := ComputeIngestionID("p", "e", "k", "t")
-	if pelaEnvelope != direto {
-		t.Errorf("the two paths diverged: %s != %s", pelaEnvelope, direto)
+	direct, _ := ComputeIngestionID("p", "e", "k", "t")
+	if byEnvelope != direct {
+		t.Errorf("the two paths diverged: %s != %s", byEnvelope, direct)
 	}
 }

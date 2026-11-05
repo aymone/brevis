@@ -17,7 +17,7 @@ import (
 
 // zoneReads is a catalog whose schedules say their zone.
 type zoneReads struct {
-	api.Leitura
+	api.Reads
 	schedules []postgres.ScheduleSummary
 }
 

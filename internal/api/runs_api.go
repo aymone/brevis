@@ -80,18 +80,18 @@ func (u *UI) runsAPI(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	f := pages.RunFilter{
 		State: validState(q.Get("state")), Workflow: q.Get("workflow"),
-		De: q.Get("from"), Ate: q.Get("to"), Page: page(q.Get("page")), PerPage: pages.DefaultPerPage,
+		From: q.Get("from"), To: q.Get("to"), Page: page(q.Get("page")), PerPage: pages.DefaultPerPage,
 	}
-	de, ate := instant(f.De), instant(f.Ate)
-	if de == nil {
-		f.De = ""
+	from, until := instant(f.From), instant(f.To)
+	if from == nil {
+		f.From = ""
 	}
-	if ate == nil {
-		f.Ate = ""
+	if until == nil {
+		f.To = ""
 	}
 	query := postgres.RunFilter{
-		State: f.State, Workflow: f.Workflow, De: de, Ate: ate,
-		Limite: f.PerPage, Offset: (f.Page - 1) * f.PerPage,
+		State: f.State, Workflow: f.Workflow, From: from, To: until,
+		Limit: f.PerPage, Offset: (f.Page - 1) * f.PerPage,
 	}
 	if f.State == "running" {
 		query.State, query.States = "", pages.InFlight
@@ -116,7 +116,7 @@ func (u *UI) runsAPI(w http.ResponseWriter, r *http.Request) {
 	out := runsView{
 		Runs: runViews(runs, u.runsLogos(r.Context(), runs)), Total: total, Page: f.Page, PerPage: f.PerPage,
 		Pages:   max(1, (total+f.PerPage-1)/f.PerPage),
-		Filter:  runsFilterView{State: f.State, Workflow: f.Workflow, From: f.De, To: f.Ate},
+		Filter:  runsFilterView{State: f.State, Workflow: f.Workflow, From: f.From, To: f.To},
 		Counts:  runsCountsView{Going: inFlight(counts), Failed: counts["failed"]},
 		ByState: map[string]int{},
 	}

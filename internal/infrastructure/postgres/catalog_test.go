@@ -19,7 +19,7 @@ func landAt(t *testing.T, pool *postgres.Pool, slug, node, target string, slot t
 	t.Helper()
 	ctx := context.Background()
 	id := aged(t, pool, slug, time.Hour, dom.StatusSuccess)
-	if _, err := pool.Exec(ctx, `UPDATE runs SET logical_date = $2, criado_em = $2 WHERE id = $1`, id, slot); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE runs SET logical_date = $2, created_at = $2 WHERE id = $1`, id, slot); err != nil {
 		t.Fatal(err)
 	}
 	if err := postgres.NewRunRepo(pool).RecordLandings(ctx, id, dom.Step(node), slug,
@@ -32,7 +32,7 @@ func landAt(t *testing.T, pool *postgres.Pool, slug, node, target string, slot t
 func schedule(t *testing.T, pool *postgres.Pool, slug, cron, tz string, active bool) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(), `
-		INSERT INTO schedules (id, workflow_slug, cron, timezone, ativo) VALUES ($1, $2, $3, $4, $5)`,
+		INSERT INTO schedules (id, workflow_slug, cron, timezone, active) VALUES ($1, $2, $3, $4, $5)`,
 		uuid.New(), slug, cron, tz, active); err != nil {
 		t.Fatal(err)
 	}

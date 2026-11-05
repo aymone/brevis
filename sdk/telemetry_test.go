@@ -14,7 +14,7 @@ import (
 // duration is measurable rather than zero.
 type slowSource struct {
 	records []any
-	pausa   time.Duration
+	pause   time.Duration
 }
 
 func (slowSource) Describe() string { return "origem.lenta" }
@@ -22,7 +22,7 @@ func (slowSource) Describe() string { return "origem.lenta" }
 func (o slowSource) Read(context.Context, ReadOptions) (iter.Seq2[Envelope, error], error) {
 	return func(yield func(Envelope, error) bool) {
 		for _, r := range o.records {
-			time.Sleep(o.pausa)
+			time.Sleep(o.pause)
 			if !yield(Envelope{Payload: r}, nil) {
 				return
 			}
@@ -40,7 +40,7 @@ func stagesOf(t *testing.T, p *Pipeline) ([]map[string]any, error) {
 
 	err := runPipeline(context.Background(), p)
 
-	var eventos []map[string]any
+	var events []map[string]any
 	for _, line := range strings.Split(buf.String(), "\n") {
 		if !strings.HasPrefix(line, phaseMarker) {
 			continue
@@ -49,12 +49,12 @@ func stagesOf(t *testing.T, p *Pipeline) ([]map[string]any, error) {
 		if e := json.Unmarshal([]byte(strings.TrimPrefix(line, phaseMarker)), &ev); e != nil {
 			t.Fatalf("line marked unreadable %q: %v", line, e)
 		}
-		eventos = append(eventos, ev)
+		events = append(events, ev)
 	}
-	return eventos, err
+	return events, err
 }
 
-func pipelineDeTeste(src Reader, box *[]Envelope) *Pipeline {
+func testPipeline(src Reader, box *[]Envelope) *Pipeline {
 	return &Pipeline{
 		Name:      "fetcher",
 		Source:    Source{From: src},
@@ -66,16 +66,16 @@ func pipelineDeTeste(src Reader, box *[]Envelope) *Pipeline {
 
 func TestPhasesFollowThePipelineShape(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(countedSource{
-		records:  []any{map[string]any{"id": 1}, map[string]any{"id": 2}},
-		leituras: new(int),
+	events, err := stagesOf(t, testPipeline(countedSource{
+		records: []any{map[string]any{"id": 1}, map[string]any{"id": 2}},
+		reads:   new(int),
 	}, &box))
 	if err != nil {
 		t.Fatalf("pipeline: %v", err)
 	}
 
 	var trail []string
-	for _, ev := range eventos {
+	for _, ev := range events {
 		if ev["type"] == "sdk" || ev["type"] == "pipeline" {
 			trail = append(trail, ev["type"].(string))
 			continue
@@ -85,7 +85,7 @@ func TestPhasesFollowThePipelineShape(t *testing.T) {
 	// One phase per element of the pipeline's SHAPE: the source, each stage in
 	// order, the destination. A single `transform` box could not tell "216
 	// became 9" from "216 became 216 and then 9".
-	querido := []string{
+	wantedList := []string{
 		"sdk", "pipeline",
 		"check:running", "check:done",
 		"extract:running",
@@ -93,8 +93,8 @@ func TestPhasesFollowThePipelineShape(t *testing.T) {
 		"extract:done", "map:done",
 		"load:running", "load:done",
 	}
-	if strings.Join(trail, " ") != strings.Join(querido, " ") {
-		t.Errorf("trilha:\n  %v\nesperada:\n  %v", trail, querido)
+	if strings.Join(trail, " ") != strings.Join(wantedList, " ") {
+		t.Errorf("trilha:\n  %v\nesperada:\n  %v", trail, wantedList)
 	}
 }
 
@@ -103,20 +103,20 @@ func TestPhasesFollowThePipelineShape(t *testing.T) {
 // differently from its neighbour" without anybody opening the Dockerfile.
 func TestTheAnnouncementCarriesTheVersion(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(countedSource{
-		records: []any{map[string]any{"id": 1}}, leituras: new(int),
+	events, err := stagesOf(t, testPipeline(countedSource{
+		records: []any{map[string]any{"id": 1}}, reads: new(int),
 	}, &box))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(eventos) == 0 || eventos[0]["type"] != "sdk" {
-		t.Fatalf("the first event has to be the announcement, got %v", eventos)
+	if len(events) == 0 || events[0]["type"] != "sdk" {
+		t.Fatalf("the first event has to be the announcement, got %v", events)
 	}
-	if v, _ := eventos[0]["version"].(string); v == "" {
+	if v, _ := events[0]["version"].(string); v == "" {
 		t.Error("the announcement came out without a version")
 	}
-	if eventos[0]["pipeline"] != "fetcher" {
-		t.Errorf("the announcement does not say whose it is: %v", eventos[0])
+	if events[0]["pipeline"] != "fetcher" {
+		t.Errorf("the announcement does not say whose it is: %v", events[0])
 	}
 }
 
@@ -127,16 +127,16 @@ func TestTheAnnouncementCarriesTheVersion(t *testing.T) {
 // extraction, and the screen would lie about precisely the longest stage.
 func TestTheSourceDurationMeasuresTheRealExtraction(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(slowSource{
+	p := testPipeline(slowSource{
 		records: []any{map[string]any{"id": 1}, map[string]any{"id": 2}, map[string]any{"id": 3}},
-		pausa:   20 * time.Millisecond,
+		pause:   20 * time.Millisecond,
 	}, &box)
-	eventos, err := stagesOf(t, p)
+	events, err := stagesOf(t, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ms := stageDuration(t, eventos, "extract")
+	ms := stageDuration(t, events, "extract")
 	if ms < 50 {
 		t.Errorf("extract took %vms; the source spends 60ms, so the measurement is "+
 			"timing the call instead of the stream", ms)
@@ -148,14 +148,14 @@ func TestTheSourceDurationMeasuresTheRealExtraction(t *testing.T) {
 // else.
 func TestAMapStageInventsNoDuration(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(slowSource{
-		records: []any{map[string]any{"id": 1}}, pausa: 20 * time.Millisecond,
+	events, err := stagesOf(t, testPipeline(slowSource{
+		records: []any{map[string]any{"id": 1}}, pause: 20 * time.Millisecond,
 	}, &box))
 	if err != nil {
 		t.Fatal(err)
 	}
-	end := findStage(t, eventos, "map", "done")
-	if _, tem := end["ms"]; tem {
+	end := findStage(t, events, "map", "done")
+	if _, has := end["ms"]; has {
 		t.Errorf("a map stage reported a duration: %v", end)
 	}
 }
@@ -165,18 +165,18 @@ func TestAMapStageInventsNoDuration(t *testing.T) {
 // pulados.
 func TestAMapStageSaysHowManyItDropped(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(countedSource{
+	events, err := stagesOf(t, testPipeline(countedSource{
 		records: []any{
 			map[string]any{"id": 1},
 			map[string]any{"sem_id": true},
 			map[string]any{"id": 3},
 		},
-		leituras: new(int),
+		reads: new(int),
 	}, &box))
 	if err != nil {
 		t.Fatal(err)
 	}
-	end := findStage(t, eventos, "map", "done")
+	end := findStage(t, events, "map", "done")
 	if end["in"] != 3.0 || end["out"] != 2.0 || end["dropped"] != 1.0 {
 		t.Errorf("wrong count: %v", end)
 	}
@@ -186,17 +186,17 @@ func TestAMapStageSaysHowManyItDropped(t *testing.T) {
 // terminal of whoever is debugging a fetcher would be cost with no return.
 func TestOutsideTheEngineNothingIsAnnounced(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(countedSource{
-		records: []any{map[string]any{"id": 1}}, leituras: new(int),
+	p := testPipeline(countedSource{
+		records: []any{map[string]any{"id": 1}}, reads: new(int),
 	}, &box)
 	p.Run = RunContext{} // rodando a mao
 
-	eventos, err := stagesOf(t, p)
+	events, err := stagesOf(t, p)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(eventos) != 0 {
-		t.Errorf("announced %d events when run by hand: %v", len(eventos), eventos)
+	if len(events) != 0 {
+		t.Errorf("announced %d events when run by hand: %v", len(events), events)
 	}
 	// E o pipeline continua funcionando igual.
 	if len(box) != 1 {
@@ -222,20 +222,20 @@ func TestThePhaseCap(t *testing.T) {
 	}
 }
 
-func findStage(t *testing.T, eventos []map[string]any, name, state string) map[string]any {
+func findStage(t *testing.T, events []map[string]any, name, state string) map[string]any {
 	t.Helper()
-	for _, ev := range eventos {
+	for _, ev := range events {
 		if ev["name"] == name && ev["state"] == state {
 			return ev
 		}
 	}
-	t.Fatalf("could not find the stage %s:%s in %v", name, state, eventos)
+	t.Fatalf("could not find the stage %s:%s in %v", name, state, events)
 	return nil
 }
 
-func stageDuration(t *testing.T, eventos []map[string]any, name string) float64 {
+func stageDuration(t *testing.T, events []map[string]any, name string) float64 {
 	t.Helper()
-	ms, ok := findStage(t, eventos, name, "done")["ms"].(float64)
+	ms, ok := findStage(t, events, name, "done")["ms"].(float64)
 	if !ok {
 		t.Fatalf("the stage %s did not report a duration", name)
 	}
@@ -250,9 +250,9 @@ func stageDuration(t *testing.T, eventos []map[string]any, name string) float64 
 // structure never reached the display.
 func TestEachStageGetsItsOwnBox(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, &Pipeline{
+	events, err := stagesOf(t, &Pipeline{
 		Name:   "fetcher",
-		Source: Source{From: countedSource{records: twoRecords(), leituras: new(int)}},
+		Source: Source{From: countedSource{records: twoRecords(), reads: new(int)}},
 		Stages: []Stage{
 			Map(SkipWithout("provider")),
 			Aggregate(Reduce{By: GroupBy("provider"), Agg: map[string]Aggregator{"n": Count()}}),
@@ -266,36 +266,36 @@ func TestEachStageGetsItsOwnBox(t *testing.T) {
 	}
 
 	// Every phase that finished, by position.
-	porIndice := map[float64]map[string]any{}
-	for _, ev := range eventos {
+	byIndex := map[float64]map[string]any{}
+	for _, ev := range events {
 		if ev["type"] == "stage" && ev["state"] == "done" {
-			porIndice[ev["index"].(float64)] = ev
+			byIndex[ev["index"].(float64)] = ev
 		}
 	}
-	if len(porIndice) != 6 {
+	if len(byIndex) != 6 {
 		t.Fatalf("%d boxes finished, want 6 (check, source, map, aggregate, map, target): %v",
-			len(porIndice), porIndice)
+			len(byIndex), byIndex)
 	}
 
 	names := []string{"check", "extract", "map", "aggregate", "map", "load"}
-	for i, quero := range names {
-		ev := porIndice[float64(i)]
+	for i, want := range names {
+		ev := byIndex[float64(i)]
 		if ev == nil {
 			t.Fatalf("no box at position %d", i)
 		}
-		if ev["name"] != quero {
-			t.Errorf("position %d is %q, want %q", i, ev["name"], quero)
+		if ev["name"] != want {
+			t.Errorf("position %d is %q, want %q", i, ev["name"], want)
 		}
 	}
 
 	// The aggregation's numbers belong to the aggregation, not to a sum of
 	// everything: 2 records in, 1 group out.
-	agg := porIndice[3]
+	agg := byIndex[3]
 	if agg["in"] != 2.0 || agg["out"] != 1.0 || agg["groups"] != 1.0 {
 		t.Errorf("the aggregation's counts are wrong: %v", agg)
 	}
 	// And the map after it saw the aggregated row, not the raw ones.
-	if after := porIndice[4]; after["in"] != 1.0 {
+	if after := byIndex[4]; after["in"] != 1.0 {
 		t.Errorf("the map after the aggregation saw %v records, want 1", after["in"])
 	}
 }
@@ -303,16 +303,16 @@ func TestEachStageGetsItsOwnBox(t *testing.T) {
 // The card is half a card without saying WHICH source and WHICH destination.
 func TestTheSourceAndTargetSayWhichTheyAre(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(countedSource{
-		records: twoRecords(), leituras: new(int),
+	events, err := stagesOf(t, testPipeline(countedSource{
+		records: twoRecords(), reads: new(int),
 	}, &box))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if d := findStage(t, eventos, "extract", "done")["detail"]; d != "origem.teste" {
+	if d := findStage(t, events, "extract", "done")["detail"]; d != "origem.teste" {
 		t.Errorf("the source does not say which it is: %v", d)
 	}
-	if d := findStage(t, eventos, "load", "done")["detail"]; d != "destino.teste" {
+	if d := findStage(t, events, "load", "done")["detail"]; d != "destino.teste" {
 		t.Errorf("the destination does not say which it is: %v", d)
 	}
 }

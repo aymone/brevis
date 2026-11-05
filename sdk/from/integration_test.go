@@ -63,7 +63,7 @@ func s3Client(t *testing.T) (*awss3.Client, string) {
 	}); err != nil {
 		t.Fatalf("creating the bucket: %v", err)
 	}
-	t.Cleanup(func() { limpa(client, bucket) })
+	t.Cleanup(func() { cleanup(client, bucket) })
 
 	return client, bucket
 }
@@ -75,7 +75,7 @@ func envOr(k, fallback string) string {
 	return fallback
 }
 
-func limpa(c *awss3.Client, bucket string) {
+func cleanup(c *awss3.Client, bucket string) {
 	ctx := context.Background()
 	out, err := c.ListObjectsV2(ctx, &awss3.ListObjectsV2Input{Bucket: aws.String(bucket)})
 	if err == nil {
@@ -164,7 +164,7 @@ func TestIntegrationS3ReadsInOrder(t *testing.T) {
 }
 
 // gzip crosses the cloud the same way: written compressed, read by extension.
-func TestIntegrationS3Comprimido(t *testing.T) {
+func TestIntegrationS3Compressed(t *testing.T) {
 	client, bucket := s3Client(t)
 	ctx := context.Background()
 	store := s3.New(client)
@@ -238,10 +238,10 @@ func TestIntegrationGCSRoundTrip(t *testing.T) {
 	}
 	defer func() { _ = client.Close() }()
 
-	prefixo := fmt.Sprintf("it-files-%d/", time.Now().UnixNano())
+	prefix := fmt.Sprintf("it-files-%d/", time.Now().UnixNano())
 	store := gcs.New(client)
 	t.Cleanup(func() {
-		keys, _ := store.List(context.Background(), bucket, prefixo)
+		keys, _ := store.List(context.Background(), bucket, prefix)
 		for _, k := range keys {
 			_ = client.Bucket(bucket).Object(k).Delete(context.Background())
 		}
@@ -252,12 +252,12 @@ func TestIntegrationGCSRoundTrip(t *testing.T) {
 		{Payload: map[string]any{"sku": "W-2"}},
 	}
 
-	if _, err := (to.Files{Path: "gs://" + bucket + "/" + prefixo, Store: store}).
+	if _, err := (to.Files{Path: "gs://" + bucket + "/" + prefix, Store: store}).
 		Write(ctx, records, core.WriteOptions{}); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
-	seq, err := from.Files{Path: "gs://" + bucket + "/" + prefixo + "*.ndjson", Store: store}.
+	seq, err := from.Files{Path: "gs://" + bucket + "/" + prefix + "*.ndjson", Store: store}.
 		Read(ctx, core.ReadOptions{})
 	if err != nil {
 		t.Fatalf("Read: %v", err)

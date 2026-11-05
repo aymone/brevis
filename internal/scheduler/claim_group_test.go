@@ -24,7 +24,7 @@ func enqueueIn(t *testing.T, repo *postgres.RunRepo, q *queue.Queue,
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+		if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 			t.Fatal(err)
 		}
 		if err := q.Enqueue(ctx, r.ID, priority, time.Time{}); err != nil {

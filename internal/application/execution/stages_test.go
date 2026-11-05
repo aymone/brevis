@@ -62,10 +62,10 @@ func TestTheArrivalOrderIsPreserved(t *testing.T) {
 	c.line(`@brevis:{"tipo":"etapa","nome":"load","estado":"running"}`)
 	c.line(`@brevis:{"tipo":"etapa","nome":"extract","estado":"done"}`)
 
-	querido := []string{"check", "extract", "load"}
-	for i, name := range querido {
+	wantedList := []string{"check", "extract", "load"}
+	for i, name := range wantedList {
 		if c.Stages[i].TaskName != name {
-			t.Fatalf("order: %+v, want %v", c.Stages, querido)
+			t.Fatalf("order: %+v, want %v", c.Stages, wantedList)
 		}
 	}
 }
@@ -124,11 +124,11 @@ func TestTheCeilingProtectsTheDatabase(t *testing.T) {
 // that only understood the new one would make an old fetcher's stages vanish
 // from the screen -- with no error, no log, just the grey box back.
 func TestBothFormatsOfTheProtocol(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"ingles (v0.48+)":         `@brevis:{"type":"stage","name":"extract","state":"done","ms":2400,"at":"agora","paginas":300}`,
 		"portugues (ate a v0.47)": `@brevis:{"tipo":"etapa","nome":"extract","estado":"done","ms":2400,"em":"agora","paginas":300}`,
 	}
-	for name, line := range casos {
+	for name, line := range cases {
 		t.Run(name, func(t *testing.T) {
 			var c stageCollector
 			if !c.line(line) {
@@ -145,9 +145,9 @@ func TestBothFormatsOfTheProtocol(t *testing.T) {
 			if e.Numbers["paginas"] != 300.0 {
 				t.Errorf("numeros: %+v", e.Numbers)
 			}
-			for _, reservado := range []string{"tipo", "type", "nome", "name", "estado", "state", "em", "at"} {
-				if _, tem := e.Numbers[reservado]; tem {
-					t.Errorf("the protocol field %q leaked into the numbers: %+v", reservado, e.Numbers)
+			for _, reserved := range []string{"tipo", "type", "nome", "name", "estado", "state", "em", "at"} {
+				if _, has := e.Numbers[reserved]; has {
+					t.Errorf("the protocol field %q leaked into the numbers: %+v", reserved, e.Numbers)
 				}
 			}
 		})
@@ -186,9 +186,9 @@ func TestTwoStagesWithTheSameNameAreTwoBoxes(t *testing.T) {
 		t.Fatalf("became %d boxes, expected 3: %+v", len(c.Stages), c.Stages)
 	}
 	// And in the pipeline's order, which is what the screen draws.
-	for i, quero := range []string{"map", "aggregate", "map"} {
-		if c.Stages[i].TaskName != quero || c.Stages[i].Index != i {
-			t.Errorf("position %d: %+v, expected %q", i, c.Stages[i], quero)
+	for i, want := range []string{"map", "aggregate", "map"} {
+		if c.Stages[i].TaskName != want || c.Stages[i].Index != i {
+			t.Errorf("position %d: %+v, expected %q", i, c.Stages[i], want)
 		}
 	}
 	// The first map was not swallowed by the second.
@@ -204,8 +204,8 @@ func TestTheBoxesComeOutInThePipelinesOrder(t *testing.T) {
 	c.line(`@brevis:{"type":"stage","index":0,"name":"check","state":"done"}`)
 	c.line(`@brevis:{"type":"stage","index":1,"name":"extract","state":"done"}`)
 
-	for i, quero := range []string{"check", "extract", "load"} {
-		if c.Stages[i].TaskName != quero {
+	for i, want := range []string{"check", "extract", "load"} {
+		if c.Stages[i].TaskName != want {
 			t.Fatalf("ordem: %+v", c.Stages)
 		}
 	}

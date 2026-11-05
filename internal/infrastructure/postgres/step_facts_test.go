@@ -15,7 +15,7 @@ import (
 func taskRun(t *testing.T, pool *postgres.Pool, run uuid.UUID, node, status string, attempt int, at time.Time, took time.Duration) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(), `
-		INSERT INTO task_runs (id, run_id, node_id, status, attempt, iniciado_em, terminado_em)
+		INSERT INTO task_runs (id, run_id, node_id, status, attempt, started_at, finished_at)
 		VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)`, run, node, status, attempt, at, at.Add(took)); err != nil {
 		t.Fatal(err)
 	}

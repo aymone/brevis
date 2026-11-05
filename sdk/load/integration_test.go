@@ -158,14 +158,14 @@ func withIngestion(n int) []core.Envelope {
 		if err != nil {
 			panic(err)
 		}
-		nova := map[string]any{
+		fresh := map[string]any{
 			core.MetadataID:       id,
 			core.MetadataLoadedAt: now,
 		}
 		for k, v := range row {
-			nova[k] = v
+			fresh[k] = v
 		}
-		out[i].Payload = nova
+		out[i].Payload = fresh
 	}
 	return out
 }
@@ -933,9 +933,9 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 	ctx := context.Background()
 
 	for _, c := range []struct {
-		name    string
-		manter  bool
-		esperar int
+		name   string
+		manter bool
+		await  int
 	}{
 		{"o padrão apaga", false, 0},
 		{"KeepStagedFile mantém", true, 1},
@@ -946,13 +946,13 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 				{Name: "label", Type: bigquery.StringFieldType},
 			})
 
-			prefixo := fmt.Sprintf("it-staged-%d/", time.Now().UnixNano())
+			prefix := fmt.Sprintf("it-staged-%d/", time.Now().UnixNano())
 			opts := []core.LoadOption{
 				core.WithProjectID(env.project),
 				core.WithDataset(env.dataset),
 				core.WithTable(name),
 				core.WithStagingBucket(env.bucket),
-				core.WithStagingPrefix(prefixo),
+				core.WithStagingPrefix(prefix),
 				core.WithThresholdForGCS(1), // forces the GCS path
 			}
 			if c.manter {
@@ -977,7 +977,7 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 			}
 			defer func() { _ = gcsClient.Close() }()
 
-			it := gcsClient.Bucket(env.bucket).Objects(ctx, &storage.Query{Prefix: prefixo})
+			it := gcsClient.Bucket(env.bucket).Objects(ctx, &storage.Query{Prefix: prefix})
 			n := 0
 			for {
 				attrs, err := it.Next()
@@ -991,8 +991,8 @@ func TestIntegrationKeepStagedFile(t *testing.T) {
 				t.Cleanup(func() { _ = gcsClient.Bucket(env.bucket).Object(attrs.Name).Delete(context.Background()) })
 			}
 
-			if n != c.esperar {
-				t.Errorf("%d objects in the bucket, want %d", n, c.esperar)
+			if n != c.await {
+				t.Errorf("%d objects in the bucket, want %d", n, c.await)
 			}
 			_ = client
 		})
@@ -1010,9 +1010,9 @@ func TestIntegrationInlineLimitPicksTheStrategy(t *testing.T) {
 
 	for _, c := range []struct {
 		name     string
-		limite   int
+		limit    int
 		lines    int
-		esperada string
+		expected string
 	}{
 		{"abaixo do limite vai inline", 10, 3, "inline"},
 		{"acima do limite passa pelo GCS", 2, 3, "gcs"},
@@ -1028,7 +1028,7 @@ func TestIntegrationInlineLimitPicksTheStrategy(t *testing.T) {
 				core.WithDataset(env.dataset),
 				core.WithTable(name),
 				core.WithStagingBucket(env.bucket),
-				core.WithThresholdForGCS(c.limite),
+				core.WithThresholdForGCS(c.limit),
 			)
 			if err != nil {
 				t.Fatalf("New: %v", err)
@@ -1037,9 +1037,9 @@ func TestIntegrationInlineLimitPicksTheStrategy(t *testing.T) {
 			if err != nil {
 				t.Fatalf("load: %v", err)
 			}
-			if res.Strategy != c.esperada {
+			if res.Strategy != c.expected {
 				t.Errorf("with limit %d and %d rows the strategy was %q, want %q",
-					c.limite, c.lines, res.Strategy, c.esperada)
+					c.limit, c.lines, res.Strategy, c.expected)
 			}
 			if res.RowsLoaded != int64(c.lines) {
 				t.Errorf("%d rows written, want %d", res.RowsLoaded, c.lines)

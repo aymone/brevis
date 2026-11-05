@@ -86,7 +86,7 @@ func TestALiteralValueAndAMissingVariable(t *testing.T) {
 	}
 	// Absent does not become an empty string: `GOOGLE_PROJECT_ID=""` would make
 	// dbt fail later, with a worse message than the missing-variable one.
-	if _, existe := env["NAO_EXISTE"]; existe {
+	if _, exists := env["NAO_EXISTE"]; exists {
 		t.Error("a missing variable became an empty string")
 	}
 }
@@ -139,7 +139,7 @@ func TestLoadReadsTheEnvironmentForEveryField(t *testing.T) {
 	if c.Pods.ServiceAccount != "brevis-task" {
 		t.Errorf("ServiceAccount = %q", c.Pods.ServiceAccount)
 	}
-	if len(c.Pods.Tolerations) != 1 || c.Pods.Tolerations[0].Efeito != "NoSchedule" {
+	if len(c.Pods.Tolerations) != 1 || c.Pods.Tolerations[0].Effect != "NoSchedule" {
 		t.Errorf("Toleracoes = %+v", c.Pods.Tolerations)
 	}
 }

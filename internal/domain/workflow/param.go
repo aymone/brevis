@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -16,25 +17,22 @@ import (
 // params there is no backfill (`load_full=true`) and no window reprocessing, and
 // eight of the data repository's 51 flows could not even be converted — their
 // command carries `{{ inputs.start_date }}` and the like.
-// The tags below are the ON-DISK FORMAT, and they keep the Portuguese field
-// names the Go struct used to have.
+// A Param is part of the document stored whole as JSON in
+// `workflows.definition` and `runs.definition`.
 //
-// A Workflow is stored whole as JSON in `workflows.definicao` and
-// `runs.definicao`, with no tags of its own -- so the Go field NAME was the
-// key. Every workflow published before this rename holds `{"Nome":"date",
-// "Tipo":"string","Descricao":"..."}`, and json.Unmarshal ignores a key it
-// does not know: reading one with the fields renamed and untagged gives a param
-// with no name, no type and no description, with no error and no log. The
-// trigger form would render an empty field and the validation would refuse a
-// value the author declared as valid.
-//
-// Pinning the keys costs three tags and keeps both directions working: an
-// engine on either side of this commit reads and writes the same document.
+// Its keys were once the Portuguese names of the Go fields -- `Nome`, `Tipo` and
+// `Descricao` -- and every workflow published before they went English holds
+// those. json.Unmarshal ignores a key it does not know, so reading such a
+// document with the fields renamed would give a param with no name, no type and
+// no description, with no error and no log: the trigger form would render an
+// empty field and the validation would refuse a value the author declared as
+// valid. UnmarshalJSON therefore reads both spellings; writing emits the English
+// keys only.
 type Param struct {
-	Name        string    `json:"Nome"`
-	Type        ParamType `json:"Tipo"`
+	Name        string    `json:"Name"`
+	Type        ParamType `json:"Type"`
 	Default     string    `json:"Default"`
-	Description string    `json:"Descricao"`
+	Description string    `json:"Description"`
 
 	// Enum restricts the accepted values. Empty = any that passes the type.
 	Enum []string `json:"Enum"`
@@ -56,6 +54,35 @@ type Param struct {
 	Group string `json:"Group,omitempty"`
 	Warn  string `json:"Warn,omitempty"`
 	Uses  string `json:"Uses,omitempty"`
+}
+
+// UnmarshalJSON reads a param under either spelling of its keys; see the type.
+//
+// shortcut: the Portuguese keys stay readable because runs.definition keeps a
+// snapshot of every run until retention purges it; they can go once the
+// oldest run that can still be retried was created by an engine that writes
+// the English ones.
+func (p *Param) UnmarshalJSON(b []byte) error {
+	type plain Param
+	aux := struct {
+		*plain
+		Nome      *string    `json:"Nome"`
+		Tipo      *ParamType `json:"Tipo"`
+		Descricao *string    `json:"Descricao"`
+	}{plain: (*plain)(p)}
+	if err := json.Unmarshal(b, &aux); err != nil {
+		return err
+	}
+	if aux.Nome != nil && p.Name == "" {
+		p.Name = *aux.Nome
+	}
+	if aux.Tipo != nil && p.Type == "" {
+		p.Type = *aux.Tipo
+	}
+	if aux.Descricao != nil && p.Description == "" {
+		p.Description = *aux.Descricao
+	}
+	return nil
 }
 
 type ParamType string
@@ -295,7 +322,7 @@ func (w Workflow) Resolver(given map[string]string) (map[string]string, error) {
 	}
 
 	for name := range given {
-		if _, existe := declared[name]; !existe {
+		if _, exists := declared[name]; !exists {
 			return nil, fmt.Errorf("workflow %q does not declare the param %q (declared: %s)",
 				w.Slug, name, namesOf(w.Params))
 		}

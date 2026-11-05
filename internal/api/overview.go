@@ -67,7 +67,7 @@ func (u *UI) failingItems(ctx context.Context, failing []postgres.FailingWorkflo
 		it := pages.AttentionItem{Workflow: f.Slug, RunID: f.RunID, FailedAt: f.FailedAt, Streak: f.Streak}
 		if u.execs != nil {
 			if r, err := u.execs.Get(ctx, f.RunID); err == nil {
-				if logs, err := u.execs.LogsDaRun(ctx, f.RunID); err == nil {
+				if logs, err := u.execs.RunLogs(ctx, f.RunID); err == nil {
 					it.Cause = causeOf(logs, r.Err)
 				}
 				it.Params, it.Rerunnable = u.rerunValues(ctx, r.WorkflowSlug, r.Params)
@@ -103,10 +103,10 @@ func (u *UI) rerunValues(ctx context.Context, slug string, used map[string]strin
 // inFlightBySlug is each workflow's run in flight, if any: a failing workflow
 // whose rerun is going says so instead of offering another.
 func (u *UI) inFlightBySlug(ctx context.Context) map[string]string {
-	if u.leitura == nil {
+	if u.reads == nil {
 		return nil
 	}
-	runs, err := u.leitura.InFlight(ctx, 100)
+	runs, err := u.reads.InFlight(ctx, 100)
 	if err != nil {
 		u.log.Warn("the runs in flight are unavailable", "error", err)
 		return nil

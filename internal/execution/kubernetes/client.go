@@ -81,15 +81,15 @@ func NoCluster() (*Client, error) {
 		return nil, fmt.Errorf("the cluster CA is not a valid PEM certificate")
 	}
 
-	transporte := http.DefaultTransport.(*http.Transport).Clone()
-	transporte.TLSClientConfig = tlsConfig{pool}.build()
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = tlsConfig{pool}.build()
 
 	return &Client{
 		base:      fmt.Sprintf("https://%s", net_(host, port)),
 		namespace: strings.TrimSpace(string(ns)),
 		// No timeout on the client: the log GET with follow stays open for the
 		// task's whole duration. The cut comes from each call's context.
-		http:     &http.Client{Transport: transporte},
+		http:     &http.Client{Transport: transport},
 		tokenTTL: time.Minute,
 		readFile: os.ReadFile,
 	}, nil
@@ -112,16 +112,16 @@ func (c *Client) authorize(r *http.Request) error {
 	return nil
 }
 
-func (c *Client) request(ctx context.Context, metodo, path string, body any) (*http.Response, error) {
-	var leitor io.Reader
+func (c *Client) request(ctx context.Context, method, path string, body any) (*http.Response, error) {
+	var reader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
 		if err != nil {
 			return nil, err
 		}
-		leitor = bytes.NewReader(b)
+		reader = bytes.NewReader(b)
 	}
-	req, err := http.NewRequestWithContext(ctx, metodo, c.base+path, leitor)
+	req, err := http.NewRequestWithContext(ctx, method, c.base+path, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (c *Client) CreatePod(ctx context.Context, p Pod) (Pod, error) {
 	return created, nil
 }
 
-// LerPod devolve o estado atual.
-func (c *Client) LerPod(ctx context.Context, name string) (Pod, error) {
+// GetPod returns the pod's current state.
+func (c *Client) GetPod(ctx context.Context, name string) (Pod, error) {
 	res, err := c.request(ctx, http.MethodGet,
 		"/api/v1/namespaces/"+c.namespace+"/pods/"+name, nil)
 	if err != nil {

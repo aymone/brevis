@@ -49,7 +49,7 @@ func TestThePodCarriesImageCommandAndResources(t *testing.T) {
 	if c.Resources.Limits["memory"] != "2Gi" {
 		t.Errorf("limits = %v", c.Resources.Limits)
 	}
-	if _, temCPU := c.Resources.Limits["cpu"]; temCPU {
+	if _, hasCPU := c.Resources.Limits["cpu"]; hasCPU {
 		t.Error("an undeclared CPU limit must not be invented -- silent throttling is worse than no limit")
 	}
 
@@ -134,9 +134,9 @@ func TestThePodsNameIsStablePerAttempt(t *testing.T) {
 		t.Errorf("the same attempt produced %q and %q", a, b)
 	}
 
-	outra := task()
-	outra.Attempt = 1
-	if c := k8s.PodName(outra); c == a {
+	other := task()
+	other.Attempt = 1
+	if c := k8s.PodName(other); c == a {
 		t.Error("different attempts should produce different pods")
 	}
 }
@@ -160,9 +160,9 @@ func TestThePodsNameObeysKubernetesLimit(t *testing.T) {
 	}
 
 	// Two long names sharing a prefix must not collide after the trim.
-	outro := tk
-	outro.NodeID = strings.Repeat("passo-tambem-enorme-", 3) + "-b"
-	if k8s.PodName(outro) == name {
+	another := tk
+	another.NodeID = strings.Repeat("passo-tambem-enorme-", 3) + "-b"
+	if k8s.PodName(another) == name {
 		t.Error("the 63-character trim created a collision between two steps")
 	}
 }

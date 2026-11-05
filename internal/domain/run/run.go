@@ -90,13 +90,13 @@ type TaskRun struct {
 // Transition moves the Run, validating. It stamps the times here, and not in
 // the caller, so that no path exists that changes the state without recording
 // when.
-func (r *Run) Transition(para Status, now time.Time) error {
-	if err := Validate(r.Status, para); err != nil {
+func (r *Run) Transition(to Status, now time.Time) error {
+	if err := Validate(r.Status, to); err != nil {
 		return err
 	}
-	r.Status = para
+	r.Status = to
 
-	switch para {
+	switch to {
 	case StatusRunning:
 		if r.StartedAt == nil {
 			r.StartedAt = &now
@@ -137,13 +137,13 @@ func Step(node string) StepKey { return StepKey{Node: node, MapIndex: Unmapped} 
 // Against the STEP's graph, not the run's. The two shared one until `skipped`
 // arrived -- a state a step has and a run does not -- and a single map could no
 // longer say the truth about both.
-func (t *TaskRun) Transition(para Status, now time.Time) error {
-	if err := ValidateStep(t.Status, para); err != nil {
+func (t *TaskRun) Transition(to Status, now time.Time) error {
+	if err := ValidateStep(t.Status, to); err != nil {
 		return err
 	}
-	t.Status = para
+	t.Status = to
 
-	switch para {
+	switch to {
 	case StatusRunning:
 		if t.StartedAt == nil {
 			t.StartedAt = &now

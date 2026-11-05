@@ -31,7 +31,7 @@ func testDB(t *testing.T) *postgres.Pool {
 	}
 	t.Cleanup(p.Close)
 	if _, err := p.Exec(context.Background(),
-		`TRUNCATE alertas, queue_items, task_runs, runs, schedules, workflows, projects CASCADE`); err != nil {
+		`TRUNCATE alerts, queue_items, task_runs, runs, schedules, workflows, projects CASCADE`); err != nil {
 		t.Fatal(err)
 	}
 	return p
@@ -136,7 +136,7 @@ func TestAnAlertSurvivesSlackBeingDown(t *testing.T) {
 	ch := &channel{failFor: 2, err: errors.New("slack answered 503")}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond, MaxAttempts: 5,
-	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())
+	}, outbox, map[string]notify.Notifier{alerts.ChannelSlack: ch}, noLog())
 
 	drain(t, d, func() bool { return ch.count() > 0 })
 
@@ -167,7 +167,7 @@ func TestItGivesUpAndKeepsTheRow(t *testing.T) {
 	ch := &channel{failFor: 1000, err: errors.New("slack answered 403: invalid_token")}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond, MaxAttempts: 3,
-	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())
+	}, outbox, map[string]notify.Notifier{alerts.ChannelSlack: ch}, noLog())
 
 	drain(t, d, func() bool { return state(t, outbox, runID).State() == "undelivered" })
 
@@ -221,7 +221,7 @@ func TestAnAlertSurvivesTheDelivererDying(t *testing.T) {
 	ch := &channel{}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond,
-	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())
+	}, outbox, map[string]notify.Notifier{alerts.ChannelSlack: ch}, noLog())
 	drain(t, d, func() bool { return ch.count() > 0 })
 
 	if s := state(t, outbox, runID).State(); s != "delivered" {
@@ -243,7 +243,7 @@ func TestAnUnknownChannelIsNotRetriedForever(t *testing.T) {
 	ch := &channel{}
 	d := alerts.NewDeliverer(alerts.Config{
 		Interval: 10 * time.Millisecond, MaxAttempts: 50,
-	}, outbox, map[string]notify.Notificador{alerts.ChannelSlack: ch}, noLog())
+	}, outbox, map[string]notify.Notifier{alerts.ChannelSlack: ch}, noLog())
 
 	drain(t, d, func() bool { return state(t, outbox, runID).State() == "undelivered" })
 

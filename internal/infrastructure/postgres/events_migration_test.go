@@ -16,8 +16,8 @@ const beforeTheFeed = 25
 // the runs by when they started and by when they finished.
 var feedIndexes = map[string]string{
 	"events_at_idx":     "ON public.events USING btree (at DESC, id DESC)",
-	"runs_started_idx":  "ON public.runs USING btree (iniciado_em DESC, id DESC) WHERE (iniciado_em IS NOT NULL)",
-	"runs_finished_idx": "ON public.runs USING btree (terminado_em DESC, id DESC) WHERE (terminado_em IS NOT NULL)",
+	"runs_started_idx":  "ON public.runs USING btree (started_at DESC, id DESC) WHERE (started_at IS NOT NULL)",
+	"runs_finished_idx": "ON public.runs USING btree (finished_at DESC, id DESC) WHERE (finished_at IS NOT NULL)",
 }
 
 func indexNamed(t *testing.T, pool *postgres.Pool, name string) (string, bool) {

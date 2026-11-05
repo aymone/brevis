@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// semEco reads a line from the terminal with the echo turned off.
+// noEcho reads a line from the terminal with the echo turned off.
 //
 // The stdlib exposes no terminal control, and the alternative would be adding
 // `golang.org/x/term` for a single call. Delegating to `stty` costs one child
@@ -19,15 +19,15 @@ import (
 // command failing: whoever is generating a hash inside a minimal container
 // would rather type the password visibly than not be able to generate the hash
 // at all. The warning makes the choice a conscious one.
-func semEco() (string, error) {
-	restaurar, err := desligarEco()
+func noEcho() (string, error) {
+	restore, err := disableEcho()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "\n(warning: no `stty`; the password will show on screen)")
 	} else {
 		// On any exit — a read error included — the terminal goes back to
 		// normal. Without this, a Ctrl-C partway through leaves the operator's
 		// shell mute.
-		defer restaurar()
+		defer restore()
 	}
 
 	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
@@ -38,7 +38,7 @@ func semEco() (string, error) {
 	return strings.TrimRight(line, "\r\n"), nil
 }
 
-func desligarEco() (func(), error) {
+func disableEcho() (func(), error) {
 	previous, err := stty("-g")
 	if err != nil {
 		return nil, err

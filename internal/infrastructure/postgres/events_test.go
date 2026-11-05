@@ -33,7 +33,7 @@ func ran(t *testing.T, pool *postgres.Pool, slug string, status dom.Status, star
 		end = &ended
 	}
 	if _, err := pool.Exec(context.Background(),
-		`UPDATE runs SET iniciado_em = $2, terminado_em = $3 WHERE id = $1`, id, started, end); err != nil {
+		`UPDATE runs SET started_at = $2, finished_at = $3 WHERE id = $1`, id, started, end); err != nil {
 		t.Fatal(err)
 	}
 	return id
@@ -58,7 +58,7 @@ func TestTheFeedInterleavesEventsAndRunsNewestFirst(t *testing.T) {
 	a := ran(t, pool, "daily", dom.StatusSuccess, now0.Add(-4*time.Minute), now0.Add(-3*time.Minute))
 	happened(t, pool, now0.Add(-2*time.Minute), events.SchedulePaused, "daily", "ana")
 	b := ran(t, pool, "daily", dom.StatusRunning, now0.Add(-time.Minute), time.Time{})
-	if _, err := pool.Exec(context.Background(), `UPDATE runs SET status = 'queued', iniciado_em = NULL, terminado_em = NULL
+	if _, err := pool.Exec(context.Background(), `UPDATE runs SET status = 'queued', started_at = NULL, finished_at = NULL
 		WHERE id = $1`, finished(t, pool, "daily", dom.StatusQueued, time.Minute)); err != nil {
 		t.Fatal(err)
 	}
@@ -257,8 +257,8 @@ func BenchmarkRecentEvents(b *testing.B) {
 	pool := insightsDB(b)
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definicao, trigger_type,
-		                  criado_em, iniciado_em, terminado_em)
+		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definition, trigger_type,
+		                  created_at, started_at, finished_at)
 		SELECT gen_random_uuid(), 'wf_' || (g % 1000), 'bench-' || g,
 		       CASE WHEN g % 20 = 0 THEN 'failed' WHEN g % 97 = 0 THEN 'canceled' ELSE 'success' END,
 		       '{}', 'schedule',

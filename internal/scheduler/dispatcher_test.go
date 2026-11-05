@@ -72,7 +72,7 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+		if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 			t.Fatal(err)
 		}
 		if err := queue.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -81,37 +81,37 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 	}
 
 	// It holds every run until we release, so the steady state is observable.
-	segurar := make(chan struct{})
+	hold := make(chan struct{})
 	var running atomic.Int32
-	var pico atomic.Int32
+	var peak atomic.Int32
 
-	executar := func(ctx context.Context, _ uuid.UUID) error {
+	execute := func(ctx context.Context, _ uuid.UUID) error {
 		n := running.Add(1)
 		for {
-			p := pico.Load()
-			if n <= p || pico.CompareAndSwap(p, n) {
+			p := peak.Load()
+			if n <= p || peak.CompareAndSwap(p, n) {
 				break
 			}
 		}
 		defer running.Add(-1)
-		<-segurar
+		<-hold
 		return nil
 	}
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: maxConc, Interval: 20 * time.Millisecond,
-	}, queue, repo, executar, noLog())
+		Worker: "t", MaxConcurrency: maxConc, Interval: 20 * time.Millisecond,
+	}, queue, repo, execute, noLog())
 
-	ctxD, parar := context.WithCancel(ctx)
+	ctxD, stop := context.WithCancel(ctx)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { defer wg.Done(); _ = d.Run(ctxD) }()
 
 	// Espera o estado estabilizar em maxConc em voo.
-	prazo := time.After(10 * time.Second)
+	deadline := time.After(10 * time.Second)
 	for running.Load() < maxConc {
 		select {
-		case <-prazo:
+		case <-deadline:
 			t.Fatalf("only %d in flight after 10s, wanted %d", running.Load(), maxConc)
 		case <-time.After(20 * time.Millisecond):
 		}
@@ -136,7 +136,7 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 	if got := count[dom.StatusQueued]; got != total-maxConc {
 		t.Errorf("QUEUED = %d, wanted %d", got, total-maxConc)
 	}
-	if p := pico.Load(); p > maxConc {
+	if p := peak.Load(); p > maxConc {
 		t.Errorf("concurrency peak = %d, exceeded the maximum of %d", p, maxConc)
 	}
 	if pending+claimed != total {
@@ -144,8 +144,8 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 	}
 
 	// Release, and confirm all 100 finish with nothing lost.
-	close(segurar)
-	prazo = time.After(30 * time.Second)
+	close(hold)
+	deadline = time.After(30 * time.Second)
 	for {
 		c, err := repo.CountByStatus(ctx)
 		if err != nil {
@@ -155,19 +155,19 @@ func TestAcceptanceCriterion_100Runs_Concurrency5(t *testing.T) {
 			break
 		}
 		select {
-		case <-prazo:
+		case <-deadline:
 			t.Fatalf("after releasing: %v -- wanted %d at success", c, total)
 		case <-time.After(50 * time.Millisecond):
 		}
 	}
-	parar()
+	stop()
 	wg.Wait()
 
 	pending, claimed, _ = queue.Size(ctx)
 	if pending+claimed != 0 {
 		t.Errorf("the queue should be empty, it holds %d pending and %d claimed", pending, claimed)
 	}
-	if p := pico.Load(); p > maxConc {
+	if p := peak.Load(); p > maxConc {
 		t.Errorf("concurrency peak = %d for the whole race", p)
 	}
 }
@@ -187,7 +187,7 @@ func TestIdempotencyPreventsADuplicateRun(t *testing.T) {
 	_, err := repo.Create(ctx, dom.Run{
 		WorkflowSlug: "w", IdempotencyKey: "mesma-chave", Definition: []byte(`{}`),
 	})
-	if !errors.Is(err, postgres.ErrJaExiste) {
+	if !errors.Is(err, postgres.ErrAlreadyExists) {
 		t.Fatalf("error = %v, wanted ErrJaExiste", err)
 	}
 }
@@ -329,10 +329,10 @@ func TestRecoveringOrphansPutsTheRunBackInTheQueue(t *testing.T) {
 	// The worker did get as far as marking running before dying -- the exact
 	// state in which
 	// a run ficava pendurada.
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusRunning); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusRunning); err != nil {
 		t.Fatal(err)
 	}
 
@@ -388,10 +388,10 @@ func TestAnOrphanStopsComingBackWhenTheAttemptsRunOut(t *testing.T) {
 	if _, err := queue.Claim(ctx, "morto", 1); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusRunning); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusRunning); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := d.RecoverOrphans(ctx); err != nil {
@@ -439,7 +439,7 @@ func TestTheAlertGoesOutOnceWhenTheAttemptsRunOut(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := queue.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -447,7 +447,7 @@ func TestTheAlertGoesOutOnceWhenTheAttemptsRunOut(t *testing.T) {
 	}
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 3,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 3,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, queue, repo, func(context.Context, uuid.UUID) error {
 		return errors.New(`step "run": exited with code 2`)
@@ -458,8 +458,8 @@ func TestTheAlertGoesOutOnceWhenTheAttemptsRunOut(t *testing.T) {
 	go func() { _ = d.Run(ctx) }()
 
 	// Espera o run esgotar as tentativas.
-	prazo := time.Now().Add(15 * time.Second)
-	for time.Now().Before(prazo) {
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
 		current, _ := repo.Get(ctx, r.ID)
 		if current.Status == dom.StatusFailed && current.Attempt >= 3 {
 			break
@@ -562,11 +562,11 @@ func TestWithNoChannelNoAlertIsWritten(t *testing.T) {
 	r, _ := repo.Create(ctx, dom.Run{
 		WorkflowSlug: "w", IdempotencyKey: "silent", Definition: []byte(`{}`),
 	})
-	_ = repo.Transicionar(ctx, r.ID, dom.StatusQueued)
+	_ = repo.Transition(ctx, r.ID, dom.StatusQueued)
 	_ = q.Enqueue(ctx, r.ID, 0, time.Time{})
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 1,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 1,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, q, repo, func(context.Context, uuid.UUID) error {
 		return errors.New("failed")
@@ -590,10 +590,10 @@ func TestWithNoChannelNoAlertIsWritten(t *testing.T) {
 }
 
 func enqueue(t *testing.T, repo *postgres.RunRepo, queue *queue.Queue,
-	slug string, quantos, maxActive int) {
+	slug string, howMany, maxActive int) {
 	t.Helper()
 	ctx := context.Background()
-	for i := 0; i < quantos; i++ {
+	for i := 0; i < howMany; i++ {
 		r, err := repo.Create(ctx, dom.Run{
 			WorkflowSlug: slug, IdempotencyKey: fmt.Sprintf("%s-%d", slug, i),
 			Definition: []byte(`{}`), MaxActive: maxActive,
@@ -601,7 +601,7 @@ func enqueue(t *testing.T, repo *postgres.RunRepo, queue *queue.Queue,
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+		if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 			t.Fatal(err)
 		}
 		if err := queue.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -632,24 +632,24 @@ func TestThePerWorkflowLimitHoldsTheRestBack(t *testing.T) {
 	}
 
 	// Until the first finishes, nobody else goes in.
-	outros, err := queue.Claim(ctx, "w", 10)
+	others, err := queue.Claim(ctx, "w", 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(outros) != 0 {
-		t.Errorf("it handed out %d more with the first still in flight", len(outros))
+	if len(others) != 0 {
+		t.Errorf("it handed out %d more with the first still in flight", len(others))
 	}
 
 	// With the first one finished, the next goes out.
 	if err := queue.Done(ctx, items[0]); err != nil {
 		t.Fatal(err)
 	}
-	seguintes, err := queue.Claim(ctx, "w", 10)
+	nextClaims, err := queue.Claim(ctx, "w", 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(seguintes) != 1 {
-		t.Errorf("after the slot was released, claim handed out %d; wanted 1", len(seguintes))
+	if len(nextClaims) != 1 {
+		t.Errorf("after the slot was released, claim handed out %d; wanted 1", len(nextClaims))
 	}
 }
 
@@ -730,7 +730,7 @@ func TestASucceedingRetryDoesNotAlert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := queue.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -739,7 +739,7 @@ func TestASucceedingRetryDoesNotAlert(t *testing.T) {
 
 	var calls int32
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 3,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 3,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, queue, repo, func(context.Context, uuid.UUID) error {
 		if atomic.AddInt32(&calls, 1) == 1 {
@@ -751,8 +751,8 @@ func TestASucceedingRetryDoesNotAlert(t *testing.T) {
 
 	go func() { _ = d.Run(ctx) }()
 
-	prazo := time.Now().Add(15 * time.Second)
-	for time.Now().Before(prazo) {
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
 		if current, _ := repo.Get(ctx, r.ID); current.Status == dom.StatusSuccess {
 			break
 		}
@@ -790,7 +790,7 @@ func TestTheAlertCarriesTheStepAndTheLog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := queue.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -798,17 +798,17 @@ func TestTheAlertCarriesTheStepAndTheLog(t *testing.T) {
 	}
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 1,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 1,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, queue, repo, func(ctx context.Context, id uuid.UUID) error {
 		// Writes the task the way the runner would, with output.
-		if err := repo.IniciarTask(ctx, id, dom.Step("fetch_observations"), 0); err != nil {
+		if err := repo.StartTask(ctx, id, dom.Step("fetch_observations"), 0); err != nil {
 			return err
 		}
 		output := "conectando na api do inmet\nHTTP 503 Service Unavailable\ndesistindo after 3 attempts"
-		codigo := 1
-		if err := repo.TerminarTask(ctx, id, dom.Step("fetch_observations"), 0,
-			dom.StatusFailed, &codigo, "exited with code 1", output); err != nil {
+		code := 1
+		if err := repo.FinishTask(ctx, id, dom.Step("fetch_observations"), 0,
+			dom.StatusFailed, &code, "exited with code 1", output); err != nil {
 			return err
 		}
 		return errors.New(`step "fetch_observations": exited with code 1`)
@@ -837,7 +837,7 @@ func TestTheAlertCarriesTheStepAndTheLog(t *testing.T) {
 //
 // `Run` waits for in-flight work before returning, and that promise was empty:
 // everything after `executar` used the RUN's context, which the signal had
-// already cancelled, so `Transicionar` and `Done` failed in silence. The run
+// already cancelled, so `Transition` and `Done` failed in silence. The run
 // came out marked SUCCESS with its item still claimed, and the visibility sweep
 // returned it fifteen minutes later and counted it as a FAILED attempt of a run
 // that had succeeded.
@@ -858,7 +858,7 @@ func TestAShutdownWhileARunFinishesDoesNotStrandTheItem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(base, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(base, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(base, r.ID, 0, time.Time{}); err != nil {
@@ -868,7 +868,7 @@ func TestAShutdownWhileARunFinishesDoesNotStrandTheItem(t *testing.T) {
 	ctx, stop := context.WithCancel(base)
 	defer stop()
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, Interval: 10 * time.Millisecond,
+		Worker: "t", MaxConcurrency: 1, Interval: 10 * time.Millisecond,
 	}, q, repo, func(context.Context, uuid.UUID) error {
 		stop() // the signal arrives while the run is on its way out
 		return nil
@@ -942,18 +942,18 @@ func TestAStepThatDeclaredOnErrorGetsItsOwnAlert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = repo.Transicionar(ctx, r.ID, dom.StatusQueued)
+	_ = repo.Transition(ctx, r.ID, dom.StatusQueued)
 	_ = q.Enqueue(ctx, r.ID, 0, time.Time{})
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 1,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 1,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, q, repo, func(ctx context.Context, id uuid.UUID) error {
-		if err := repo.IniciarTask(ctx, id, dom.Step("fetch"), 0); err != nil {
+		if err := repo.StartTask(ctx, id, dom.Step("fetch"), 0); err != nil {
 			return err
 		}
 		code := 1
-		if err := repo.TerminarTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code,
+		if err := repo.FinishTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code,
 			"exited with code 1", "HTTP 503 from the vendor"); err != nil {
 			return err
 		}
@@ -1014,21 +1014,21 @@ func TestWhenAttemptAnnouncesAFailureThatWillBeRetried(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = repo.Transicionar(ctx, r.ID, dom.StatusQueued)
+	_ = repo.Transition(ctx, r.ID, dom.StatusQueued)
 	_ = q.Enqueue(ctx, r.ID, 0, time.Time{})
 
 	var calls int32
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 3,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 3,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, q, repo, func(ctx context.Context, id uuid.UUID) error {
 		n := int(atomic.AddInt32(&calls, 1))
 		if n > 1 {
 			return nil // the second attempt passes
 		}
-		_ = repo.IniciarTask(ctx, id, dom.Step("fetch"), 0)
+		_ = repo.StartTask(ctx, id, dom.Step("fetch"), 0)
 		code := 1
-		_ = repo.TerminarTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code, "boom", "boom")
+		_ = repo.FinishTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code, "boom", "boom")
 		return errors.New(`step "fetch": exited with code 1`)
 	}, noLog())
 	d.Channel = wfdom.ChannelSlack
@@ -1078,16 +1078,16 @@ func TestAStepNamingAnUnconfiguredChannelIsNotWritten(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = repo.Transicionar(ctx, r.ID, dom.StatusQueued)
+	_ = repo.Transition(ctx, r.ID, dom.StatusQueued)
 	_ = q.Enqueue(ctx, r.ID, 0, time.Time{})
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 1,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 1,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, q, repo, func(ctx context.Context, id uuid.UUID) error {
-		_ = repo.IniciarTask(ctx, id, dom.Step("fetch"), 0)
+		_ = repo.StartTask(ctx, id, dom.Step("fetch"), 0)
 		code := 1
-		_ = repo.TerminarTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code, "boom", "boom")
+		_ = repo.FinishTask(ctx, id, dom.Step("fetch"), 0, dom.StatusFailed, &code, "boom", "boom")
 		return errors.New("boom")
 	}, noLog())
 	d.Channel = wfdom.ChannelSlack
@@ -1129,7 +1129,7 @@ func TestTheBackoffActuallyDelaysTheNextAttempt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -1143,7 +1143,7 @@ func TestTheBackoffActuallyDelaysTheNextAttempt(t *testing.T) {
 	var mu sync.Mutex
 	var starts []time.Time
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 2,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 2,
 		Interval: 10 * time.Millisecond, BackoffBase: base, BackoffMax: time.Hour,
 	}, q, repo, func(context.Context, uuid.UUID) error {
 		mu.Lock()

@@ -156,7 +156,7 @@ func TestAnEndedRunsItemLeavesTheQueue(t *testing.T) {
 	repo := postgres.NewRunRepo(pool)
 	q := queue.New(pool.Pool)
 	id := queuedRun(t, pool, q, "ended")
-	if err := repo.Transicionar(context.Background(), id, dom.StatusCanceled); err != nil {
+	if err := repo.Transition(context.Background(), id, dom.StatusCanceled); err != nil {
 		t.Fatal(err)
 	}
 
@@ -190,11 +190,11 @@ func TestAnOrphanAskedToStopIsCanceled(t *testing.T) {
 	q := queue.New(pool.Pool)
 	ctx := context.Background()
 	id := queuedRun(t, pool, q, "orphan")
-	if err := repo.Transicionar(ctx, id, dom.StatusRunning); err != nil {
+	if err := repo.Transition(ctx, id, dom.StatusRunning); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx, `
-		UPDATE queue_items SET reivindicado_em = now() - interval '1 hour', reivindicado_por = 'dead'
+		UPDATE queue_items SET claimed_at = now() - interval '1 hour', claimed_by = 'dead'
 		WHERE run_id = $1`, id); err != nil {
 		t.Fatal(err)
 	}

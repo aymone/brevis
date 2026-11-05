@@ -13,28 +13,28 @@ import (
 // every format error read "formato  from ..." with a hole in it -- and no test
 // noticed, because no test looked at the message. These do.
 func TestFormatErrorMessage(t *testing.T) {
-	casos := []struct {
-		name string
-		err  *FormatError
-		quer string
+	cases := []struct {
+		name  string
+		err   *FormatError
+		wants string
 	}{
 		{
-			name: "sem registro",
-			err:  &FormatError{URL: "https://api.example.com/v1", Line: -1, Cause: errors.New("not a JSON object")},
-			quer: "format error in https://api.example.com/v1: not a JSON object",
+			name:  "sem registro",
+			err:   &FormatError{URL: "https://api.example.com/v1", Line: -1, Cause: errors.New("not a JSON object")},
+			wants: "format error in https://api.example.com/v1: not a JSON object",
 		},
 		{
-			name: "com registro",
-			err:  &FormatError{URL: "https://api.example.com/v1", Line: 7, Cause: errors.New("building source_key: missing lat")},
-			quer: "format error in https://api.example.com/v1, record 7: building source_key: missing lat",
+			name:  "com registro",
+			err:   &FormatError{URL: "https://api.example.com/v1", Line: 7, Cause: errors.New("building source_key: missing lat")},
+			wants: "format error in https://api.example.com/v1, record 7: building source_key: missing lat",
 		},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got := c.err.Error()
-			if got != c.quer {
-				t.Errorf("message\n  got:  %q\n  want: %q", got, c.quer)
+			if got != c.wants {
+				t.Errorf("message\n  got:  %q\n  want: %q", got, c.wants)
 			}
 			// A hole in the message is the defect this test exists to catch:
 			// two spaces in a row, or a stray comma.

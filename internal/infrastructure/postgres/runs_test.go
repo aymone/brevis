@@ -105,7 +105,7 @@ func TestSucceedingForgetsTheDrain(t *testing.T) {
 	}
 
 	for _, to := range []dom.Status{dom.StatusQueued, dom.StatusRunning, dom.StatusSuccess} {
-		if err := repo.Transicionar(ctx, id, to); err != nil {
+		if err := repo.Transition(ctx, id, to); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -121,7 +121,7 @@ func TestGoingBackToTheQueueKeepsTheDrain(t *testing.T) {
 	ctx := context.Background()
 	id := newRun(t, repo)
 	for _, to := range []dom.Status{dom.StatusQueued, dom.StatusRunning} {
-		if err := repo.Transicionar(ctx, id, to); err != nil {
+		if err := repo.Transition(ctx, id, to); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -130,7 +130,7 @@ func TestGoingBackToTheQueueKeepsTheDrain(t *testing.T) {
 	}
 
 	for _, to := range []dom.Status{dom.StatusFailed, dom.StatusRetrying, dom.StatusQueued} {
-		if err := repo.Transicionar(ctx, id, to); err != nil {
+		if err := repo.Transition(ctx, id, to); err != nil {
 			t.Fatal(err)
 		}
 	}

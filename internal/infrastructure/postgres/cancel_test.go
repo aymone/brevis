@@ -27,7 +27,7 @@ func runAt(t *testing.T, repo *postgres.RunRepo, to dom.Status) uuid.UUID {
 		dom.StatusRetrying: {dom.StatusQueued, dom.StatusRunning, dom.StatusFailed, dom.StatusRetrying},
 	}[to]
 	for _, s := range path {
-		if err := repo.Transicionar(context.Background(), id, s); err != nil {
+		if err := repo.Transition(context.Background(), id, s); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -39,7 +39,7 @@ func runAt(t *testing.T, repo *postgres.RunRepo, to dom.Status) uuid.UUID {
 func enqueued(t *testing.T, pool *postgres.Pool, id uuid.UUID, claimed bool) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(), `
-		INSERT INTO queue_items (run_id, reivindicado_em, reivindicado_por)
+		INSERT INTO queue_items (run_id, claimed_at, claimed_by)
 		VALUES ($1, CASE WHEN $2 THEN now() END, CASE WHEN $2 THEN 'test' END)`, id, claimed); err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func cancelStateOf(t *testing.T, pool *postgres.Pool, id uuid.UUID) cancelState 
 	t.Helper()
 	var s cancelState
 	if err := pool.QueryRow(context.Background(), `
-		SELECT status, cancel_requested_at IS NOT NULL, canceled_by, terminado_em IS NOT NULL,
+		SELECT status, cancel_requested_at IS NOT NULL, canceled_by, finished_at IS NOT NULL,
 		       (SELECT count(*) FROM queue_items WHERE run_id = $1)
 		FROM runs WHERE id = $1`, id).Scan(&s.status, &s.requested, &s.by, &s.ended, &s.items); err != nil {
 		t.Fatal(err)

@@ -153,7 +153,7 @@ type Config struct {
 
 type PodsConfig struct {
 	// Mode: auto (use pods when a cluster is there), on (require) or off (never).
-	Modo              string
+	Mode              string
 	Namespace         string
 	ServiceAccount    string
 	PullSecrets       []string
@@ -181,7 +181,7 @@ type PodsConfig struct {
 type Grace struct {
 	Key    string
 	Value  string
-	Efeito string
+	Effect string
 }
 
 // Load builds the Config and fails at boot if something required is missing.
@@ -218,7 +218,7 @@ func Load() (Config, error) {
 			ClientIPHeader: os.Getenv("BREVIS_AUTH_CLIENT_IP_HEADER"),
 		},
 		Pods: PodsConfig{
-			Modo:              get("BREVIS_PODS", "auto"),
+			Mode:              get("BREVIS_PODS", "auto"),
 			Namespace:         os.Getenv("BREVIS_POD_NAMESPACE"),
 			ServiceAccount:    os.Getenv("BREVIS_POD_SERVICE_ACCOUNT"),
 			PullSecrets:       list("BREVIS_POD_PULL_SECRETS"),
@@ -306,10 +306,10 @@ func Load() (Config, error) {
 	if c.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("BREVIS_DATABASE_URL is required")
 	}
-	switch c.Pods.Modo {
+	switch c.Pods.Mode {
 	case "auto", "on", "off":
 	default:
-		return Config{}, fmt.Errorf("BREVIS_PODS: %q is not valid (auto, on or off)", c.Pods.Modo)
+		return Config{}, fmt.Errorf("BREVIS_PODS: %q is not valid (auto, on or off)", c.Pods.Mode)
 	}
 	if err := c.Auth.Validate(); err != nil {
 		return Config{}, err
@@ -387,7 +387,7 @@ func TasksEnvironment(names []string) map[string]string {
 		// A name with no value: passed on if it exists. Missing does NOT become
 		// an empty string -- `GOOGLE_PROJECT_ID=""` would make dbt fail later,
 		// with a message worse than the one for a missing variable.
-		if v, existe := os.LookupEnv(input); existe {
+		if v, exists := os.LookupEnv(input); exists {
 			env[input] = v
 		}
 	}
@@ -415,13 +415,13 @@ func envInt(key string, fallback int) (int, error) {
 func graces(key string) []Grace {
 	var out []Grace
 	for _, input := range list(key) {
-		par, efeito, temEfeito := strings.Cut(input, ":")
+		par, effect, hasEffect := strings.Cut(input, ":")
 		k, v, hasValue := strings.Cut(par, "=")
-		if !hasValue || !temEfeito {
+		if !hasValue || !hasEffect {
 			continue
 		}
 		out = append(out, Grace{Key: strings.TrimSpace(k),
-			Value: strings.TrimSpace(v), Efeito: strings.TrimSpace(efeito)})
+			Value: strings.TrimSpace(v), Effect: strings.TrimSpace(effect)})
 	}
 	return out
 }

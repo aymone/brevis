@@ -27,17 +27,17 @@ func TestStagingErrorNamesTheBucketAndTheWayOut(t *testing.T) {
 		ThresholdForGCS: 5000,
 	}}
 
-	for _, causa := range []struct {
+	for _, cause := range []struct {
 		name string
 		err  error
 	}{
 		{"sentinela do storage", storage.ErrBucketNotExist},
 		{"404 da api json", &googleapi.Error{Code: 404, Message: "The specified bucket does not exist"}},
 	} {
-		t.Run(causa.name, func(t *testing.T) {
-			msg := l.stagingError(context.Background(), causa.err, 12000).Error()
+		t.Run(cause.name, func(t *testing.T) {
+			msg := l.stagingError(context.Background(), cause.err, 12000).Error()
 
-			for _, exigido := range []string{
+			for _, required := range []string{
 				"projeto-brevis-staging", // qual bucket
 				"12000",                  // why it staged
 				"InlineLimit",            // saida 1
@@ -45,8 +45,8 @@ func TestStagingErrorNamesTheBucketAndTheWayOut(t *testing.T) {
 				"v0.25.0",                // why the name changed
 				"StagingBucket",          // how to choose another
 			} {
-				if !strings.Contains(msg, exigido) {
-					t.Errorf("the message does not say %q:\n%s", exigido, msg)
+				if !strings.Contains(msg, required) {
+					t.Errorf("the message does not say %q:\n%s", required, msg)
 				}
 			}
 		})
@@ -59,10 +59,10 @@ func TestStagingErrorNamesTheBucketAndTheWayOut(t *testing.T) {
 // matters more than having advice to give.
 func TestStagingErrorInventsNoDiagnosis(t *testing.T) {
 	l := &Loader{cfg: &core.LoadConfig{StagingBucket: "b", StagingPrefix: "p/"}}
-	causa := errors.New("connection reset by peer")
+	cause := errors.New("connection reset by peer")
 
-	err := l.stagingError(context.Background(), causa, 12000)
-	if !errors.Is(err, causa) {
+	err := l.stagingError(context.Background(), cause, 12000)
+	if !errors.Is(err, cause) {
 		t.Fatal("the original error must remain reachable through errors.Is")
 	}
 	if strings.Contains(err.Error(), "create the bucket") {
@@ -117,9 +117,9 @@ func TestLoadViaGCSUsesStagingError(t *testing.T) {
 	if strings.Contains(msg, "close gcs writer") {
 		t.Errorf("the writer's raw message came back:\n%s", msg)
 	}
-	for _, exigido := range []string{"projeto-brevis-staging", "InlineLimit", "12000"} {
-		if !strings.Contains(msg, exigido) {
-			t.Errorf("the real path does not say %q:\n%s", exigido, msg)
+	for _, required := range []string{"projeto-brevis-staging", "InlineLimit", "12000"} {
+		if !strings.Contains(msg, required) {
+			t.Errorf("the real path does not say %q:\n%s", required, msg)
 		}
 	}
 }

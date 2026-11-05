@@ -431,10 +431,10 @@ func (l *Loader) Load(ctx context.Context, envelopes ...core.Envelope) (*core.Lo
 	} else {
 		var bytesStaged int64
 		if result.Strategy == "gcs" {
-			var objeto string
-			bytesStaged, objeto, result.JobID, rowErrs, err = l.loadViaGCS(ctx, table, data, len(envelopes))
-			if objeto != "" {
-				result.Objects = []string{objeto}
+			var object string
+			bytesStaged, object, result.JobID, rowErrs, err = l.loadViaGCS(ctx, table, data, len(envelopes))
+			if object != "" {
+				result.Objects = []string{object}
 			}
 		} else {
 			bytesStaged, result.JobID, rowErrs, err = l.loadInline(ctx, table, data)
@@ -856,7 +856,7 @@ func (l *Loader) loadInline(ctx context.Context, table *bigquery.Table, data []b
 	return int64(len(data)), jobID, nil, nil
 }
 
-func (l *Loader) loadViaGCS(ctx context.Context, table *bigquery.Table, data []byte, rowCount int) (bytesStaged int64, objeto, jobID string, rowErrs []string, err error) {
+func (l *Loader) loadViaGCS(ctx context.Context, table *bigquery.Table, data []byte, rowCount int) (bytesStaged int64, object, jobID string, rowErrs []string, err error) {
 	format, err := sourceFormat(l.cfg.Format)
 	if err != nil {
 		return 0, "", "", nil, err

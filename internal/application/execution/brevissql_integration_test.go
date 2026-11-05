@@ -84,7 +84,7 @@ func TestIntegrationBrevisSQLModelsReachTheCatalog(t *testing.T) {
 		t.Fatalf("creating the run: %v", err)
 	}
 
-	r := app.Runner{RunID: runID, Persist: repo, Processo: localExecutor(t)}
+	r := app.Runner{RunID: runID, Persist: repo, Process: localExecutor(t)}
 	w := wf.Workflow{
 		Slug: "e2e",
 		Nodes: []wf.Node{{
@@ -137,7 +137,7 @@ func TestIntegrationBrevisSQLModelsReachTheCatalog(t *testing.T) {
 	}
 
 	// And the marker is not in the step's log; it is a message, not output.
-	logs, err := repo.LogsDaRun(ctx, runID)
+	logs, err := repo.RunLogs(ctx, runID)
 	if err != nil {
 		t.Fatalf("logs: %v", err)
 	}

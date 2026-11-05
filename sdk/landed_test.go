@@ -17,9 +17,9 @@ func (l locatingTarget) Write(ctx context.Context, envs []Envelope, opt WriteOpt
 	return l.keepingTarget.Write(ctx, envs, opt)
 }
 
-func landingsIn(eventos []map[string]any) []map[string]any {
+func landingsIn(events []map[string]any) []map[string]any {
 	var out []map[string]any
-	for _, ev := range eventos {
+	for _, ev := range events {
 		if ev["type"] == "landed" {
 			out = append(out, ev)
 		}
@@ -29,23 +29,23 @@ func landingsIn(eventos []map[string]any) []map[string]any {
 
 func twoLandable() countedSource {
 	return countedSource{
-		records:  []any{map[string]any{"id": 1}, map[string]any{"id": 2}},
-		leituras: new(int),
+		records: []any{map[string]any{"id": 1}, map[string]any{"id": 2}},
+		reads:   new(int),
 	}
 }
 
 func TestASuccessfulLoadLandsOnceAfterTheLoadCloses(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(twoLandable(), &box)
+	p := testPipeline(twoLandable(), &box)
 	p.Target.To = locatingTarget{keepingTarget{received: &box}, "postgres://analytics/public/orders"}
 
-	eventos, err := stagesOf(t, p)
+	events, err := stagesOf(t, p)
 	if err != nil {
 		t.Fatalf("pipeline: %v", err)
 	}
-	got := landingsIn(eventos)
+	got := landingsIn(events)
 	if len(got) != 1 {
-		t.Fatalf("landings = %d, want exactly 1: %v", len(got), eventos)
+		t.Fatalf("landings = %d, want exactly 1: %v", len(got), events)
 	}
 	l := got[0]
 	if l["target"] != "postgres://analytics/public/orders" {
@@ -62,7 +62,7 @@ func TestASuccessfulLoadLandsOnceAfterTheLoadCloses(t *testing.T) {
 	// about a finished load, and a landing announced while the load still ran
 	// would be a promise.
 	closed, landed := -1, -1
-	for i, ev := range eventos {
+	for i, ev := range events {
 		if ev["type"] == "stage" && ev["name"] == PhaseTarget && ev["state"] == StateDone {
 			closed = i
 		}
@@ -79,14 +79,14 @@ func TestASuccessfulLoadLandsOnceAfterTheLoadCloses(t *testing.T) {
 // and the writer is on time; leaving `rows` out would read as "did not say".
 func TestALoadOfNothingStillLandsAndSaysZero(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(countedSource{leituras: new(int)}, &box)
+	p := testPipeline(countedSource{reads: new(int)}, &box)
 	p.Target.To = locatingTarget{keepingTarget{received: &box}, "postgres://analytics/public/orders"}
 
-	eventos, err := stagesOf(t, p)
+	events, err := stagesOf(t, p)
 	if err != nil {
 		t.Fatalf("pipeline: %v", err)
 	}
-	got := landingsIn(eventos)
+	got := landingsIn(events)
 	if len(got) != 1 || got[0]["rows"] != float64(0) {
 		t.Fatalf("landings = %v, want one with rows 0", got)
 	}
@@ -94,11 +94,11 @@ func TestALoadOfNothingStillLandsAndSaysZero(t *testing.T) {
 
 func TestAFailedLoadLandsNothing(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(twoLandable(), &box)
+	p := testPipeline(twoLandable(), &box)
 	p.Target.To = locatingTarget{keepingTarget{received: &box, fail: true}, "postgres://analytics/public/orders"}
 
-	eventos, _ := stagesOf(t, p)
-	if got := landingsIn(eventos); len(got) != 0 {
+	events, _ := stagesOf(t, p)
+	if got := landingsIn(events); len(got) != 0 {
 		t.Fatalf("a refused load landed: %v", got)
 	}
 }
@@ -107,11 +107,11 @@ func TestAFailedLoadLandsNothing(t *testing.T) {
 // nothing: Locator is optional.
 func TestAWriterThatCannotNameItsDestinationLandsNothing(t *testing.T) {
 	var box []Envelope
-	eventos, err := stagesOf(t, pipelineDeTeste(twoLandable(), &box))
+	events, err := stagesOf(t, testPipeline(twoLandable(), &box))
 	if err != nil {
 		t.Fatalf("pipeline: %v", err)
 	}
-	if got := landingsIn(eventos); len(got) != 0 {
+	if got := landingsIn(events); len(got) != 0 {
 		t.Fatalf("landings = %v, want none", got)
 	}
 }
@@ -119,11 +119,11 @@ func TestAWriterThatCannotNameItsDestinationLandsNothing(t *testing.T) {
 // An empty answer from Locate() is "cannot say", not a target.
 func TestAnEmptyLocateLandsNothing(t *testing.T) {
 	var box []Envelope
-	p := pipelineDeTeste(twoLandable(), &box)
+	p := testPipeline(twoLandable(), &box)
 	p.Target.To = locatingTarget{keepingTarget{received: &box}, ""}
 
-	eventos, _ := stagesOf(t, p)
-	if got := landingsIn(eventos); len(got) != 0 {
+	events, _ := stagesOf(t, p)
+	if got := landingsIn(events); len(got) != 0 {
 		t.Fatalf("landings = %v, want none", got)
 	}
 }

@@ -21,7 +21,7 @@ func TestTheIndicatorsCountRetriesInTheWindow(t *testing.T) {
 	if _, err := pool.Exec(ctx, `UPDATE runs SET attempt = 1 WHERE id = $1`, retried); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `UPDATE runs SET attempt = 2, criado_em = now() - interval '3 days' WHERE id = $1`, old); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE runs SET attempt = 2, created_at = now() - interval '3 days' WHERE id = $1`, old); err != nil {
 		t.Fatal(err)
 	}
 	reads := postgres.NewReadRepo(pool)
@@ -46,7 +46,7 @@ func TestRunsAreBucketedByHourOrDay(t *testing.T) {
 	ctx := context.Background()
 	finished(t, pool, "daily", dom.StatusSuccess, time.Second)
 	twoDays := finished(t, pool, "daily", dom.StatusFailed, time.Second)
-	if _, err := pool.Exec(ctx, `UPDATE runs SET criado_em = now() - interval '2 days' WHERE id = $1`, twoDays); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE runs SET created_at = now() - interval '2 days' WHERE id = $1`, twoDays); err != nil {
 		t.Fatal(err)
 	}
 	reads := postgres.NewReadRepo(pool)
@@ -78,7 +78,7 @@ func TestRunsPerIgnoresRunsBeforeTheWindowAndBucketsInUTC(t *testing.T) {
 	ctx := context.Background()
 	finished(t, pool, "daily", dom.StatusSuccess, time.Second)
 	old := finished(t, pool, "daily", dom.StatusFailed, time.Second)
-	if _, err := pool.Exec(ctx, `UPDATE runs SET criado_em = now() - interval '40 days' WHERE id = $1`, old); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE runs SET created_at = now() - interval '40 days' WHERE id = $1`, old); err != nil {
 		t.Fatal(err)
 	}
 	reads := postgres.NewReadRepo(pool)

@@ -78,7 +78,7 @@ func TestARunNotStartedForADrainIsDeferredForFree(t *testing.T) {
 	}
 	var later bool
 	if err := pool.QueryRow(context.Background(), `
-		SELECT reivindicado_em IS NULL AND disponivel_em > now() + interval '50 minutes'
+		SELECT claimed_at IS NULL AND available_at > now() + interval '50 minutes'
 		FROM queue_items WHERE run_id = $1`, id).Scan(&later); err != nil {
 		t.Fatalf("the run has no queue item: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestARunDeferredThenRunHasOneRowPerStep(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		if err := repo.IniciarTask(ctx, runID, dom.StepKey{Node: "load", MapIndex: dom.Unmapped},
+		if err := repo.StartTask(ctx, runID, dom.StepKey{Node: "load", MapIndex: dom.Unmapped},
 			r.Attempt+1); err != nil {
 			return err
 		}

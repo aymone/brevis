@@ -231,14 +231,14 @@ func (r *ReadRepo) catalogWriters(ctx context.Context, target *string) ([]Catalo
 	}
 	rows, err := r.pool.Query(ctx, latest+`
 		SELECT l.target, l.legacy, l.workflow_slug, l.node_id, l.loaded_at, l.rows_written,
-		       s.cron IS NOT NULL, COALESCE(s.cron, ''), COALESCE(s.timezone, ''), COALESCE(s.ativo, false),
+		       s.cron IS NOT NULL, COALESCE(s.cron, ''), COALESCE(s.timezone, ''), COALESCE(s.active, false),
 		       COALESCE(lag.p90, 0),
 		       inflight.id::text
 		FROM latest l
 		LEFT JOIN schedules s ON s.workflow_slug = l.workflow_slug
 		LEFT JOIN LATERAL (
 			SELECT percentile_cont(0.9) WITHIN GROUP (
-			         ORDER BY GREATEST(0, EXTRACT(EPOCH FROM x.loaded_at - COALESCE(ru.logical_date, ru.criado_em)))
+			         ORDER BY GREATEST(0, EXTRACT(EPOCH FROM x.loaded_at - COALESCE(ru.logical_date, ru.created_at)))
 			       ) AS p90
 			FROM (
 				SELECT run_id, loaded_at FROM landings x
@@ -251,7 +251,7 @@ func (r *ReadRepo) catalogWriters(ctx context.Context, target *string) ([]Catalo
 		LEFT JOIN LATERAL (
 			SELECT id FROM runs
 			WHERE workflow_slug = l.workflow_slug AND status IN ('queued', 'running', 'retrying')
-			ORDER BY criado_em DESC
+			ORDER BY created_at DESC
 			LIMIT 1
 		) inflight ON true
 		ORDER BY l.target, l.workflow_slug, l.node_id`, args...)

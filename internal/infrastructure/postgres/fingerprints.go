@@ -24,16 +24,16 @@ func NewFingerprints(pool *Pool) *Fingerprints { return &Fingerprints{pool: pool
 // Both statements are exported for the test to EXPLAIN them.
 const (
 	// runsFingerprintSQL: the three max() calls are each one step down an
-	// index (criado_em, iniciado_em partial, terminado_em partial), and the
+	// index (created_at, started_at partial, finished_at partial), and the
 	// count walks only runs_status_idx, which holds the non-terminal runs --
-	// a handful. Together they move on: a new run (criado_em), a start
-	// (iniciado_em), a finish or a retry's end (terminado_em), and a run
+	// a handful. Together they move on: a new run (created_at), a start
+	// (started_at), a finish or a retry's end (finished_at), and a run
 	// entering or leaving a live state (the count).
 	runsFingerprintSQL = `
 		SELECT concat_ws('|',
-		  (SELECT max(criado_em)    FROM runs),
-		  (SELECT max(iniciado_em)  FROM runs),
-		  (SELECT max(terminado_em) FROM runs),
+		  (SELECT max(created_at)    FROM runs),
+		  (SELECT max(started_at)  FROM runs),
+		  (SELECT max(finished_at) FROM runs),
 		  (SELECT count(*) FROM runs WHERE status NOT IN ('success', 'canceled')))`
 
 	// runFingerprintSQL: the run's own row plus its steps. pg_column_size(log)
@@ -43,8 +43,8 @@ const (
 	// moving to the exact same byte count is the only miss, and the very next
 	// line moves it again).
 	runFingerprintSQL = `
-		SELECT concat_ws('|', r.status, r.attempt, r.iniciado_em, r.terminado_em, r.cancel_requested_at,
-		  (SELECT concat_ws('/', count(*), coalesce(sum(pg_column_size(t.log)), 0), max(t.terminado_em),
+		SELECT concat_ws('|', r.status, r.attempt, r.started_at, r.finished_at, r.cancel_requested_at,
+		  (SELECT concat_ws('/', count(*), coalesce(sum(pg_column_size(t.log)), 0), max(t.finished_at),
 		            string_agg(t.node_id || ':' || t.map_index || ':' || t.attempt || ':' || t.status, ',' ORDER BY t.node_id, t.map_index, t.attempt))
 		   FROM task_runs t WHERE t.run_id = r.id))
 		FROM runs r WHERE r.id = $1`
@@ -52,19 +52,19 @@ const (
 	// schedulesFingerprintSQL: a handful of rows, so a scan is cheaper than
 	// any index. Pausing, resuming or editing a schedule moves it.
 	schedulesFingerprintSQL = `
-		SELECT concat_ws('|', count(*) FILTER (WHERE ativo), max(atualizado_em)) FROM schedules`
+		SELECT concat_ws('|', count(*) FILTER (WHERE active), max(updated_at)) FROM schedules`
 
-	// workflowFingerprintSQL: max(iniciado_em) per workflow has no index, so
-	// the fingerprint is the newest 50 runs of the slug (runs_workflow_criado_idx,
+	// workflowFingerprintSQL: max(started_at) per workflow has no index, so
+	// the fingerprint is the newest 50 runs of the slug (runs_workflow_created_idx,
 	// one backward range scan) hashed with the fields the screen shows, plus
 	// the slug's schedule (UNIQUE on workflow_slug). A run older than the 50
 	// newest that changes is not on the workflow's first screen.
 	workflowFingerprintSQL = `
 		SELECT concat_ws('|',
-		  (SELECT md5(coalesce(string_agg(concat_ws(',', id, status, attempt, iniciado_em, terminado_em), ';'), ''))
-		   FROM (SELECT id, status, attempt, iniciado_em, terminado_em FROM runs
-		         WHERE workflow_slug = $1 ORDER BY criado_em DESC LIMIT 50) x),
-		  (SELECT concat_ws(',', ativo, atualizado_em) FROM schedules WHERE workflow_slug = $1))`
+		  (SELECT md5(coalesce(string_agg(concat_ws(',', id, status, attempt, started_at, finished_at), ';'), ''))
+		   FROM (SELECT id, status, attempt, started_at, finished_at FROM runs
+		         WHERE workflow_slug = $1 ORDER BY created_at DESC LIMIT 50) x),
+		  (SELECT concat_ws(',', active, updated_at) FROM schedules WHERE workflow_slug = $1))`
 
 	// dataFingerprintSQL, for /data (catalog) and /ingest:
 	//  - max(landings.recorded_at): every landing, write or retry, stamps it

@@ -52,7 +52,7 @@ func TestRequeueingClearsTheStamps(t *testing.T) {
 // Section 7 requires an invalid transition to return an error -- not to be
 // ignored.
 func TestInvalidTransitionsAreRefused(t *testing.T) {
-	casos := []struct{ de, para Status }{
+	cases := []struct{ from, to Status }{
 		{StatusSuccess, StatusRunning},  // terminal does not come back
 		{StatusCanceled, StatusQueued},  // terminal does not come back
 		{StatusCreated, StatusRunning},  // does not skip the queue
@@ -61,15 +61,15 @@ func TestInvalidTransitionsAreRefused(t *testing.T) {
 		{StatusRunning, StatusRetrying}, // only a failure goes to retry
 		{StatusFailed, StatusRunning},   // a retry goes through the queue
 	}
-	for _, c := range casos {
-		err := Validate(c.de, c.para)
+	for _, c := range cases {
+		err := Validate(c.from, c.to)
 		if err == nil {
-			t.Errorf("%s -> %s should have been refused", c.de, c.para)
+			t.Errorf("%s -> %s should have been refused", c.from, c.to)
 			continue
 		}
 		var inv ErrInvalidTransition
 		if !errors.As(err, &inv) {
-			t.Errorf("%s -> %s returned %T, wanted ErrInvalidTransition", c.de, c.para, err)
+			t.Errorf("%s -> %s returned %T, wanted ErrInvalidTransition", c.from, c.to, err)
 		}
 	}
 }
@@ -88,9 +88,9 @@ func TestFailedIsNotTerminal(t *testing.T) {
 // Cancelling has to be possible from any active state -- and only from active
 // ones.
 func TestCancelling(t *testing.T) {
-	for _, de := range []Status{StatusCreated, StatusQueued, StatusRunning, StatusRetrying} {
-		if err := Validate(de, StatusCanceled); err != nil {
-			t.Errorf("it should be possible to cancel from %s: %v", de, err)
+	for _, from := range []Status{StatusCreated, StatusQueued, StatusRunning, StatusRetrying} {
+		if err := Validate(from, StatusCanceled); err != nil {
+			t.Errorf("it should be possible to cancel from %s: %v", from, err)
 		}
 	}
 	if err := Validate(StatusSuccess, StatusCanceled); err == nil {

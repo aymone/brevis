@@ -68,7 +68,7 @@ func (r *Registry) Register(t Task) error {
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if _, existe := r.tasks[name]; existe {
+	if _, exists := r.tasks[name]; exists {
 		return fmt.Errorf("task %q is already registered", name)
 	}
 	r.tasks[name] = t

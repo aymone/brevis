@@ -48,8 +48,8 @@ func claimOne(t *testing.T, pool *postgres.Pool, q *queue.Queue, key string) que
 func age(t *testing.T, pool *postgres.Pool, it queue.Item) queue.Item {
 	t.Helper()
 	if err := pool.QueryRow(context.Background(), `
-		UPDATE queue_items SET reivindicado_em = reivindicado_em - interval '1 hour'
-		WHERE id = $1 RETURNING reivindicado_em`, it.ID).Scan(&it.ClaimedAt); err != nil {
+		UPDATE queue_items SET claimed_at = claimed_at - interval '1 hour'
+		WHERE id = $1 RETURNING claimed_at`, it.ID).Scan(&it.ClaimedAt); err != nil {
 		t.Fatal(err)
 	}
 	return it
@@ -60,7 +60,7 @@ func age(t *testing.T, pool *postgres.Pool, it queue.Item) queue.Item {
 func reclaim(t *testing.T, pool *postgres.Pool, it queue.Item) {
 	t.Helper()
 	if _, err := pool.Exec(context.Background(), `
-		UPDATE queue_items SET reivindicado_em = now() + interval '1 second', reivindicado_por = 'other'
+		UPDATE queue_items SET claimed_at = now() + interval '1 second', claimed_by = 'other'
 		WHERE id = $1`, it.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func reclaim(t *testing.T, pool *postgres.Pool, it queue.Item) {
 func claimedBy(t *testing.T, pool *postgres.Pool, it queue.Item) (by *string, renewed *time.Time) {
 	t.Helper()
 	if err := pool.QueryRow(context.Background(), `
-		SELECT reivindicado_por, renovado_em FROM queue_items WHERE id = $1`, it.ID).
+		SELECT claimed_by, renewed_at FROM queue_items WHERE id = $1`, it.ID).
 		Scan(&by, &renewed); err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestRenewingAClaimTakenSinceReportsItLost(t *testing.T) {
 		t.Error("a stale holder's renewal reports the claim still held")
 	}
 	if _, renewed := claimedBy(t, pool, it); renewed != nil {
-		t.Error("a stale holder's renewal wrote renovado_em on somebody else's claim")
+		t.Error("a stale holder's renewal wrote renewed_at on somebody else's claim")
 	}
 }
 
@@ -271,7 +271,7 @@ func queuedRun(t *testing.T, pool *postgres.Pool, q *queue.Queue, key string) uu
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -438,7 +438,7 @@ func heldBy(t *testing.T, pool *postgres.Pool, id uuid.UUID) string {
 	t.Helper()
 	var by *string
 	err := pool.QueryRow(context.Background(),
-		`SELECT reivindicado_por FROM queue_items WHERE run_id = $1`, id).Scan(&by)
+		`SELECT claimed_by FROM queue_items WHERE run_id = $1`, id).Scan(&by)
 	if err != nil || by == nil {
 		return ""
 	}
@@ -496,7 +496,7 @@ func TestALostClaimCancelsTheRunAndWritesNothing(t *testing.T) {
 	d := scheduler.New(lostClaim, q, repo, func(ctx context.Context, _ uuid.UUID) error {
 		defer close(returned)
 		if _, err := pool.Exec(ctx, `
-			UPDATE queue_items SET reivindicado_em = now() + interval '1 hour', reivindicado_por = 'other'
+			UPDATE queue_items SET claimed_at = now() + interval '1 hour', claimed_by = 'other'
 			WHERE run_id = $1`, id); err != nil {
 			return err
 		}
@@ -540,7 +540,7 @@ func TestAClaimLostAsTheRunEndsWritesNothing(t *testing.T) {
 			d := scheduler.New(lostClaim, q, repo, func(ctx context.Context, _ uuid.UUID) error {
 				defer close(returned)
 				if _, err := pool.Exec(ctx, `
-					UPDATE queue_items SET reivindicado_em = now() + interval '1 hour', reivindicado_por = 'other'
+					UPDATE queue_items SET claimed_at = now() + interval '1 hour', claimed_by = 'other'
 					WHERE run_id = $1`, id); err != nil {
 					return err
 				}
@@ -632,7 +632,7 @@ func TestALostClaimCancelsTheRunWithItsReason(t *testing.T) {
 	d := scheduler.New(lostClaim, q, repo, func(ctx context.Context, _ uuid.UUID) error {
 		defer close(returned)
 		if _, err := pool.Exec(ctx, `
-			UPDATE queue_items SET reivindicado_em = now() + interval '1 hour', reivindicado_por = 'other'
+			UPDATE queue_items SET claimed_at = now() + interval '1 hour', claimed_by = 'other'
 			WHERE run_id = $1`, id); err != nil {
 			return err
 		}

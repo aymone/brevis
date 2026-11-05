@@ -569,7 +569,7 @@ func TestTheDrainBudgetFollowsTheLongestFlushWindow(t *testing.T) {
 		return c.DrainBudget()
 	}
 
-	casos := []struct {
+	cases := []struct {
 		why     string
 		windows []time.Duration
 		want    time.Duration
@@ -585,7 +585,7 @@ func TestTheDrainBudgetFollowsTheLongestFlushWindow(t *testing.T) {
 		// and finishes when the slowest does.
 		{"the longest of several", []time.Duration{time.Second, 300 * time.Second, 5 * time.Second}, 300 * time.Second},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		if got := budget(c.windows...); got != c.want {
 			t.Errorf("%s: DrainBudget() = %s, want %s", c.why, got, c.want)
 		}

@@ -89,7 +89,7 @@ func TestAPageWithNoSessionGoesToTheLoginAndComesBackThroughNext(t *testing.T) {
 func TestAValidSessionStillReachesAnAPIPath(t *testing.T) {
 	cred := credential(t, "operador", "senha-de-teste-longa")
 	var user string
-	gate := &auth.Gate{Cred: cred, Insecure: true, Next: http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { user = auth.De(r.Context()) })}
+	gate := &auth.Gate{Cred: cred, Insecure: true, Next: http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) { user = auth.OperatorOf(r.Context()) })}
 	rec := httptest.NewRecorder()
 	if !gate.SignIn(rec, "operador", "senha-de-teste-longa") {
 		t.Fatal("sign-in refused")
@@ -111,7 +111,7 @@ func TestAPublicPathTellsAStrangerFromAnOperator(t *testing.T) {
 	gate := &auth.Gate{
 		Cred: credential(t, "operador", "senha-de-teste-longa"),
 		Next: http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-			anonymous, who = auth.Anonymous(r.Context()), auth.De(r.Context())
+			anonymous, who = auth.Anonymous(r.Context()), auth.OperatorOf(r.Context())
 		}),
 	}
 	gate.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/api/config", nil))

@@ -26,6 +26,21 @@ and stay as written: a changelog records what was decided on a date.
 
 ## [Unreleased]
 
+### Changed: the checkpoint depot is written with English names
+
+A resumable checkpoint (`Checkpoint{At: ...}`) is now written as
+`part-00000.ndjson` ... and `_complete`, with the manifest keys `version`,
+`records`, `parts`, `numbers` and `written_at` (and a `_start` marker); it used to
+be `parte-00000.ndjson`, `_completo` and `versao`, `registros`, `partes`,
+`numeros`, `gravado_em`. A depot written by an earlier release is still read, so
+a retry across an upgrade does not extract again; the old names are read for as
+long as such a depot can exist. No exported symbol changed, and the deprecated
+Portuguese aliases (`CampoJSON`, `ComoCriar`, `CriarPorSQL`, `PlanoDeCriacao`,
+`ParaJSONComOID`, ...) are exactly as they were.
+
+`to.Files` still names what it writes `parte-<timestamp>.ndjson`: that is the
+name downstream consumers glob, and it is not changed silently.
+
 ### Added: `iceberg://` is a target `CheckTarget` accepts
 
 - `iceberg://{catalog}/{namespace}/{table}`: three segments, and a dotted

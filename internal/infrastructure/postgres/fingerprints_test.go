@@ -48,13 +48,13 @@ func TestFingerprintsMoveWithTheirData(t *testing.T) {
 	changed(t, "runs", func() (string, error) { return fp.Runs(ctx) }, "a new run",
 		func() { finished(t, pool, "other", dom.StatusSuccess, time.Minute) })
 	changed(t, "runs", func() (string, error) { return fp.Runs(ctx) }, "a run reaching a terminal state",
-		func() { exec(`UPDATE runs SET status = 'success', terminado_em = now() WHERE id = $1`, id) })
+		func() { exec(`UPDATE runs SET status = 'success', finished_at = now() WHERE id = $1`, id) })
 
 	id2 := finished(t, pool, "daily", dom.StatusRunning, time.Minute)
 	exec(`INSERT INTO task_runs (id, run_id, node_id, status, log) VALUES (gen_random_uuid(), $1, 'a', 'running', 'x')`, id2)
 	run := func() (string, error) { return fp.Run(ctx, id2.String()) }
 	changed(t, "run", run, "the log growing", func() { exec(`UPDATE task_runs SET log = log || repeat('line\n', 50) WHERE run_id = $1`, id2) })
-	changed(t, "run", run, "a step finishing", func() { exec(`UPDATE task_runs SET status = 'success', terminado_em = now() WHERE run_id = $1`, id2) })
+	changed(t, "run", run, "a step finishing", func() { exec(`UPDATE task_runs SET status = 'success', finished_at = now() WHERE run_id = $1`, id2) })
 	changed(t, "run", run, "a cancel request", func() { exec(`UPDATE runs SET cancel_requested_at = now() WHERE id = $1`, id2) })
 	if s, err := fp.Run(ctx, uuid.NewString()); err != nil || s != "" {
 		t.Errorf("a missing run = %q, %v; want empty, nil", s, err)
@@ -64,11 +64,11 @@ func TestFingerprintsMoveWithTheirData(t *testing.T) {
 	changed(t, "workflows", wf, "a schedule pause", func() {
 		exec(`INSERT INTO schedules (id, workflow_slug, cron) VALUES (gen_random_uuid(), 'daily', '* * * * *')`)
 	})
-	changed(t, "workflows", wf, "a schedule pause", func() { exec(`UPDATE schedules SET ativo = false, atualizado_em = now()`) })
+	changed(t, "workflows", wf, "a schedule pause", func() { exec(`UPDATE schedules SET active = false, updated_at = now()`) })
 
 	one := func() (string, error) { return fp.Workflow(ctx, "daily") }
 	changed(t, "workflow", one, "its run changing", func() { exec(`UPDATE runs SET attempt = attempt + 1 WHERE id = $1`, id2) })
-	changed(t, "workflow", one, "its schedule changing", func() { exec(`UPDATE schedules SET ativo = true`) })
+	changed(t, "workflow", one, "its schedule changing", func() { exec(`UPDATE schedules SET active = true`) })
 	otherBefore, _ := one()
 	finished(t, pool, "unrelated", dom.StatusSuccess, time.Minute)
 	if after, _ := one(); after != otherBefore {
@@ -92,7 +92,7 @@ func TestFingerprintsAreCheapAt100kRuns(t *testing.T) {
 	pool := insightsDB(t)
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definicao, criado_em, iniciado_em, terminado_em)
+		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definition, created_at, started_at, finished_at)
 		SELECT gen_random_uuid(), 'wf' || (i % 40), 'k' || i,
 		       CASE WHEN i % 500 = 0 THEN 'running' ELSE 'success' END, '{}',
 		       now() - make_interval(secs => (100000 - i) * 30),
@@ -103,7 +103,7 @@ func TestFingerprintsAreCheapAt100kRuns(t *testing.T) {
 	}
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO landings (run_id, node_id, target, workflow_slug, loaded_at, recorded_at)
-		SELECT id, 'n', 't' || (i % 50), workflow_slug, criado_em, criado_em
+		SELECT id, 'n', 't' || (i % 50), workflow_slug, created_at, created_at
 		FROM (SELECT *, row_number() OVER () i FROM runs LIMIT 100000) r`); err != nil {
 		t.Fatal(err)
 	}

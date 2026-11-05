@@ -21,16 +21,16 @@ func triggered(t *testing.T, tr wf.Trigger) (*scheduler.Scheduler, *postgres.Poo
 	pool := testDB(t)
 	ctx := context.Background()
 
-	projeto := uuid.New()
+	project := uuid.New()
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Projeto')`, projeto); err != nil {
+		`INSERT INTO projects (id, slug, name) VALUES ($1, 'p', 'Projeto')`, project); err != nil {
 		t.Fatal(err)
 	}
 	wRepo := postgres.NewWorkflowRepo(pool)
-	if err := wRepo.Publicar(ctx, wf.Workflow{
+	if err := wRepo.Publish(ctx, wf.Workflow{
 		Slug: "silver", Name: "silver", Kind: wf.KindChain,
 		Nodes: []wf.Node{{ID: "a", Run: "brevis-sql build"}}, Trigger: tr,
-	}, projeto, "test"); err != nil {
+	}, project, "test"); err != nil {
 		t.Fatal(err)
 	}
 	s := scheduler.NewScheduler(postgres.NewScheduleRepo(pool), wRepo,
@@ -76,7 +76,7 @@ func TestTenLandingsInAMinuteStartOneRun(t *testing.T) {
 
 	// The first cycle PLANTS the cursor and starts nothing: a trigger that
 	// fired for the whole history of the table on its first turn is the
-	// mistake `schedules.ultimo_slot` already made once.
+	// mistake `schedules.last_slot` already made once.
 	if n, err := s.Cycle(ctx, t0); err != nil || n != 0 {
 		t.Fatalf("the planting cycle created %d runs (%v)", n, err)
 	}

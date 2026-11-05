@@ -49,15 +49,15 @@ import (
 // in twenty-four hours -- a success rate over a single sample is not a rate.
 const workflowWindow = 30 * 24 * time.Hour
 
-// Leitura is what the UI needs from the database. The interface is declared here, in the consumer.
-type Leitura interface {
+// Reads is what the UI needs from the database. The interface is declared here, in the consumer.
+type Reads interface {
 	Indicators(ctx context.Context, window time.Duration) (postgres.Indicators, error)
 	IndicatorsFor(ctx context.Context, window time.Duration, workflow string) (postgres.Indicators, error)
 	RunsPerDay(ctx context.Context, workflow string, days int) ([]postgres.Day, error)
 	LoadTrend(ctx context.Context, workflow string, days int) ([]postgres.LoadDay, error)
 	RunsPer(ctx context.Context, g postgres.Grain, n int) ([]postgres.Bucket, error)
-	InFlight(ctx context.Context, limite int) ([]postgres.RunSummary, error)
-	LatestRuns(ctx context.Context, limite int) ([]postgres.RunSummary, error)
+	InFlight(ctx context.Context, limit int) ([]postgres.RunSummary, error)
+	LatestRuns(ctx context.Context, limit int) ([]postgres.RunSummary, error)
 	Runs(ctx context.Context, f postgres.RunFilter) ([]postgres.RunSummary, error)
 	CountRuns(ctx context.Context, f postgres.RunFilter) (int, error)
 	CountRunsByState(ctx context.Context, f postgres.RunFilter) (map[string]int, error)
@@ -79,7 +79,7 @@ type Leitura interface {
 	QueueDepth(ctx context.Context) (int, int, error)
 }
 
-// Definitions reads a workflow's published definition. Kept apart from `Leitura`
+// Definitions reads a workflow's published definition. Kept apart from `Reads`
 // because it returns the domain, not a screen projection.
 type Definitions interface {
 	Definition(ctx context.Context, slug string) (wf.Workflow, error)
@@ -92,7 +92,7 @@ type Definitions interface {
 type RunsChart interface {
 	Get(ctx context.Context, id uuid.UUID) (run.Run, error)
 	NodeStates(ctx context.Context, id uuid.UUID) (map[string]postgres.NodeState, error)
-	LogsDaRun(ctx context.Context, id uuid.UUID) ([]postgres.StepLog, error)
+	RunLogs(ctx context.Context, id uuid.UUID) ([]postgres.StepLog, error)
 	// WaitingOn says what concurrency limit holds a queued run, if one does.
 	WaitingOn(ctx context.Context, id uuid.UUID) (*postgres.Wait, error)
 }
@@ -124,9 +124,9 @@ type CatalogReader interface {
 type Actions interface {
 	// Toggle pauses or resumes; actor is who pressed it, for the events feed.
 	Toggle(ctx context.Context, slug, actor string) (bool, error)
-	// Disparar runs a workflow now; with a slot, that past slot of its
+	// Trigger runs a workflow now; with a slot, that past slot of its
 	// schedule.
-	Disparar(ctx context.Context, slug string, now time.Time, params map[string]string, slot *time.Time) (uuid.UUID, error)
+	Trigger(ctx context.Context, slug string, now time.Time, params map[string]string, slot *time.Time) (uuid.UUID, error)
 	// Cancel stops a run, or asks the dispatcher holding it to; actor is who
 	// pressed it.
 	Cancel(ctx context.Context, id uuid.UUID, actor string) (postgres.CancelResult, error)
@@ -134,7 +134,7 @@ type Actions interface {
 
 // UI registers the server-rendered pages and the JSON the React island consumes.
 type UI struct {
-	leitura  Leitura
+	reads    Reads
 	inFlight func(context.Context) (int, error)
 	// version is what the console runs; updates says if there is newer.
 	version string
@@ -301,10 +301,10 @@ func (u *UI) dataTools(target string) bool {
 	return u.protected && u.preview.Configured() && catalog.IsRelation(target)
 }
 
-func NewUI(l Leitura, d Definitions, e RunsChart, a Actions, al AlertsReader,
+func NewUI(l Reads, d Definitions, e RunsChart, a Actions, al AlertsReader,
 	c CatalogReader, m branding.Brand, log *slog.Logger,
 ) *UI {
-	u := &UI{leitura: l, defs: d, execs: e, actions: a, alerts: al, catalog: c, brand: m, log: log}
+	u := &UI{reads: l, defs: d, execs: e, actions: a, alerts: al, catalog: c, brand: m, log: log}
 	if l != nil {
 		// Every page and every open tab's 10 s poll draws the badge.
 		u.inFlight = CachedInFlight(l.CountRunsInFlight, 5*time.Second, time.Now)
@@ -323,7 +323,7 @@ func (u *UI) Registrar(mux *http.ServeMux) {
 	// calls) and the language choice.
 	mux.HandleFunc("GET /runs/{id}/log.txt", u.runLog)
 	mux.HandleFunc("POST /preferences/lang", u.chooseLang)
-	mux.HandleFunc("POST /workflows/{slug}/trigger", u.disparar)
+	mux.HandleFunc("POST /workflows/{slug}/trigger", u.trigger)
 
 	// The JSON the graph fetches.
 	mux.HandleFunc("GET /api/workflows/{slug}/graph", u.workflowGraph)
@@ -467,8 +467,8 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 		it.Action = "set-lang:" + lang
 		items = append(items, it)
 	}
-	if u.leitura != nil {
-		wfs, err := u.leitura.Workflows(ctx)
+	if u.reads != nil {
+		wfs, err := u.reads.Workflows(ctx)
 		if err != nil {
 			u.failure(w, r, err)
 			return
@@ -476,7 +476,7 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 		for _, wf := range wfs {
 			items = append(items, paletteEntry("Workflows", wf.Name, wf.Project, "/workflows/"+url.PathEscape(wf.Slug), "workflow"))
 		}
-		projects, err := u.leitura.Projects(ctx)
+		projects, err := u.reads.Projects(ctx)
 		if err != nil {
 			u.failure(w, r, err)
 			return
@@ -535,7 +535,7 @@ func (u *UI) palette(w http.ResponseWriter, r *http.Request) {
 // (`schedule`), and reimplementing it in SQL would create a second reading of
 // the same field -- one that would one day diverge from the one the scheduler
 // actually uses.
-func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limite int,
+func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limit int,
 	log *slog.Logger) []pages.NextRun {
 
 	var out []pages.NextRun
@@ -544,7 +544,7 @@ func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limite int,
 			continue
 		}
 		s := sch.Schedule{WorkflowSlug: a.WorkflowSlug, Cron: a.Cron, Timezone: a.Timezone, Active: true}
-		prox, err := s.Next(now)
+		next, err := s.Next(now)
 		if err != nil {
 			// An invalid cron in the database must not take the whole dashboard
 			// down; the schedule simply does not show up in the list.
@@ -553,12 +553,12 @@ func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limite int,
 			continue
 		}
 		out = append(out, pages.NextRun{
-			Workflow: a.WorkflowSlug, Cron: a.Cron, Timezone: a.Timezone, When: prox,
+			Workflow: a.WorkflowSlug, Cron: a.Cron, Timezone: a.Timezone, When: next,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].When.Before(out[j].When) })
-	if len(out) > limite {
-		out = out[:limite]
+	if len(out) > limit {
+		out = out[:limit]
 	}
 	return out
 }
@@ -568,20 +568,20 @@ func nextRuns(schedules []postgres.ScheduleSummary, now time.Time, limite int,
 // what its link would show. No reader is an empty column: a process wired
 // for the run alone still opens it.
 func (u *UI) runsList(ctx context.Context, query postgres.RunFilter) ([]postgres.RunSummary, int, map[string]int, error) {
-	if u.leitura == nil {
+	if u.reads == nil {
 		return nil, 0, nil, nil
 	}
-	total, err := u.leitura.CountRuns(ctx, query)
+	total, err := u.reads.CountRuns(ctx, query)
 	if err != nil {
 		return nil, 0, nil, err
 	}
-	runs, err := u.leitura.Runs(ctx, query)
+	runs, err := u.reads.Runs(ctx, query)
 	if err != nil {
 		return nil, 0, nil, err
 	}
 	byState := query
-	byState.State, byState.States, byState.Limite, byState.Offset = "", nil, 0, 0
-	counts, err := u.leitura.CountRunsByState(ctx, byState)
+	byState.State, byState.States, byState.Limit, byState.Offset = "", nil, 0, 0
+	counts, err := u.reads.CountRunsByState(ctx, byState)
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -633,12 +633,12 @@ func instant(s string) *time.Time {
 // contar is how many workflows each state would show: the same filter with
 // that one field swapped, run through filtrar, so a count cannot disagree
 // with the list its link opens.
-func contar(all []postgres.WorkflowSummary, f pages.Filter, x listFacts) pages.WorkflowCounts {
+func count(all []postgres.WorkflowSummary, f pages.Filter, x listFacts) pages.WorkflowCounts {
 	c := pages.WorkflowCounts{State: map[string]int{}}
 	for _, s := range []string{"", "failing", "running", "paused", "manual"} {
 		g := f
 		g.State = s
-		c.State[s] = len(filtrar(all, g, x))
+		c.State[s] = len(filter(all, g, x))
 	}
 	return c
 }
@@ -665,11 +665,11 @@ func sortBy(ws []postgres.WorkflowSummary, f pages.Filter) {
 	}
 	sort.SliceStable(ws, func(i, j int) bool {
 		a, b := ws[i], ws[j]
-		temA, temB := hasValue(a, f.Sort), hasValue(b, f.Sort)
-		if temA != temB {
-			return temA
+		hasA, hasB := hasValue(a, f.Sort), hasValue(b, f.Sort)
+		if hasA != hasB {
+			return hasA
 		}
-		if temA {
+		if hasA {
 			if c := compareField(a, b, f.Sort); c != 0 {
 				if f.Desc {
 					return c > 0
@@ -698,16 +698,16 @@ func compareField(a, b postgres.WorkflowSummary, field string) int {
 	case "schedule":
 		return strings.Compare(a.Cron, b.Cron)
 	case "next":
-		return comparaTempo(a.NextRun, b.NextRun)
+		return compareTime(a.NextRun, b.NextRun)
 	case "last":
-		return comparaTempo(a.LastRunAt, b.LastRunAt)
+		return compareTime(a.LastRunAt, b.LastRunAt)
 	}
 	return strings.Compare(a.Slug, b.Slug)
 }
 
-// comparaTempo only receives present values: absence is decided earlier, in
+// compareTime only receives present values: absence is decided earlier, in
 // `temValor`, precisely so it does not depend on the direction.
-func comparaTempo(a, b *time.Time) int {
+func compareTime(a, b *time.Time) int {
 	switch {
 	case a.Before(*b):
 		return -1
@@ -720,28 +720,28 @@ func comparaTempo(a, b *time.Time) int {
 // recortar returns the requested page. A page past the end comes back empty
 // rather than overflowing the slice -- which happens when filtering while on a
 // high page.
-func recortar(ws []postgres.WorkflowSummary, f pages.Filter) []postgres.WorkflowSummary {
-	de := (f.Page - 1) * f.PerPage
-	if de >= len(ws) {
+func clip(ws []postgres.WorkflowSummary, f pages.Filter) []postgres.WorkflowSummary {
+	from := (f.Page - 1) * f.PerPage
+	if from >= len(ws) {
 		return nil
 	}
-	ate := de + f.PerPage
-	if ate > len(ws) {
-		ate = len(ws)
+	until := from + f.PerPage
+	if until > len(ws) {
+		until = len(ws)
 	}
-	return ws[de:ate]
+	return ws[from:until]
 }
 
-func proximaDoWorkflow(w postgres.WorkflowSummary, now time.Time) *time.Time {
+func nextOfWorkflow(w postgres.WorkflowSummary, now time.Time) *time.Time {
 	if !w.Active || w.Cron == "" {
 		return nil
 	}
 	s := sch.Schedule{WorkflowSlug: w.Slug, Cron: w.Cron, Timezone: w.Timezone, Active: true}
-	prox, err := s.Next(now)
+	next, err := s.Next(now)
 	if err != nil {
 		return nil
 	}
-	return &prox
+	return &next
 }
 
 // filtrar applies the search bar in memory.
@@ -749,7 +749,7 @@ func proximaDoWorkflow(w postgres.WorkflowSummary, now time.Time) *time.Time {
 // In memory and not in SQL because the workflow list is in the dozens, and
 // filtering by LAST state would mean repeating the query's LATERAL inside a
 // WHERE. If it ever becomes thousands, this turns into a database predicate.
-func filtrar(ws []postgres.WorkflowSummary, f pages.Filter, x listFacts) []postgres.WorkflowSummary {
+func filter(ws []postgres.WorkflowSummary, f pages.Filter, x listFacts) []postgres.WorkflowSummary {
 	search := strings.ToLower(f.Search)
 	out := make([]postgres.WorkflowSummary, 0, len(ws))
 	for _, w := range ws {
@@ -819,14 +819,14 @@ func tagsOf(values []string) []string {
 	return out
 }
 
-// tagsDe gathers the tags of ALL workflows, not of the filtered rows: the filter
+// allTags gathers the tags of ALL workflows, not of the filtered rows: the filter
 // bar must not shrink as you filter, or there is no way back.
-func tagsDe(ws []postgres.WorkflowSummary) []string {
+func allTags(ws []postgres.WorkflowSummary) []string {
 	seen := map[string]struct{}{}
 	var out []string
 	for _, w := range ws {
 		for _, t := range w.Tags {
-			if _, ja := seen[t]; ja {
+			if _, already := seen[t]; already {
 				continue
 			}
 			seen[t] = struct{}{}
@@ -855,7 +855,7 @@ func (u *UI) runLog(w http.ResponseWriter, r *http.Request) {
 		u.failure(w, r, err)
 		return
 	}
-	logs, err := u.execs.LogsDaRun(r.Context(), id)
+	logs, err := u.execs.RunLogs(r.Context(), id)
 	if err != nil {
 		u.failure(w, r, err)
 		return
@@ -918,7 +918,7 @@ func (u *UI) runPage(ctx context.Context, current run.Run) pages.RunPage {
 		}
 		p.Step = stepLineOf(def, states)
 	}
-	if p.Logs, err = u.execs.LogsDaRun(ctx, current.ID); err != nil {
+	if p.Logs, err = u.execs.RunLogs(ctx, current.ID); err != nil {
 		u.log.Warn("the run's logs are unavailable", "run", current.ID, "error", err)
 	}
 	if u.alerts != nil {
@@ -1003,7 +1003,7 @@ func paramsFromForm(form url.Values) map[string]string {
 	return params
 }
 
-func (u *UI) disparar(w http.ResponseWriter, r *http.Request) {
+func (u *UI) trigger(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// The params come from the form, prefixed with `param.` so they do not
@@ -1019,7 +1019,7 @@ func (u *UI) disparar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := u.actions.Disparar(r.Context(), slug, time.Now(), params, slot)
+	id, err := u.actions.Trigger(r.Context(), slug, time.Now(), params, slot)
 	if err != nil {
 		// An invalid param is an INPUT error, not the server's: a 500 here would
 		// send the operator looking for a defect in the platform rather than in
@@ -1074,8 +1074,8 @@ func (u *UI) slotFromForm(ctx context.Context, slug, v string) (*time.Time, erro
 		return &t, nil
 	}
 	loc := time.UTC
-	if u.leitura != nil {
-		schedules, err := u.leitura.Schedules(ctx)
+	if u.reads != nil {
+		schedules, err := u.reads.Schedules(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1102,7 +1102,7 @@ func backTo(r *http.Request) string {
 	// It only accepts a destination on this site: an external Referer would turn
 	// the redirect into an open-redirect vector.
 	if target == "" || !strings.HasPrefix(target, "/") {
-		if u := parseMesmoHost(r); u != "" {
+		if u := parseSameHost(r); u != "" {
 			target = u
 		} else {
 			target = "/workflows"
@@ -1111,8 +1111,8 @@ func backTo(r *http.Request) string {
 	return target
 }
 
-// parseMesmoHost accepts the Referer only when it points at this same host.
-func parseMesmoHost(r *http.Request) string {
+// parseSameHost accepts the Referer only when it points at this same host.
+func parseSameHost(r *http.Request) string {
 	ref := r.Referer()
 	if ref == "" {
 		return ""

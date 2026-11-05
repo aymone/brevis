@@ -40,33 +40,33 @@ type Holder struct {
 // what is ahead of it leaves no slot. A change to the claim is a change here.
 func (r *RunRepo) WaitingOn(ctx context.Context, runID uuid.UUID) (*Wait, error) {
 	var (
-		w     Wait
-		chave string
+		w   Wait
+		key string
 	)
 	err := r.pool.QueryRow(ctx, `
-		WITH eu AS (
-			SELECT r.max_ativos, COALESCE(r.grupo_concorrencia, '') AS grupo,
-			       COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug) AS chave,
-			       q.id, q.prioridade, q.disponivel_em
+		WITH self AS (
+			SELECT r.max_active, COALESCE(r.concurrency_group, '') AS grp,
+			       COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug) AS lane,
+			       q.id, q.priority, q.available_at
 			FROM runs r
 			JOIN queue_items q ON q.run_id = r.id
 			WHERE r.id = $1
-			  AND r.max_ativos > 0
-			  AND q.reivindicado_em IS NULL
-			  AND q.disponivel_em <= now()
+			  AND r.max_active > 0
+			  AND q.claimed_at IS NULL
+			  AND q.available_at <= now()
 		)
-		SELECT eu.max_ativos, eu.grupo, eu.chave,
+		SELECT self.max_active, self.grp, self.lane,
 		       (SELECT count(*)
 		        FROM queue_items q
 		        JOIN runs r ON r.id = q.run_id
-		        WHERE q.reivindicado_em IS NULL
-		          AND q.disponivel_em <= now()
-		          AND q.id <> eu.id
-		          AND COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug) = eu.chave
-		          AND (q.prioridade > eu.prioridade
-		               OR (q.prioridade = eu.prioridade
-		                   AND (q.disponivel_em, q.id) < (eu.disponivel_em, eu.id))))
-		FROM eu`, runID).Scan(&w.Limit, &w.Group, &chave, &w.Ahead)
+		        WHERE q.claimed_at IS NULL
+		          AND q.available_at <= now()
+		          AND q.id <> self.id
+		          AND COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug) = self.lane
+		          AND (q.priority > self.priority
+		               OR (q.priority = self.priority
+		                   AND (q.available_at, q.id) < (self.available_at, self.id))))
+		FROM self`, runID).Scan(&w.Limit, &w.Group, &key, &w.Ahead)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -75,12 +75,12 @@ func (r *RunRepo) WaitingOn(ctx context.Context, runID uuid.UUID) (*Wait, error)
 	}
 
 	rows, err := r.pool.Query(ctx, `
-		SELECT r.id, r.workflow_slug, q.reivindicado_em
+		SELECT r.id, r.workflow_slug, q.claimed_at
 		FROM queue_items q
 		JOIN runs r ON r.id = q.run_id
-		WHERE q.reivindicado_em IS NOT NULL
-		  AND COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug) = $1
-		ORDER BY q.reivindicado_em, r.id`, chave)
+		WHERE q.claimed_at IS NOT NULL
+		  AND COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug) = $1
+		ORDER BY q.claimed_at, r.id`, key)
 	if err != nil {
 		return nil, err
 	}

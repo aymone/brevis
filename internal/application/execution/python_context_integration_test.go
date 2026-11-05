@@ -105,9 +105,9 @@ context.set(rows=48213)
 		},
 	}
 
-	rep := &coletor{}
+	rep := &collector{}
 	r := app.Runner{
-		Processo: exe, Report: rep, ContextDir: t.TempDir(),
+		Process: exe, Report: rep, ContextDir: t.TempDir(),
 		Env: map[string]string{
 			"PATH": os.Getenv("PATH"),
 			// The library is not installed; this is how a checkout runs it.
@@ -124,13 +124,13 @@ context.set(rows=48213)
 		"python read: s3://landing/2026-09-07", // Python read bash, through Go
 	} {
 		var read bool
-		for _, e := range rep.eventos {
+		for _, e := range rep.events {
 			if strings.Contains(e.Message, want) {
 				read = true
 			}
 		}
 		if !read {
-			t.Errorf("no step reported %q. Events: %+v", want, rep.eventos)
+			t.Errorf("no step reported %q. Events: %+v", want, rep.events)
 		}
 	}
 
@@ -293,7 +293,7 @@ with open(os.environ["READINGS"], "w") as f:
 	}
 
 	r := app.Runner{
-		Processo: exe, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exe, Report: &collector{}, ContextDir: t.TempDir(),
 		LogicalDate: &slot,
 		// A run that was thirty-seven minutes late, which is the case the
 		// clock exists for: reading now() here would give the wall clock.
@@ -402,9 +402,9 @@ print("the step's own output, which is not a metric")
 		Slug: "metered", Kind: wf.KindDAG,
 		Nodes: []wf.Node{{ID: "load", Run: python + " " + script}},
 	}
-	rep := &coletor{}
+	rep := &collector{}
 	r := app.Runner{
-		Processo: exe, Report: rep, ContextDir: t.TempDir(), Metrics: met,
+		Process: exe, Report: rep, ContextDir: t.TempDir(), Metrics: met,
 		Env: map[string]string{"PATH": os.Getenv("PATH"), "PYTHONPATH": libSrc},
 	}
 	if err := r.Run(context.Background(), w); err != nil {
@@ -430,13 +430,13 @@ print("the step's own output, which is not a metric")
 
 	// The marker line is NOT the step's log. Whoever opens the screen wants the
 	// output, not the JSON that carried a number.
-	for _, e := range rep.eventos {
+	for _, e := range rep.events {
 		if strings.Contains(e.Message, "@brevis:") {
 			t.Errorf("a marker reached the log: %q", e.Message)
 		}
 	}
 	var sawOutput bool
-	for _, e := range rep.eventos {
+	for _, e := range rep.events {
 		if strings.Contains(e.Message, "the step's own output") {
 			sawOutput = true
 		}

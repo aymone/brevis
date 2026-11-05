@@ -21,7 +21,7 @@ func TestDefinitionsAreEveryPublishedWorkflow(t *testing.T) {
 		t.Helper()
 		w := wf.Workflow{Slug: slug, Name: slug, Kind: wf.KindChain, Image: image,
 			Nodes: []wf.Node{{ID: "load", Run: step}}}
-		if err := repo.Publicar(ctx, w, sales, "cli"); err != nil {
+		if err := repo.Publish(ctx, w, sales, "cli"); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -29,7 +29,7 @@ func TestDefinitionsAreEveryPublishedWorkflow(t *testing.T) {
 	publish("orders", "python:3.13", "python load.py") // republished: the new one
 	publish("refunds", "", "dbt build")
 	publish("gone", "", "echo gone")
-	if _, err := repo.Podar(ctx, sales, []string{"orders", "refunds"}, "cli"); err != nil {
+	if _, err := repo.Prune(ctx, sales, []string{"orders", "refunds"}, "cli"); err != nil {
 		t.Fatal(err)
 	}
 

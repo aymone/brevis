@@ -137,7 +137,7 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 		Calendar: calendarView{Days: []calendarDayView{}}, Day: dayString(day), Now: now, Slots: []slotView{},
 	}
 
-	latest, err := u.leitura.WorkflowHistory(ctx, slug, day, 10)
+	latest, err := u.reads.WorkflowHistory(ctx, slug, day, 10)
 	if err != nil {
 		u.log.Warn("the workflow's history is unavailable", "workflow", slug, "error", err)
 	}
@@ -151,31 +151,31 @@ func (u *UI) workflowJSON(w http.ResponseWriter, r *http.Request) {
 		out.Runs = append(out.Runs, rv)
 	}
 
-	if ind, err := u.leitura.IndicatorsFor(ctx, workflowWindow, slug); err == nil {
-		out.Stats.MeanMs, out.Stats.Running, out.Stats.Queued = ind.MeanDuration.Milliseconds(), ind.Running, ind.Pending
+	if indicators, err := u.reads.IndicatorsFor(ctx, workflowWindow, slug); err == nil {
+		out.Stats.MeanMs, out.Stats.Running, out.Stats.Queued = indicators.MeanDuration.Milliseconds(), indicators.Running, indicators.Pending
 	} else {
 		u.log.Warn("the workflow's indicators are unavailable", "workflow", slug, "error", err)
 	}
 	// 53 weeks and the days of this one: the calendar's whole grid.
-	if days, err := u.leitura.RunsPerDay(ctx, slug, 53*7); err == nil {
+	if days, err := u.reads.RunsPerDay(ctx, slug, 53*7); err == nil {
 		out.Calendar, out.Stats.RanDays, out.Stats.FailedDays = calendarOf(days, now)
 	} else {
 		u.log.Warn("the workflow's calendar is unavailable", "workflow", slug, "error", err)
 	}
 
-	if load, err := u.leitura.LoadTrend(ctx, slug, components.TrendDays); err == nil {
+	if load, err := u.reads.LoadTrend(ctx, slug, components.TrendDays); err == nil {
 		out.Load = loadOf(load)
 	} else {
 		u.log.Warn("the workflow's load trend is unavailable", "workflow", slug, "error", err)
 	}
 
-	if all, err := u.leitura.Workflows(ctx); err == nil {
+	if all, err := u.reads.Workflows(ctx); err == nil {
 		for _, s := range all {
 			if s.Slug != slug {
 				continue
 			}
 			out.Project, out.HasSchedule, out.Active, out.Timezone = s.Project, s.HasSchedule, s.Active, s.Timezone
-			out.NextRun = proximaDoWorkflow(s, now)
+			out.NextRun = nextOfWorkflow(s, now)
 		}
 	} else {
 		u.log.Warn("the workflow's summary is unavailable", "workflow", slug, "error", err)

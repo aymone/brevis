@@ -27,7 +27,7 @@ type Item struct {
 	Priority    int
 	AvailableAt time.Time
 
-	// ClaimedAt is the claim this holder knows: reivindicado_em as the claim
+	// ClaimedAt is the claim this holder knows: claimed_at as the claim
 	// wrote it. It is the fence on everything the holder does afterwards --
 	// Renew, Done, Release -- because a reclaim always writes a new one, so the
 	// pair (ID, ClaimedAt) names one claim and not merely one item.
@@ -39,7 +39,7 @@ type Item struct {
 }
 
 // claim is ClaimedAt as the fence's parameter: NULL for zero, so
-// `reivindicado_em IS NOT DISTINCT FROM $2` matches an unclaimed item.
+// `claimed_at IS NOT DISTINCT FROM $2` matches an unclaimed item.
 func (it Item) claim() any {
 	if it.ClaimedAt.IsZero() {
 		return nil
@@ -72,7 +72,7 @@ func (q *Queue) Enqueue(ctx context.Context, runID uuid.UUID, priority int, avai
 		when = nil // COALESCE resolves to the database's now()
 	}
 	_, err := q.pool.Exec(ctx, `
-		INSERT INTO queue_items (run_id, prioridade, disponivel_em)
+		INSERT INTO queue_items (run_id, priority, available_at)
 		VALUES ($1, $2, COALESCE($3::timestamptz, now()))
 		ON CONFLICT (run_id) DO NOTHING`,
 		runID, priority, when)
@@ -89,8 +89,8 @@ func (q *Queue) Enqueue(ctx context.Context, runID uuid.UUID, priority int, avai
 // concurrency allows, because whoever counts the slots is whoever asks.
 //
 // Claims are serialized across processes by an advisory lock (see claimLock).
-func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, error) {
-	if limite <= 0 {
+func (q *Queue) Claim(ctx context.Context, worker string, limit int) ([]Item, error) {
+	if limit <= 0 {
 		return nil, nil
 	}
 
@@ -100,21 +100,21 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 	// then handing back would be a window in which two dispatchers had already
 	// taken the same workflow.
 	//
-	// That holds for ONE claimer. `em_voo` and `posicao` are computed from one
+	// That holds for ONE claimer. `in_flight` and `pos` are computed from one
 	// READ COMMITTED snapshot, and SKIP LOCKED only keeps two claimers off the
 	// same ROW: neither sees the other's uncommitted claim, so two processes
 	// claiming at once could each take a different item of a workflow with a
 	// limit of 1. The advisory lock below makes the claims take turns; the
 	// claim is a single short statement, so the wait is negligible.
 	//
-	// `em_voo` counts CLAIMED items, not runs in `running`: between the claim
+	// `in_flight` counts CLAIMED items, not runs in `running`: between the claim
 	// and the state transition there is an instant where the run is still
 	// `queued`, and counting by status would open exactly that gap.
 	//
-	// `posicao` is what prevents the second problem: without it, three items of
+	// `pos` is what prevents the second problem: without it, three items of
 	// the same workflow with a limit of 1 would ALL come out in the same batch,
 	// because the count does not change mid-query. With the per-workflow
-	// numbering, an item only passes if `em_voo + its position` fits the
+	// numbering, an item only passes if `in_flight + its position` fits the
 	// limit.
 	//
 	// What is counted is the run's CONCURRENCY KEY, not its workflow (#32). A
@@ -137,44 +137,44 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 		return nil, fmt.Errorf("claiming items: %w", err)
 	}
 	rows, err := tx.Query(ctx, `
-		WITH em_voo AS (
-			SELECT COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug) AS chave,
+		WITH in_flight AS (
+			SELECT COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug) AS lane,
 			       count(*) AS n
 			FROM queue_items q
 			JOIN runs r ON r.id = q.run_id
-			WHERE q.reivindicado_em IS NOT NULL
+			WHERE q.claimed_at IS NOT NULL
 			GROUP BY 1
 		),
-		elegiveis AS (
+		eligible AS (
 			SELECT q.id,
-			       r.max_ativos,
-			       COALESCE(v.n, 0) AS ja_em_voo,
+			       r.max_active,
+			       COALESCE(v.n, 0) AS already_in_flight,
 			       row_number() OVER (
-			           PARTITION BY COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug)
-			           ORDER BY q.prioridade DESC, q.disponivel_em, q.id
-			       ) AS posicao
+			           PARTITION BY COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug)
+			           ORDER BY q.priority DESC, q.available_at, q.id
+			       ) AS pos
 			FROM queue_items q
 			JOIN runs r ON r.id = q.run_id
-			LEFT JOIN em_voo v
-			       ON v.chave = COALESCE('g:' || r.grupo_concorrencia, 'w:' || r.workflow_slug)
-			WHERE q.reivindicado_em IS NULL
-			  AND q.disponivel_em <= now()
+			LEFT JOIN in_flight v
+			       ON v.lane = COALESCE('g:' || r.concurrency_group, 'w:' || r.workflow_slug)
+			WHERE q.claimed_at IS NULL
+			  AND q.available_at <= now()
 		)
 		UPDATE queue_items
-		SET reivindicado_em = now(), reivindicado_por = $1
+		SET claimed_at = now(), claimed_by = $1
 		WHERE id IN (
 			SELECT q.id
 			FROM queue_items q
-			JOIN elegiveis e ON e.id = q.id
-			WHERE q.reivindicado_em IS NULL
-			  AND q.disponivel_em <= now()
-			  AND (e.max_ativos = 0 OR e.ja_em_voo + e.posicao <= e.max_ativos)
-			ORDER BY q.prioridade DESC, q.disponivel_em, q.id
+			JOIN eligible e ON e.id = q.id
+			WHERE q.claimed_at IS NULL
+			  AND q.available_at <= now()
+			  AND (e.max_active = 0 OR e.already_in_flight + e.pos <= e.max_active)
+			ORDER BY q.priority DESC, q.available_at, q.id
 			LIMIT $2
 			FOR UPDATE OF q SKIP LOCKED
 		)
-		RETURNING id, run_id, prioridade, disponivel_em, reivindicado_em`,
-		worker, limite)
+		RETURNING id, run_id, priority, available_at, claimed_at`,
+		worker, limit)
 	if err != nil {
 		return nil, fmt.Errorf("claiming items: %w", err)
 	}
@@ -204,15 +204,15 @@ func (q *Queue) Claim(ctx context.Context, worker string, limite int) ([]Item, e
 const claimLock int64 = 0x62726576_636c6d31 // "brev" "clm1"
 
 // Renew says the claim is still held. It is fenced on the claim itself, not on
-// the item: a reclaim writes a new reivindicado_em, so a stale holder's renewal
+// the item: a reclaim writes a new claimed_at, so a stale holder's renewal
 // matches nothing -- and nothing is the answer that tells it it lost.
 //
 // `held` false with no error is that answer. An error is the database not
 // answering, which says nothing about the claim either way.
 func (q *Queue) Renew(ctx context.Context, it Item) (held bool, err error) {
 	tag, err := q.pool.Exec(ctx, `
-		UPDATE queue_items SET renovado_em = now()
-		WHERE id = $1 AND reivindicado_em = $2`,
+		UPDATE queue_items SET renewed_at = now()
+		WHERE id = $1 AND claimed_at = $2`,
 		it.ID, it.claim())
 	if err != nil {
 		return false, err
@@ -228,7 +228,7 @@ func (q *Queue) Renew(ctx context.Context, it Item) (held bool, err error) {
 func (q *Queue) Done(ctx context.Context, it Item) error {
 	_, err := q.pool.Exec(ctx, `
 		DELETE FROM queue_items
-		WHERE id = $1 AND reivindicado_em IS NOT DISTINCT FROM $2`,
+		WHERE id = $1 AND claimed_at IS NOT DISTINCT FROM $2`,
 		it.ID, it.claim())
 	return err
 }
@@ -240,13 +240,13 @@ func (q *Queue) Done(ctx context.Context, it Item) error {
 //
 // Fenced on the claim, as Done is, so a stale holder cannot hand somebody
 // else's run back to the queue.
-func (q *Queue) Release(ctx context.Context, it Item, atraso time.Duration) error {
+func (q *Queue) Release(ctx context.Context, it Item, delay time.Duration) error {
 	_, err := q.pool.Exec(ctx, `
 		UPDATE queue_items
-		SET reivindicado_em = NULL, reivindicado_por = NULL, renovado_em = NULL,
-		    disponivel_em = now() + $3::interval
-		WHERE id = $1 AND reivindicado_em IS NOT DISTINCT FROM $2`,
-		it.ID, it.claim(), fmt.Sprintf("%d milliseconds", atraso.Milliseconds()))
+		SET claimed_at = NULL, claimed_by = NULL, renewed_at = NULL,
+		    available_at = now() + $3::interval
+		WHERE id = $1 AND claimed_at IS NOT DISTINCT FROM $2`,
+		it.ID, it.claim(), fmt.Sprintf("%d milliseconds", delay.Milliseconds()))
 	return err
 }
 
@@ -261,18 +261,18 @@ func (q *Queue) Release(ctx context.Context, it Item, atraso time.Duration) erro
 // process that crashed would stay stuck forever. That was exactly the failure
 // mode of the zombie runs that jammed pipelines for 33 days in the previous
 // system.
-func (q *Queue) Recover(ctx context.Context, limite time.Duration) ([]Item, error) {
+func (q *Queue) Recover(ctx context.Context, limit time.Duration) ([]Item, error) {
 	// It returns the items, not just the count: whoever recovers needs to know
 	// WHICH runs were left dangling in order to fix their state too. With the
 	// count alone, the item went back to the queue but the Run stayed "running"
 	// forever -- the half of the bug this fixes.
 	rows, err := q.pool.Query(ctx, `
 		UPDATE queue_items
-		SET reivindicado_em = NULL, reivindicado_por = NULL, renovado_em = NULL
-		WHERE reivindicado_em IS NOT NULL
-		  AND COALESCE(renovado_em, reivindicado_em) < now() - $1::interval
-		RETURNING id, run_id, prioridade`,
-		fmt.Sprintf("%d milliseconds", limite.Milliseconds()))
+		SET claimed_at = NULL, claimed_by = NULL, renewed_at = NULL
+		WHERE claimed_at IS NOT NULL
+		  AND COALESCE(renewed_at, claimed_at) < now() - $1::interval
+		RETURNING id, run_id, priority`,
+		fmt.Sprintf("%d milliseconds", limit.Milliseconds()))
 	if err != nil {
 		return nil, err
 	}
@@ -293,8 +293,8 @@ func (q *Queue) Recover(ctx context.Context, limite time.Duration) ([]Item, erro
 func (q *Queue) Size(ctx context.Context) (pending, claimed int, err error) {
 	err = q.pool.QueryRow(ctx, `
 		SELECT
-			count(*) FILTER (WHERE reivindicado_em IS NULL),
-			count(*) FILTER (WHERE reivindicado_em IS NOT NULL)
+			count(*) FILTER (WHERE claimed_at IS NULL),
+			count(*) FILTER (WHERE claimed_at IS NOT NULL)
 		FROM queue_items`).Scan(&pending, &claimed)
 	return
 }

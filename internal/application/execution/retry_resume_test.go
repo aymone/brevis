@@ -55,7 +55,7 @@ func retryOf(t *testing.T, w wf.Workflow, settled []string, failing ...string) (
 	spy := &spyPersister{}
 	err := app.Runner{
 		Go: local.NewGoExecutor(reg), Persist: spy, RunID: uuid.New(),
-		History: &historico{settled: already},
+		History: &history{settled: already},
 	}.Run(context.Background(), w)
 	return done, spy, err
 }
@@ -327,7 +327,7 @@ func TestIntegrationTheRetryStillSeesWhatTheSettledStepPublished(t *testing.T) {
 	}
 	r := app.Runner{
 		RunID: runID, Persist: repo, History: repo,
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 

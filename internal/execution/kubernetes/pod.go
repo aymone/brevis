@@ -168,8 +168,8 @@ type StatusContainer struct {
 	} `json:"state"`
 }
 
-// Fase returns the current phase; empty until the server answers with a status.
-func (p Pod) Fase() string {
+// Phase returns the current phase; empty until the server answers with a status.
+func (p Pod) Phase() string {
 	if p.Status == nil {
 		return ""
 	}
@@ -178,7 +178,7 @@ func (p Pod) Fase() string {
 
 // Terminou says whether the pod reached a final state.
 func (p Pod) Finished() bool {
-	f := p.Fase()
+	f := p.Phase()
 	return f == "Succeeded" || f == "Failed"
 }
 
@@ -280,12 +280,12 @@ type Options struct {
 	AllowedSecrets []string
 	Labels         map[string]string
 	Shell          []string
-	// EsperaParaIniciar is how long a pod may go without starting before the
+	// StartTimeout is how long a pod may go without starting before the
 	// step gives up. It exists because `Pending` is not an error to Kubernetes:
 	// a pod that fits on no node sits there forever, and without this limit the
 	// step waits along with it -- no log, no failure, no retry. It happened in
 	// dev with a CPU request larger than the pool's free capacity.
-	EsperaParaIniciar time.Duration
+	StartTimeout time.Duration
 
 	// KeepFailedPod leaves the pod around for inspection when a step fails.
 	// A successful one is always deleted: thousands of Completed pods clutter
@@ -304,13 +304,13 @@ const (
 	credentialDirEnv = "BREVIS_CREDENTIAL_DIR" // #nosec G101 -- a variable NAME
 )
 
-// permiteSecret decides whether a YAML may name this Secret.
+// allowSecret decides whether a YAML may name this Secret.
 //
 // The refusal happens while BUILDING the pod and not at the server: a
 // secretKeyRef to a forbidden Secret is not even forbidden by Kubernetes -- it
 // mounts, and the error one sees is a different one. Here the message names it
 // and says where to allow it.
-func (o Options) permiteSecret(name string) error {
+func (o Options) allowSecret(name string) error {
 	for _, p := range o.AllowedSecrets {
 		if p == name {
 			return nil
@@ -338,10 +338,10 @@ func (o Options) withDefaults() Options {
 	if o.CredentialPVC != "" && o.CredentialPath == "" {
 		o.CredentialPath = "/var/brevis/credentials"
 	}
-	if o.EsperaParaIniciar <= 0 {
+	if o.StartTimeout <= 0 {
 		// Ten minutes cover pulling a large image (the dbt one is 620 MB) and an
 		// autoscaler scale-up, without leaving a step stuck all night.
-		o.EsperaParaIniciar = 10 * time.Minute
+		o.StartTimeout = 10 * time.Minute
 	}
 	return o
 }
@@ -415,7 +415,7 @@ func BuildPod(t execution.TaskExec, o Options) (Pod, error) {
 	sort.Strings(secrets)
 	for _, k := range secrets {
 		name, key, _ := strings.Cut(t.Secrets[k], "/")
-		if err := o.permiteSecret(name); err != nil {
+		if err := o.allowSecret(name); err != nil {
 			return Pod{}, fmt.Errorf("step %q, secrets[%q]: %w", t.NodeID, k, err)
 		}
 		c.Env = append(c.Env, Var{
@@ -428,7 +428,7 @@ func BuildPod(t execution.TaskExec, o Options) (Pod, error) {
 	// points at the mount, and it is the same one the SDK reads on somebody's
 	// laptop with BREVIS_CREDENTIAL_DIR=./.brevis -- the same code in both.
 	if o.CredentialPVC != "" {
-		if _, jaTem := t.Env[credentialDirEnv]; !jaTem {
+		if _, alreadyHas := t.Env[credentialDirEnv]; !alreadyHas {
 			c.Env = append(c.Env, Var{Name: credentialDirEnv, Value: o.CredentialPath})
 		}
 		c.VolumeMounts = append(c.VolumeMounts, VolumeMount{
@@ -468,8 +468,8 @@ func BuildPod(t execution.TaskExec, o Options) (Pod, error) {
 	if t.Timeout > 0 {
 		// A safety net on the cluster's side: if the Brevis process dies, the
 		// pod still stops on its own instead of running forever.
-		segundos := int64(t.Timeout.Seconds())
-		spec.ActiveDeadlineSeconds = &segundos
+		seconds := int64(t.Timeout.Seconds())
+		spec.ActiveDeadlineSeconds = &seconds
 	}
 
 	labels := map[string]string{
@@ -567,14 +567,14 @@ func PodName(t execution.TaskExec) string {
 		identity += fmt.Sprintf("|%d", t.MapIndex)
 	}
 	sum := sha256.Sum256([]byte(identity))
-	sufixo := hex.EncodeToString(sum[:4])
+	suffix := hex.EncodeToString(sum[:4])
 
 	const maxName = 63
-	if len(base)+1+len(sufixo) > maxName {
-		base = base[:maxName-1-len(sufixo)]
+	if len(base)+1+len(suffix) > maxName {
+		base = base[:maxName-1-len(suffix)]
 		base = strings.TrimRight(base, "-")
 	}
-	return base + "-" + sufixo
+	return base + "-" + suffix
 }
 
 func sanitize(s string) string {

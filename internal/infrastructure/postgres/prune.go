@@ -13,8 +13,8 @@ import (
 //
 // Measured on a year of hourly runs across forty workflows -- 350,000 runs:
 //
-//	task_runs     339 MB   log 119, etapas 113, saida 20, indexes 35
-//	runs          141 MB   auto_params 38, definicao 30, indexes 31
+//	task_runs     339 MB   log 119, stages 113, output 20, indexes 35
+//	runs          141 MB   auto_params 38, definition 30, indexes 31
 //	load_metrics   81 MB
 //
 // Three quarters of the biggest table is BULK: the text a step printed and the
@@ -33,7 +33,7 @@ import (
 // only thing that keeps a table on /data after the runs that loaded it are
 // gone.
 type Retention struct {
-	// TrimAfter empties log, etapas and saida on runs older than this.
+	// TrimAfter empties log, stages and output on runs older than this.
 	TrimAfter time.Duration
 
 	// PurgeAfter deletes the run outright, and with it its task_runs, its queue
@@ -172,16 +172,16 @@ func (r *RunRepo) trim(ctx context.Context, after time.Duration, batch int, dry 
 		SELECT t.id
 		FROM task_runs t
 		JOIN runs r ON r.id = t.run_id
-		WHERE r.criado_em < now() - $1::interval
-		  AND (t.log <> '' OR t.etapas <> '[]'::jsonb OR t.saida IS NOT NULL)
+		WHERE r.created_at < now() - $1::interval
+		  AND (t.log <> '' OR t.stages <> '[]'::jsonb OR t.output IS NOT NULL)
 		LIMIT $2`
 
 	if dry {
 		var n int64
 		err := r.pool.QueryRow(ctx,
 			`SELECT count(*) FROM task_runs t JOIN runs r ON r.id = t.run_id
-			 WHERE r.criado_em < now() - $1::interval
-			   AND (t.log <> '' OR t.etapas <> '[]'::jsonb OR t.saida IS NOT NULL)`,
+			 WHERE r.created_at < now() - $1::interval
+			   AND (t.log <> '' OR t.stages <> '[]'::jsonb OR t.output IS NOT NULL)`,
 			interval(after)).Scan(&n)
 		return n, err
 	}
@@ -189,7 +189,7 @@ func (r *RunRepo) trim(ctx context.Context, after time.Duration, batch int, dry 
 	var total int64
 	for {
 		tag, err := r.pool.Exec(ctx, `
-			UPDATE task_runs SET log = '', etapas = '[]'::jsonb, saida = NULL
+			UPDATE task_runs SET log = '', stages = '[]'::jsonb, output = NULL
 			WHERE id IN (`+eligible+`)`, interval(after), batch)
 		if err != nil {
 			return total, err
@@ -207,7 +207,7 @@ func (r *RunRepo) trim(ctx context.Context, after time.Duration, batch int, dry 
 	}
 }
 
-// purge deletes whole runs. task_runs, queue_items and alertas follow by
+// purge deletes whole runs. task_runs, queue_items and alerts follow by
 // cascade; load_metrics does NOT, which is the point of it having no foreign
 // key.
 func (r *RunRepo) purge(ctx context.Context, after time.Duration, batch int, dry bool) (int64, error) {
@@ -228,7 +228,7 @@ func (r *RunRepo) purge(ctx context.Context, after time.Duration, batch int, dry
 	if dry {
 		var n int64
 		err := r.pool.QueryRow(ctx,
-			`SELECT count(*) FROM runs WHERE criado_em < now() - $1::interval AND status = ANY($2)`,
+			`SELECT count(*) FROM runs WHERE created_at < now() - $1::interval AND status = ANY($2)`,
 			interval(after), settled).Scan(&n)
 		return n, err
 	}
@@ -238,7 +238,7 @@ func (r *RunRepo) purge(ctx context.Context, after time.Duration, batch int, dry
 		tag, err := r.pool.Exec(ctx, `
 			DELETE FROM runs WHERE id IN (
 				SELECT id FROM runs
-				WHERE criado_em < now() - $1::interval
+				WHERE created_at < now() - $1::interval
 				  AND status = ANY($2)
 				LIMIT $3)`, interval(after), settled, batch)
 		if err != nil {

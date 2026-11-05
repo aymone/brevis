@@ -19,7 +19,7 @@ import (
 // This test checks that every field reaches the other side.
 func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	var (
-		metodo string
+		method string
 		body   string
 		header string
 		path   string
@@ -27,7 +27,7 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		calls++
-		metodo = r.Method
+		method = r.Method
 		b := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(b)
 		body = string(b)
@@ -65,8 +65,8 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 	}
 
 	// Os campos do driver.
-	if metodo != http.MethodPost {
-		t.Errorf("Method did not arrive: %q", metodo)
+	if method != http.MethodPost {
+		t.Errorf("Method did not arrive: %q", method)
 	}
 	if body != `{"q":1}` {
 		t.Errorf("Body did not arrive: %q", body)
@@ -93,10 +93,10 @@ func TestHTTPPassesEveryFieldThrough(t *testing.T) {
 // Every format has to reach the right decoder. An ignored Format would decode
 // JSON where the fetcher asked for CSV.
 func TestHTTPForwardsEachFormat(t *testing.T) {
-	casos := []struct {
-		formato core.Format
-		body    string
-		field   string
+	cases := []struct {
+		format core.Format
+		body   string
+		field  string
 	}{
 		{core.FormatJSON, `[{"a":"1"}]`, "a"},
 		{core.FormatNDJSON, `{"a":"1"}` + "\n", "a"},
@@ -104,14 +104,14 @@ func TestHTTPForwardsEachFormat(t *testing.T) {
 		{core.FormatXML, `<r><item><a>1</a></item></r>`, "a"},
 	}
 
-	for _, c := range casos {
-		t.Run(string(c.formato), func(t *testing.T) {
+	for _, c := range cases {
+		t.Run(string(c.format), func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				_, _ = w.Write([]byte(c.body))
 			}))
 			defer srv.Close()
 
-			seq, err := HTTP{URL: srv.URL, Format: c.formato}.
+			seq, err := HTTP{URL: srv.URL, Format: c.format}.
 				Read(context.Background(), core.ReadOptions{})
 			if err != nil {
 				t.Fatalf("Read: %v", err)
@@ -127,7 +127,7 @@ func TestHTTPForwardsEachFormat(t *testing.T) {
 				n++
 			}
 			if n == 0 {
-				t.Errorf("no record came out of a valid %s body", c.formato)
+				t.Errorf("no record came out of a valid %s body", c.format)
 			}
 		})
 	}

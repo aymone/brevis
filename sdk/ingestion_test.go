@@ -9,7 +9,7 @@ import (
 	core "brevis.sh/brevis/sdk/internal/core"
 )
 
-func aplica(t *testing.T, fn Transformer, in map[string]any) map[string]any {
+func applyTransform(t *testing.T, fn Transformer, in map[string]any) map[string]any {
 	t.Helper()
 	got, err := fn(in)
 	if err != nil {
@@ -34,7 +34,7 @@ func TestIngestionIDProducesTheSameIDAsBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got := aplica(t, IngestionID(), map[string]any{
+	got := applyTransform(t, IngestionID(), map[string]any{
 		"provider": "open_meteo", "entity": "hourly_temperature",
 		"source_key": "-23.55|-46.63|2026-01-01T00:00", "record_ts": "2026-01-01T00:00",
 	})
@@ -48,27 +48,27 @@ func TestIngestionIDProducesTheSameIDAsBefore(t *testing.T) {
 // And against the frozen value, written out: a test comparing two
 // implementations passes if both change together.
 func TestIngestionIDAgainstTheFrozenValue(t *testing.T) {
-	got := aplica(t, IngestionID(), map[string]any{
+	got := applyTransform(t, IngestionID(), map[string]any{
 		"provider": "p", "entity": "e", "source_key": "k", "record_ts": "2026-01-01T00:00:00Z",
 	})
 
 	// Checked against Python's uuid.uuid5, which is the parity that matters:
 	//   uuid.uuid5(UUID("e3a4f8c0-1b9d-4ea0-9c2e-77f6a6c4a4d7"),
 	//              "p|e|k|2026-01-01T00:00:00Z")
-	const congelado = "178d0b49-dece-5738-b8eb-f5cae222a1ea"
-	if got[ColumnIngestionID] != congelado {
-		t.Errorf("ingestion_id = %v, frozen at %s", got[ColumnIngestionID], congelado)
+	const frozen = "178d0b49-dece-5738-b8eb-f5cae222a1ea"
+	if got[ColumnIngestionID] != frozen {
+		t.Errorf("ingestion_id = %v, frozen at %s", got[ColumnIngestionID], frozen)
 	}
 }
 
 func TestIngestionIDReadsTheNamesYouGiveIt(t *testing.T) {
-	comCanonicos := aplica(t, IngestionID(), map[string]any{
+	withCanonical := applyTransform(t, IngestionID(), map[string]any{
 		"provider": "p", "entity": "e", "source_key": "k", "record_ts": "t",
 	})
-	comOutros := aplica(t, IngestionID("provider", "entity", "source_key", "time"),
+	withOthers := applyTransform(t, IngestionID("provider", "entity", "source_key", "time"),
 		map[string]any{"provider": "p", "entity": "e", "source_key": "k", "time": "t"})
 
-	if comCanonicos[ColumnIngestionID] != comOutros[ColumnIngestionID] {
+	if withCanonical[ColumnIngestionID] != withOthers[ColumnIngestionID] {
 		t.Error("naming the fields must give the same id as the canonical ones")
 	}
 }
@@ -80,9 +80,9 @@ func TestIngestionIDRefusesAMissingField(t *testing.T) {
 	if err == nil {
 		t.Fatal("missing source_key and record_ts, the id would be built from nothing")
 	}
-	for _, quer := range []string{"source_key", "record_ts"} {
-		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("the error does not name %q: %v", quer, err)
+	for _, wants := range []string{"source_key", "record_ts"} {
+		if !strings.Contains(err.Error(), wants) {
+			t.Errorf("the error does not name %q: %v", wants, err)
 		}
 	}
 	// And it says what the row does have, so the fix comes out of one reading.
@@ -123,7 +123,7 @@ func TestIngestionIDRefusesTheWrongNumberOfFields(t *testing.T) {
 }
 
 func TestIngestionLoadedAtWritesNowInUTC(t *testing.T) {
-	got := aplica(t, IngestionLoadedAt(), map[string]any{"a": 1})
+	got := applyTransform(t, IngestionLoadedAt(), map[string]any{"a": 1})
 
 	v, ok := got[ColumnIngestionLoadedAt].(string)
 	if !ok {
@@ -166,7 +166,7 @@ func TestIngestionLoadedAtRefusesToOverwrite(t *testing.T) {
 // which the next test measures.
 func TestTransformersWriteInPlace(t *testing.T) {
 	line := map[string]any{"provider": "p", "entity": "e", "source_key": "k", "record_ts": "t"}
-	output := aplica(t, IngestionID(), line)
+	output := applyTransform(t, IngestionID(), line)
 
 	if _, ok := line[ColumnIngestionID]; !ok {
 		t.Error("the transformer returned a new map; the chain's saving depends on it writing in place")

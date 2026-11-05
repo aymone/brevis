@@ -46,7 +46,7 @@ func TestOnlyADeclaringStepIsPointedAtTheStore(t *testing.T) {
 	}
 
 	if err := (app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: &spyPersister{}, RunID: uuid.New(),
 		PersistURL: store,
 		Env:        map[string]string{"PATH": os.Getenv("PATH")},
@@ -85,7 +85,7 @@ func TestEveryDeclaredKeyIsPassedOn(t *testing.T) {
 	}
 
 	if err := (app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: &spyPersister{}, RunID: uuid.New(),
 		PersistURL: t.TempDir(),
 		Env:        map[string]string{"PATH": os.Getenv("PATH")},
@@ -119,7 +119,7 @@ func TestAWorkflowThatNeedsAStoreIsRefusedWithoutOne(t *testing.T) {
 	}
 
 	err = app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: &spyPersister{}, RunID: uuid.New(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)
@@ -163,7 +163,7 @@ func TestTheEphemeralContextIsUnaffected(t *testing.T) {
 	}
 
 	if err := (app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: &spyPersister{}, RunID: uuid.New(),
 		PersistURL: t.TempDir(),
 		Env:        map[string]string{"PATH": os.Getenv("PATH")},

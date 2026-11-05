@@ -39,7 +39,7 @@ func mapped(t *testing.T, body, key string) ([]string, *spyPersister, error) {
 	}
 	spy := &spyPersister{}
 	runErr := app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: spy, RunID: uuid.New(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)
@@ -154,7 +154,7 @@ func TestAnUnmappedStepIsUntouched(t *testing.T) {
 	}
 	spy := &spyPersister{}
 	if err := (app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: spy, RunID: uuid.New(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}).Run(context.Background(), w); err != nil {
@@ -194,7 +194,7 @@ func TestOneFailedInstanceFailsTheStep(t *testing.T) {
 	}
 	spy := &spyPersister{}
 	err = app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: spy, RunID: uuid.New(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)
@@ -259,7 +259,7 @@ func TestIntegrationARetryRedoesOnlyTheInstancesThatFailed(t *testing.T) {
 	}
 	r := app.Runner{
 		RunID: runID, Persist: repo, History: repo,
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 

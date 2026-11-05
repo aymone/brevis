@@ -342,7 +342,7 @@ func TestAMarkerRunsWithoutAnExecutor(t *testing.T) {
 		Edges: []wf.Edge{{From: "start", To: "work"}, {From: "work", To: "end"}},
 	}
 	spy := &spyPersister{}
-	// No Processo and no Pods: a marker that needed either would fail here
+	// No Process and no Pods: a marker that needed either would fail here
 	// with "no process executor configured", which is exactly the point.
 	err := app.Runner{
 		Go: local.NewGoExecutor(reg), Persist: spy, RunID: uuid.New(),

@@ -33,7 +33,7 @@ func anyExecutor(t *testing.T) *local.ProcessExecutor {
 // agent's half: one id per instance, so the agent never refuses the second as
 // "already running here".
 func TestEachInstanceGetsItsOwnExecutionId(t *testing.T) {
-	r := Runner{Processo: anyExecutor(t)}
+	r := Runner{Process: anyExecutor(t)}
 	w := wf.Workflow{Slug: "pipeline", Nodes: []wf.Node{{ID: "load", Run: "echo hi"}}}
 	n := w.Nodes[0]
 
@@ -60,7 +60,7 @@ func TestEachInstanceGetsItsOwnExecutionId(t *testing.T) {
 // tests hold it.
 func TestAnExecutionIdReadsAsItsIdentity(t *testing.T) {
 	runID := uuid.MustParse("6f1d2c3b-0000-4000-8000-000000000127")
-	r := Runner{Processo: anyExecutor(t), RunID: runID, RunAttempt: 1}
+	r := Runner{Process: anyExecutor(t), RunID: runID, RunAttempt: 1}
 	w := wf.Workflow{Slug: "pipeline", Nodes: []wf.Node{{ID: "load", Run: "echo hi"}}}
 
 	_, task, err := r.build(w, w.Nodes[0], instance{key: run.Step("load")}, 2, false)
@@ -79,7 +79,7 @@ func TestNoTwoExecutionsShareAnId(t *testing.T) {
 	w := wf.Workflow{Slug: "pipeline", Nodes: []wf.Node{{ID: "load", Run: "echo hi"}}}
 	id := func(runID uuid.UUID, runAttempt, attempt int) string {
 		t.Helper()
-		r := Runner{Processo: anyExecutor(t), RunID: runID, RunAttempt: runAttempt}
+		r := Runner{Process: anyExecutor(t), RunID: runID, RunAttempt: runAttempt}
 		_, task, err := r.build(w, w.Nodes[0], instance{key: run.Step("load")}, attempt, false)
 		if err != nil {
 			t.Fatal(err)
@@ -105,7 +105,7 @@ func TestNoTwoExecutionsShareAnId(t *testing.T) {
 // retried run would not adopt the previous attempt's pods, and PodName reads
 // it -- but build never set it, so it was always 0 (#127).
 func TestTheTaskCarriesTheRunsAttemptAndItsInstance(t *testing.T) {
-	r := Runner{Processo: anyExecutor(t), RunID: uuid.New(), RunAttempt: 2}
+	r := Runner{Process: anyExecutor(t), RunID: uuid.New(), RunAttempt: 2}
 	w := wf.Workflow{Slug: "pipeline", Nodes: []wf.Node{{ID: "load", Run: "echo hi"}}}
 
 	_, mapped, err := r.build(w, w.Nodes[0], instance{key: run.StepKey{Node: "load", MapIndex: 3}}, 0, false)
@@ -128,7 +128,7 @@ func TestTheTaskCarriesTheRunsAttemptAndItsInstance(t *testing.T) {
 // unescaped -- and becomes the agent's state file name. Whatever it is made of
 // has to come back out of the agent's own router unchanged.
 func TestAnExecutionIdSurvivesTheAgentsRoute(t *testing.T) {
-	r := Runner{Processo: anyExecutor(t), RunID: uuid.New(), RunAttempt: 1}
+	r := Runner{Process: anyExecutor(t), RunID: uuid.New(), RunAttempt: 1}
 	w := wf.Workflow{Slug: "daily_sales", Nodes: []wf.Node{{ID: "load_orders", Run: "echo hi"}}}
 	_, task, err := r.build(w, w.Nodes[0], instance{key: run.StepKey{Node: "load_orders", MapIndex: 12}}, 3, false)
 	if err != nil {

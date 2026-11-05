@@ -112,7 +112,7 @@ func (r Record) State() string {
 	}
 }
 
-// Outbox operates on the alertas table.
+// Outbox operates on the alerts table.
 type Outbox struct{ pool *pgxpool.Pool }
 
 func New(pool *pgxpool.Pool) *Outbox { return &Outbox{pool: pool} }
@@ -129,7 +129,7 @@ func WriteTx(ctx context.Context, tx pgx.Tx, p Pending) error {
 		return fmt.Errorf("serializing the alert of run %s: %w", p.RunID, err)
 	}
 	_, err = tx.Exec(ctx, `
-		INSERT INTO alertas (run_id, tipo, node_id, canal, payload)
+		INSERT INTO alerts (run_id, kind, node_id, channel, payload)
 		VALUES ($1, $2, $3, $4, $5)`,
 		p.RunID, p.Kind, p.NodeID, p.Channel, payload)
 	if err != nil {
@@ -149,19 +149,19 @@ func (o *Outbox) Claim(ctx context.Context, worker string, limit int) ([]Item, e
 		return nil, nil
 	}
 	rows, err := o.pool.Query(ctx, `
-		UPDATE alertas
-		SET reivindicado_em = now(), reivindicado_por = $1
+		UPDATE alerts
+		SET claimed_at = now(), claimed_by = $1
 		WHERE id IN (
-			SELECT id FROM alertas
-			WHERE reivindicado_em IS NULL
-			  AND entregue_em IS NULL
-			  AND desistiu_em IS NULL
-			  AND disponivel_em <= now()
-			ORDER BY disponivel_em, id
+			SELECT id FROM alerts
+			WHERE claimed_at IS NULL
+			  AND delivered_at IS NULL
+			  AND gave_up_at IS NULL
+			  AND available_at <= now()
+			ORDER BY available_at, id
 			LIMIT $2
 			FOR UPDATE SKIP LOCKED
 		)
-		RETURNING id, run_id, tipo, node_id, canal, payload, tentativas`,
+		RETURNING id, run_id, kind, node_id, channel, payload, attempts`,
 		worker, limit)
 	if err != nil {
 		return nil, fmt.Errorf("claiming alerts: %w", err)
@@ -174,9 +174,9 @@ func (o *Outbox) Claim(ctx context.Context, worker string, limit int) ([]Item, e
 // on the third try should not still show the second try's failure.
 func (o *Outbox) Delivered(ctx context.Context, id int64) error {
 	_, err := o.pool.Exec(ctx, `
-		UPDATE alertas
-		SET entregue_em = now(), reivindicado_em = NULL, reivindicado_por = NULL,
-		    tentativas = tentativas + 1, erro = ''
+		UPDATE alerts
+		SET delivered_at = now(), claimed_at = NULL, claimed_by = NULL,
+		    attempts = attempts + 1, error = ''
 		WHERE id = $1`, id)
 	return err
 }
@@ -189,10 +189,10 @@ func (o *Outbox) Delivered(ctx context.Context, id int64) error {
 // needs a human.
 func (o *Outbox) Retry(ctx context.Context, id int64, cause error, delay time.Duration) error {
 	_, err := o.pool.Exec(ctx, `
-		UPDATE alertas
-		SET reivindicado_em = NULL, reivindicado_por = NULL,
-		    tentativas = tentativas + 1, erro = $2,
-		    disponivel_em = now() + $3::interval
+		UPDATE alerts
+		SET claimed_at = NULL, claimed_by = NULL,
+		    attempts = attempts + 1, error = $2,
+		    available_at = now() + $3::interval
 		WHERE id = $1`,
 		id, message(cause), fmt.Sprintf("%d milliseconds", delay.Milliseconds()))
 	return err
@@ -206,9 +206,9 @@ func (o *Outbox) Retry(ctx context.Context, id int64, cause error, delay time.Du
 // indistinguishable from an alert that was never raised at all.
 func (o *Outbox) GaveUp(ctx context.Context, id int64, cause error) error {
 	_, err := o.pool.Exec(ctx, `
-		UPDATE alertas
-		SET desistiu_em = now(), reivindicado_em = NULL, reivindicado_por = NULL,
-		    tentativas = tentativas + 1, erro = $2
+		UPDATE alerts
+		SET gave_up_at = now(), claimed_at = NULL, claimed_by = NULL,
+		    attempts = attempts + 1, error = $2
 		WHERE id = $1`, id, message(cause))
 	return err
 }
@@ -220,10 +220,10 @@ func (o *Outbox) GaveUp(ctx context.Context, id int64, cause error) error {
 // in progress. It is the same safety net queue_items has, for the same reason.
 func (o *Outbox) Recover(ctx context.Context, limit time.Duration) (int, error) {
 	tag, err := o.pool.Exec(ctx, `
-		UPDATE alertas
-		SET reivindicado_em = NULL, reivindicado_por = NULL
-		WHERE reivindicado_em IS NOT NULL
-		  AND reivindicado_em < now() - $1::interval`,
+		UPDATE alerts
+		SET claimed_at = NULL, claimed_by = NULL
+		WHERE claimed_at IS NOT NULL
+		  AND claimed_at < now() - $1::interval`,
 		fmt.Sprintf("%d milliseconds", limit.Milliseconds()))
 	if err != nil {
 		return 0, err
@@ -234,9 +234,9 @@ func (o *Outbox) Recover(ctx context.Context, limit time.Duration) (int, error) 
 // ForRun lists a run's alerts for the screen, newest first.
 func (o *Outbox) ForRun(ctx context.Context, runID uuid.UUID) ([]Record, error) {
 	rows, err := o.pool.Query(ctx, `
-		SELECT id, run_id, tipo, node_id, canal, payload, tentativas,
-		       erro, entregue_em, desistiu_em, criado_em
-		FROM alertas WHERE run_id = $1 ORDER BY id DESC`, runID)
+		SELECT id, run_id, kind, node_id, channel, payload, attempts,
+		       error, delivered_at, gave_up_at, created_at
+		FROM alerts WHERE run_id = $1 ORDER BY id DESC`, runID)
 	if err != nil {
 		return nil, err
 	}
@@ -264,9 +264,9 @@ func (o *Outbox) ForRun(ctx context.Context, runID uuid.UUID) ([]Record, error) 
 func (o *Outbox) Pending(ctx context.Context) (waiting, undelivered int, err error) {
 	err = o.pool.QueryRow(ctx, `
 		SELECT
-			count(*) FILTER (WHERE entregue_em IS NULL AND desistiu_em IS NULL),
-			count(*) FILTER (WHERE desistiu_em IS NOT NULL)
-		FROM alertas`).Scan(&waiting, &undelivered)
+			count(*) FILTER (WHERE delivered_at IS NULL AND gave_up_at IS NULL),
+			count(*) FILTER (WHERE gave_up_at IS NOT NULL)
+		FROM alerts`).Scan(&waiting, &undelivered)
 	return
 }
 

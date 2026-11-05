@@ -94,7 +94,7 @@ func TestTheLogIsNotGivenToSomebodyNotSignedIn(t *testing.T) {
 		run:  dom.Run{ID: logRun, WorkflowSlug: "daily_sales"},
 		logs: []postgres.StepLog{{NodeID: "load", MapIndex: dom.Unmapped, Log: "a customer's row"}},
 	})
-	srv := api.NewServerAutenticado(slog.New(slog.DiscardHandler), nil, ui,
+	srv := api.NewServerWithAuth(slog.New(slog.DiscardHandler), nil, ui,
 		auth.Credential{User: "operator", Hash: "x", Secret: []byte("0123456789abcdef0123456789abcdef")}, true)
 	rec := httptest.NewRecorder()
 	srv.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/runs/"+logRun.String()+"/log.txt", nil))

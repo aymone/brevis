@@ -14,11 +14,11 @@ import (
 // grain it was asked for.
 type overviewReads struct {
 	readsFake
-	ind       postgres.Indicators
-	inFlight  []postgres.RunSummary
-	recent    []postgres.RunSummary
-	schedules []postgres.ScheduleSummary
-	asked     *struct {
+	indicators postgres.Indicators
+	inFlight   []postgres.RunSummary
+	recent     []postgres.RunSummary
+	schedules  []postgres.ScheduleSummary
+	asked      *struct {
 		span  time.Duration
 		grain postgres.Grain
 		n     int
@@ -27,7 +27,7 @@ type overviewReads struct {
 
 func (f overviewReads) Indicators(_ context.Context, w time.Duration) (postgres.Indicators, error) {
 	f.asked.span = w
-	return f.ind, nil
+	return f.indicators, nil
 }
 func (f overviewReads) RunsPer(_ context.Context, g postgres.Grain, n int) ([]postgres.Bucket, error) {
 	f.asked.grain, f.asked.n = g, n

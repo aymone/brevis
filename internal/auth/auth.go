@@ -65,16 +65,16 @@ const CookieName = "brevis_sessao"
 // change: when we double the cost a few years from now, old hashes have to keep
 // verifying. A format that stores only the digest forces invalidating everyone.
 func GenerateHash(password string) (string, error) {
-	sal := make([]byte, 16)
-	if _, err := rand.Read(sal); err != nil {
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
 		return "", err
 	}
-	key, err := pbkdf2.Key(sha256.New, password, sal, iterations, keySize)
+	key, err := pbkdf2.Key(sha256.New, password, salt, iterations, keySize)
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("pbkdf2-sha256$%d$%s$%s", iterations,
-		base64.RawStdEncoding.EncodeToString(sal),
+		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key)), nil
 }
 
@@ -92,7 +92,7 @@ func CheckPassword(hash, password string) bool {
 	if err != nil || iter <= 0 {
 		return false
 	}
-	sal, err := base64.RawStdEncoding.DecodeString(partes[2])
+	salt, err := base64.RawStdEncoding.DecodeString(partes[2])
 	if err != nil {
 		return false
 	}
@@ -100,7 +100,7 @@ func CheckPassword(hash, password string) bool {
 	if err != nil {
 		return false
 	}
-	got, err := pbkdf2.Key(sha256.New, password, sal, iter, len(expected))
+	got, err := pbkdf2.Key(sha256.New, password, salt, iter, len(expected))
 	if err != nil {
 		return false
 	}
@@ -167,10 +167,10 @@ func (c Credential) Validate() error {
 // because the naive construction is vulnerable to length extension.
 func (c Credential) issue(now time.Time) string {
 	body := c.User + "|" + strconv.FormatInt(now.Add(SessionLifetime).Unix(), 10)
-	return body + "|" + base64.RawURLEncoding.EncodeToString(c.assinar(body))
+	return body + "|" + base64.RawURLEncoding.EncodeToString(c.sign(body))
 }
 
-func (c Credential) assinar(body string) []byte {
+func (c Credential) sign(body string) []byte {
 	m := hmac.New(sha256.New, c.Secret)
 	m.Write([]byte(body))
 	return m.Sum(nil)
@@ -182,15 +182,15 @@ func (c Credential) checkSession(value string, now time.Time) bool {
 	if i < 0 {
 		return false
 	}
-	body, assinatura := value[:i], value[i+1:]
+	body, signature := value[:i], value[i+1:]
 
-	bruta, err := base64.RawURLEncoding.DecodeString(assinatura)
+	decoded, err := base64.RawURLEncoding.DecodeString(signature)
 	if err != nil {
 		return false
 	}
 	// The signature is checked BEFORE the deadline, and in constant time:
 	// reading a field of an unsigned cookie is already trusting it.
-	if !hmac.Equal(bruta, c.assinar(body)) {
+	if !hmac.Equal(decoded, c.sign(body)) {
 		return false
 	}
 
@@ -461,8 +461,8 @@ func Anonymous(ctx context.Context) bool {
 	return v
 }
 
-// De returns the request's operator, or empty when there is no session.
-func De(ctx context.Context) string {
+// OperatorOf returns the request's operator, or empty when there is no session.
+func OperatorOf(ctx context.Context) string {
 	u, _ := ctx.Value(key{}).(string)
 	return u
 }

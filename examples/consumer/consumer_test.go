@@ -109,16 +109,16 @@ func TestBeforeSeesTheParams(t *testing.T) {
 	t.Setenv("BREVIS_RUN_ID", "run-1")
 	t.Setenv("BREVIS_RUN_PARAMS", `{"load_full":"true"}`)
 
-	var viu string
+	var saw string
 	p := pipeline(srv.URL)
 	p.Before = func(ctx context.Context, p *sdk.Pipeline) error {
-		viu = p.Run.Params["load_full"]
+		saw = p.Run.Params["load_full"]
 		return nil
 	}
 	run(t, p)
 
-	if viu != "true" {
-		t.Errorf(`p.Run.Params["load_full"] = %q, want "true"`, viu)
+	if saw != "true" {
+		t.Errorf(`p.Run.Params["load_full"] = %q, want "true"`, saw)
 	}
 }
 
@@ -307,7 +307,7 @@ func TestAConsumerWritesBothColumnsInTheChain(t *testing.T) {
 		}
 		line := env.Payload.(map[string]any)
 		for _, column := range []string{sdk.ColumnIngestionID, sdk.ColumnIngestionLoadedAt} {
-			if v, tem := line[column]; !tem || v == "" {
+			if v, has := line[column]; !has || v == "" {
 				t.Errorf("record %d came out without %s: %v", n, column, line)
 			}
 		}

@@ -221,7 +221,7 @@ func TestManyConcurrentReadsEverything(t *testing.T) {
 func TestManySumsTheCounters(t *testing.T) {
 	var stats sdk.Stats
 	if _, err := drain(t, from.Many{
-		Sources: []sdk.Reader{contadora{2}, contadora{3}, contadora{5}},
+		Sources: []sdk.Reader{counter{2}, counter{3}, counter{5}},
 		Workers: 3,
 	}, &stats); err != nil {
 		t.Fatal(err)
@@ -232,10 +232,10 @@ func TestManySumsTheCounters(t *testing.T) {
 }
 
 // countingSource fills the Stats it receives, like a real driver.
-type contadora struct{ pages int }
+type counter struct{ pages int }
 
-func (c contadora) Describe() string { return fmt.Sprintf("contadora(%d)", c.pages) }
-func (c contadora) Read(_ context.Context, opt sdk.ReadOptions) (iter.Seq2[sdk.Envelope, error], error) {
+func (c counter) Describe() string { return fmt.Sprintf("contadora(%d)", c.pages) }
+func (c counter) Read(_ context.Context, opt sdk.ReadOptions) (iter.Seq2[sdk.Envelope, error], error) {
 	return func(yield func(sdk.Envelope, error) bool) {
 		if opt.Stats != nil {
 			opt.Stats.Pages = c.pages

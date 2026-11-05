@@ -23,7 +23,7 @@ func TestParamListIsReadableBeforeRun(t *testing.T) {
 }
 
 func TestParamFromTheCommandLine(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		why  string
 		args []string
 		want string
@@ -38,7 +38,7 @@ func TestParamFromTheCommandLine(t *testing.T) {
 		{"a trailing -param with no value does not panic", []string{"-param"}, ""},
 		{"absent", []string{"-v"}, ""},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		if got := paramFromArgs(c.args, "ufs"); got != c.want {
 			t.Errorf("%s: paramFromArgs(%v) = %q, want %q", c.why, c.args, got, c.want)
 		}

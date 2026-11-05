@@ -126,9 +126,9 @@ func TestTheYAMLDoesNotChooseWhichSecretToMount(t *testing.T) {
 	if err == nil {
 		t.Fatal("the YAML mounted a Secret the installation did not allow")
 	}
-	for _, exigido := range []string{"brevis-database", "BREVIS_POD_ALLOWED_SECRETS"} {
-		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("the error does not say %q: %v", exigido, err)
+	for _, required := range []string{"brevis-database", "BREVIS_POD_ALLOWED_SECRETS"} {
+		if !strings.Contains(err.Error(), required) {
+			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }

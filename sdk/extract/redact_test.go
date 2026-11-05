@@ -8,7 +8,7 @@ import (
 // The redacted URL appears on every extract log line and in every error message.
 // A leak here is a live credential in a log aggregator plenty of people read.
 func TestRedactLetsNoSecretThrough(t *testing.T) {
-	casos := []string{
+	cases := []string{
 		"https://api.exemplo.com/v1?key=SEGREDO",
 		"https://api.exemplo.com/v1?api_key=SEGREDO",
 		"https://api.exemplo.com/v1?API_KEY=SEGREDO",
@@ -35,7 +35,7 @@ func TestRedactLetsNoSecretThrough(t *testing.T) {
 		"https://usuario:SEGREDO@api.exemplo.com/v1?token=SEGREDO&latitude=-23.5",
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		got := redactURL(c)
 		if strings.Contains(got, "SEGREDO") {
 			t.Errorf("vazou:\n  %s\n  -> %s", c, got)
@@ -48,9 +48,9 @@ func TestRedactLetsNoSecretThrough(t *testing.T) {
 func TestRedactPreservesWhatIsNotASecret(t *testing.T) {
 	got := redactURL("https://api.open-meteo.com/v1/forecast?latitude=-23.55&longitude=-46.63&api_key=X")
 
-	for _, quer := range []string{"api.open-meteo.com", "/v1/forecast", "latitude=-23.55", "longitude=-46.63"} {
-		if !strings.Contains(got, quer) {
-			t.Errorf("the URL lost %q, so it is no use for debugging: %s", quer, got)
+	for _, wants := range []string{"api.open-meteo.com", "/v1/forecast", "latitude=-23.55", "longitude=-46.63"} {
+		if !strings.Contains(got, wants) {
+			t.Errorf("the URL lost %q, so it is no use for debugging: %s", wants, got)
 		}
 	}
 	if !strings.Contains(got, "REDACTED") {

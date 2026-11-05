@@ -15,8 +15,8 @@ import (
 const streakSQL = `
 		SELECT count(*) FROM runs f
 		WHERE f.workflow_slug = $1 AND f.status = 'failed'
-		  AND f.criado_em > COALESCE((
-		      SELECT max(s.criado_em) FROM runs s
+		  AND f.created_at > COALESCE((
+		      SELECT max(s.created_at) FROM runs s
 		      WHERE s.workflow_slug = $1 AND s.status = 'success'), '-infinity')`
 
 // FailureStreak is how many times in a row the workflow failed, counted back
@@ -38,27 +38,27 @@ type FailingWorkflow struct {
 
 // failingWorkflowsSQL reads, per declared workflow, its last finished run
 // and, when that failed, the streak -- each through the
-// (workflow_slug, criado_em DESC) index. A workflow is declared while it is in
+// (workflow_slug, created_at DESC) index. A workflow is declared while it is in
 // a project, paused or not: pausing a broken workflow does not fix it, and one
 // taken out of the project leaves its runs as history but is not failing.
 const failingWorkflowsSQL = `
-		SELECT w.slug, l.id, COALESCE(l.terminado_em, l.criado_em), s.n
+		SELECT w.slug, l.id, COALESCE(l.finished_at, l.created_at), s.n
 		FROM (SELECT DISTINCT slug FROM workflows) w
 		CROSS JOIN LATERAL (
-		    SELECT id, status, criado_em, terminado_em FROM runs
+		    SELECT id, status, created_at, finished_at FROM runs
 		    WHERE workflow_slug = w.slug AND status IN ('success', 'failed')
-		    ORDER BY criado_em DESC, id DESC
+		    ORDER BY created_at DESC, id DESC
 		    LIMIT 1
 		) l
 		CROSS JOIN LATERAL (
 		    SELECT count(*) AS n FROM runs f
 		    WHERE f.workflow_slug = w.slug AND f.status = 'failed'
-		      AND f.criado_em > COALESCE((
-		          SELECT max(s.criado_em) FROM runs s
+		      AND f.created_at > COALESCE((
+		          SELECT max(s.created_at) FROM runs s
 		          WHERE s.workflow_slug = w.slug AND s.status = 'success'), '-infinity')
 		) s
 		WHERE l.status = $1
-		ORDER BY s.n DESC, l.criado_em DESC, w.slug`
+		ORDER BY s.n DESC, l.created_at DESC, w.slug`
 
 // FailingWorkflows lists the workflows failing now, worst first: the longest
 // streak, then the most recent failure. One query for the whole list.

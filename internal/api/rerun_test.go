@@ -18,7 +18,7 @@ type triggerSpy struct {
 }
 
 func (s *triggerSpy) Toggle(context.Context, string, string) (bool, error) { return false, nil }
-func (s *triggerSpy) Disparar(_ context.Context, _ string, _ time.Time, params map[string]string, slot *time.Time) (uuid.UUID, error) {
+func (s *triggerSpy) Trigger(_ context.Context, _ string, _ time.Time, params map[string]string, slot *time.Time) (uuid.UUID, error) {
 	s.got, s.slot, s.called = params, slot, true
 	if s.err != nil {
 		return uuid.Nil, s.err

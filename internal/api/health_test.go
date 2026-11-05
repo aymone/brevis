@@ -11,9 +11,9 @@ import (
 	"testing"
 )
 
-type checkerFalso struct{ err error }
+type fakeChecker struct{ err error }
 
-func (c checkerFalso) Check(context.Context) error { return c.err }
+func (c fakeChecker) Check(context.Context) error { return c.err }
 
 func testServer(checkers map[string]Checker) *Server {
 	return NewServer(slog.New(slog.NewTextHandler(io.Discard, nil)), checkers, nil)
@@ -23,7 +23,7 @@ func testServer(checkers map[string]Checker) *Server {
 // make Kubernetes kill the pod instead of merely taking it out of the balancer.
 func TestHealthIgnoresABrokenDependency(t *testing.T) {
 	s := testServer(map[string]Checker{
-		"postgres": checkerFalso{err: errors.New("conexao recusada")},
+		"postgres": fakeChecker{err: errors.New("conexao recusada")},
 	})
 
 	rec := httptest.NewRecorder()
@@ -35,7 +35,7 @@ func TestHealthIgnoresABrokenDependency(t *testing.T) {
 }
 
 func TestReadyIsOkWhenEverythingAnswers(t *testing.T) {
-	s := testServer(map[string]Checker{"postgres": checkerFalso{}})
+	s := testServer(map[string]Checker{"postgres": fakeChecker{}})
 
 	rec := httptest.NewRecorder()
 	s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/ready", nil))
@@ -54,7 +54,7 @@ func TestReadyIsOkWhenEverythingAnswers(t *testing.T) {
 
 func TestReadyFailsAndSaysWhichDependency(t *testing.T) {
 	s := testServer(map[string]Checker{
-		"postgres": checkerFalso{err: errors.New("conexao recusada")},
+		"postgres": fakeChecker{err: errors.New("conexao recusada")},
 	})
 
 	rec := httptest.NewRecorder()

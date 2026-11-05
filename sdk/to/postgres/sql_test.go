@@ -29,9 +29,9 @@ func TestInsertSQLNamesTheColumns(t *testing.T) {
 // on a batch that has already run the whole extract.
 func TestInsertSQLQuotesIdentifiers(t *testing.T) {
 	got := InsertSQL("t", "s", []string{core.MetadataID, "order", "group"}, core.MetadataID)
-	for _, palavra := range []string{`"order"`, `"group"`} {
-		if !strings.Contains(got, palavra) {
-			t.Errorf("%s is not quoted:\n%s", palavra, got)
+	for _, word := range []string{`"order"`, `"group"`} {
+		if !strings.Contains(got, word) {
+			t.Errorf("%s is not quoted:\n%s", word, got)
 		}
 	}
 }
@@ -58,22 +58,22 @@ func TestInsertSQLConflictsOnIngestionID(t *testing.T) {
 
 // TestSplitName covers the implicit schema and a name with too many parts.
 func TestSplitName(t *testing.T) {
-	casos := []struct {
-		name, esquema, table string
-		failure              bool
+	cases := []struct {
+		name, schema, table string
+		failure             bool
 	}{
 		{"pedidos", "public", "pedidos", false},
 		{"landing.pedidos", "landing", "pedidos", false},
 		{"a.b.c", "", "", true},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		e, tb, err := splitName(c.name)
 		if (err != nil) != c.failure {
 			t.Errorf("%q: error = %v, want error=%v", c.name, err, c.failure)
 			continue
 		}
-		if !c.failure && (e != c.esquema || tb != c.table) {
-			t.Errorf("%q = (%q, %q), want (%q, %q)", c.name, e, tb, c.esquema, c.table)
+		if !c.failure && (e != c.schema || tb != c.table) {
+			t.Errorf("%q = (%q, %q), want (%q, %q)", c.name, e, tb, c.schema, c.table)
 		}
 	}
 }

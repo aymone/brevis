@@ -43,7 +43,7 @@ func stranded(t *testing.T, key string, claimed bool, path ...dom.Status) (
 		}
 	}
 	for _, to := range path {
-		if err := repo.Transicionar(ctx, r.ID, to); err != nil {
+		if err := repo.Transition(ctx, r.ID, to); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -110,7 +110,7 @@ func TestAFailedRunWithAWaitingItemIsNotClaimedInALoop(t *testing.T) {
 
 	var ran int
 	d := scheduler.New(scheduler.Config{
-		Worker: "w", MaxConcorrente: 1, Interval: 20 * time.Millisecond,
+		Worker: "w", MaxConcurrency: 1, Interval: 20 * time.Millisecond,
 		MaxAttempts: 3, BackoffBase: time.Hour, BackoffMax: time.Hour,
 	}, q, repo, func(context.Context, uuid.UUID) error { ran++; return nil }, noLog())
 
@@ -136,17 +136,17 @@ type flaky struct {
 	n int32
 }
 
-func (f *flaky) Transicionar(ctx context.Context, id uuid.UUID, to dom.Status) error {
+func (f *flaky) Transition(ctx context.Context, id uuid.UUID, to dom.Status) error {
 	if to == dom.StatusSuccess && atomic.AddInt32(&f.n, -1) >= 0 {
 		return errors.New("blip")
 	}
-	return f.Repo.Transicionar(ctx, id, to)
+	return f.Repo.Transition(ctx, id, to)
 }
 
 func runOnce(t *testing.T, repo scheduler.Repo, q *queue.Queue, ran *int32) {
 	t.Helper()
 	d := scheduler.New(scheduler.Config{
-		Worker: "w", MaxConcorrente: 1, Interval: 10 * time.Millisecond, MaxAttempts: 3,
+		Worker: "w", MaxConcurrency: 1, Interval: 10 * time.Millisecond, MaxAttempts: 3,
 	}, q, repo, func(context.Context, uuid.UUID) error { atomic.AddInt32(ran, 1); return nil }, noLog())
 	d.WriteBackoff = time.Millisecond
 	ctx, stop := context.WithTimeout(context.Background(), time.Second)
@@ -186,7 +186,7 @@ func TestTheAlertCauseIsTheRecordedError(t *testing.T) {
 	if err := pg.RecordError(context.Background(), id, "step load: exit code 2"); err != nil {
 		t.Fatal(err)
 	}
-	if err := pg.Transicionar(context.Background(), id, dom.StatusFailed); err != nil {
+	if err := pg.Transition(context.Background(), id, dom.StatusFailed); err != nil {
 		t.Fatal(err)
 	}
 	d := scheduler.New(scheduler.Config{Worker: "alive", MaxAttempts: 1, Visibility: time.Nanosecond},

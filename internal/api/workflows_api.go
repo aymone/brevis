@@ -97,7 +97,7 @@ type workflowsView struct {
 // paging the page does (filtrar, sortBy, contar, recortar), already applied.
 func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	all, err := u.leitura.Workflows(ctx)
+	all, err := u.reads.Workflows(ctx)
 	if err != nil {
 		u.log.Error("listing the workflows", "error", err)
 		fail(w, http.StatusInternalServerError, codeUnavailable)
@@ -105,7 +105,7 @@ func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 	}
 	now := time.Now()
 	for i := range all {
-		all[i].NextRun = proximaDoWorkflow(all[i], now)
+		all[i].NextRun = nextOfWorkflow(all[i], now)
 	}
 
 	q := r.URL.Query()
@@ -126,16 +126,16 @@ func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	facts := u.listFacts(ctx)
-	filtered := filtrar(all, f, facts)
+	filtered := filter(all, f, facts)
 	sortBy(filtered, f)
-	rows := recortar(filtered, f)
+	rows := clip(filtered, f)
 
 	slugs := make([]string, len(rows))
 	for i, wf := range rows {
 		slugs[i] = wf.Slug
 	}
 	// A failed strip is rows without squares, not a failed screen.
-	recent, err := u.leitura.RecentStates(ctx, slugs, pages.RecentRuns)
+	recent, err := u.reads.RecentStates(ctx, slugs, pages.RecentRuns)
 	if err != nil {
 		u.log.Warn("reading the recent runs for the Workflows list", "error", err)
 	}
@@ -146,8 +146,8 @@ func (u *UI) workflowsJSON(w http.ResponseWriter, r *http.Request) {
 		Filter: filterView{Q: f.Search, State: f.State, Active: f.Active, Lang: f.Lang, Tags: nonNil(f.Tags),
 			Project: f.Project, Sort: f.Sort, Dir: dirOf(f.Desc), Page: f.Page, PerPage: f.PerPage},
 		Rows:     make([]workflowRowView, 0, len(rows)),
-		Counts:   contar(all, f, facts).State,
-		Tags:     nonNil(tagsDe(all)),
+		Counts:   count(all, f, facts).State,
+		Tags:     nonNil(allTags(all)),
 		Langs:    []langCountView{},
 		Total:    len(all),
 		Filtered: len(filtered),
@@ -194,7 +194,7 @@ func nonNil(s []string) []string {
 // toggleJSON pauses or resumes a schedule: handler `toggle`'s effect, as JSON.
 func (u *UI) toggleJSON(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
-	active, err := u.actions.Toggle(r.Context(), slug, auth.De(r.Context()))
+	active, err := u.actions.Toggle(r.Context(), slug, auth.OperatorOf(r.Context()))
 	if errors.Is(err, pgx.ErrNoRows) {
 		fail(w, http.StatusNotFound, codeNoSchedule)
 		return

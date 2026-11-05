@@ -79,7 +79,7 @@ func TestTheRunsJSONForgivesABadFilterAndNeverSendsNull(t *testing.T) {
 	if runs, ok := body["runs"].([]any); !ok || len(runs) != 0 {
 		t.Errorf("runs = %v; want []", body["runs"])
 	}
-	if asked.Workflow != "daily" || asked.De != nil {
+	if asked.Workflow != "daily" || asked.From != nil {
 		t.Errorf("the read was filtered by %+v", asked)
 	}
 }
@@ -87,7 +87,7 @@ func TestTheRunsJSONForgivesABadFilterAndNeverSendsNull(t *testing.T) {
 func TestTheRunsJSONReadsThePeriod(t *testing.T) {
 	var asked postgres.RunFilter
 	body := jsonRuns(t, runsReads{listed: &asked}, "/api/runs?state=all&from=2026-10-26T10:00:00Z&to=2026-10-26T11:00:00Z")
-	if asked.De == nil || asked.Ate == nil || body["filter"].(map[string]any)["period"] == "" {
+	if asked.From == nil || asked.To == nil || body["filter"].(map[string]any)["period"] == "" {
 		t.Errorf("period not read: %+v %v", asked, body["filter"])
 	}
 }

@@ -17,21 +17,21 @@ import (
 
 // spyStore records what was written, touching neither disk nor cloud.
 type spyStore struct {
-	mu       sync.Mutex
-	guardado string
-	writes   int
+	mu      sync.Mutex
+	guarded string
+	writes  int
 }
 
 func (s *spyStore) Load() (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.guardado, nil
+	return s.guarded, nil
 }
 
 func (s *spyStore) Save(v string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.guardado = v
+	s.guarded = v
 	s.writes++
 	return nil
 }
@@ -41,7 +41,7 @@ func (s *spyStore) Describe() string { return "store espiao" }
 func (s *spyStore) state() (string, int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.guardado, s.writes
+	return s.guarded, s.writes
 }
 
 // loggedOutSession imitates NextAuth for a session that did not authenticate:
@@ -110,10 +110,10 @@ func TestARefreshThatDoesNotAuthenticateDoesNotWrite(t *testing.T) {
 		t.Errorf("the error does not point to the missing expiry: %v", err)
 	}
 
-	guardado, writes := store.state()
+	guarded, writes := store.state()
 	if writes != 0 {
 		t.Errorf("wrote %d time(s) after a renewal that did not authenticate; kept %q",
-			writes, guardado)
+			writes, guarded)
 	}
 }
 
@@ -137,12 +137,12 @@ func TestAGoodRefreshStillWrites(t *testing.T) {
 		t.Fatalf("a good run failed: %v", err)
 	}
 
-	guardado, writes := store.state()
+	guarded, writes := store.state()
 	if writes != 1 {
 		t.Fatalf("writes = %d, want 1", writes)
 	}
-	if !strings.Contains(guardado, "rotacionado") {
-		t.Errorf("kept %q, expected the rotated value", guardado)
+	if !strings.Contains(guarded, "rotacionado") {
+		t.Errorf("kept %q, expected the rotated value", guarded)
 	}
 }
 
@@ -236,9 +236,9 @@ func TestAStoreWithoutExpiresAtWarnsAtAssembly(t *testing.T) {
 	}
 
 	log := buf.String()
-	for _, exigido := range []string{"ExpiresAt", "store espiao", "200"} {
-		if !strings.Contains(log, exigido) {
-			t.Errorf("the warning does not say %q:\n%s", exigido, log)
+	for _, required := range []string{"ExpiresAt", "store espiao", "200"} {
+		if !strings.Contains(log, required) {
+			t.Errorf("the warning does not say %q:\n%s", required, log)
 		}
 	}
 }

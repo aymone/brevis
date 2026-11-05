@@ -62,7 +62,7 @@ func (e execsFake) WaitingOn(context.Context, uuid.UUID) (*postgres.Wait, error)
 }
 
 func (e execsFake) Get(context.Context, uuid.UUID) (dom.Run, error) { return e.run, e.err }
-func (e execsFake) LogsDaRun(context.Context, uuid.UUID) ([]postgres.StepLog, error) {
+func (e execsFake) RunLogs(context.Context, uuid.UUID) ([]postgres.StepLog, error) {
 	return e.logs, nil
 }
 
@@ -163,7 +163,7 @@ func TestTheWorkflowGraphHasNoState(t *testing.T) {
 	if g.RunID != "" {
 		t.Errorf("run_id = %q on a graph with no run", g.RunID)
 	}
-	if g.Nodes[0].Data["acao"] == nil {
+	if g.Nodes[0].Data["action"] == nil {
 		t.Error("the card lost the action's label")
 	}
 }
@@ -192,19 +192,19 @@ func TestTheRunGraphAppliesStatePerNode(t *testing.T) {
 		t.Error("a running run marked terminal: the UI would stop refreshing")
 	}
 
-	porID := map[string]map[string]any{}
+	byID := map[string]map[string]any{}
 	for _, n := range g.Nodes {
-		porID[n.ID] = n.Data
+		byID[n.ID] = n.Data
 	}
-	if porID["a"]["status"] != "success" || porID["a"]["duracao_ms"] != float64(1200) {
-		t.Errorf("no a: %v", porID["a"])
+	if byID["a"]["status"] != "success" || byID["a"]["duration_ms"] != float64(1200) {
+		t.Errorf("no a: %v", byID["a"])
 	}
-	if porID["c"]["erro"] != "boom" || porID["c"]["exit_code"] != float64(2) {
-		t.Errorf("node c lost its error/exit code: %v", porID["c"])
+	if byID["c"]["error"] != "boom" || byID["c"]["exit_code"] != float64(2) {
+		t.Errorf("node c lost its error/exit code: %v", byID["c"])
 	}
 	// d never ran; it has to stay grey rather than inherit the parent's state.
-	if porID["d"]["status"] != "pending" {
-		t.Errorf("no d: %v", porID["d"])
+	if byID["d"]["status"] != "pending" {
+		t.Errorf("no d: %v", byID["d"])
 	}
 
 	for _, e := range g.Edges {
@@ -233,7 +233,7 @@ func TestTheRunGraphMarksTerminal(t *testing.T) {
 }
 
 func TestTheGraphRefusesInvalidInput(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name     string
 		ui       *api.UI
 		path     string
@@ -251,7 +251,7 @@ func TestTheGraphRefusesInvalidInput(t *testing.T) {
 			Edges: []wf.Edge{{From: "a", To: "b"}, {From: "b", To: "a"}},
 		}}, execsFake{}), "/api/workflows/ciclo/graph", http.StatusUnprocessableEntity},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			res, _ := request(t, c.ui, c.path)
 			if res.StatusCode != c.expected {
@@ -295,17 +295,17 @@ func TestAnSDKStepBecomesAGroupWithTheStagesInside(t *testing.T) {
 		"b": {NodeID: "b", Status: "running", Stages: fourStages(), SdkVersion: "v0.44.1"},
 	})
 
-	pai := -1
+	parent := -1
 	var children []int
 	for i, n := range g.Nodes {
 		if n.ID == "b" {
-			pai = i
+			parent = i
 		}
 		if n.ParentID == "b" {
 			children = append(children, i)
 		}
 	}
-	if pai < 0 {
+	if parent < 0 {
 		t.Fatal("the step vanished from the graph")
 	}
 	if len(children) != 4 {
@@ -314,18 +314,18 @@ func TestAnSDKStepBecomesAGroupWithTheStagesInside(t *testing.T) {
 
 	// React Flow requires the parent BEFORE the children in the array.
 	for _, f := range children {
-		if f < pai {
+		if f < parent {
 			t.Fatal("a child came out before the parent; React Flow does not build the group")
 		}
 	}
 
-	height, ok := g.Nodes[pai].Style["height"].(float64)
+	height, ok := g.Nodes[parent].Style["height"].(float64)
 	if !ok || height <= 0 {
-		t.Fatalf("the group came out with no declared height: %v", g.Nodes[pai].Style)
+		t.Fatalf("the group came out with no declared height: %v", g.Nodes[parent].Style)
 	}
 	for _, f := range children {
 		n := g.Nodes[f]
-		if n.Type != "etapa" || n.Extent != "parent" {
+		if n.Type != "phase" || n.Extent != "parent" {
 			t.Errorf("malformed child: %+v", n)
 		}
 		if n.Selectable == nil || *n.Selectable {
@@ -351,34 +351,34 @@ func TestAColumnDoesNotOverlapWithAnExpandedNode(t *testing.T) {
 	})
 
 	// The bottom of each node, measured by the children it carries.
-	fundo := map[string]int{}
+	background := map[string]int{}
 	for _, n := range g.Nodes {
 		if n.ParentID == "" {
 			continue
 		}
-		if b := n.Position.Y + 26; b > fundo[n.ParentID] {
-			fundo[n.ParentID] = b
+		if b := n.Position.Y + 26; b > background[n.ParentID] {
+			background[n.ParentID] = b
 		}
 	}
 
 	height := func(id string) int {
-		if f := fundo[id]; f > 0 {
-			return f + 10 // a folga de rodape do grupo
+		if f := background[id]; f > 0 {
+			return f + 10 // the footer slack of the group
 		}
 		return 84 // a card with no stages
 	}
 
 	var b, c int
-	temB, temC := false, false
+	hasB, hasC := false, false
 	for _, n := range g.Nodes {
 		switch {
 		case n.ID == "b" && n.ParentID == "":
-			b, temB = n.Position.Y, true
+			b, hasB = n.Position.Y, true
 		case n.ID == "c" && n.ParentID == "":
-			c, temC = n.Position.Y, true
+			c, hasC = n.Position.Y, true
 		}
 	}
-	if !temB || !temC {
+	if !hasB || !hasC {
 		t.Fatal("b and c must be in the graph")
 	}
 
@@ -407,7 +407,7 @@ func TestTheSDKBadgeComesOutOnTheNode(t *testing.T) {
 				t.Errorf("the SDK step came out with no badge: %v", n.Data)
 			}
 		case "c":
-			if _, tem := n.Data["sdk"]; tem {
+			if _, has := n.Data["sdk"]; has {
 				t.Errorf("a step that announced nothing got a badge: %v", n.Data)
 			}
 		}
@@ -674,8 +674,8 @@ func TestAMarkerSaysWhatItIs(t *testing.T) {
 	}
 	_, g := request(t, newUI(defsFake{w: w}, execsFake{}), "/api/workflows/markers/graph")
 	for _, n := range g.Nodes {
-		if m, _ := n.Data["acao"].(map[string]any); n.ID == "start" && m["k"] != "graph.marker" {
-			t.Errorf("the marker's subtitle is %v", n.Data["acao"])
+		if m, _ := n.Data["action"].(map[string]any); n.ID == "start" && m["k"] != "graph.marker" {
+			t.Errorf("the marker's subtitle is %v", n.Data["action"])
 		}
 	}
 }
@@ -707,7 +707,7 @@ func TestAGroupIsDrawnBehindItsSteps(t *testing.T) {
 	}
 	_, g := request(t, newUI(defsFake{w: w}, execsFake{}), "/api/workflows/grouped/graph")
 
-	if g.Nodes[0].Type != "grupo" {
+	if g.Nodes[0].Type != "group" {
 		t.Fatalf("the first node is %q; a group drawn after its members covers them", g.Nodes[0].Type)
 	}
 	if g.Nodes[0].ParentID != "" {
@@ -725,14 +725,14 @@ func TestAGroupIsDrawnBehindItsSteps(t *testing.T) {
 			continue
 		}
 		inside := n.Position.X >= group.Position.X && n.Position.Y >= group.Position.Y
-		if n.Data["grupo"] == "sales" {
+		if n.Data["group"] == "sales" {
 			members++
 			if !inside {
 				t.Errorf("%s is in the group and outside its box", n.ID)
 			}
 		} else {
 			outsiders++
-			if n.Data["grupo"] != nil {
+			if n.Data["group"] != nil {
 				t.Errorf("%s carries a group it does not have", n.ID)
 			}
 		}
@@ -742,15 +742,15 @@ func TestAGroupIsDrawnBehindItsSteps(t *testing.T) {
 	}
 }
 
-// A workflow with no groups emits no group node and no `grupo` key, so its
+// A workflow with no groups emits no group node and no `group` key, so its
 // payload is byte for byte what it was.
 func TestAWorkflowWithNoGroupsIsUnchanged(t *testing.T) {
 	_, g := request(t, newUI(defsFake{w: diamond()}, execsFake{}), "/api/workflows/diamond/graph")
 	for _, n := range g.Nodes {
-		if n.Type == "grupo" {
+		if n.Type == "group" {
 			t.Errorf("a group node appeared in an ungrouped workflow")
 		}
-		if _, has := n.Data["grupo"]; has {
+		if _, has := n.Data["group"]; has {
 			t.Errorf("%s carries a group key", n.ID)
 		}
 	}
@@ -791,7 +791,7 @@ func TestAGroupsBoxNeverContainsAStepThatIsNotInIt(t *testing.T) {
 	type box struct{ x, y, w, h int }
 	boxes := map[string]box{}
 	for _, n := range g.Nodes {
-		if n.Type != "grupo" {
+		if n.Type != "group" {
 			continue
 		}
 		boxes[n.Data["label"].(string)] = box{
@@ -807,7 +807,7 @@ func TestAGroupsBoxNeverContainsAStepThatIsNotInIt(t *testing.T) {
 		if n.Type != "brevis" {
 			continue
 		}
-		mine, _ := n.Data["grupo"].(string)
+		mine, _ := n.Data["group"].(string)
 		for name, b := range boxes {
 			if name == mine {
 				continue

@@ -32,15 +32,15 @@ type Server struct {
 // that something did. `ui` may be nil: a process that only serves health checks
 // does not need the pages.
 func NewServer(log *slog.Logger, checkers map[string]Checker, ui *UI) *Server {
-	return NewServerAutenticado(log, checkers, ui, auth.Credential{}, false)
+	return NewServerWithAuth(log, checkers, ui, auth.Credential{}, false)
 }
 
-// NewServerAutenticado is the same, requiring a session when the credential is
+// NewServerWithAuth is the same, requiring a session when the credential is
 // configured. `inseguro` sends the cookie without the Secure flag — needed only
 // for plain http in development, because a Secure cookie never comes back over
 // http and the login would look simply broken.
-func NewServerAutenticado(log *slog.Logger, checkers map[string]Checker, ui *UI,
-	cred auth.Credential, inseguro bool,
+func NewServerWithAuth(log *slog.Logger, checkers map[string]Checker, ui *UI,
+	cred auth.Credential, insecure bool,
 ) *Server {
 	s := &Server{log: log, checkers: checkers, mux: http.NewServeMux()}
 	s.mux.HandleFunc("GET /health", s.health)
@@ -49,8 +49,8 @@ func NewServerAutenticado(log *slog.Logger, checkers map[string]Checker, ui *UI,
 		ui.Registrar(s.mux)
 	}
 	if cred.Enabled() {
-		s.gate = &auth.Gate{Cred: cred, Next: s.mux, Insecure: inseguro}
-		if cred.ClientIPHeader == "" && !inseguro {
+		s.gate = &auth.Gate{Cred: cred, Next: s.mux, Insecure: insecure}
+		if cred.ClientIPHeader == "" && !insecure {
 			// Behind a proxy every browser arrives from its address, so a
 			// guesser would lock the operator out: keep the lock short.
 			s.gate.Limit = auth.NewLimiter()
@@ -67,7 +67,7 @@ func NewServerAutenticado(log *slog.Logger, checkers map[string]Checker, ui *UI,
 // ServeHTTP makes Server an http.Handler, with an access log.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	rec := &gravador{ResponseWriter: w, status: http.StatusOK}
+	rec := &recorder{ResponseWriter: w, status: http.StatusOK}
 	h := rec.Header()
 	h.Set("X-Frame-Options", "DENY") // the console must not be framed: clickjacking Run/Cancel
 	h.Set("Referrer-Policy", "same-origin")
@@ -127,7 +127,7 @@ func (s *Server) HTTPServer(addr string) *http.Server {
 
 // gravador captures the status for the access log; http.ResponseWriter does not
 // expose it after it is written.
-type gravador struct {
+type recorder struct {
 	http.ResponseWriter
 	status int
 }
@@ -135,9 +135,9 @@ type gravador struct {
 // Unwrap lets http.ResponseController reach the real connection: without it
 // Flush and SetWriteDeadline report "not supported" through this wrapper and a
 // server-sent stream would end right after its first write.
-func (g *gravador) Unwrap() http.ResponseWriter { return g.ResponseWriter }
+func (g *recorder) Unwrap() http.ResponseWriter { return g.ResponseWriter }
 
-func (g *gravador) WriteHeader(codigo int) {
-	g.status = codigo
-	g.ResponseWriter.WriteHeader(codigo)
+func (g *recorder) WriteHeader(code int) {
+	g.status = code
+	g.ResponseWriter.WriteHeader(code)
 }

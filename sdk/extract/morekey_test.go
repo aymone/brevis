@@ -13,7 +13,7 @@ import (
 
 // paginatorWithMeta serves N pages and says, in the body, whether there is a
 // next one.
-func paginatorWithMeta(t *testing.T, pages int, mente bool) (*httptest.Server, *int) {
+func paginatorWithMeta(t *testing.T, pages int, withMeta bool) (*httptest.Server, *int) {
 	t.Helper()
 	var requested int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func paginatorWithMeta(t *testing.T, pages int, mente bool) (*httptest.Server, *
 			_, _ = fmt.Sscanf(v, "%d", &p)
 		}
 		hasMore := p < pages
-		if mente {
+		if withMeta {
 			// It lies, always saying there is more; the safety net (an empty
 			// page) has to end the run anyway.
 			hasMore = true
@@ -118,9 +118,9 @@ func TestAnAbsentMoreKeyIsNotTheEndOfPagination(t *testing.T) {
 	if err == nil {
 		t.Fatal("a missing field passed as 'no more'")
 	}
-	for _, quero := range []string{"pageMeta", "check the path"} {
-		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("the error does not say %q: %v", quero, err)
+	for _, want := range []string{"pageMeta", "check the path"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error does not say %q: %v", want, err)
 		}
 	}
 }

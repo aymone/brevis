@@ -98,14 +98,14 @@ func TestSplitName(t *testing.T) {
 // as []byte, and every instant would become base64 in the JSON -- silently,
 // because []byte is a legitimate value.
 func TestWithParseTime(t *testing.T) {
-	casos := map[string]string{
+	cases := map[string]string{
 		"u:s@tcp(h:3306)/db":                 "u:s@tcp(h:3306)/db?parseTime=true",
 		"u:s@tcp(h:3306)/db?charset=utf8":    "u:s@tcp(h:3306)/db?charset=utf8&parseTime=true",
 		"u:s@tcp(h:3306)/db?parseTime=false": "u:s@tcp(h:3306)/db?parseTime=false",
 	}
-	for input, quero := range casos {
-		if got := comParseTime(input); got != quero {
-			t.Errorf("withParseTime(%q) = %q, want %q", input, got, quero)
+	for input, want := range cases {
+		if got := withParseTime(input); got != want {
+			t.Errorf("withParseTime(%q) = %q, want %q", input, got, want)
 		}
 	}
 }

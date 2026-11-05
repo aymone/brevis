@@ -65,8 +65,8 @@ func ExamplePipeline() {
 			From: from.HTTP{
 				URL: "https://api.exemplo.com/eventos",
 				Records: func(r sdk.Response) ([]any, error) {
-					var eventos []any
-					return eventos, r.JSON(&eventos)
+					var events []any
+					return events, r.JSON(&events)
 				},
 			},
 		},

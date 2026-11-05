@@ -41,7 +41,7 @@ func TestAHandoverIsKeptOnTheRowUntilTheAttemptMovesOn(t *testing.T) {
 		t.Fatal(err)
 	}
 	step := dom.Step("long")
-	if err := repo.IniciarTask(ctx, r.ID, step, 0); err != nil {
+	if err := repo.StartTask(ctx, r.ID, step, 0); err != nil {
 		t.Fatal(err)
 	}
 
@@ -60,7 +60,7 @@ func TestAHandoverIsKeptOnTheRowUntilTheAttemptMovesOn(t *testing.T) {
 		t.Errorf("a handed-over row reads %s; it is running", status)
 	}
 
-	if err := repo.IniciarTask(ctx, r.ID, step, 0); err != nil {
+	if err := repo.StartTask(ctx, r.ID, step, 0); err != nil {
 		t.Fatal(err)
 	}
 	if got := handoverOf(t, pool, r.ID); got != nil {
@@ -70,7 +70,7 @@ func TestAHandoverIsKeptOnTheRowUntilTheAttemptMovesOn(t *testing.T) {
 	if err := repo.RecordHandover(ctx, r.ID, step, 0, want); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.TerminarTask(ctx, r.ID, step, 0, dom.StatusSuccess, nil, "", ""); err != nil {
+	if err := repo.FinishTask(ctx, r.ID, step, 0, dom.StatusSuccess, nil, "", ""); err != nil {
 		t.Fatal(err)
 	}
 	if got := handoverOf(t, pool, r.ID); got != nil {
@@ -117,7 +117,7 @@ func TestARunsHandoversAreWhatItLeftRunning(t *testing.T) {
 		attempt int
 		h       execution.Handover
 	}{{mine, handed, 1, h}, {mine, finished, 0, h}, {other, dom.Step("transform"), 0, theirs}} {
-		if err := repo.IniciarTask(ctx, s.run, s.step, s.attempt); err != nil {
+		if err := repo.StartTask(ctx, s.run, s.step, s.attempt); err != nil {
 			t.Fatal(err)
 		}
 		if err := repo.RecordHandover(ctx, s.run, s.step, s.attempt, s.h); err != nil {
@@ -125,7 +125,7 @@ func TestARunsHandoversAreWhatItLeftRunning(t *testing.T) {
 		}
 	}
 	// One of mine ended after its handover: its reattach finished it.
-	if err := repo.TerminarTask(ctx, mine, finished, 0, dom.StatusSuccess, nil, "", ""); err != nil {
+	if err := repo.FinishTask(ctx, mine, finished, 0, dom.StatusSuccess, nil, "", ""); err != nil {
 		t.Fatal(err)
 	}
 

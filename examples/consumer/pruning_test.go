@@ -14,9 +14,9 @@ import (
 // by imported package, never by used field, so the only way not to pay for a
 // driver is not to import its package.
 func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name      string
-		pacotes   []string
+		packages  []string
 		forbidden bool
 	}{
 		{"the root alone", []string{"brevis.sh/brevis/sdk"}, true},
@@ -42,14 +42,14 @@ func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
 		}, false},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			carrega := strings.Contains(deps(t, c.pacotes...), "cloud.google.com/go/bigquery")
+			loads := strings.Contains(deps(t, c.packages...), "cloud.google.com/go/bigquery")
 
-			if c.forbidden && carrega {
+			if c.forbidden && loads {
 				t.Error("BigQuery got into the graph of somebody who did not import it")
 			}
-			if !c.forbidden && !carrega {
+			if !c.forbidden && !loads {
 				t.Error("importing to.BigQuery has to bring BigQuery in; " +
 					"without this the test above proves nothing")
 			}
@@ -61,10 +61,10 @@ func TestNotUsingBigQueryCompilesNoBigQuery(t *testing.T) {
 // and GCS, but the backend is a value -- so reading a local CSV compiles neither
 // AWS nor Google. With the three in a single package, it would.
 func TestReadingALocalFileCompilesNoCloud(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name     string
-		pacotes  []string
-		procura  string
+		packages []string
+		search   string
 		expected bool
 	}{
 		{"from on its own does not bring AWS in", []string{
@@ -81,11 +81,11 @@ func TestReadingALocalFileCompilesNoCloud(t *testing.T) {
 			"brevis.sh/brevis/sdk/store/s3"}, "cloud.google.com", false},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			carrega := strings.Contains(deps(t, c.pacotes...), c.procura)
-			if carrega != c.expected {
-				t.Errorf("carries %q = %v, expected %v", c.procura, carrega, c.expected)
+			loads := strings.Contains(deps(t, c.packages...), c.search)
+			if loads != c.expected {
+				t.Errorf("carries %q = %v, expected %v", c.search, loads, c.expected)
 			}
 		})
 	}
@@ -93,9 +93,9 @@ func TestReadingALocalFileCompilesNoCloud(t *testing.T) {
 
 // deps runs in the sdk module, which is what declares those dependencies. Running
 // it from here would only resolve what the examples module already imports.
-func deps(t *testing.T, pacotes ...string) string {
+func deps(t *testing.T, packages ...string) string {
 	t.Helper()
-	cmd := exec.Command("go", append([]string{"list", "-deps"}, pacotes...)...)
+	cmd := exec.Command("go", append([]string{"list", "-deps"}, packages...)...)
 	cmd.Dir = "../../sdk"
 	out, err := cmd.Output()
 	if err != nil {

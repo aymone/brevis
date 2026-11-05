@@ -47,7 +47,7 @@ func TestARunThatRetriedIsCountedOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -57,7 +57,7 @@ func TestARunThatRetriedIsCountedOnce(t *testing.T) {
 	m := metrics.New()
 	var calls int32
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, MaxAttempts: 3,
+		Worker: "t", MaxConcurrency: 1, MaxAttempts: 3,
 		Interval: 10 * time.Millisecond, BackoffBase: time.Millisecond,
 	}, q, repo, func(context.Context, uuid.UUID) error {
 		if atomic.AddInt32(&calls, 1) == 1 {
@@ -104,7 +104,7 @@ func TestTheClaimLatencyIsMeasured(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -113,7 +113,7 @@ func TestTheClaimLatencyIsMeasured(t *testing.T) {
 
 	m := metrics.New()
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, Interval: 10 * time.Millisecond,
+		Worker: "t", MaxConcurrency: 1, Interval: 10 * time.Millisecond,
 	}, q, repo, func(context.Context, uuid.UUID) error { return nil }, noLog())
 	d.Metrics = m
 
@@ -147,7 +147,7 @@ func TestAnOrphanSweepIsCounted(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		t.Fatal(err)
 	}
 	if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {
@@ -158,13 +158,13 @@ func TestAnOrphanSweepIsCounted(t *testing.T) {
 	if _, err := q.Claim(ctx, "the-worker-that-died", 1); err != nil {
 		t.Fatal(err)
 	}
-	if err := repo.Transicionar(ctx, r.ID, dom.StatusRunning); err != nil {
+	if err := repo.Transition(ctx, r.ID, dom.StatusRunning); err != nil {
 		t.Fatal(err)
 	}
 
 	m := metrics.New()
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1,
+		Worker: "t", MaxConcurrency: 1,
 		// A visibility of zero makes every claimed item an orphan at once,
 		// which is what turns a fifteen-minute timeout into a test.
 		Visibility: time.Nanosecond,
@@ -203,7 +203,7 @@ func TestTheQueueDepthComesFromTheTable(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := repo.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+		if err := repo.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 			t.Fatal(err)
 		}
 		if err := q.Enqueue(ctx, r.ID, 0, time.Time{}); err != nil {

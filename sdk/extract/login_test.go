@@ -191,10 +191,10 @@ func TestLoginDoesNotLeakTheSourcesHeader(t *testing.T) {
 
 // TestLoginRefusesConfigurationThatCannotWork.
 func TestLoginRefusesConfigurationThatCannotWork(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name string
 		cred *core.Credential
-		diz  string
+		says string
 	}{
 		{"Login e Value juntos", &core.Credential{
 			Value: core.FromEnv("PATH"), Apply: core.AsBearer,
@@ -208,14 +208,14 @@ func TestLoginRefusesConfigurationThatCannotWork(t *testing.T) {
 		}, "Token"},
 		{"nem Value nem Login", &core.Credential{Apply: core.AsBearer}, "both nil"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			_, err := JSON(context.Background(), core.Source{URL: "http://x", Auth: c.cred}, nil)
 			if err == nil {
 				t.Fatal("passou")
 			}
-			if !strings.Contains(err.Error(), c.diz) {
-				t.Errorf("the error does not say %q: %v", c.diz, err)
+			if !strings.Contains(err.Error(), c.says) {
+				t.Errorf("the error does not say %q: %v", c.says, err)
 			}
 		})
 	}
@@ -229,9 +229,9 @@ func TestAMissingJSONFieldIsAnError(t *testing.T) {
 	if err == nil {
 		t.Fatal("a missing field got through")
 	}
-	for _, quero := range []string{"accessToken", "empty header"} {
-		if !strings.Contains(err.Error(), quero) {
-			t.Errorf("the error does not say %q: %v", quero, err)
+	for _, want := range []string{"accessToken", "empty header"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the error does not say %q: %v", want, err)
 		}
 	}
 }

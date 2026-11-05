@@ -29,7 +29,7 @@ type Scheduler struct {
 	queue     *queue.Queue
 	log       *slog.Logger
 
-	intervalo   time.Duration
+	interval    time.Duration
 	maxPerCycle int
 
 	// A lower priority than new work: a large backfill must not delay the
@@ -57,13 +57,13 @@ func NewScheduler(a *postgres.ScheduleRepo, w *postgres.WorkflowRepo, r *postgre
 	}
 	return &Scheduler{
 		schedules: a, workflows: w, runs: r, queue: f, log: log,
-		intervalo: o.Interval, maxPerCycle: o.MaxPerCycle, backfillPriority: -10,
+		interval: o.Interval, maxPerCycle: o.MaxPerCycle, backfillPriority: -10,
 	}
 }
 
 // Run evaluates the schedules periodically until the context is cancelled.
 func (s *Scheduler) Run(ctx context.Context) error {
-	tick := time.NewTicker(s.intervalo)
+	tick := time.NewTicker(s.interval)
 	defer tick.Stop()
 
 	for {
@@ -137,11 +137,11 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 		return 0, nil
 	}
 
-	slots, truncado, err := a.Slots(now, s.maxPerCycle)
+	slots, truncated, err := a.Slots(now, s.maxPerCycle)
 	if err != nil {
 		return 0, err
 	}
-	if truncado {
+	if truncated {
 		// Visible, not silent: truncating without warning makes it look as
 		// though the gap was covered.
 		s.log.Warn("slots truncated in this cycle", "workflow", a.WorkflowSlug,
@@ -155,7 +155,7 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 	if err != nil {
 		return 0, err
 	}
-	bruto, err := json.Marshal(def)
+	raw, err := json.Marshal(def)
 	if err != nil {
 		return 0, err
 	}
@@ -168,7 +168,7 @@ func (s *Scheduler) materialize(ctx context.Context, a sch.Schedule, now time.Ti
 		if err != nil {
 			return created, fmt.Errorf("default params of %q: %w", a.WorkflowSlug, err)
 		}
-		made, err := s.createAndEnqueue(ctx, a.WorkflowSlug, bruto, slot,
+		made, err := s.createAndEnqueue(ctx, a.WorkflowSlug, raw, slot,
 			sch.TriggerSchedule, 0, defaults, def.MaxActive, def.Group)
 		if err != nil {
 			return created, err
@@ -220,7 +220,7 @@ func (s *Scheduler) createAndEnqueue(ctx context.Context, slug string, def []byt
 		TriggerTargets: targets,
 	})
 	if err != nil {
-		if errors.Is(err, postgres.ErrJaExiste) {
+		if errors.Is(err, postgres.ErrAlreadyExists) {
 			// Already materialized -- unless a previous attempt died before the
 			// enqueue, in which case finishing it is the only thing that will.
 			_, err := s.finish(ctx, key, priority)
@@ -229,7 +229,7 @@ func (s *Scheduler) createAndEnqueue(ctx context.Context, slug string, def []byt
 		return false, err
 	}
 
-	if err := s.runs.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := s.runs.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		return false, err
 	}
 	return true, s.queue.Enqueue(ctx, r.ID, priority, time.Time{})
@@ -249,14 +249,14 @@ func (s *Scheduler) finish(ctx context.Context, key string, priority int) (uuid.
 		return uuid.Nil, err
 	}
 	if status == dom.StatusCreated {
-		if err := s.runs.Transicionar(ctx, id, dom.StatusQueued); err != nil {
+		if err := s.runs.Transition(ctx, id, dom.StatusQueued); err != nil {
 			return uuid.Nil, err
 		}
 	}
 	return id, s.queue.Enqueue(ctx, id, priority, time.Time{})
 }
 
-// Disparar creates a manual Run and enqueues it now.
+// Trigger creates a manual Run and enqueues it now.
 //
 // A higher priority than scheduled work: whoever clicked is looking at the
 // screen. A manual run has no `logical_date` -- it belongs to no slot (§12) --
@@ -267,13 +267,13 @@ func (s *Scheduler) finish(ctx context.Context, key string, priority int) (uuid.
 // but with the slot as its logical date, so its automatic params are the
 // slot's. The key carries the slot AND the second of the click: the same slot
 // can be run again, and two clicks in one second are still one run.
-func (s *Scheduler) Disparar(ctx context.Context, slug string, now time.Time,
+func (s *Scheduler) Trigger(ctx context.Context, slug string, now time.Time,
 	params map[string]string, slot *time.Time) (uuid.UUID, error) {
 	def, err := s.workflows.Definition(ctx, slug)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("workflow %q: %w", slug, err)
 	}
-	bruto, err := json.Marshal(def)
+	raw, err := json.Marshal(def)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -301,7 +301,7 @@ func (s *Scheduler) Disparar(ctx context.Context, slug string, now time.Time,
 	r, err := s.runs.Create(ctx, dom.Run{
 		WorkflowSlug:   slug,
 		IdempotencyKey: key,
-		Definition:     bruto,
+		Definition:     raw,
 		TriggerType:    string(sch.TriggerManual),
 		LogicalDate:    logical,
 		Params:         values,
@@ -311,14 +311,14 @@ func (s *Scheduler) Disparar(ctx context.Context, slug string, now time.Time,
 		Group: def.Group,
 	})
 	if err != nil {
-		if errors.Is(err, postgres.ErrJaExiste) {
+		if errors.Is(err, postgres.ErrAlreadyExists) {
 			// A repeated click within the same second -- or a click whose first
 			// attempt died before the enqueue, which this one then finishes.
 			return s.finish(ctx, key, 10)
 		}
 		return uuid.Nil, err
 	}
-	if err := s.runs.Transicionar(ctx, r.ID, dom.StatusQueued); err != nil {
+	if err := s.runs.Transition(ctx, r.ID, dom.StatusQueued); err != nil {
 		return uuid.Nil, err
 	}
 	return r.ID, s.queue.Enqueue(ctx, r.ID, 10, time.Time{})
@@ -396,7 +396,7 @@ type Backfilled struct {
 // Existing is how many slots already had a run.
 func (b Backfilled) Existing() int { return b.Slots - b.Created }
 
-func (s *Scheduler) Backfill(ctx context.Context, slug string, de, ate time.Time,
+func (s *Scheduler) Backfill(ctx context.Context, slug string, from, until time.Time,
 	params map[string]string) (Backfilled, error) {
 	schedules, err := s.schedules.Active(ctx)
 	if err != nil {
@@ -423,7 +423,7 @@ func (s *Scheduler) Backfill(ctx context.Context, slug string, de, ate time.Time
 	if err != nil {
 		return Backfilled{}, err
 	}
-	bruto, err := json.Marshal(def)
+	raw, err := json.Marshal(def)
 	if err != nil {
 		return Backfilled{}, err
 	}
@@ -439,16 +439,16 @@ func (s *Scheduler) Backfill(ctx context.Context, slug string, de, ate time.Time
 	// returns the next one strictly after `t`, so starting at `de` would exclude
 	// the 00:00 slot in a full-day backfill.
 	var out Backfilled
-	for cursor := de.In(loc).Add(-time.Nanosecond); ; {
-		prox := cronSched.Next(cursor)
-		if prox.After(ate) {
+	for cursor := from.In(loc).Add(-time.Nanosecond); ; {
+		next := cronSched.Next(cursor)
+		if next.After(until) {
 			break
 		}
 		// COUNTED BEFORE IT IS CREATED. A slot the cron fired is a slot
 		// whether or not it became a run, which is the whole point of
 		// carrying both numbers.
 		out.Slots++
-		made, err := s.createAndEnqueue(ctx, slug, bruto, prox,
+		made, err := s.createAndEnqueue(ctx, slug, raw, next,
 			sch.TriggerBackfill, s.backfillPriority, values, def.MaxActive, def.Group)
 		if err != nil {
 			return out, err
@@ -456,10 +456,10 @@ func (s *Scheduler) Backfill(ctx context.Context, slug string, de, ate time.Time
 		if made {
 			out.Created++
 		}
-		cursor = prox
+		cursor = next
 	}
 
-	// A backfill does NOT touch ultimo_slot: it fills the past, and advancing
+	// A backfill does NOT touch last_slot: it fills the past, and advancing
 	// the marker would make the scheduler skip future slots that have not
 	// happened yet.
 	return out, nil

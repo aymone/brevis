@@ -423,21 +423,21 @@ body {
 
 /* The chart's clickable targets. The hover highlight is what says the bar leads
    somewhere — without it only the cursor gives it away, and too late. */
-.grafico-alvo {
+.chart-target {
   cursor: pointer;
 }
-.grafico-alvo:hover rect,
-.grafico-alvo:focus-visible rect {
+.chart-target:hover rect,
+.chart-target:focus-visible rect {
   opacity: 0.78;
 }
-.grafico-alvo:hover circle,
-.grafico-alvo:focus-visible circle {
+.chart-target:hover circle,
+.chart-target:focus-visible circle {
   opacity: 0.82;
 }
-.grafico-faixa {
+.chart-band {
   fill: transparent;
 }
-.grafico-alvo:hover .grafico-faixa {
+.chart-target:hover .chart-band {
   fill: var(--color-hover);
 }
 

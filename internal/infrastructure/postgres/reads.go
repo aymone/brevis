@@ -142,37 +142,37 @@ func (r *ReadRepo) CountByStatus(ctx context.Context) (map[string]int, error) {
 }
 
 // LatestRuns lists the most recent runs.
-func (r *ReadRepo) LatestRuns(ctx context.Context, limite int) ([]RunSummary, error) {
+func (r *ReadRepo) LatestRuns(ctx context.Context, limit int) ([]RunSummary, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT id::text, workflow_slug, status, trigger_type, attempt,
-		       logical_date, criado_em, iniciado_em, terminado_em, erro
+		       logical_date, created_at, started_at, finished_at, error
 		FROM runs
-		ORDER BY criado_em DESC
-		LIMIT $1`, limite)
+		ORDER BY created_at DESC
+		LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return varrerRuns(rows)
+	return scanRuns(rows)
 }
 
-// varrerRuns reads the columns LatestRuns and InFlight select, in the same
+// scanRuns reads the columns LatestRuns and InFlight select, in the same
 // order. Two identical scans would diverge on the first new column.
-func varrerRuns(rows pgx.Rows) ([]RunSummary, error) {
+func scanRuns(rows pgx.Rows) ([]RunSummary, error) {
 	var out []RunSummary
 	for rows.Next() {
 		var r RunSummary
-		var ini, end *time.Time
+		var started, end *time.Time
 		if err := rows.Scan(&r.ID, &r.WorkflowSlug, &r.Status, &r.TriggerType, &r.Attempt,
-			&r.LogicalDate, &r.CreatedAt, &ini, &end, &r.Err); err != nil {
+			&r.LogicalDate, &r.CreatedAt, &started, &end, &r.Err); err != nil {
 			return nil, err
 		}
-		r.StartedAt = ini
+		r.StartedAt = started
 		// Duration only exists when the run actually started AND finished;
 		// computing it with either side null would produce a meaningless
 		// number.
-		if ini != nil && end != nil {
-			d := end.Sub(*ini)
+		if started != nil && end != nil {
+			d := end.Sub(*started)
 			r.Duration = &d
 		}
 		out = append(out, r)
@@ -185,9 +185,9 @@ func (r *ReadRepo) Workflows(ctx context.Context) ([]WorkflowSummary, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT w.slug, w.name, p.slug,
 		       COALESCE(s.cron, ''), COALESCE(s.timezone, ''),
-		       COALESCE(s.catchup, false), COALESCE(s.ativo, false),
-		       s.workflow_slug IS NOT NULL, s.ultimo_slot,
-		       COALESCE(u.status, ''), u.id::text, u.criado_em,
+		       COALESCE(s.catchup, false), COALESCE(s.active, false),
+		       s.workflow_slug IS NOT NULL, s.last_slot,
+		       COALESCE(u.status, ''), u.id::text, u.created_at,
 		       (SELECT count(*) FROM runs WHERE workflow_slug = w.slug),
 		       -- The Tags key may not exist (a workflow published before the
 		       -- field) or arrive as JSON null (no tags). In both cases the
@@ -196,8 +196,8 @@ func (r *ReadRepo) Workflows(ctx context.Context) ([]WorkflowSummary, error) {
 		       -- it to an empty array before expanding.
 		       COALESCE((
 		           SELECT array_agg(t) FROM jsonb_array_elements_text(
-		               CASE WHEN jsonb_typeof(w.definicao->'Tags') = 'array'
-		                    THEN w.definicao->'Tags' ELSE '[]'::jsonb END) t
+		               CASE WHEN jsonb_typeof(w.definition->'Tags') = 'array'
+		                    THEN w.definition->'Tags' ELSE '[]'::jsonb END) t
 		       ), '{}')
 		FROM workflows w
 		JOIN projects p ON p.id = w.project_id
@@ -206,8 +206,8 @@ func (r *ReadRepo) Workflows(ctx context.Context) ([]WorkflowSummary, error) {
 		-- and the instant of the last run come from the SAME row. Three
 		-- independent subselects could mix different runs.
 		LEFT JOIN LATERAL (
-		    SELECT id, status, criado_em FROM runs
-		    WHERE workflow_slug = w.slug ORDER BY criado_em DESC LIMIT 1
+		    SELECT id, status, created_at FROM runs
+		    WHERE workflow_slug = w.slug ORDER BY created_at DESC LIMIT 1
 		) u ON true
 		ORDER BY w.slug`)
 	if err != nil {
@@ -248,15 +248,15 @@ type RecentRun struct {
 // The tie-break -- id DESC within an instant, id ascending in the answer -- is
 // the window's, unchanged.
 const recentStatesSQL = `
-		SELECT s.slug, r.id::text, r.status, r.criado_em
+		SELECT s.slug, r.id::text, r.status, r.created_at
 		FROM (SELECT DISTINCT unnest($1::text[]) AS slug) s
 		CROSS JOIN LATERAL (
-		    SELECT id, status, criado_em FROM runs
+		    SELECT id, status, created_at FROM runs
 		    WHERE workflow_slug = s.slug
-		    ORDER BY criado_em DESC, id DESC
+		    ORDER BY created_at DESC, id DESC
 		    LIMIT $2
 		) r
-		ORDER BY s.slug, r.criado_em, r.id`
+		ORDER BY s.slug, r.created_at, r.id`
 
 // RecentStates is the last n runs of each workflow asked, oldest to newest so
 // a strip reads left to right like time. ONE query for a page rather than one
@@ -310,8 +310,8 @@ func (r *ReadRepo) Projects(ctx context.Context) ([]ProjectSummary, error) {
 // QueueDepth shows the queue on the dashboard.
 func (r *ReadRepo) QueueDepth(ctx context.Context) (pending, claimed int, err error) {
 	err = r.pool.QueryRow(ctx, `
-		SELECT count(*) FILTER (WHERE reivindicado_em IS NULL),
-		       count(*) FILTER (WHERE reivindicado_em IS NOT NULL)
+		SELECT count(*) FILTER (WHERE claimed_at IS NULL),
+		       count(*) FILTER (WHERE claimed_at IS NOT NULL)
 		FROM queue_items`).Scan(&pending, &claimed)
 	return
 }
@@ -340,11 +340,11 @@ func (r *ReadRepo) IndicatorsFor(ctx context.Context, window time.Duration, work
 		       count(*) FILTER (WHERE status = 'failed'),
 		       count(*) FILTER (WHERE status IN ('running', 'retrying')),
 		       count(*) FILTER (WHERE status = 'queued'),
-		       avg(EXTRACT(EPOCH FROM (terminado_em - iniciado_em)) * 1000)
-		         FILTER (WHERE terminado_em IS NOT NULL AND iniciado_em IS NOT NULL),
+		       avg(EXTRACT(EPOCH FROM (finished_at - started_at)) * 1000)
+		         FILTER (WHERE finished_at IS NOT NULL AND started_at IS NOT NULL),
 		       count(*) FILTER (WHERE attempt > 0)
 		FROM runs
-		WHERE criado_em >= now() - $1::interval
+		WHERE created_at >= now() - $1::interval
 		  AND ($2 = '' OR workflow_slug = $2)`, window, workflow).
 		Scan(&i.Total, &i.Succeeded, &i.Failed, &i.Running, &i.Pending, &meanMs, &i.Retried)
 	if err != nil {
@@ -375,14 +375,14 @@ type Day struct {
 // rows to draw nothing would be the same picture at ten times the cost.
 func (r *ReadRepo) RunsPerDay(ctx context.Context, workflow string, days int) ([]Day, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT (criado_em AT TIME ZONE 'UTC')::date AS dia,
+		SELECT (created_at AT TIME ZONE 'UTC')::date AS day,
 		       count(*),
 		       count(*) FILTER (WHERE status = 'success'),
 		       count(*) FILTER (WHERE status = 'failed'),
 		       count(*) FILTER (WHERE status IN ('running', 'retrying', 'queued', 'pending'))
 		FROM runs
 		WHERE workflow_slug = $1
-		  AND criado_em >= (now() AT TIME ZONE 'UTC')::date - ($2::int - 1)
+		  AND created_at >= (now() AT TIME ZONE 'UTC')::date - ($2::int - 1)
 		GROUP BY 1
 		ORDER BY 1`, workflow, days)
 	if err != nil {
@@ -425,26 +425,26 @@ func (g Grain) unit() string {
 func (r *ReadRepo) RunsPer(ctx context.Context, g Grain, n int) ([]Bucket, error) {
 	unit := g.unit()
 	rows, err := r.pool.Query(ctx, `
-		WITH janela AS (
+		WITH span AS (
 		    SELECT generate_series(
 		        date_trunc('`+unit+`', now() AT TIME ZONE 'UTC') - ($1::int - 1) * interval '1 `+unit+`',
 		        date_trunc('`+unit+`', now() AT TIME ZONE 'UTC'),
-		        interval '1 `+unit+`') AS inicio
+		        interval '1 `+unit+`') AS bucket_start
 		)
-		SELECT j.inicio,
+		SELECT j.bucket_start,
 		       count(r.id) FILTER (WHERE r.status = 'success'),
 		       count(r.id) FILTER (WHERE r.status = 'failed'),
 		       count(r.id) FILTER (WHERE r.status IN ('running', 'retrying')),
 		       count(r.id) FILTER (WHERE r.status = 'queued'),
-		       avg(EXTRACT(EPOCH FROM (r.terminado_em - r.iniciado_em)) * 1000)
-		FROM janela j
+		       avg(EXTRACT(EPOCH FROM (r.finished_at - r.started_at)) * 1000)
+		FROM span j
 		LEFT JOIN runs r
-		       ON date_trunc('`+unit+`', r.criado_em AT TIME ZONE 'UTC') = j.inicio
-		      -- the range is what lets criado_em's index bound the scan to the
+		       ON date_trunc('`+unit+`', r.created_at AT TIME ZONE 'UTC') = j.bucket_start
+		      -- the range is what lets created_at's index bound the scan to the
 		      -- window; without it the join read every run ever made.
-		      AND r.criado_em >= (SELECT min(inicio) FROM janela) AT TIME ZONE 'UTC'
-		GROUP BY j.inicio
-		ORDER BY j.inicio`, n)
+		      AND r.created_at >= (SELECT min(bucket_start) FROM span) AT TIME ZONE 'UTC'
+		GROUP BY j.bucket_start
+		ORDER BY j.bucket_start`, n)
 	if err != nil {
 		return nil, err
 	}
@@ -470,26 +470,26 @@ func (r *ReadRepo) RunsPer(ctx context.Context, g Grain, n int) ([]Bucket, error
 //
 // The order is ascending on purpose: whatever has been in the queue longest is
 // what deserves attention, and sorting by most recent would hide exactly that.
-func (r *ReadRepo) InFlight(ctx context.Context, limite int) ([]RunSummary, error) {
+func (r *ReadRepo) InFlight(ctx context.Context, limit int) ([]RunSummary, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT id::text, workflow_slug, status, trigger_type, attempt,
-		       logical_date, criado_em, iniciado_em, terminado_em, erro
+		       logical_date, created_at, started_at, finished_at, error
 		FROM runs
 		WHERE status IN ('queued', 'running', 'retrying')
-		ORDER BY criado_em
-		LIMIT $1`, limite)
+		ORDER BY created_at
+		LIMIT $1`, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return varrerRuns(rows)
+	return scanRuns(rows)
 }
 
 // Schedules returns every schedule, active or not. The DAG list shows the paused
 // ones too — hiding them from the screen would hide the reason nothing runs.
 func (r *ReadRepo) Schedules(ctx context.Context) ([]ScheduleSummary, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT workflow_slug, cron, timezone, ativo FROM schedules ORDER BY workflow_slug`)
+		`SELECT workflow_slug, cron, timezone, active FROM schedules ORDER BY workflow_slug`)
 	if err != nil {
 		return nil, err
 	}
@@ -515,9 +515,9 @@ type RunFilter struct {
 	// Workflow is a piece of the slug, matched without case. The whole slug
 	// other screens link with is a piece of itself, so their links still land.
 	Workflow string
-	De       *time.Time
-	Ate      *time.Time
-	Limite   int
+	From     *time.Time
+	To       *time.Time
+	Limit    int
 	Offset   int
 }
 
@@ -539,11 +539,11 @@ func (f RunFilter) where() (string, []any) {
 	if f.Workflow != "" {
 		put(`workflow_slug ILIKE $%d ESCAPE '\'`, "%"+likeLiteral(f.Workflow)+"%")
 	}
-	if f.De != nil {
-		put("criado_em >= $%d", *f.De)
+	if f.From != nil {
+		put("created_at >= $%d", *f.From)
 	}
-	if f.Ate != nil {
-		put("criado_em < $%d", *f.Ate)
+	if f.To != nil {
+		put("created_at < $%d", *f.To)
 	}
 	return strings.Join(cond, " AND "), args
 }
@@ -556,33 +556,33 @@ func likeLiteral(s string) string {
 
 // Runs lists runs with filtering and pagination.
 func (r *ReadRepo) Runs(ctx context.Context, f RunFilter) ([]RunSummary, error) {
-	if f.Limite <= 0 {
-		f.Limite = 50
+	if f.Limit <= 0 {
+		f.Limit = 50
 	}
-	predicado, args := f.where()
-	args = append(args, f.Limite, f.Offset)
+	predicate, args := f.where()
+	args = append(args, f.Limit, f.Offset)
 
 	rows, err := r.pool.Query(ctx, fmt.Sprintf(`
 		SELECT id::text, workflow_slug, status, trigger_type, attempt,
-		       logical_date, criado_em, iniciado_em, terminado_em, erro
+		       logical_date, created_at, started_at, finished_at, error
 		FROM runs
 		WHERE %s
-		ORDER BY criado_em DESC
-		LIMIT $%d OFFSET $%d`, predicado, len(args)-1, len(args)), args...)
+		ORDER BY created_at DESC
+		LIMIT $%d OFFSET $%d`, predicate, len(args)-1, len(args)), args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return varrerRuns(rows)
+	return scanRuns(rows)
 }
 
 // CountRuns returns the total for the SAME filter, so the pagination knows how
 // many pages there are.
 func (r *ReadRepo) CountRuns(ctx context.Context, f RunFilter) (int, error) {
-	predicado, args := f.where()
+	predicate, args := f.where()
 	var n int
 	err := r.pool.QueryRow(ctx,
-		fmt.Sprintf(`SELECT count(*) FROM runs WHERE %s`, predicado), args...).Scan(&n)
+		fmt.Sprintf(`SELECT count(*) FROM runs WHERE %s`, predicate), args...).Scan(&n)
 	return n, err
 }
 
@@ -603,9 +603,9 @@ func (r *ReadRepo) CountRunsInFlight(ctx context.Context) (int, error) {
 // predicate the list uses.
 func (r *ReadRepo) CountRunsByState(ctx context.Context, f RunFilter) (map[string]int, error) {
 	f.State = ""
-	predicado, args := f.where()
+	predicate, args := f.where()
 	rows, err := r.pool.Query(ctx,
-		fmt.Sprintf(`SELECT status, count(*) FROM runs WHERE %s GROUP BY status`, predicado), args...)
+		fmt.Sprintf(`SELECT status, count(*) FROM runs WHERE %s GROUP BY status`, predicate), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -670,14 +670,14 @@ func (d LoadDay) RowsPerSecond() int64 {
 // every average through a floor that never happened. The screen draws the gap.
 func (r *ReadRepo) LoadTrend(ctx context.Context, workflow string, days int) ([]LoadDay, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT (em AT TIME ZONE 'UTC')::date AS dia,
+		SELECT (run_created_at AT TIME ZONE 'UTC')::date AS day,
 		       count(*),
-		       sum(linhas), sum(registros), sum(ignorados),
-		       sum(bytes_entrada), sum(bytes_saida),
+		       sum(rows), sum(records), sum(ignored),
+		       sum(bytes_in), sum(bytes_out),
 		       avg(extract_ms)::bigint, avg(load_ms)::bigint
 		FROM load_metrics
 		WHERE workflow_slug = $1
-		  AND em >= (now() AT TIME ZONE 'UTC')::date - ($2::int - 1)
+		  AND run_created_at >= (now() AT TIME ZONE 'UTC')::date - ($2::int - 1)
 		GROUP BY 1
 		ORDER BY 1`, workflow, days)
 	if err != nil {
@@ -738,12 +738,12 @@ func (r *ReadRepo) WorkflowHistory(ctx context.Context, slug string, day *time.T
 	}
 	rows, err := r.pool.Query(ctx, `
 		SELECT id::text, workflow_slug, status, trigger_type, attempt,
-		       logical_date, criado_em, iniciado_em, terminado_em, erro, params
+		       logical_date, created_at, started_at, finished_at, error, params
 		FROM runs
 		WHERE workflow_slug = $1
-		  AND ($2::timestamptz IS NULL OR criado_em >= $2)
-		  AND ($3::timestamptz IS NULL OR criado_em < $3)
-		ORDER BY criado_em DESC
+		  AND ($2::timestamptz IS NULL OR created_at >= $2)
+		  AND ($3::timestamptz IS NULL OR created_at < $3)
+		ORDER BY created_at DESC
 		LIMIT $4`, slug, from, to, limit)
 	if err != nil {
 		return nil, err
@@ -753,14 +753,14 @@ func (r *ReadRepo) WorkflowHistory(ctx context.Context, slug string, day *time.T
 	var out []RunSummary
 	for rows.Next() {
 		var r RunSummary
-		var ini, end *time.Time
+		var started, end *time.Time
 		if err := rows.Scan(&r.ID, &r.WorkflowSlug, &r.Status, &r.TriggerType, &r.Attempt,
-			&r.LogicalDate, &r.CreatedAt, &ini, &end, &r.Err, &r.Params); err != nil {
+			&r.LogicalDate, &r.CreatedAt, &started, &end, &r.Err, &r.Params); err != nil {
 			return nil, err
 		}
-		r.StartedAt = ini
-		if ini != nil && end != nil {
-			d := end.Sub(*ini)
+		r.StartedAt = started
+		if started != nil && end != nil {
+			d := end.Sub(*started)
 			r.Duration = &d
 		}
 		out = append(out, r)
@@ -781,10 +781,10 @@ type StepRun struct {
 func (r *ReadRepo) LastStepRuns(ctx context.Context, slug string) (map[string]StepRun, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT DISTINCT ON (t.node_id) t.node_id, t.status,
-		       COALESCE(EXTRACT(EPOCH FROM (t.terminado_em - t.iniciado_em)) * 1000, 0)::bigint
+		       COALESCE(EXTRACT(EPOCH FROM (t.finished_at - t.started_at)) * 1000, 0)::bigint
 		FROM task_runs t JOIN runs r ON r.id = t.run_id
 		WHERE r.workflow_slug = $1
-		ORDER BY t.node_id, r.criado_em DESC, t.attempt DESC, t.iniciado_em DESC NULLS LAST`, slug)
+		ORDER BY t.node_id, r.created_at DESC, t.attempt DESC, t.started_at DESC NULLS LAST`, slug)
 	if err != nil {
 		return nil, err
 	}

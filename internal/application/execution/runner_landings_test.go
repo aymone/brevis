@@ -93,7 +93,7 @@ func TestAStepThatLandsAndThenFailsStillRecordsItsLandings(t *testing.T) {
 }
 
 func runnerSpeaking(spy *spyPersister, ex execution.Executor) app.Runner {
-	return app.Runner{RunID: uuid.New(), Persist: spy, Report: &spyReporter{}, Processo: ex}
+	return app.Runner{RunID: uuid.New(), Persist: spy, Report: &spyReporter{}, Process: ex}
 }
 
 // Every landing of an attempt carries the configuration the pipeline
@@ -152,7 +152,7 @@ func TestALandingThatCouldNotBeRecordedIsLogged(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
 	t.Cleanup(func() { slog.SetDefault(previous) })
 
-	r := app.Runner{RunID: uuid.New(), Persist: landingsFail{&spyPersister{}}, Report: &spyReporter{}, Processo: sdkSpeaker{lines: []string{
+	r := app.Runner{RunID: uuid.New(), Persist: landingsFail{&spyPersister{}}, Report: &spyReporter{}, Process: sdkSpeaker{lines: []string{
 		`@brevis:{"type":"landed","target":"bigquery://acme-prod/silver/orders","rows":10}`,
 		`@brevis:{"type":"landed","target":"bigquery://acme-prod/silver/items","rows":4}`,
 	}}}
@@ -192,7 +192,7 @@ func TestPhasesAndLoadNumbersThatCouldNotBeRecordedAreLoggedOnce(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
 	t.Cleanup(func() { slog.SetDefault(previous) })
 
-	r := app.Runner{RunID: uuid.New(), Persist: persistFails{&spyPersister{}}, Report: &spyReporter{}, Processo: sdkSpeaker{lines: []string{
+	r := app.Runner{RunID: uuid.New(), Persist: persistFails{&spyPersister{}}, Report: &spyReporter{}, Process: sdkSpeaker{lines: []string{
 		`@brevis:{"type":"stage","index":0,"name":"extract","state":"running"}`,
 		`@brevis:{"type":"stage","index":0,"name":"extract","state":"done","ms":10}`,
 		`@brevis:{"type":"stage","index":1,"name":"load","state":"running"}`,

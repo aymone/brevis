@@ -22,13 +22,13 @@ import (
 // ifGenerationMatch de verdade.
 type fakeGCS struct {
 	mu         sync.Mutex
-	conteudo   []byte
+	content    []byte
 	generation int64
-	existe     bool
-	conflitos  int
+	exists     bool
+	conflicts  int
 }
 
-func (g *fakeGCS) servidor(t *testing.T) *storage.Client {
+func (g *fakeGCS) server(t *testing.T) *storage.Client {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		g.mu.Lock()
@@ -40,13 +40,13 @@ func (g *fakeGCS) servidor(t *testing.T) *storage.Client {
 		// fake
 		// errou.
 		if r.Method == http.MethodGet {
-			if !g.existe {
+			if !g.exists {
 				http.Error(w, `{"error":{"code":404}}`, http.StatusNotFound)
 				return
 			}
 			w.Header().Set("x-goog-generation", fmt.Sprint(g.generation))
-			w.Header().Set("Content-Length", fmt.Sprint(len(g.conteudo)))
-			_, _ = w.Write(g.conteudo)
+			w.Header().Set("Content-Length", fmt.Sprint(len(g.content)))
+			_, _ = w.Write(g.content)
 			return
 		}
 
@@ -55,19 +55,19 @@ func (g *fakeGCS) servidor(t *testing.T) *storage.Client {
 			if v := q.Get("ifGenerationMatch"); v != "" {
 				expected := v == fmt.Sprint(g.generation)
 				if v == "0" {
-					expected = !g.existe
+					expected = !g.exists
 				}
 				if !expected {
-					g.conflitos++
+					g.conflicts++
 					http.Error(w, `{"error":{"code":412,"message":"generation mismatch"}}`,
 						http.StatusPreconditionFailed)
 					return
 				}
 			}
 			body, _ := io.ReadAll(r.Body)
-			g.conteudo = extrairCorpoMultipart(body)
+			g.content = extractMultipartBody(body)
 			g.generation++
-			g.existe = true
+			g.exists = true
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"name": "obj", "bucket": "b", "generation": fmt.Sprint(g.generation),
 			})
@@ -86,8 +86,8 @@ func (g *fakeGCS) servidor(t *testing.T) *storage.Client {
 	return cli
 }
 
-// extrairCorpoMultipart pega a segunda parte do upload multipart do GCS.
-func extrairCorpoMultipart(b []byte) []byte {
+// extractMultipartBody pega a segunda parte do upload multipart do GCS.
+func extractMultipartBody(b []byte) []byte {
 	partes := strings.Split(string(b), "\r\n\r\n")
 	if len(partes) < 3 {
 		return b
@@ -103,7 +103,7 @@ func credential(t *testing.T, g *fakeGCS) Credential {
 	t.Helper()
 	t.Setenv(core.EnvCredentialKey, "")
 	generations.Delete("gs://b/obj")
-	return Credential{Bucket: "b", Object: "obj", Client: g.servidor(t)}
+	return Credential{Bucket: "b", Object: "obj", Client: g.server(t)}
 }
 
 // TestItStoresAndReturns: o caminho feliz.
@@ -144,7 +144,7 @@ func TestTheConditionalWrite(t *testing.T) {
 	// Another process writes from outside, advancing the generation.
 	g.mu.Lock()
 	g.generation++
-	g.conteudo = []byte("brevis-cred/1p\nde-outro-processo")
+	g.content = []byte("brevis-cred/1p\nde-outro-processo")
 	g.mu.Unlock()
 
 	// This run's write was conditional on the generation it read.
@@ -152,14 +152,14 @@ func TestTheConditionalWrite(t *testing.T) {
 		t.Fatalf("the conflict became an error: %v", err)
 	}
 	g.mu.Lock()
-	conflitos, conteudo := g.conflitos, string(g.conteudo)
+	conflicts, content := g.conflicts, string(g.content)
 	g.mu.Unlock()
 
-	if conflitos != 1 {
-		t.Errorf("conflicts = %d, want 1 -- the write was not conditional", conflitos)
+	if conflicts != 1 {
+		t.Errorf("conflicts = %d, want 1 -- the write was not conditional", conflicts)
 	}
-	if !strings.Contains(conteudo, "de-outro-processo") {
-		t.Errorf("overwrote the newer value: %q", conteudo)
+	if !strings.Contains(content, "de-outro-processo") {
+		t.Errorf("overwrote the newer value: %q", content)
 	}
 }
 
@@ -174,7 +174,7 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 	}
 	// Another process creates the object first.
 	g.mu.Lock()
-	g.existe, g.generation, g.conteudo = true, 7, []byte("brevis-cred/1p\nde-outro")
+	g.exists, g.generation, g.content = true, 7, []byte("brevis-cred/1p\nde-outro")
 	g.mu.Unlock()
 
 	if err := c.Save("meu"); err != nil {
@@ -182,11 +182,11 @@ func TestTheFirstWriteUsesDoesNotExist(t *testing.T) {
 	}
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	if g.conflitos != 1 {
-		t.Errorf("conflicts = %d; the first write did not use DoesNotExist", g.conflitos)
+	if g.conflicts != 1 {
+		t.Errorf("conflicts = %d; the first write did not use DoesNotExist", g.conflicts)
 	}
-	if !strings.Contains(string(g.conteudo), "de-outro") {
-		t.Errorf("sobrescreveu: %q", g.conteudo)
+	if !strings.Contains(string(g.content), "de-outro") {
+		t.Errorf("sobrescreveu: %q", g.content)
 	}
 }
 

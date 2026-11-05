@@ -26,10 +26,10 @@ func BenchmarkPostgresLoad(b *testing.B) {
 	name := benchTable(b, conn)
 
 	const rows = 10000
-	lote := make([]sdk.Envelope, rows)
+	batch := make([]sdk.Envelope, rows)
 	now := time.Now().UTC().Format(time.RFC3339)
-	for i := range lote {
-		lote[i] = sdk.Envelope{Payload: map[string]any{
+	for i := range batch {
+		batch[i] = sdk.Envelope{Payload: map[string]any{
 			"ingestion_id":        fmt.Sprintf("id-%06d", i),
 			"ingestion_loaded_at": now,
 			"provider":            "bench",
@@ -42,7 +42,7 @@ func BenchmarkPostgresLoad(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if _, err := target.Write(context.Background(), lote, sdk.WriteOptions{}); err != nil {
+		if _, err := target.Write(context.Background(), batch, sdk.WriteOptions{}); err != nil {
 			b.Fatal(err)
 		}
 	}

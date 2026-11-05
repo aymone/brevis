@@ -22,10 +22,10 @@ import (
 // here, which is exactly when you want to be bothered.
 func TestEveryLoadConfigFieldIsReachable(t *testing.T) {
 	fields := fieldsOf(t, "../../internal/core/types.go", "LoadConfig")
-	escritos := escritosPor(t, "bigquery.go")
+	written := writtenBy(t, "bigquery.go")
 
 	// These the adapter does not write, and for stated reasons.
-	naoSeAplica := map[string]string{
+	notApplicable := map[string]string{
 		"Format":   "sempre ndjson: é o único formato que o load escreve",
 		"Provider": "vem do lote, não do Target -- ver Write",
 		"Entity":   "vem do lote, não do Target -- ver Write",
@@ -33,10 +33,10 @@ func TestEveryLoadConfigFieldIsReachable(t *testing.T) {
 
 	var missing []string
 	for _, c := range fields {
-		if escritos[c] {
+		if written[c] {
 			continue
 		}
-		if _, ok := naoSeAplica[c]; ok {
+		if _, ok := notApplicable[c]; ok {
 			continue
 		}
 		missing = append(missing, c)
@@ -51,9 +51,9 @@ func TestEveryLoadConfigFieldIsReachable(t *testing.T) {
 }
 
 var (
-	fieldRe   = regexp.MustCompile(`(?m)^\t([A-Z][A-Za-z0-9]*)\s`)
-	escritaRe = regexp.MustCompile(`(?m)^\t+([A-Z][A-Za-z0-9]*):`)
-	atribRe   = regexp.MustCompile(`cfg\.([A-Z][A-Za-z0-9]*)\s*(,|=)`)
+	fieldRe = regexp.MustCompile(`(?m)^\t([A-Z][A-Za-z0-9]*)\s`)
+	writeRe = regexp.MustCompile(`(?m)^\t+([A-Z][A-Za-z0-9]*):`)
+	attrRe  = regexp.MustCompile(`cfg\.([A-Z][A-Za-z0-9]*)\s*(,|=)`)
 )
 
 func fieldsOf(t *testing.T, path, kind string) []string {
@@ -77,7 +77,7 @@ func fieldsOf(t *testing.T, path, kind string) []string {
 	return out
 }
 
-func escritosPor(t *testing.T, path string) map[string]bool {
+func writtenBy(t *testing.T, path string) map[string]bool {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -86,10 +86,10 @@ func escritosPor(t *testing.T, path string) map[string]bool {
 	s := string(data)
 
 	out := map[string]bool{}
-	for _, m := range escritaRe.FindAllStringSubmatch(s, -1) {
+	for _, m := range writeRe.FindAllStringSubmatch(s, -1) {
 		out[m[1]] = true
 	}
-	for _, m := range atribRe.FindAllStringSubmatch(s, -1) {
+	for _, m := range attrRe.FindAllStringSubmatch(s, -1) {
 		out[m[1]] = true
 	}
 	return out

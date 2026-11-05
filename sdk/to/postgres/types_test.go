@@ -19,11 +19,11 @@ import (
 func TestToColumnRowByRow(t *testing.T) {
 	instant := time.Date(2026, 9, 5, 12, 30, 0, 0, time.UTC)
 
-	casos := []struct {
+	cases := []struct {
 		name  string
 		value any
 		kind  string
-		quero any
+		want  any
 		why   string
 	}{
 		{"nil vira NULL em qualquer coluna", nil, "timestamp with time zone", nil, ""},
@@ -54,21 +54,21 @@ func TestToColumnRowByRow(t *testing.T) {
 		{"integer passa como veio", int64(42), "integer", int64(42), ""},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got, err := toColumn(c.value, c.kind)
 			if err != nil {
 				t.Fatalf("toColumn: %v", err)
 			}
-			if ts, ok := c.quero.(time.Time); ok {
+			if ts, ok := c.want.(time.Time); ok {
 				gt, ok := got.(time.Time)
 				if !ok || !gt.Equal(ts) {
 					t.Errorf("= %#v, want %v\n  %s", got, ts, c.why)
 				}
 				return
 			}
-			if got != c.quero {
-				t.Errorf("= %#v, want %#v\n  %s", got, c.quero, c.why)
+			if got != c.want {
+				t.Errorf("= %#v, want %#v\n  %s", got, c.want, c.why)
 			}
 		})
 	}
@@ -110,9 +110,9 @@ func TestToColumnsErrorSaysTheFormat(t *testing.T) {
 	if err == nil {
 		t.Fatal("text that is not a date got through")
 	}
-	for _, exigido := range []string{"RFC 3339", "2026-09-05T12:30:00Z"} {
-		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("the error does not say %q: %v", exigido, err)
+	for _, required := range []string{"RFC 3339", "2026-09-05T12:30:00Z"} {
+		if !strings.Contains(err.Error(), required) {
+			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }
@@ -120,8 +120,8 @@ func TestToColumnsErrorSaysTheFormat(t *testing.T) {
 // TestToColumnElidesALongValue: a 4 KB field inside an error message is
 // noise, and it can carry data nobody wants in a log.
 func TestToColumnElidesALongValue(t *testing.T) {
-	longo := strings.Repeat("x", 4000)
-	_, err := toColumn(longo, "date")
+	long := strings.Repeat("x", 4000)
+	_, err := toColumn(long, "date")
 	if err == nil {
 		t.Fatal("passou")
 	}

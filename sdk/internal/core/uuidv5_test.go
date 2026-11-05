@@ -24,15 +24,15 @@ func TestUUIDv5AgreesWithThePackage(t *testing.T) {
 			data[j] = byte(r.Intn(256))
 		}
 
-		var espaco uuid.UUID
-		for j := range espaco {
-			espaco[j] = byte(r.Intn(256))
+		var namespace uuid.UUID
+		for j := range namespace {
+			namespace[j] = byte(r.Intn(256))
 		}
 
-		quero := uuid.NewSHA1(espaco, data)
-		got := uuidV5(espaco, data)
-		if got != quero {
-			t.Fatalf("diverged at %d bytes of data:\n  mine %s\n  uuid %s", len(data), got, quero)
+		want := uuid.NewSHA1(namespace, data)
+		got := uuidV5(namespace, data)
+		if got != want {
+			t.Fatalf("diverged at %d bytes of data:\n  mine %s\n  uuid %s", len(data), got, want)
 		}
 	}
 }
@@ -47,8 +47,8 @@ func TestUUIDv5InTheRealNamespace(t *testing.T) {
 		make([]byte, 1000),
 	}
 	for _, data := range entries {
-		if got, quero := uuidV5(DefaultNamespace, data), uuid.NewSHA1(DefaultNamespace, data); got != quero {
-			t.Errorf("%d bytes: mine %s, uuid %s", len(data), got, quero)
+		if got, want := uuidV5(DefaultNamespace, data), uuid.NewSHA1(DefaultNamespace, data); got != want {
+			t.Errorf("%d bytes: mine %s, uuid %s", len(data), got, want)
 		}
 	}
 }
@@ -62,8 +62,8 @@ func TestFormatUUIDAgreesWithString(t *testing.T) {
 		for j := range u {
 			u[j] = byte(r.Intn(256))
 		}
-		if got, quero := formatUUID(u), u.String(); got != quero {
-			t.Fatalf("mine %q, String() %q", got, quero)
+		if got, want := formatUUID(u), u.String(); got != want {
+			t.Fatalf("mine %q, String() %q", got, want)
 		}
 	}
 }
@@ -71,18 +71,18 @@ func TestFormatUUIDAgreesWithString(t *testing.T) {
 // TestAKeyLargerThanTheStackBuffer: a 192-byte key fits on the stack, and a
 // larger one falls to the heap -- both have to produce the same id.
 func TestAKeyLargerThanTheStackBuffer(t *testing.T) {
-	longo := ""
-	for len(longo) < 300 {
-		longo += "provedor-com-nome-comprido-"
+	long := ""
+	for len(long) < 300 {
+		long += "provedor-com-nome-comprido-"
 	}
 
-	got, err := ComputeIngestionID(longo, "entidade", "chave", "2026-09-05T12:00:00Z")
+	got, err := ComputeIngestionID(long, "entidade", "chave", "2026-09-05T12:00:00Z")
 	if err != nil {
 		t.Fatal(err)
 	}
-	quero := uuid.NewSHA1(DefaultNamespace,
-		[]byte(longo+"|entidade|chave|2026-09-05T12:00:00Z")).String()
-	if got != quero {
-		t.Errorf("long key diverged:\n  mine %s\n  uuid %s", got, quero)
+	want := uuid.NewSHA1(DefaultNamespace,
+		[]byte(long+"|entidade|chave|2026-09-05T12:00:00Z")).String()
+	if got != want {
+		t.Errorf("long key diverged:\n  mine %s\n  uuid %s", got, want)
 	}
 }

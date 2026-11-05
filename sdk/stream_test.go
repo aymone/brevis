@@ -28,7 +28,7 @@ func TestWithFlushEveryAStreamIsWrittenWhileItIsStillReading(t *testing.T) {
 		Stream: func(r sdk.Response, emit func(any) error) error {
 			for i := range 10 {
 				if i == 2*flush {
-					writtenMidway = len(target.levas)
+					writtenMidway = len(target.batches)
 				}
 				if err := emit(map[string]any{"i": i}); err != nil {
 					return err
@@ -48,7 +48,7 @@ func TestWithFlushEveryAStreamIsWrittenWhileItIsStillReading(t *testing.T) {
 		t.Errorf("after %d records the destination had %d batch(es); the records were held "+
 			"until the function returned", 2*flush, writtenMidway)
 	}
-	if res.Records != 10 || len(target.levas) != 4 {
-		t.Errorf("Records=%d in %d batches, want 10 in 4 (3+3+3+1)", res.Records, len(target.levas))
+	if res.Records != 10 || len(target.batches) != 4 {
+		t.Errorf("Records=%d in %d batches, want 10 in 4 (3+3+3+1)", res.Records, len(target.batches))
 	}
 }

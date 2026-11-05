@@ -34,7 +34,7 @@ func gated(t *testing.T, body, key string) (bool, *spyPersister, error) {
 	}
 	spy := &spyPersister{}
 	runErr := app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Persist: spy, RunID: uuid.New(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}.Run(context.Background(), w)

@@ -52,8 +52,8 @@ func TestLoadNamesTheLineThatIsBroken(t *testing.T) {
 // A record whose payload crosses 64 KB is why this uses a Decoder and not a
 // Scanner: a Scanner stops reading in silence at its buffer limit.
 func TestLoadReadsARecordLargerThanAScannerLine(t *testing.T) {
-	grande := `{"payload":"` + strings.Repeat("x", 200_000) + `"}`
-	envelopes, err := readNDJSON(strings.NewReader(grande))
+	big := `{"payload":"` + strings.Repeat("x", 200_000) + `"}`
+	envelopes, err := readNDJSON(strings.NewReader(big))
 	if err != nil {
 		t.Fatalf("a 200 kB record was refused: %v", err)
 	}

@@ -13,11 +13,11 @@ catalogs (`web/i18n/locales/`), English first, and a template asks for a key --
 `i18n.T(ctx, "nav.overview")` -- rather than writing a sentence. Everything
 else, including this repository, is English only.
 
-A few names stay Portuguese on purpose, and each one says so where it lives:
-the on-disk and wire formats. The `Param` JSON keys, `postgres.Stage`'s tags, the
-migrations' columns, the checkpoint depot's file names, the graph payload
-the console reads, and `data-dica` / `grafico-*`. They are data, not prose, and
-renaming one is a migration rather than a translation.
+Identifiers are English too: Go names, the database schema, JSON keys and file
+names. The only Portuguese left in code is what has to be READ for data an older
+release wrote -- the legacy stage keys, the old checkpoint depot names, the
+`Nome`/`Tipo`/`Descricao` param keys, the deprecated aliases kept for a
+published API -- and each one says so, and when it can go, where it lives.
 
 The two changelogs predate this rule in part and are kept as they were written:
 they record decisions made on a date, and rewriting a record is not the same as

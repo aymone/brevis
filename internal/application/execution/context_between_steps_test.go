@@ -36,7 +36,7 @@ func TestContextTravelsAcrossSteps(t *testing.T) {
 	}
 
 	r := app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 	if err := r.Run(context.Background(), w); err != nil {
@@ -95,7 +95,7 @@ func TestAStepCannotReadASiblingItDoesNotDependOn(t *testing.T) {
 	}
 
 	r := app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 	if err := r.Run(context.Background(), w); err != nil {
@@ -133,7 +133,7 @@ func TestAStepThatPublishesNothingLeavesTheNextOneClean(t *testing.T) {
 	}
 
 	r := app.Runner{
-		Processo: exec, Report: &coletor{}, ContextDir: t.TempDir(),
+		Process: exec, Report: &collector{}, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 	if err := r.Run(context.Background(), w); err != nil {
@@ -167,9 +167,9 @@ func TestATruncatedPayloadIsReportedOnTheStepsLog(t *testing.T) {
 		Nodes: []wf.Node{{ID: "a", Run: `sh -c 'printf '"'"'` + cut + `'"'"' > "$BREVIS_OUTPUT"'`}},
 	}
 
-	rep := &coletor{}
+	rep := &collector{}
 	r := app.Runner{
-		Processo: exec, Report: rep, ContextDir: t.TempDir(),
+		Process: exec, Report: rep, ContextDir: t.TempDir(),
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 	if err := r.Run(context.Background(), w); err != nil {
@@ -177,14 +177,14 @@ func TestATruncatedPayloadIsReportedOnTheStepsLog(t *testing.T) {
 	}
 
 	var said bool
-	for _, e := range rep.eventos {
+	for _, e := range rep.events {
 		if contains(e.Message, "not usable") && contains(e.Message, "truncat") {
 			said = true
 		}
 	}
 	if !said {
 		t.Errorf("the truncation was swallowed; the step below would get a "+
-			"missing key with nothing saying why. Events: %+v", rep.eventos)
+			"missing key with nothing saying why. Events: %+v", rep.events)
 	}
 }
 
@@ -252,7 +252,7 @@ func TestContextWorksWithoutConfiguringAnything(t *testing.T) {
 
 	// No ContextDir. Exactly what cmd/brevis assembles.
 	r := app.Runner{
-		Processo: exec, Report: &coletor{},
+		Process: exec, Report: &collector{},
 		Env: map[string]string{"PATH": os.Getenv("PATH")},
 	}
 	if err := r.Run(context.Background(), w); err != nil {

@@ -36,7 +36,7 @@ type AutoParams struct {
 
 	// StartedAt is when this ATTEMPT began.
 	//
-	// Named for the column it comes from (`iniciado_em`) and for what every
+	// Named for the column it comes from (`started_at`) and for what every
 	// other orchestrator calls it, rather than `running_at`: a run is not
 	// running for the whole time this timestamp describes -- it is the instant
 	// it started, and a retry moves it.

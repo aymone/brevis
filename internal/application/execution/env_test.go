@@ -25,12 +25,12 @@ func TestTheEnvironmentsPrecedence(t *testing.T) {
 	}
 	r := Runner{Env: map[string]string{"NIVEL": "global", "SO_DO_GLOBAL": "1"}}
 
-	casos := map[string]string{"com_env": "passo", "sem_env": "workflow"}
+	cases := map[string]string{"com_env": "passo", "sem_env": "workflow"}
 	for _, n := range w.Nodes {
-		env := mesclarEnv(r.Env, r.runContext(instance{key: run.Step(n.ID)}, false, 0), w.EnvDe(n))
+		env := mergeEnv(r.Env, r.runContext(instance{key: run.Step(n.ID)}, false, 0), w.EnvOf(n))
 
-		if got := env["NIVEL"]; got != casos[n.ID] {
-			t.Errorf("%s: LEVEL = %q, expected %q", n.ID, got, casos[n.ID])
+		if got := env["NIVEL"]; got != cases[n.ID] {
+			t.Errorf("%s: LEVEL = %q, expected %q", n.ID, got, cases[n.ID])
 		}
 		// Inheriting must not mean losing the rest.
 		if env["SO_DO_WORKFLOW"] != "1" {
@@ -53,11 +53,11 @@ func TestSecretsDoNotEnterTheTasksEnv(t *testing.T) {
 	}
 	n := w.Nodes[0]
 
-	env := mesclarEnv(nil, nil, w.EnvDe(n))
-	if _, tem := env["TOKEN"]; tem {
+	env := mergeEnv(nil, nil, w.EnvOf(n))
+	if _, has := env["TOKEN"]; has {
 		t.Error("the secret went into the task's Env")
 	}
-	if w.SecretsDe(n)["TOKEN"] != "cofre/token" {
+	if w.SecretsOf(n)["TOKEN"] != "cofre/token" {
 		t.Error("the secret did not arrive as a coordinate")
 	}
 }

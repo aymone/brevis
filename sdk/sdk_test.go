@@ -128,9 +128,9 @@ func resp(status int, body string) Response {
 }
 
 func TestRejectIf(t *testing.T) {
-	guarda := RejectIf("error")
+	guard := RejectIf("error")
 
-	err := guarda(resp(200, `{"error": true, "reason": "invalid parameter"}`))
+	err := guard(resp(200, `{"error": true, "reason": "invalid parameter"}`))
 	if err == nil {
 		t.Fatal("a 200 flagged with error must be rejected")
 	}
@@ -141,7 +141,7 @@ func TestRejectIf(t *testing.T) {
 		t.Error("a refusal has to be distinguishable from a programming error")
 	}
 
-	if err := guarda(resp(200, `{"temperature": 20}`)); err != nil {
+	if err := guard(resp(200, `{"temperature": 20}`)); err != nil {
 		t.Errorf("a good response was refused: %v", err)
 	}
 }
@@ -163,11 +163,11 @@ func TestRejectIfDoesNotLetANonJSONBodyThrough(t *testing.T) {
 }
 
 func TestRequireFields(t *testing.T) {
-	guarda := RequireFields("hourly")
-	if err := guarda(resp(200, `{"daily": {}}`)); err == nil {
+	guard := RequireFields("hourly")
+	if err := guard(resp(200, `{"daily": {}}`)); err == nil {
 		t.Fatal("a payload missing the required field must be rejected")
 	}
-	if err := guarda(resp(200, `{"hourly": {}}`)); err != nil {
+	if err := guard(resp(200, `{"hourly": {}}`)); err != nil {
 		t.Errorf("a correct payload was rejected: %v", err)
 	}
 }
@@ -257,8 +257,8 @@ func TestExtractExpandsAndMaps(t *testing.T) {
 		t.Error("the chain did not write ingestion_id")
 	}
 
-	segundo := envelopes[1].Payload.(map[string]any)
-	if first[ColumnIngestionID] == segundo[ColumnIngestionID] {
+	secondRun := envelopes[1].Payload.(map[string]any)
+	if first[ColumnIngestionID] == secondRun[ColumnIngestionID] {
 		t.Error("two different reads collided on the same id")
 	}
 }
@@ -340,8 +340,8 @@ func TestFormatErrorOnAMissingKey(t *testing.T) {
 	}))
 
 	_, err = collect(data, Target{})
-	var formato *FormatError
-	if !errors.As(err, &formato) {
+	var format *FormatError
+	if !errors.As(err, &format) {
 		t.Fatalf("expected *FormatError, got %T: %v", err, err)
 	}
 	if !errors.Is(err, ErrFormat) {
@@ -634,7 +634,7 @@ func TestEveryCoreOptionIsReachable(t *testing.T) {
 // they are ever called: a selector that runs is a selector whose failure can
 // sink a load the caller never asked the SDK to inspect.
 func TestEvery2xxReachesRecords(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		status int
 		body   string
 		lines  int
@@ -645,7 +645,7 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 		{206, `[{"a":1}]`, 1},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(fmt.Sprint(c.status), func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(c.status)
@@ -653,11 +653,11 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			visto := 0
+			seen := 0
 			data, err := Extract(context.Background(), Source{From: from.HTTP{
 				URL: srv.URL,
 				Records: func(r Response) ([]any, error) {
-					visto = r.Status
+					seen = r.Status
 					if len(r.Bytes()) == 0 {
 						return nil, nil // janela vazia
 					}
@@ -668,8 +668,8 @@ func TestEvery2xxReachesRecords(t *testing.T) {
 			if err != nil {
 				t.Fatalf("http %d brought the run down: %v", c.status, err)
 			}
-			if visto != c.status {
-				t.Errorf("Records saw status %d, want %d", visto, c.status)
+			if seen != c.status {
+				t.Errorf("Records saw status %d, want %d", seen, c.status)
 			}
 
 			n := 0
@@ -714,12 +714,12 @@ func TestANon2xxStillFails(t *testing.T) {
 // A refusal from the source and a programming error ask different things of
 // whoever is on call, so they have to be distinguishable.
 func TestARejectionIsDistinctFromAProgrammingError(t *testing.T) {
-	recusa := Reject("open-meteo recusou: %s", "latitude inválida")
-	if !errors.Is(recusa, ErrRejected) {
+	refused := Reject("open-meteo recusou: %s", "latitude inválida")
+	if !errors.Is(refused, ErrRejected) {
 		t.Error("Reject has to match errors.Is(err, ErrRejected)")
 	}
-	if !strings.Contains(recusa.Error(), "latitude inválida") {
-		t.Errorf("the reason must survive: %v", recusa)
+	if !strings.Contains(refused.Error(), "latitude inválida") {
+		t.Errorf("the reason must survive: %v", refused)
 	}
 
 	if errors.Is(fmt.Errorf("nil map"), ErrRejected) {
@@ -727,7 +727,7 @@ func TestARejectionIsDistinctFromAProgrammingError(t *testing.T) {
 	}
 
 	var r *Rejection
-	if !errors.As(recusa, &r) {
+	if !errors.As(refused, &r) {
 		t.Error("Rejection has to be reachable by errors.As")
 	}
 }

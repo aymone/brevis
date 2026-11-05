@@ -9,7 +9,7 @@ import (
 	"brevis.sh/brevis/internal/infrastructure/postgres"
 )
 
-const workflowIndex = "runs_workflow_criado_idx"
+const workflowIndex = "runs_workflow_created_idx"
 
 // indexDef returns the index's definition and whether it is valid, or "" when
 // there is no index by that name.
@@ -51,8 +51,8 @@ func migrateBeforeTheIndex(t *testing.T) {
 func TestRunsHaveAnIndexByWorkflowAndTime(t *testing.T) {
 	pool := insightsDB(t)
 	def, valid := indexDef(t, pool)
-	if !valid || !strings.Contains(def, "(workflow_slug, criado_em DESC)") {
-		t.Errorf("index = %q (valid %v); wanted runs (workflow_slug, criado_em DESC), valid", def, valid)
+	if !valid || !strings.Contains(def, "(workflow_slug, created_at DESC)") {
+		t.Errorf("index = %q (valid %v); wanted runs (workflow_slug, created_at DESC), valid", def, valid)
 	}
 }
 
@@ -82,7 +82,7 @@ func TestAnIndexLeftByAFailedBuildDoesNotStopTheMigration(t *testing.T) {
 
 	migrateBeforeTheIndex(t)
 	if _, err := pool.Exec(context.Background(),
-		`CREATE INDEX `+workflowIndex+` ON runs (status)`); err != nil {
+		`CREATE INDEX runs_workflow_criado_idx ON runs (status)`); err != nil {
 		t.Fatal(err)
 	}
 	migrate(t, "up")
@@ -100,9 +100,9 @@ func TestTheConsolesReadsByWorkflowCanUseTheIndex(t *testing.T) {
 	ctx := context.Background()
 	for name, query := range map[string]string{
 		"Workflows' last run": `SELECT id FROM runs WHERE workflow_slug = 'daily'
-			ORDER BY criado_em DESC LIMIT 1`,
+			ORDER BY created_at DESC LIMIT 1`,
 		"WorkflowRuns": `SELECT id FROM runs WHERE workflow_slug = 'daily'
-			ORDER BY criado_em DESC LIMIT 50`,
+			ORDER BY created_at DESC LIMIT 50`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			tx, err := pool.Begin(ctx)

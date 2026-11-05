@@ -51,13 +51,13 @@ import (
 )
 
 func main() {
-	if err := raiz().Execute(); err != nil {
+	if err := root().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
 }
 
-func raiz() *cobra.Command {
+func root() *cobra.Command {
 	c := &cobra.Command{
 		Use:           "brevis",
 		Short:         "Brevis — a data transformation and orchestration engine",
@@ -164,9 +164,9 @@ func paramsFromFlags(entries []string) (map[string]string, error) {
 // expandir resolves files and directories into a list of YAMLs, in a stable
 // order. The order matters: publishing the same folder twice has to produce the
 // same log, or the difference between two deploys becomes noise.
-func expandir(alvos []string) ([]string, error) {
+func expand(targets []string) ([]string, error) {
 	var files []string
-	for _, target := range alvos {
+	for _, target := range targets {
 		info, err := os.Stat(target)
 		if err != nil {
 			return nil, err
@@ -182,7 +182,7 @@ func expandir(alvos []string) ([]string, error) {
 		files = append(files, found...)
 	}
 	if len(files) == 0 {
-		return nil, fmt.Errorf("no .yaml file found in %v", alvos)
+		return nil, fmt.Errorf("no .yaml file found in %v", targets)
 	}
 	sort.Strings(files)
 	return files, nil
@@ -194,7 +194,7 @@ func cmdValidate() *cobra.Command {
 		Short: "Validate workflow files (needs no database)",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			files, err := expandir(args)
+			files, err := expand(args)
 			if err != nil {
 				return err
 			}
@@ -205,19 +205,19 @@ func cmdValidate() *cobra.Command {
 			var failures1 int
 			var parsed []wfdom.Workflow
 			for _, a := range files {
-				conteudo, err := os.ReadFile(a) // #nosec G304 -- the workflow files the operator named
+				content, err := os.ReadFile(a) // #nosec G304 -- the workflow files the operator named
 				if err != nil {
 					fmt.Printf("  ERROR %s: %v\n", a, err)
 					failures1++
 					continue
 				}
-				w, err := spec.Parse(a, conteudo)
+				w, err := spec.Parse(a, content)
 				if err != nil {
 					fmt.Printf("  ERROR %v\n", err)
 					failures1++
 					continue
 				}
-				avisar(a, conteudo)
+				warnAbout(a, content)
 				parsed = append(parsed, w)
 				fmt.Printf("  ok    %-28s %s  %d steps, %d dependencies%s\n",
 					w.Slug, w.Kind, len(w.Nodes), len(w.Edges), schedule(w.Schedule))
@@ -254,8 +254,8 @@ func cmdValidate() *cobra.Command {
 // greps and redirects, and a warning that disappears into a pipe is a warning
 // nobody reads. It is also why this is not an error: the file is fine, the
 // engine will behave exactly as it did, and one of its lines does nothing.
-func avisar(path string, conteudo []byte) {
-	for _, w := range spec.UnknownFields(path, conteudo) {
+func warnAbout(path string, content []byte) {
+	for _, w := range spec.UnknownFields(path, content) {
 		fmt.Fprintf(os.Stderr, "  warn  %s\n", w)
 	}
 }
@@ -263,15 +263,15 @@ func avisar(path string, conteudo []byte) {
 func readAll(files []string) ([]wfdom.Workflow, error) {
 	out := make([]wfdom.Workflow, 0, len(files))
 	for _, a := range files {
-		conteudo, err := os.ReadFile(a) // #nosec G304 -- the workflow files the operator named
+		content, err := os.ReadFile(a) // #nosec G304 -- the workflow files the operator named
 		if err != nil {
 			return nil, err
 		}
-		w, err := spec.Parse(a, conteudo)
+		w, err := spec.Parse(a, content)
 		if err != nil {
 			return nil, err
 		}
-		avisar(a, conteudo)
+		warnAbout(a, content)
 		out = append(out, w)
 	}
 	return out, nil
@@ -336,7 +336,7 @@ func readPassword() (string, error) {
 		line, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		return strings.TrimRight(line, "\r\n"), err
 	}
-	return semEco()
+	return noEcho()
 }
 
 // cmdBrand validates a brand file without starting the server.
@@ -346,8 +346,10 @@ func readPassword() (string, error) {
 // through the pod's log — far from whoever edited the file. The installation's
 // CI calls this and the error comes back in the pull request.
 //
-// `marca` is kept as an alias: it was the command's name in a released version,
-// and a script calling it must not start printing "unknown command".
+// `marca` is kept as a DEPRECATED alias: it was the command's name in a released
+// version, and a script calling it must not start printing "unknown command".
+//
+// shortcut: remove the alias in v1, when a breaking change is allowed.
 func cmdBrand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "brand <brand.yaml>",
@@ -396,15 +398,15 @@ func cmdRun() *cobra.Command {
 		Short: "Run a workflow locally",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			conteudo, err := os.ReadFile(args[0])
+			content, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}
-			w, err := spec.Parse(args[0], conteudo)
+			w, err := spec.Parse(args[0], content)
 			if err != nil {
 				return err
 			}
-			avisar(args[0], conteudo)
+			warnAbout(args[0], content)
 
 			env := os.Getenv("BREVIS_ENV")
 			if env == "" {
@@ -433,8 +435,8 @@ func cmdRun() *cobra.Command {
 			}
 
 			runner := app.Runner{
-				Params:   values,
-				Processo: exec,
+				Params:  values,
+				Process: exec,
 				// `brevis run` has no server and no store unless the operator
 				// points at one. A workflow that declares persist_context is
 				// then refused by name, before the first step.
@@ -478,7 +480,7 @@ func cmdRun() *cobra.Command {
 // the output readable when several run in parallel at the same level.
 type consoleReporter struct{}
 
-func (consoleReporter) Evento(e execution.Event) {
+func (consoleReporter) Event(e execution.Event) {
 	switch e.Kind {
 	case execution.EventStarted:
 		fmt.Printf("  ▶ %s\n", e.NodeID)
@@ -514,8 +516,8 @@ func open(ctx context.Context) (*postgres.Pool, config.Config, error) {
 }
 
 func cmdPublish() *cobra.Command {
-	var projeto string
-	var podar bool
+	var project string
+	var prune bool
 	c := &cobra.Command{
 		Use:   "publish <file.yaml|directory> ...",
 		Short: "Publish workflows and their schedules to the database",
@@ -531,11 +533,11 @@ func cmdPublish() *cobra.Command {
 			// A default project for local mode. Section 4 has Project as a
 			// first-class entity; until there is project management, this fixed
 			// slug keeps the FK honest without inventing a hierarchy.
-			var idProjeto uuid.UUID
+			var projectID uuid.UUID
 			err = pool.QueryRow(ctx, `
 				INSERT INTO projects (id, slug, name) VALUES ($1, $2, $2)
 				ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
-				RETURNING id`, uuid.New(), projeto).Scan(&idProjeto)
+				RETURNING id`, uuid.New(), project).Scan(&projectID)
 			if err != nil {
 				return err
 			}
@@ -544,7 +546,7 @@ func cmdPublish() *cobra.Command {
 			// installation assembles a FOLDER of workflows, and forcing the
 			// caller to expand the glob would leave the command hostage to
 			// whoever's shell is calling.
-			files, err := expandir(args)
+			files, err := expand(args)
 			if err != nil {
 				return err
 			}
@@ -569,7 +571,7 @@ func cmdPublish() *cobra.Command {
 			for _, w := range resolved {
 				slugs = append(slugs, w.Slug)
 			}
-			others, err := repo.PublishedGroupMembers(ctx, idProjeto, slugs, podar)
+			others, err := repo.PublishedGroupMembers(ctx, projectID, slugs, prune)
 			if err != nil {
 				return err
 			}
@@ -579,15 +581,15 @@ func cmdPublish() *cobra.Command {
 
 			published := make([]string, 0, len(resolved))
 			for _, w := range resolved {
-				if err := repo.Publicar(ctx, w, idProjeto, "cli"); err != nil {
+				if err := repo.Publish(ctx, w, projectID, "cli"); err != nil {
 					return err
 				}
 				fmt.Printf("  published  %-24s %s\n", w.Slug, schedule(w.Schedule))
 				published = append(published, w.Slug)
 			}
 
-			if podar {
-				removed, err := repo.Podar(ctx, idProjeto, published, "cli")
+			if prune {
+				removed, err := repo.Prune(ctx, projectID, published, "cli")
 				if err != nil {
 					return err
 				}
@@ -598,35 +600,35 @@ func cmdPublish() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&projeto, "project", "default", "the project's slug")
+	c.Flags().StringVar(&project, "project", "default", "the project's slug")
 	// Optional and not the default: `publish one-file.yaml` must not delete the
 	// project's other 48 just because they were not named on the command line.
-	c.Flags().BoolVar(&podar, "prune", false,
+	c.Flags().BoolVar(&prune, "prune", false,
 		"remove from the project the workflows absent from the published list (history is preserved)")
 	return c
 }
 
-// executorDePods decides between a pod and a process, once, at boot.
+// podExecutor decides between a pod and a process, once, at boot.
 //
 // `auto` is the default because the same binary runs in both places: on a
 // laptop there is no service account mounted and it falls back to a local
 // process; in a cluster there is, and it starts creating pods. `on` exists for
 // the deployment that must NOT silently become local execution — there, ending
 // up without a cluster has to be a boot error.
-func executorDePods(cfg config.Config, log *slog.Logger) (execution.Executor, error) {
-	if cfg.Pods.Modo == "off" {
+func podExecutor(cfg config.Config, log *slog.Logger) (execution.Executor, error) {
+	if cfg.Pods.Mode == "off" {
 		return nil, nil
 	}
 
 	client, err := k8s.NoCluster()
 	if err != nil {
 		var outside k8s.ErrOutsideCluster
-		if errors.As(err, &outside) && cfg.Pods.Modo == "auto" {
+		if errors.As(err, &outside) && cfg.Pods.Mode == "auto" {
 			log.Info("no cluster: steps with `image:` will run on the instance itself",
 				"reason", outside.Reason)
 			return nil, nil
 		}
-		return nil, fmt.Errorf("BREVIS_PODS=%s: %w", cfg.Pods.Modo, err)
+		return nil, fmt.Errorf("BREVIS_PODS=%s: %w", cfg.Pods.Mode, err)
 	}
 
 	ns := cfg.Pods.Namespace
@@ -659,7 +661,7 @@ func podTolerations(cfg []config.Grace) []k8s.Grace {
 	var out []k8s.Grace
 	for _, t := range cfg {
 		out = append(out, k8s.Grace{
-			Key: t.Key, Operator: "Equal", Value: t.Value, Effect: t.Efeito,
+			Key: t.Key, Operator: "Equal", Value: t.Value, Effect: t.Effect,
 		})
 	}
 	return out
@@ -708,7 +710,7 @@ func (f *schedulerFlags) bind(c *cobra.Command) {
 // dispatcher is the policy these flags describe.
 func (f schedulerFlags) dispatcher() scheduler.Config {
 	return scheduler.Config{
-		Worker: workerName(os.Hostname, os.Getpid()), MaxConcorrente: f.concurrency,
+		Worker: workerName(os.Hostname, os.Getpid()), MaxConcurrency: f.concurrency,
 		MaxAttempts:       f.maxAttempts,
 		BackoffBase:       f.retryBackoff,
 		BackoffMax:        f.retryBackoffMax,
@@ -721,7 +723,7 @@ func (f schedulerFlags) dispatcher() scheduler.Config {
 // workerName is what this process claims queue items as, and what its log
 // lines say.
 //
-// Every replica claimed as "local" until #121, so reivindicado_por could not
+// Every replica claimed as "local" until #121, so claimed_by could not
 // tell two schedulers apart. The hostname is the pod's name in Kubernetes, and
 // the pid separates two processes on one machine -- or a container restarted
 // under the same name, whose predecessor's claims are still in the table.
@@ -780,9 +782,9 @@ func cmdScheduler() *cobra.Command {
 			// produces a NON-nil interface, and the runner would call a method
 			// on a null pointer instead of reporting "no process executor
 			// configured".
-			var processo execution.Executor
+			var process execution.Executor
 			if exec, err := local.New(cfg.Env); err == nil {
-				processo = exec
+				process = exec
 			} else {
 				var outside local.ErrOutsideLocal
 				if !errors.As(err, &outside) {
@@ -796,7 +798,7 @@ func cmdScheduler() *cobra.Command {
 			// becomes a pod of its own. Outside a cluster, `pods` stays nil and
 			// everything runs as a local process — the SAME YAML in both
 			// cases.
-			pods, err := executorDePods(cfg, log)
+			pods, err := podExecutor(cfg, log)
 			if err != nil {
 				return err
 			}
@@ -830,7 +832,7 @@ func cmdScheduler() *cobra.Command {
 					"hint", "declare what they need in BREVIS_TASK_ENV (e.g. GOOGLE_PROJECT_ID,STAGE,DBT_KEYFILE)")
 			}
 
-			executar := func(ctx context.Context, id uuid.UUID) error {
+			execute := func(ctx context.Context, id uuid.UUID) error {
 				r, err := runs.Get(ctx, id)
 				if err != nil {
 					return err
@@ -846,7 +848,7 @@ func cmdScheduler() *cobra.Command {
 					// a fetcher using the SDK sees them without being passed
 					// anything as an argument.
 					Params:     r.Params,
-					Processo:   processo,
+					Process:    process,
 					PersistURL: cfg.PersistURL,
 					Pods:       pods,
 					Hosts:      hosts,
@@ -884,7 +886,7 @@ func cmdScheduler() *cobra.Command {
 				}.Run(ctx, w)
 			}
 
-			disp := scheduler.New(f.dispatcher(), q, runs, executar, log)
+			disp := scheduler.New(f.dispatcher(), q, runs, execute, log)
 			// The dispatcher no longer TALKS to Slack. It writes a row in the
 			// same transaction as the failure, and `brevis alert` delivers it.
 			//
@@ -919,7 +921,7 @@ func cmdScheduler() *cobra.Command {
 				log.Warn("queue depth will not be reported", "error", err)
 			}
 			if err := met.WatchSlots(func() (int, int) {
-				return disp.EmVoo(), f.concurrency
+				return disp.InFlight(), f.concurrency
 			}); err != nil {
 				log.Warn("slot usage will not be reported", "error", err)
 			}
@@ -1058,9 +1060,9 @@ func cmdAlert() *cobra.Command {
 			// silent no-op: a row naming something absent here is marked
 			// undelivered with the valid names in its error, instead of being
 			// retried forever or dropped.
-			channels := map[string]notify.Notificador{}
+			channels := map[string]notify.Notifier{}
 			if cfg.SlackWebhook != "" {
-				channels[alerts.ChannelSlack] = notify.NovoSlack(cfg.SlackWebhook, cfg.Env)
+				channels[alerts.ChannelSlack] = notify.NewSlack(cfg.SlackWebhook, cfg.Env)
 			}
 			if len(channels) == 0 {
 				// Refused at boot rather than warned about. A delivery process
@@ -1147,7 +1149,7 @@ func cmdReport() *cobra.Command {
 			// reason a CronJob should hang.
 			send, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
-			if err := notify.NovoSlack(cfg.SlackWebhook, cfg.Env).Report(send, rep); err != nil {
+			if err := notify.NewSlack(cfg.SlackWebhook, cfg.Env).Report(send, rep); err != nil {
 				return err
 			}
 			log.Info("report sent", "runs", rep.Runs, "window", window.String())
@@ -1189,14 +1191,14 @@ func printReport(r notify.Report) {
 
 func cmdBackfill() *cobra.Command {
 	var rawParams []string
-	var de, until string
+	var from, until string
 	c := &cobra.Command{
 		Use:   "backfill <workflow>",
 		Short: "Materialize a workflow's past slots",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			start, err := time.Parse("2006-01-02", de)
+			start, err := time.Parse("2006-01-02", from)
 			if err != nil {
 				return fmt.Errorf("--from: %w (use YYYY-MM-DD)", err)
 			}
@@ -1226,11 +1228,11 @@ func cmdBackfill() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Print(backfillReport(did, args[0], cronOf(ctx, pool, args[0]), de, until))
+			fmt.Print(backfillReport(did, args[0], cronOf(ctx, pool, args[0]), from, until))
 			return nil
 		},
 	}
-	c.Flags().StringVar(&de, "from", "", "start date (YYYY-MM-DD)")
+	c.Flags().StringVar(&from, "from", "", "start date (YYYY-MM-DD)")
 	c.Flags().StringVar(&until, "to", "", "end date (YYYY-MM-DD)")
 	// The backfill's central use case: "reprocess the whole of January with
 	// load_full=true". The values apply to every slot in the range.
@@ -1361,9 +1363,9 @@ func (a uiActions) Toggle(ctx context.Context, slug, actor string) (bool, error)
 	return a.schedules.Toggle(ctx, slug, actor)
 }
 
-func (a uiActions) Disparar(ctx context.Context, slug string, now time.Time,
+func (a uiActions) Trigger(ctx context.Context, slug string, now time.Time,
 	params map[string]string, slot *time.Time) (uuid.UUID, error) {
-	return a.sched.Disparar(ctx, slug, now, params, slot)
+	return a.sched.Trigger(ctx, slug, now, params, slot)
 }
 
 func (a uiActions) Cancel(ctx context.Context, id uuid.UUID, actor string) (postgres.CancelResult, error) {
@@ -1474,7 +1476,7 @@ func serve(ctx context.Context) error {
 	// `inseguro` follows the environment: locally the server listens on plain
 	// http, and a Secure cookie would never come back — the login would look
 	// broken.
-	srv := api.NewServerAutenticado(log, map[string]api.Checker{"postgres": pool}, ui,
+	srv := api.NewServerWithAuth(log, map[string]api.Checker{"postgres": pool}, ui,
 		cfg.Auth, cfg.Env == "local").HTTPServer(cfg.HTTPAddr)
 	if cfg.Auth.Enabled() {
 		log.Info("interface is protected", "user", cfg.Auth.User)

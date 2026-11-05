@@ -363,20 +363,20 @@ func isGzip(resp *http.Response, url string) bool {
 	}
 	// The extension, last: a server sending application/json for a .gz is saying
 	// something more specific than the file name.
-	semQuery, _, _ := strings.Cut(url, "?")
-	return strings.HasSuffix(strings.ToLower(semQuery), ".gz")
+	noQuery, _, _ := strings.Cut(url, "?")
+	return strings.HasSuffix(strings.ToLower(noQuery), ".gz")
 }
 
 // gzipReader closes both: the decompressor and the connection under it. Finish
 // so o de cima deixaria a conexao presa ate o timeout.
 type gzipReader struct {
 	*gzip.Reader
-	sob io.Closer
+	under io.Closer
 }
 
 func (l gzipReader) Close() error {
 	err := l.Reader.Close()
-	if e := l.sob.Close(); err == nil {
+	if e := l.under.Close(); err == nil {
 		err = e
 	}
 	return err
@@ -779,7 +779,7 @@ func fetchPage(ctxTotal context.Context, client *http.Client, source core.Source
 			release()
 			return nil, fmt.Errorf("the response announces gzip and is not: %w", err)
 		}
-		body = gzipReader{Reader: gz, sob: resp.Body}
+		body = gzipReader{Reader: gz, under: resp.Body}
 	}
 	p := &page{body: body, release: release}
 
@@ -1120,9 +1120,9 @@ func NewDecoder(r io.Reader, source core.Source) Decoder {
 		}
 		return &csvDecoder{r: reader, noHeader: source.NoHeader}
 	case "ndjson":
-		return &ndjsonDecoder{dec: decodificadorJSON(r, source)}
+		return &ndjsonDecoder{dec: jsonSourceDecoder(r, source)}
 	case "json":
-		return &jsonDecoder{dec: decodificadorJSON(r, source)}
+		return &jsonDecoder{dec: jsonSourceDecoder(r, source)}
 	case "xml":
 		return &xmlDecoder{dec: xml.NewDecoder(r)}
 	default:
@@ -1130,13 +1130,13 @@ func NewDecoder(r io.Reader, source core.Source) Decoder {
 	}
 }
 
-// decodificadorJSON builds the decoder, with or without preserving the literal.
+// jsonSourceDecoder builds the decoder, with or without preserving the literal.
 //
 // Without UseNumber, `{"id": 19}` and `{"id": 19.0}` arrive identical as
 // float64 -- and in Python the first was an int and the second a float, with
 // different str(). A ported fetcher that composed its key with str() cannot
 // reproduce the id without the literal.
-func decodificadorJSON(r io.Reader, source core.Source) *json.Decoder {
+func jsonSourceDecoder(r io.Reader, source core.Source) *json.Decoder {
 	dec := json.NewDecoder(r)
 	if source.PreserveNumbers {
 		dec.UseNumber()

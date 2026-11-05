@@ -26,10 +26,10 @@ import (
 // matches everything. It passed because the source was at the root, and no real
 // API is.
 func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
-	casos := []struct {
-		name    string
-		source  string
-		renovar string
+	cases := []struct {
+		name   string
+		source string
+		renew  string
 	}{
 		{"prefixos diferentes", "/api/proxy/occurrences", "/api/auth/session"},
 		{"mesmo prefixo", "/api/proxy/occurrences", "/api/proxy/session"},
@@ -37,14 +37,14 @@ func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
 		{"renovacao mais funda", "/api/dados", "/api/v2/interno/auth/session"},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			var mu sync.Mutex
 			var cookieOnRefresh string
 			var cookieOnPages []string
 
 			mux := http.NewServeMux()
-			mux.HandleFunc(c.renovar, func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc(c.renew, func(w http.ResponseWriter, r *http.Request) {
 				mu.Lock()
 				cookieOnRefresh = r.Header.Get("Cookie")
 				mu.Unlock()
@@ -74,7 +74,7 @@ func TestTheRefreshGetsTheCredentialUnderAnotherPrefix(t *testing.T) {
 					Value: func(context.Context) (string, error) { return "session=colado==", nil },
 					Apply: core.AsCookie,
 					Refresh: &core.Refresh{
-						URL:       srv.URL + c.renovar,
+						URL:       srv.URL + c.renew,
 						ExpiresAt: core.JSONField("expires"),
 					},
 				},

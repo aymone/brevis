@@ -16,8 +16,8 @@ func TestTheParamsPresentationKeysAreOnDiskWhenSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := `{"Nome":"date","Tipo":"string","Default":"","Descricao":"","Enum":null,"Pattern":""}`; string(plain) != want {
-		t.Errorf("a plain param = %s, want the document it always was: %s", plain, want)
+	if want := `{"Name":"date","Type":"string","Default":"","Description":"","Enum":null,"Pattern":""}`; string(plain) != want {
+		t.Errorf("a plain param = %s, want the document: %s", plain, want)
 	}
 
 	raw, err := json.Marshal(wf.Param{Name: "load_full", Type: wf.ParamBool,
@@ -38,8 +38,8 @@ func TestTheParamsPresentationKeysAreOnDiskWhenSet(t *testing.T) {
 	}
 }
 
-// A WORKFLOW PUBLISHED BEFORE THESE FIELDS reads with them empty, and nothing
-// else lost.
+// A WORKFLOW PUBLISHED BEFORE THESE FIELDS (and with the Portuguese keys) reads
+// with them empty, and nothing else lost.
 func TestAnOldParamDocumentReadsWithoutThem(t *testing.T) {
 	var p wf.Param
 	old := `{"Nome":"date","Tipo":"string","Default":"2026-01-01","Descricao":"the day","Enum":null,"Pattern":""}`

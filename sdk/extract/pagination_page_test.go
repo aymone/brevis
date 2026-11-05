@@ -17,10 +17,10 @@ import (
 func numberedPage(t *testing.T, key string, seenValues *[]string) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bruto := r.URL.Query().Get(key)
-		*seenValues = append(*seenValues, bruto)
+		raw := r.URL.Query().Get(key)
+		*seenValues = append(*seenValues, raw)
 
-		n, err := strconv.Atoi(bruto)
+		n, err := strconv.Atoi(raw)
 		if err != nil {
 			http.Error(w, "sem numero de pagina: "+r.URL.RawQuery, http.StatusBadRequest)
 			return
@@ -59,7 +59,7 @@ func TestPageKeyAdvancesOneAtATime(t *testing.T) {
 // and the SDK guesses the next number -- guessing wrong skips a page
 // inteira em silencio.
 func TestPageKeyNumbersTheFirstRequest(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name  string
 		url   func(string) string
 		first int
@@ -70,7 +70,7 @@ func TestPageKeyNumbersTheFirstRequest(t *testing.T) {
 		{"numero na propria url vence", func(u string) string { return u + "?page=2" }, 0, "2,3"},
 		{"a url vence ate contra FirstPage", func(u string) string { return u + "?page=2" }, 9, "2,3"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			var seenValues []string
 			srv := numberedPage(t, "page", &seenValues)
@@ -106,12 +106,12 @@ func TestAZeroIndexedAPISaysSoInTheURL(t *testing.T) {
 // TestPaginationRefusesTwoStrategies: with two set, one would be read and the
 // other ignored in silence -- which is the defect this SDK keeps finding.
 func TestPaginationRefusesTwoStrategies(t *testing.T) {
-	casos := []core.Source{
+	cases := []core.Source{
 		{URL: "http://x", PageKey: "page", OffsetKey: "offset"},
 		{URL: "http://x", CursorKey: "c", PageKey: "page"},
 		{URL: "http://x", FollowLinks: true, OffsetKey: "offset"},
 	}
-	for _, s := range casos {
+	for _, s := range cases {
 		if _, err := JSON(context.Background(), s, nil); err == nil {
 			t.Errorf("accepted two strategies: %+v", s)
 		}

@@ -393,14 +393,14 @@ func (t Table) open() (*sql.DB, func(), error) {
 	if t.DB != nil {
 		return t.DB, func() {}, nil
 	}
-	db, err := sql.Open("mysql", comParseTime(t.DSN))
+	db, err := sql.Open("mysql", withParseTime(t.DSN))
 	if err != nil {
 		return nil, nil, fmt.Errorf("mysql: DSN is not valid")
 	}
 	return db, func() { _ = db.Close() }, nil
 }
 
-func comParseTime(dsn string) string {
+func withParseTime(dsn string) string {
 	if strings.Contains(dsn, "parseTime=") {
 		return dsn
 	}

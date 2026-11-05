@@ -33,12 +33,48 @@ const stageCeiling = 60
 // with: it is what a test outside this package needs to check what was
 // recorded.
 type Stage struct {
-	Index    int            `json:"indice"`
-	TaskName string         `json:"nome"`
-	State    string         `json:"estado"`
+	Index    int            `json:"index"`
+	TaskName string         `json:"name"`
+	State    string         `json:"state"`
 	Ms       *int64         `json:"ms,omitempty"`
-	At       string         `json:"em"`
-	Numbers  map[string]any `json:"numeros,omitempty"`
+	At       string         `json:"at"`
+	Numbers  map[string]any `json:"numbers,omitempty"`
+}
+
+// UnmarshalJSON reads both spellings of a recorded phase: rows written before
+// the keys went English carry indice, nome, estado, em and numeros.
+//
+// shortcut: it goes with postgres.Stage's reader, once no task_runs row can
+// hold the Portuguese keys.
+func (s *Stage) UnmarshalJSON(b []byte) error {
+	type plain Stage
+	aux := struct {
+		*plain
+		IndexOld   *int           `json:"indice"`
+		NameOld    *string        `json:"nome"`
+		StateOld   *string        `json:"estado"`
+		AtOld      *string        `json:"em"`
+		NumbersOld map[string]any `json:"numeros"`
+	}{plain: (*plain)(s)}
+	if err := json.Unmarshal(b, &aux); err != nil {
+		return err
+	}
+	if aux.IndexOld != nil && s.Index == 0 {
+		s.Index = *aux.IndexOld
+	}
+	if aux.NameOld != nil && s.TaskName == "" {
+		s.TaskName = *aux.NameOld
+	}
+	if aux.StateOld != nil && s.State == "" {
+		s.State = *aux.StateOld
+	}
+	if aux.AtOld != nil && s.At == "" {
+		s.At = *aux.AtOld
+	}
+	if s.Numbers == nil {
+		s.Numbers = aux.NumbersOld
+	}
+	return nil
 }
 
 // knownStages is a closed list on purpose: a phase this engine does not
@@ -266,12 +302,12 @@ func (c *stageCollector) line(msg string) bool {
 		// NAME -- there could be only one `transform`, so the name was the
 		// identity. Reusing that box's position keeps those drawing exactly as
 		// they did, instead of turning `running` and `done` into two boxes.
-		indice := c.positionFor(ev.TaskName)
+		index := c.positionFor(ev.TaskName)
 		if ev.Index != nil {
-			indice = *ev.Index
+			index = *ev.Index
 		}
 		c.apply(Stage{
-			Index: indice, TaskName: ev.TaskName, State: ev.State, Ms: ev.Ms, At: ev.At,
+			Index: index, TaskName: ev.TaskName, State: ev.State, Ms: ev.Ms, At: ev.At,
 			Numbers: numbersOf(body),
 		})
 		return true
@@ -282,16 +318,16 @@ func (c *stageCollector) line(msg string) bool {
 // positionFor is the position an unindexed phase belongs at: the one it already
 // occupies, or the next free one.
 func (c *stageCollector) positionFor(name string) int {
-	maior := -1
+	largest := -1
 	for _, e := range c.Stages {
 		if e.TaskName == name {
 			return e.Index
 		}
-		if e.Index > maior {
-			maior = e.Index
+		if e.Index > largest {
+			largest = e.Index
 		}
 	}
-	return maior + 1
+	return largest + 1
 }
 
 // aplicar replaces the phase at the same POSITION, keeping the pipeline's order.
@@ -316,19 +352,19 @@ var reservedFields = map[string]bool{
 }
 
 func numbersOf(body string) map[string]any {
-	var tudo map[string]any
-	if err := json.Unmarshal([]byte(body), &tudo); err != nil {
+	var all map[string]any
+	if err := json.Unmarshal([]byte(body), &all); err != nil {
 		return nil
 	}
-	for k := range tudo {
+	for k := range all {
 		if reservedFields[k] {
-			delete(tudo, k)
+			delete(all, k)
 		}
 	}
-	if len(tudo) == 0 {
+	if len(all) == 0 {
 		return nil
 	}
-	return tudo
+	return all
 }
 
 // translateOldType maps the old format's type. See stageCollector.line.
@@ -343,7 +379,7 @@ func translateOldType(pt string) string {
 // the phases so it can be stored as a row and read as a trend.
 //
 // Every field here already crossed the `@brevis:` pipe and is already in
-// `task_runs.etapas`. This does not measure anything new; it makes the numbers
+// `task_runs.stages`. This does not measure anything new; it makes the numbers
 // answerable without reading a year of JSONB.
 //
 // A table rather than a query over the JSONB, because it was measured: on a
@@ -382,7 +418,7 @@ func (c *stageCollector) LoadNumbers() (LoadNumbers, bool) {
 //
 // It takes the recorded shape rather than the collector because that is the
 // shape the other implementation of this rule works on: migration 00012
-// backfills the same numbers out of `task_runs.etapas`, in SQL, for history
+// backfills the same numbers out of `task_runs.stages`, in SQL, for history
 // this code never saw. Two implementations of one rule is the shape that
 // drifts, and having the Go one answerable from the stored shape is what lets a
 // test put the same phases through both and compare.

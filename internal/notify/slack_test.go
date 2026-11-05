@@ -24,7 +24,7 @@ func capture(t *testing.T, status int, response string) (*notify.Slack, *string)
 	}))
 	t.Cleanup(srv.Close)
 
-	s := notify.NovoSlack(srv.URL, "prod")
+	s := notify.NewSlack(srv.URL, "prod")
 	return s, &received
 }
 
@@ -105,7 +105,7 @@ func TestTheEnvironmentShowsInTheHeader(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	s := notify.NovoSlack(srv.URL, "dev")
+	s := notify.NewSlack(srv.URL, "dev")
 	if err := s.Failed(context.Background(), alert()); err != nil {
 		t.Fatal(err)
 	}

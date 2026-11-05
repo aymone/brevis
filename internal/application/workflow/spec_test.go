@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	dominio "brevis.sh/brevis/internal/domain/workflow"
+	domain "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // The example the author asked for has to pass exactly as written.
-func TestParseExemploDailyReport(t *testing.T) {
+func TestParseExampleDailyReport(t *testing.T) {
 	b, err := os.ReadFile("../../../examples/daily-report.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -32,7 +32,7 @@ func TestParseExemploDailyReport(t *testing.T) {
 	if len(w.Edges) != 2 {
 		t.Fatalf("edges = %d, wanted 2 (a 3-step chain)", len(w.Edges))
 	}
-	if w.Edges[0] != (dominio.Edge{From: "fetch_data", To: "build_report"}) {
+	if w.Edges[0] != (domain.Edge{From: "fetch_data", To: "build_report"}) {
 		t.Errorf("first edge = %+v", w.Edges[0])
 	}
 
@@ -87,7 +87,7 @@ func TestParseWithNoTypeAssumesDAG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if w.Kind != dominio.KindDAG {
+	if w.Kind != domain.KindDAG {
 		t.Errorf("kind = %q, wanted dag", w.Kind)
 	}
 	if len(w.Edges) != 0 {

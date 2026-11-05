@@ -12,7 +12,7 @@ import (
 // reasonable thing to write -- took the process down on the first retry. Having
 // no jitter is a choice, not a mistake.
 func TestBackoffWithoutJitterDoesNotPanic(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name string
 		cfg  core.RetryConfig
 	}{
@@ -21,7 +21,7 @@ func TestBackoffWithoutJitterDoesNotPanic(t *testing.T) {
 		{"sem MaxBackoff", core.RetryConfig{MaxAttempts: 3, InitialBackoff: time.Millisecond, JitterFraction: 0.1}},
 		{"zerado", core.RetryConfig{}},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			for attempt := 0; attempt < 4; attempt++ {
 				if d := calculateBackoff(attempt, &c.cfg); d < 0 {

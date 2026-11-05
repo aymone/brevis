@@ -107,11 +107,11 @@ func (m Many) Read(ctx context.Context, opt core.ReadOptions) (iter.Seq2[core.En
 		// Discovery happens HERE, inside Read, and not while the pipeline is
 		// assembled: an error from it is an extract error, handled like any
 		// other -- and not a panic in a main before anything has started.
-		descobertas, err := m.Discover(ctx)
+		discovered, err := m.Discover(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("from.Many: discovering the sources: %w", err)
 		}
-		sources = descobertas
+		sources = discovered
 	}
 
 	if len(sources) == 0 {
@@ -151,7 +151,7 @@ func (m Many) Read(ctx context.Context, opt core.ReadOptions) (iter.Seq2[core.En
 		var failures []core.SourceFailure
 		total := core.Stats{}
 
-		type resultado struct {
+		type result struct {
 			env core.Envelope
 			err error
 			// source is filled only when err comes from OPENING the source,
@@ -160,7 +160,7 @@ func (m Many) Read(ctx context.Context, opt core.ReadOptions) (iter.Seq2[core.En
 		}
 
 		queue := make(chan int)
-		out := make(chan resultado)
+		out := make(chan result)
 
 		var wg sync.WaitGroup
 		for w := 0; w < workers; w++ {
@@ -183,7 +183,7 @@ func (m Many) Read(ctx context.Context, opt core.ReadOptions) (iter.Seq2[core.En
 					rows, err := src.Read(ctx, opts)
 					if err != nil {
 						select {
-						case out <- resultado{err: err, source: src}:
+						case out <- result{err: err, source: src}:
 						case <-ctx.Done():
 						}
 						continue
@@ -191,7 +191,7 @@ func (m Many) Read(ctx context.Context, opt core.ReadOptions) (iter.Seq2[core.En
 
 					for env, err := range rows {
 						select {
-						case out <- resultado{env: env, err: err, source: src}:
+						case out <- result{env: env, err: err, source: src}:
 						case <-ctx.Done():
 							return
 						}

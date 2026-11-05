@@ -43,7 +43,7 @@ func (e attentionExecs) Get(_ context.Context, id uuid.UUID) (dom.Run, error) {
 	}
 	return dom.Run{}, pgx.ErrNoRows
 }
-func (e attentionExecs) LogsDaRun(_ context.Context, id uuid.UUID) ([]postgres.StepLog, error) {
+func (e attentionExecs) RunLogs(_ context.Context, id uuid.UUID) ([]postgres.StepLog, error) {
 	*e.reads++
 	return e.logs[id], nil
 }

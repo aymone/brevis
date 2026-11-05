@@ -11,7 +11,7 @@ import (
 	"brevis.sh/brevis/migrations"
 )
 
-// Migration 00013 recovers, from task_runs.etapas, the loads that happened
+// Migration 00013 recovers, from task_runs.stages, the loads that happened
 // before steps could say which table they wrote. What it can recover is the
 // LABEL the load phase carried (`postgres:landing_orders`, `bronze.clicks`) and
 // never a target -- turning a label into a URI would be inferring one -- so
@@ -79,7 +79,7 @@ func landingBackfillSQL(t *testing.T) string {
 	if j < 0 {
 		t.Fatal("the backfill in 00013 does not end in a semicolon")
 	}
-	return body[i : i+j]
+	return asCurrentSchema(body[i : i+j])
 }
 
 func TestTheLandingBackfillKeepsOnlyFinishedLoadsAndOnlyAsLegacy(t *testing.T) {
@@ -93,7 +93,7 @@ func TestTheLandingBackfillKeepsOnlyFinishedLoadsAndOnlyAsLegacy(t *testing.T) {
 			}
 			runID := seedRunWithStages(t, pool, "vendas", c.stages)
 			var created time.Time
-			if err := pool.QueryRow(ctx, `SELECT criado_em FROM runs WHERE id = $1`, runID).Scan(&created); err != nil {
+			if err := pool.QueryRow(ctx, `SELECT created_at FROM runs WHERE id = $1`, runID).Scan(&created); err != nil {
 				t.Fatal(err)
 			}
 
@@ -140,7 +140,7 @@ func TestTheLandingBackfillKeepsTheLastAttemptThatLanded(t *testing.T) {
 	runID := seedRunWithStages(t, pool, "vendas",
 		`[{"indice":0,"nome":"load","estado":"done","em":"x","numeros":{"rows":40000,"detail":"bronze.clicks"}}]`)
 	if _, err := pool.Exec(ctx, `
-		INSERT INTO task_runs (id, run_id, node_id, status, attempt, map_index, etapas)
+		INSERT INTO task_runs (id, run_id, node_id, status, attempt, map_index, stages)
 		VALUES ($1, $2, 'carga', 'success', 1, -1, $3)`, uuid.New(), runID,
 		`[{"indice":0,"nome":"load","estado":"done","em":"x","numeros":{"rows":48000,"detail":"bronze.clicks"}}]`); err != nil {
 		t.Fatal(err)

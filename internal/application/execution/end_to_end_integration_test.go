@@ -58,9 +58,9 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 	}
 
 	r := app.Runner{
-		RunID:    runID,
-		Persist:  repo,
-		Processo: localExecutor(t),
+		RunID:   runID,
+		Persist: repo,
+		Process: localExecutor(t),
 	}
 	w := wf.Workflow{
 		Slug:  "e2e",
@@ -139,7 +139,7 @@ func TestIntegrationStagesReachTheDatabaseThroughARealBinary(t *testing.T) {
 	}
 
 	// The marker must NOT have become the step's log.
-	logs, err := repo.LogsDaRun(ctx, runID)
+	logs, err := repo.RunLogs(ctx, runID)
 	if err != nil {
 		t.Fatalf("logs: %v", err)
 	}
@@ -170,7 +170,7 @@ func buildFetcher(t *testing.T, dir string) string {
 func createRun(ctx context.Context, pool *postgres.Pool, id uuid.UUID) error {
 	def, _ := json.Marshal(wf.Workflow{Slug: "e2e"})
 	_, err := pool.Exec(ctx, `
-		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definicao, criado_em)
+		INSERT INTO runs (id, workflow_slug, idempotency_key, status, definition, created_at)
 		VALUES ($1, 'e2e', $2, 'running', $3, $4)`,
 		id, "e2e-"+id.String(), def, time.Now())
 	return err

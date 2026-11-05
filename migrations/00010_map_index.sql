@@ -22,7 +22,7 @@ ALTER TABLE task_runs ADD CONSTRAINT task_runs_instance_key
     UNIQUE (run_id, node_id, attempt, map_index);
 
 COMMENT ON COLUMN task_runs.map_index IS
-  'Indice da instancia de um passo mapeado (for_each). -1 = passo nao mapeado.';
+  'Index of the instance of a mapped step (for_each). -1 = unmapped step.';
 
 -- +goose Down
 ALTER TABLE task_runs DROP CONSTRAINT task_runs_instance_key;

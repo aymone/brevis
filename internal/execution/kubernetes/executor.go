@@ -18,7 +18,7 @@ import (
 // server.
 type API interface {
 	CreatePod(ctx context.Context, p Pod) (Pod, error)
-	LerPod(ctx context.Context, name string) (Pod, error)
+	GetPod(ctx context.Context, name string) (Pod, error)
 	Logs(ctx context.Context, name string, follow bool) (io.ReadCloser, error)
 	DeletePod(ctx context.Context, name string) error
 }
@@ -97,7 +97,7 @@ func (e *Executor) follow(ctx context.Context, name string, t execution.TaskExec
 		Message: fmt.Sprintf("pod %s (%s)", name, t.Image),
 	}
 
-	pod, err := e.esperarSair(ctx, name, t, events)
+	pod, err := e.waitExit(ctx, name, t, events)
 	if err != nil {
 		events <- execution.Event{
 			Kind: execution.EventFailed, NodeID: t.NodeID,
@@ -127,16 +127,16 @@ func (e *Executor) follow(ctx context.Context, name string, t execution.TaskExec
 		}
 	}
 
-	codigo, finished := pod.Output()
-	if pod.Fase() == "Succeeded" {
-		events <- execution.Event{Kind: execution.EventSucceeded, NodeID: t.NodeID, ExitCode: codigo}
+	code, finished := pod.Output()
+	if pod.Phase() == "Succeeded" {
+		events <- execution.Event{Kind: execution.EventSucceeded, NodeID: t.NodeID, ExitCode: code}
 		e.cleanUp(name, true)
 		return
 	}
 
-	msg := fmt.Sprintf("pod %s ended in phase %s", name, pod.Fase())
+	msg := fmt.Sprintf("pod %s ended in phase %s", name, pod.Phase())
 	if finished {
-		msg = fmt.Sprintf("exited with code %d", codigo)
+		msg = fmt.Sprintf("exited with code %d", code)
 	}
 	if pod.Reason() != "" {
 		// DeadlineExceeded, OOMKilled, Evicted: the difference between "the code
@@ -145,13 +145,13 @@ func (e *Executor) follow(ctx context.Context, name string, t execution.TaskExec
 	}
 	events <- execution.Event{
 		Kind: execution.EventFailed, NodeID: t.NodeID,
-		ExitCode: codigo, Message: msg, Err: errors.New(msg),
+		ExitCode: code, Message: msg, Err: errors.New(msg),
 	}
 	e.cleanUp(name, false)
 }
 
-// esperarSair polls until the pod finishes, reporting why it is waiting.
-func (e *Executor) esperarSair(ctx context.Context, name string, t execution.TaskExec,
+// waitExit polls until the pod finishes, reporting why it is waiting.
+func (e *Executor) waitExit(ctx context.Context, name string, t execution.TaskExec,
 	events chan<- execution.Event) (Pod, error) {
 
 	tick := time.NewTicker(e.Interval)
@@ -167,19 +167,19 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 	// body closes with the context, so the follower exits. Losing the rest of
 	// the live follow costs nothing -- drainLogs reads the whole log right
 	// afterwards, which is how the last lines already arrived.
-	ctxLogs, pararLogs := context.WithCancel(ctx)
-	var seguidores sync.WaitGroup
+	ctxLogs, stopLogs := context.WithCancel(ctx)
+	var followers sync.WaitGroup
 	defer func() {
-		pararLogs()
-		seguidores.Wait()
+		stopLogs()
+		followers.Wait()
 	}()
 
 	var lastReason string
-	seguindo := false
+	following := false
 	started := time.Now()
 
 	for {
-		pod, err := e.api.LerPod(ctx, name)
+		pod, err := e.api.GetPod(ctx, name)
 		if err != nil {
 			return Pod{}, fmt.Errorf("reading pod %s: %w", name, err)
 		}
@@ -200,11 +200,11 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 
 		// As soon as the container runs, the log is followed in parallel -- the
 		// operator sees dbt's output live rather than only at the end.
-		if !seguindo && pod.Fase() == "Running" {
-			seguindo = true
-			seguidores.Add(1)
+		if !following && pod.Phase() == "Running" {
+			following = true
+			followers.Add(1)
 			go func() {
-				defer seguidores.Done()
+				defer followers.Done()
 				e.followLogs(ctxLogs, name, t, events)
 			}()
 		}
@@ -213,16 +213,16 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 		// waits forever for a node it fits on. Without this cut-off the step
 		// waits with it -- no failure and no retry -- which is how a CPU request
 		// larger than the pool's free capacity jammed an entire run in dev.
-		if !seguindo && time.Since(started) > e.opts.EsperaParaIniciar {
+		if !following && time.Since(started) > e.opts.StartTimeout {
 			reason := pod.WaitReason()
 			if reason == "" {
-				reason = "fase " + pod.Fase()
+				reason = "fase " + pod.Phase()
 			}
 			if scheduling := e.whyNotScheduled(ctx, name); scheduling != "" {
 				reason = scheduling
 			}
 			return Pod{}, fmt.Errorf("pod %s did not start within %s: %s",
-				name, e.opts.EsperaParaIniciar, reason)
+				name, e.opts.StartTimeout, reason)
 		}
 
 		select {
@@ -237,7 +237,7 @@ func (e *Executor) esperarSair(ctx context.Context, name string, t execution.Tas
 // scheduler explains "Insufficient cpu" or "didn't match node affinity".
 // Without it the message would say only "Pending", which helps nobody.
 func (e *Executor) whyNotScheduled(ctx context.Context, name string) string {
-	pod, err := e.api.LerPod(ctx, name)
+	pod, err := e.api.GetPod(ctx, name)
 	if err != nil || pod.Status == nil {
 		return ""
 	}

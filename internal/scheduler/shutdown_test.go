@@ -84,7 +84,7 @@ func TestARunInterruptedByAShutdownIsRequeuedForFree(t *testing.T) {
 	}
 	var available bool
 	if err := pool.QueryRow(context.Background(), `
-		SELECT reivindicado_em IS NULL AND disponivel_em <= now()
+		SELECT claimed_at IS NULL AND available_at <= now()
 		FROM queue_items WHERE run_id = $1`, id).Scan(&available); err != nil {
 		t.Fatalf("the run has no queue item: %v", err)
 	}

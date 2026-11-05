@@ -28,16 +28,16 @@ import (
 	"brevis.sh/brevis/internal/queue"
 )
 
-// Executar runs a Run. Injected so the dispatcher knows nothing of executors,
+// Execute runs a Run. Injected so the dispatcher knows nothing of executors,
 // graphs or YAML -- which makes the concurrency testable without a real
 // process.
-type Executar func(ctx context.Context, runID uuid.UUID) error
+type Execute func(ctx context.Context, runID uuid.UUID) error
 
 // Repo is what the dispatcher needs from persistence. A small interface,
 // declared here in the consumer rather than in the package that implements
 // it.
 type Repo interface {
-	Transicionar(ctx context.Context, id uuid.UUID, para dom.Status) error
+	Transition(ctx context.Context, id uuid.UUID, to dom.Status) error
 	RecordError(ctx context.Context, id uuid.UUID, msg string) error
 	Get(ctx context.Context, id uuid.UUID) (dom.Run, error)
 
@@ -74,7 +74,7 @@ type Repo interface {
 // Config parameterises the dispatcher.
 type Config struct {
 	Worker         string
-	MaxConcorrente int
+	MaxConcurrency int
 	Interval       time.Duration
 
 	// MaxAttempts is how many times a failed RUN is tried, counting the first.
@@ -166,8 +166,8 @@ func (c *Config) defaults() {
 	if c.Worker == "" {
 		c.Worker = "dispatcher"
 	}
-	if c.MaxConcorrente <= 0 {
-		c.MaxConcorrente = 5
+	if c.MaxConcurrency <= 0 {
+		c.MaxConcurrency = 5
 	}
 	if c.Interval <= 0 {
 		c.Interval = 200 * time.Millisecond
@@ -197,11 +197,11 @@ func (c *Config) defaults() {
 
 // Dispatcher drains the queue while respecting the maximum concurrency.
 type Dispatcher struct {
-	cfg      Config
-	queue    *queue.Queue
-	repo     Repo
-	executar Executar
-	log      *slog.Logger
+	cfg     Config
+	queue   *queue.Queue
+	repo    Repo
+	execute Execute
+	log     *slog.Logger
 
 	// Channel is where a run-level alert goes. Empty means alerting is off and
 	// no row is written at all -- an outbox filling up with alerts nobody can
@@ -230,9 +230,9 @@ type Dispatcher struct {
 	// without breaking the pool every other call shares.
 	Renew func(ctx context.Context, it queue.Item) (held bool, err error)
 
-	mu    sync.Mutex
-	emVoo int
-	wg    sync.WaitGroup
+	mu       sync.Mutex
+	inFlight int
+	wg       sync.WaitGroup
 
 	// held is how to stop each run this dispatcher is executing, for when
 	// someone asks to cancel it. Guarded by mu.
@@ -242,9 +242,9 @@ type Dispatcher struct {
 // The logger is given the worker's name once, here, so every line says which
 // process wrote it -- "requeued" or "claim lost" from one of three schedulers
 // is otherwise a line about nobody in particular (#121).
-func New(cfg Config, f *queue.Queue, r Repo, e Executar, log *slog.Logger) *Dispatcher {
+func New(cfg Config, f *queue.Queue, r Repo, e Execute, log *slog.Logger) *Dispatcher {
 	cfg.defaults()
-	return &Dispatcher{cfg: cfg, queue: f, repo: r, executar: e,
+	return &Dispatcher{cfg: cfg, queue: f, repo: r, execute: e,
 		log: log.With("worker", cfg.Worker), held: map[uuid.UUID]context.CancelCauseFunc{}}
 }
 
@@ -306,7 +306,7 @@ func (d *Dispatcher) RecoverOrphans(ctx context.Context) (int, error) {
 			d.cancel(ctx, it)
 			continue
 		}
-		d.fail(ctx, it, errOrphan{worker: d.cfg.Worker, limite: d.cfg.Visibility})
+		d.fail(ctx, it, errOrphan{worker: d.cfg.Worker, limit: d.cfg.Visibility})
 	}
 	// Until now a dead worker was a log line and nothing else, so "workers are
 	// dying" was not a thing anybody could alert on.
@@ -319,12 +319,12 @@ func (d *Dispatcher) RecoverOrphans(ctx context.Context) (int, error) {
 // investigation.
 type errOrphan struct {
 	worker string
-	limite time.Duration
+	limit  time.Duration
 }
 
 func (e errOrphan) Error() string {
 	return fmt.Sprintf("orphaned run: no worker reported in for %s "+
-		"(the process that claimed it most likely died)", e.limite)
+		"(the process that claimed it most likely died)", e.limit)
 }
 
 // claimCycle asks the queue for the free slots ONLY.
@@ -335,7 +335,7 @@ func (e errOrphan) Error() string {
 // claim would leave items claimed and idle, invisible to other workers.
 func (d *Dispatcher) claimCycle(ctx context.Context) error {
 	d.mu.Lock()
-	slots := d.cfg.MaxConcorrente - d.emVoo
+	slots := d.cfg.MaxConcurrency - d.inFlight
 	d.mu.Unlock()
 
 	if slots <= 0 {
@@ -349,12 +349,12 @@ func (d *Dispatcher) claimCycle(ctx context.Context) error {
 
 	for _, it := range items {
 		// Enqueued to claimed, which is the dispatcher's own SLA. It is
-		// measured from disponivel_em and not from the row's creation on
+		// measured from available_at and not from the row's creation on
 		// purpose: an item waiting out its retry backoff is not the scheduler
 		// being slow, and counting it would make a healthy backoff look like
 		// saturation.
 		//
-		// Clamped at zero because the two clocks are different. disponivel_em
+		// Clamped at zero because the two clocks are different. available_at
 		// is the DATABASE's now(); time.Now() here is the process's, and a few
 		// milliseconds of skew would otherwise land negative observations in
 		// the first bucket.
@@ -365,7 +365,7 @@ func (d *Dispatcher) claimCycle(ctx context.Context) error {
 		}
 
 		d.mu.Lock()
-		d.emVoo++
+		d.inFlight++
 		d.mu.Unlock()
 
 		d.wg.Add(1)
@@ -373,7 +373,7 @@ func (d *Dispatcher) claimCycle(ctx context.Context) error {
 			defer d.wg.Done()
 			defer func() {
 				d.mu.Lock()
-				d.emVoo--
+				d.inFlight--
 				d.mu.Unlock()
 			}()
 			d.process(ctx, it)
@@ -389,7 +389,7 @@ func (d *Dispatcher) process(ctx context.Context, it queue.Item) {
 		d.cancel(ctx, it)
 		return
 	}
-	if err := d.repo.Transicionar(ctx, it.RunID, dom.StatusRunning); err != nil {
+	if err := d.repo.Transition(ctx, it.RunID, dom.StatusRunning); err != nil {
 		// An invalid transition here means another dispatcher took the same
 		// run, or that it has ended. Not our error. An ended run's item is
 		// done with: released, it would be claimed and refused again with no
@@ -434,7 +434,7 @@ func (d *Dispatcher) process(ctx context.Context, it queue.Item) {
 	unwatch := context.AfterFunc(ctx, func() { cancelRun(execution.ErrShutdown) })
 	stop := d.keepClaim(runCtx, it, func() { cancelRun(execution.ErrClaimLost) })
 	d.hold(it.RunID, cancelRun)
-	err := d.executar(runCtx, it.RunID)
+	err := d.execute(runCtx, it.RunID)
 	d.release(it.RunID)
 	// Read before cancelRun(nil) below, which would make every cause "canceled".
 	cause := context.Cause(runCtx)
@@ -546,7 +546,7 @@ func (d *Dispatcher) deferRun(ctx context.Context, it queue.Item, cause error, w
 			"without spending an attempt (waiting %s of --drain-wait %s)",
 		cause, waited.Round(time.Second), d.cfg.DrainWait))
 	for _, to := range []dom.Status{dom.StatusFailed, dom.StatusRetrying, dom.StatusQueued} {
-		if err := d.repo.Transicionar(ctx, it.RunID, to); err != nil {
+		if err := d.repo.Transition(ctx, it.RunID, to); err != nil {
 			d.log.Error("requeuing a deferred run", "run", it.RunID, "to", to, "error", err)
 			_ = d.queue.Done(ctx, it)
 			return
@@ -630,7 +630,7 @@ func (d *Dispatcher) cancel(ctx context.Context, it queue.Item) {
 	if err := d.repo.RecordError(ctx, it.RunID, msg); err != nil {
 		d.log.Error("recording why the run ended", "run", it.RunID, "error", err)
 	}
-	if err := d.repo.Transicionar(ctx, it.RunID, dom.StatusCanceled); err != nil {
+	if err := d.repo.Transition(ctx, it.RunID, dom.StatusCanceled); err != nil {
 		d.log.Error("marking canceled", "run", it.RunID, "error", err)
 	}
 	_ = d.queue.Done(ctx, it)
@@ -654,7 +654,7 @@ func (d *Dispatcher) interrupt(ctx context.Context, it queue.Item, cause error) 
 		"interrupted: the scheduler shut down while the run was in flight (%s), "+
 			"and it went back to the queue without spending an attempt", cause))
 	for _, to := range []dom.Status{dom.StatusFailed, dom.StatusRetrying, dom.StatusQueued} {
-		if err := d.repo.Transicionar(ctx, it.RunID, to); err != nil {
+		if err := d.repo.Transition(ctx, it.RunID, to); err != nil {
 			d.log.Error("requeuing an interrupted run", "run", it.RunID, "to", to, "error", err)
 			_ = d.queue.Done(ctx, it)
 			return
@@ -807,12 +807,12 @@ func (d *Dispatcher) fail(ctx context.Context, it queue.Item, cause error) {
 			_ = d.queue.Done(ctx, it)
 			return
 		}
-		if err := d.repo.Transicionar(ctx, it.RunID, dom.StatusRetrying); err != nil {
+		if err := d.repo.Transition(ctx, it.RunID, dom.StatusRetrying); err != nil {
 			d.log.Error("marking retrying", "run", it.RunID, "error", err)
 			return
 		}
 	}
-	if err := d.repo.Transicionar(ctx, it.RunID, dom.StatusQueued); err != nil {
+	if err := d.repo.Transition(ctx, it.RunID, dom.StatusQueued); err != nil {
 		d.log.Error("requeuing", "run", it.RunID, "error", err)
 		return
 	}
@@ -840,7 +840,7 @@ func (d *Dispatcher) endRun(ctx context.Context, id uuid.UUID, to dom.Status) (e
 			}
 			wait *= 2
 		}
-		if err = d.repo.Transicionar(ctx, id, to); err == nil {
+		if err = d.repo.Transition(ctx, id, to); err == nil {
 			return nil
 		}
 		d.log.Warn("writing the run's end", "run", id, "to", to, "try", try+1, "error", err)
@@ -854,9 +854,9 @@ func (d *Dispatcher) endRun(ctx context.Context, id uuid.UUID, to dom.Status) (e
 // at once: an instant retry against a dependency that is down only burns
 // the queue.
 func (d *Dispatcher) handBack(ctx context.Context, it queue.Item, attempt int) {
-	atraso := d.backoff(attempt)
-	d.log.Info("requeued", "run", it.RunID, "attempt", attempt, "delay", atraso)
-	if err := d.queue.Release(ctx, it, atraso); err != nil {
+	delay := d.backoff(attempt)
+	d.log.Info("requeued", "run", it.RunID, "attempt", attempt, "delay", delay)
+	if err := d.queue.Release(ctx, it, delay); err != nil {
 		d.log.Error("handing back to the queue", "run", it.RunID, "error", err)
 	}
 }
@@ -1080,9 +1080,9 @@ func lastLines(text string, n int) string {
 	return strings.Join(rows, "\n")
 }
 
-// EmVoo devolve quantas execucoes estao correndo agora.
-func (d *Dispatcher) EmVoo() int {
+// InFlight devolve quantas execucoes estao correndo agora.
+func (d *Dispatcher) InFlight() int {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	return d.emVoo
+	return d.inFlight
 }

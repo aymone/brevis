@@ -72,31 +72,31 @@ func TestWithoutADelimiterASemicolonCSVBecomesOneColumn(t *testing.T) {
 // large file. from.Files already decompressed by extension; the rule existed in
 // the SDK and simply did not reach HTTP.
 func TestHTTPDecompressesGzip(t *testing.T) {
-	var comprimido bytes.Buffer
-	gz := gzip.NewWriter(&comprimido)
+	var compressed bytes.Buffer
+	gz := gzip.NewWriter(&compressed)
 	_, _ = gz.Write(csvPontoEVirgula())
 	_ = gz.Close()
 
-	for _, caso := range []struct {
+	for _, testCase := range []struct {
 		name, contentType, path string
 	}{
 		{"por content-type", "application/gzip", "/dados"},
 		{"por extensão", "application/octet-stream", "/dados.csv.gz"},
 		{"por content-encoding", "", "/dados"},
 	} {
-		t.Run(caso.name, func(t *testing.T) {
+		t.Run(testCase.name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-				if caso.contentType != "" {
-					w.Header().Set("Content-Type", caso.contentType)
+				if testCase.contentType != "" {
+					w.Header().Set("Content-Type", testCase.contentType)
 				} else {
 					w.Header().Set("Content-Encoding", "gzip")
 				}
-				_, _ = w.Write(comprimido.Bytes())
+				_, _ = w.Write(compressed.Bytes())
 			}))
 			defer srv.Close()
 
 			lines := readAll(t, from.HTTP{
-				URL: srv.URL + caso.path, Format: core.FormatCSV, Delimiter: ';',
+				URL: srv.URL + testCase.path, Format: core.FormatCSV, Delimiter: ';',
 			})
 			if len(lines) != 2 || lines[1]["municipio"] != "Rio" {
 				t.Errorf("did not decompress: %v", lines)

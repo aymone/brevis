@@ -46,8 +46,8 @@ func TestTheRetryFlagsReachTheDispatcher(t *testing.T) {
 	if cfg.BackoffMax != 10*time.Minute {
 		t.Errorf("BackoffMax = %s, the flag said 10m", cfg.BackoffMax)
 	}
-	if cfg.MaxConcorrente != 7 {
-		t.Errorf("MaxConcorrente = %d", cfg.MaxConcorrente)
+	if cfg.MaxConcurrency != 7 {
+		t.Errorf("MaxConcorrente = %d", cfg.MaxConcurrency)
 	}
 	// Zero is a value here, not an omission: it turns the wait off (#146).
 	if cfg.DrainWait != 0 {
@@ -133,7 +133,7 @@ func TestTheBootLineSaysWhenTheAttemptsLand(t *testing.T) {
 	}
 }
 
-// Every replica claimed as "local", so reivindicado_por could not tell two
+// Every replica claimed as "local", so claimed_by could not tell two
 // schedulers apart and no log line said which one held a run (#121). The name
 // is the host's -- the pod's, in Kubernetes -- and the process's.
 func TestEachSchedulerClaimsUnderItsOwnName(t *testing.T) {

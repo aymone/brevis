@@ -4,9 +4,9 @@ import { useFormat, useMsg, useT, type Msg } from "../../i18n";
 import { langLabel } from "../lang";
 import { Logo, hasMark } from "../logo";
 
-// The wire keys (nome, estado, numeros, rotulo, acao, erro, tentativa,
-// duracao_ms, instancias, grupo, node type `etapa`) are internal/api/graph.go's
-// payload, shared with the old island; they are read here as they arrive.
+// The wire keys (name, state, numbers, label, action, error, attempt,
+// duration_ms, instances, group, node type `phase`) are internal/api/graph.go's
+// payload; they are read here as they arrive.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type NodeData = Record<string, any>;
 type P = NodeProps & { data: NodeData };
@@ -44,7 +44,7 @@ export function StepCard({ data: d }: P) {
   // A workflow's graph draws no run: its cards are pending and say how the step went last time.
   const last = d.status === "pending" && d.last_status;
   const st = tone(last ? d.last_status : d.status);
-  const took = last ? d.last_duration_ms : d.duracao_ms;
+  const took = last ? d.last_duration_ms : d.duration_ms;
   const tools: string[] = d.tools ?? [];
   const inferred = d.runtime_source === "inferred";
   const lang: string = d.runtime || tools[0] || "";
@@ -59,9 +59,9 @@ export function StepCard({ data: d }: P) {
         <span className="dag-name" title={d.label}>
           {d.label}
         </span>
-        {d.instancias ? (
-          <span className="dag-inst" title={`${d.instancias_ok} / ${d.instancias}`}>
-            {d.instancias_ok === d.instancias ? `[${d.instancias}]` : `[${d.instancias_ok || 0}/${d.instancias}]`}
+        {d.instances ? (
+          <span className="dag-inst" title={`${d.instances_ok} / ${d.instances}`}>
+            {d.instances_ok === d.instances ? `[${d.instances}]` : `[${d.instances_ok || 0}/${d.instances}]`}
           </span>
         ) : null}
         {d.hasStages && (
@@ -79,7 +79,7 @@ export function StepCard({ data: d }: P) {
           </button>
         )}
       </div>
-      {d.acao && <div className="dag-cmd">{words(d.acao)}</div>}
+      {d.action && <div className="dag-cmd">{words(d.action)}</div>}
       {(d.runtime || tools.length > 0) && (
         <div className="dag-chips">
           {d.runtime && (
@@ -103,7 +103,7 @@ export function StepCard({ data: d }: P) {
       <div className="dag-status">
         <span>{t(`state.${st}`)}</span>
         {took ? <span className="took">{duration(took)}</span> : null}
-        {d.tentativa ? <span className="retry">{t("graph.retry", { n: number(d.tentativa) })}</span> : null}
+        {d.attempt ? <span className="retry">{t("graph.retry", { n: number(d.attempt) })}</span> : null}
         {d.sdk && <span className="dag-sdk">SDK {d.sdk}</span>}
       </div>
       <Handle type="source" position={Position.Right} />
@@ -116,14 +116,14 @@ export function StageBox({ data: d }: P) {
   const { number, duration } = useFormat();
   const words = useWords();
   const nums = HIGHLIGHT.flatMap((k) => {
-    const v = d.numeros?.[k];
+    const v = d.numbers?.[k];
     return v === null || v === undefined || v === "" ? [] : [{ k, v: typeof v === "number" ? number(v) : String(v) }];
   }).slice(0, 2);
-  const detail: string | undefined = d.numeros?.detail;
+  const detail: string | undefined = d.numbers?.detail;
   return (
-    <div className="dag-stage" style={colour(stageTone(d.estado))} data-state={d.estado} title={detail ?? ""}>
+    <div className="dag-stage" style={colour(stageTone(d.state))} data-state={d.state} title={detail ?? ""}>
       <span className="d" />
-      <b>{words(d.rotulo || d.nome)}</b>
+      <b>{words(d.label || d.name)}</b>
       <span className="detail">{detail}</span>
       <span className="nums">
         {nums.map((n) => (
@@ -144,7 +144,7 @@ export function GroupBox({ data: d }: P) {
       <button type="button" className="nodrag" aria-expanded={!d.collapsed} onClick={(e) => { e.stopPropagation(); d.onToggle(); }}>
         <span style={{ fontSize: 9 }}>{d.collapsed ? "▸" : "▾"}</span>
         {d.label}
-        {d.membros ? <small>· {d.membros} {d.membros === 1 ? "step" : "steps"}</small> : null}
+        {d.members ? <small>· {d.members} {d.members === 1 ? "step" : "steps"}</small> : null}
       </button>
     </div>
   );
@@ -155,4 +155,4 @@ export function ColumnLabel({ data: d }: P) {
   return <div className="dag-col">{d.label}</div>;
 }
 
-export const NODE_TYPES = { brevis: StepCard, etapa: StageBox, grupo: GroupBox, stage: ColumnLabel };
+export const NODE_TYPES = { brevis: StepCard, phase: StageBox, group: GroupBox, stage: ColumnLabel };

@@ -45,12 +45,12 @@ func TestTheRunCarriesTheClockItShouldRead(t *testing.T) {
 
 	slot := time.Date(2026, 9, 8, 4, 0, 0, 0, time.UTC)
 	id := scheduled(t, repo, "nightly", "0 4 * * *", slot)
-	_ = repo.Transicionar(ctx, id, dom.StatusQueued)
+	_ = repo.Transition(ctx, id, dom.StatusQueued)
 	_ = q.Enqueue(ctx, id, 0, time.Time{})
 
 	var seen dom.AutoParams
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, Interval: 10 * time.Millisecond,
+		Worker: "t", MaxConcurrency: 1, Interval: 10 * time.Millisecond,
 	}, q, repo, func(ctx context.Context, runID uuid.UUID) error {
 		// What the runner sees, which is the only thing that matters.
 		r, err := repo.Get(ctx, runID)
@@ -109,13 +109,13 @@ func TestPreviousErrorLooksAtTheRunBefore(t *testing.T) {
 
 	yesterday := time.Date(2026, 9, 7, 4, 0, 0, 0, time.UTC)
 	old := scheduled(t, repo, "nightly", "0 4 * * *", yesterday)
-	_ = repo.Transicionar(ctx, old, dom.StatusQueued)
-	_ = repo.Transicionar(ctx, old, dom.StatusRunning)
-	_ = repo.Transicionar(ctx, old, dom.StatusFailed)
+	_ = repo.Transition(ctx, old, dom.StatusQueued)
+	_ = repo.Transition(ctx, old, dom.StatusRunning)
+	_ = repo.Transition(ctx, old, dom.StatusFailed)
 
 	today := scheduled(t, repo, "nightly", "0 4 * * *", yesterday.AddDate(0, 0, 1))
-	_ = repo.Transicionar(ctx, today, dom.StatusQueued)
-	_ = repo.Transicionar(ctx, today, dom.StatusRunning)
+	_ = repo.Transition(ctx, today, dom.StatusQueued)
+	_ = repo.Transition(ctx, today, dom.StatusRunning)
 
 	auto, err := repo.RecordAuto(ctx, today, nil)
 	if err != nil {
@@ -130,10 +130,10 @@ func TestPreviousErrorLooksAtTheRunBefore(t *testing.T) {
 
 	// Now make yesterday a success and check the other side. A rule that always
 	// says true passes the half above.
-	_ = repo.Transicionar(ctx, old, dom.StatusRetrying)
-	_ = repo.Transicionar(ctx, old, dom.StatusQueued)
-	_ = repo.Transicionar(ctx, old, dom.StatusRunning)
-	_ = repo.Transicionar(ctx, old, dom.StatusSuccess)
+	_ = repo.Transition(ctx, old, dom.StatusRetrying)
+	_ = repo.Transition(ctx, old, dom.StatusQueued)
+	_ = repo.Transition(ctx, old, dom.StatusRunning)
+	_ = repo.Transition(ctx, old, dom.StatusSuccess)
 
 	auto, err = repo.RecordAuto(ctx, today, nil)
 	if err != nil {
@@ -157,8 +157,8 @@ func TestAFirstRunHasNoPreviousError(t *testing.T) {
 
 	slot := time.Date(2026, 9, 8, 4, 0, 0, 0, time.UTC)
 	id := scheduled(t, repo, "brand_new", "0 4 * * *", slot)
-	_ = repo.Transicionar(ctx, id, dom.StatusQueued)
-	_ = repo.Transicionar(ctx, id, dom.StatusRunning)
+	_ = repo.Transition(ctx, id, dom.StatusQueued)
+	_ = repo.Transition(ctx, id, dom.StatusRunning)
 
 	auto, err := repo.RecordAuto(ctx, id, nil)
 	if err != nil {
@@ -191,11 +191,11 @@ func TestARunSurvivesTheParamsNotBeingRecorded(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = repo.Transicionar(ctx, r.ID, dom.StatusQueued)
+	_ = repo.Transition(ctx, r.ID, dom.StatusQueued)
 	_ = q.Enqueue(ctx, r.ID, 0, time.Time{})
 
 	d := scheduler.New(scheduler.Config{
-		Worker: "t", MaxConcorrente: 1, Interval: 10 * time.Millisecond,
+		Worker: "t", MaxConcurrency: 1, Interval: 10 * time.Millisecond,
 	}, q, repo, func(context.Context, uuid.UUID) error { return nil }, noLog())
 
 	go func() { _ = d.Run(ctx) }()

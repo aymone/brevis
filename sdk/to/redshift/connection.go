@@ -43,11 +43,11 @@ func (c pgConn) Exec(ctx context.Context, sql string) error {
 // third-party store to implement it because of one driver -- the driver asks
 // whether that store knows how to delete.
 func (t Table) remove(ctx context.Context, bucket, key string) error {
-	type apagador interface {
+	type remover interface {
 		Delete(ctx context.Context, bucket, key string) error
 	}
-	d, sabe := t.Store.(apagador)
-	if !sabe {
+	d, knows := t.Store.(remover)
+	if !knows {
 		return fmt.Errorf("this store does not delete; set KeepStagedFile to silence this")
 	}
 	return d.Delete(ctx, bucket, key)
@@ -60,13 +60,13 @@ func hideDSN(err error, dsn string) error {
 	return fmt.Errorf("%s", strings.ReplaceAll(err.Error(), dsn, "REDACTED"))
 }
 
-// avisarSobra says the staging file was left behind.
+// warnLeftover says the staging file was left behind.
 //
 // It does not bring the load down: the rows are already in, and trading a good
 // load for a cleanup error would trade a small problem for a big one. But it does
 // not stay quiet -- one orphaned object per run becomes a bill at the end of the
 // month.
-func avisarSobra(ctx context.Context, uri string, err error) {
+func warnLeftover(ctx context.Context, uri string, err error) {
 	slog.WarnContext(ctx, "redshift: the staged file was left behind",
 		"object", uri,
 		"why", err,

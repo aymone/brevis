@@ -133,7 +133,7 @@ func TestAFailedWriteDoesNotStopTheRun(t *testing.T) {
 			Apply: core.AsCookie,
 			Refresh: &core.Refresh{
 				URL:   srv.URL + "/auth",
-				Store: storeQueNaoGrava{},
+				Store: nonWritingStore{},
 			},
 		},
 	}, nil)
@@ -155,11 +155,11 @@ func TestAFailedWriteDoesNotStopTheRun(t *testing.T) {
 	}
 }
 
-type storeQueNaoGrava struct{}
+type nonWritingStore struct{}
 
-func (storeQueNaoGrava) Load() (string, error) { return "", nil }
-func (storeQueNaoGrava) Save(string) error     { return fmt.Errorf("disco cheio") }
-func (storeQueNaoGrava) Describe() string      { return "store de teste" }
+func (nonWritingStore) Load() (string, error) { return "", nil }
+func (nonWritingStore) Save(string) error     { return fmt.Errorf("disco cheio") }
+func (nonWritingStore) Describe() string      { return "store de teste" }
 
 // TestTheCredentialNeverAppearsInALog is §7.8 of the spec. A value that leaks
 // into the log leaks into the log aggregator, which plenty of people read -- and

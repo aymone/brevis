@@ -22,7 +22,7 @@ func createdOn(t *testing.T, pool *postgres.Pool, slug string, at time.Time, par
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := pool.Exec(ctx, `UPDATE runs SET criado_em = $2 WHERE id = $1`, r.ID, at); err != nil {
+	if _, err := pool.Exec(ctx, `UPDATE runs SET created_at = $2 WHERE id = $1`, r.ID, at); err != nil {
 		t.Fatal(err)
 	}
 	return r.ID

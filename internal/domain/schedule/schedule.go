@@ -87,7 +87,7 @@ func (s Schedule) Parse() (cron.Schedule, *time.Location, error) {
 // `limite` caps the count: a workflow stopped for months with catchup=true would
 // create thousands of runs at once and drown the queue. Returning the excess as
 // `truncado` makes that visible instead of silent.
-func (s Schedule) Slots(now time.Time, limite int) (slots []time.Time, truncado bool, err error) {
+func (s Schedule) Slots(now time.Time, limit int) (slots []time.Time, truncated bool, err error) {
 	if !s.Active {
 		return nil, false, nil
 	}
@@ -100,9 +100,9 @@ func (s Schedule) Slots(now time.Time, limite int) (slots []time.Time, truncado 
 	// when
 	// the schedule never ran. Starting from zero would create the cron's entire
 	// history.
-	de := now.In(loc)
+	from := now.In(loc)
 	if s.LastSlot != nil {
-		de = s.LastSlot.In(loc)
+		from = s.LastSlot.In(loc)
 	}
 
 	// Without catchup, only the MOST RECENT slot matters — the gap is discarded
@@ -110,16 +110,16 @@ func (s Schedule) Slots(now time.Time, limite int) (slots []time.Time, truncado 
 	// there is nothing to truncate when only one slot will be materialized.
 	//
 	// The iteration ceiling protects against a schedule with a very old
-	// ultimo_slot, which would make the loop walk years of cron every cycle.
+	// last_slot, which would make the loop walk years of cron every cycle.
 	if !s.Catchup {
 		const maxIter = 500_000
 		var last time.Time
 		for i := 0; i < maxIter; i++ {
-			prox := sched.Next(de)
-			if prox.After(now) {
+			next := sched.Next(from)
+			if next.After(now) {
 				break
 			}
-			last, de = prox, prox
+			last, from = next, next
 		}
 		if last.IsZero() {
 			return nil, false, nil
@@ -128,16 +128,16 @@ func (s Schedule) Slots(now time.Time, limite int) (slots []time.Time, truncado 
 	}
 
 	for {
-		prox := sched.Next(de)
-		if prox.After(now) {
+		next := sched.Next(from)
+		if next.After(now) {
 			break
 		}
-		slots = append(slots, prox)
-		de = prox
+		slots = append(slots, next)
+		from = next
 
 		// It truncates and SIGNALS. The rest goes into the following cycles,
 		// because the marker advances on every materialized slot.
-		if limite > 0 && len(slots) >= limite {
+		if limit > 0 && len(slots) >= limit {
 			return slots, true, nil
 		}
 	}

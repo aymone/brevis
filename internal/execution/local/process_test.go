@@ -122,7 +122,7 @@ func TestItDoesNotInheritTheParentsEnvironment(t *testing.T) {
 	}
 }
 
-func TestCancelInterrompe(t *testing.T) {
+func TestCancelInterrupts(t *testing.T) {
 	p := executor(t)
 	ev, err := p.Execute(context.Background(), execution.TaskExec{
 		ExecutionID: "5", NodeID: "n", Command: "sleep 30",

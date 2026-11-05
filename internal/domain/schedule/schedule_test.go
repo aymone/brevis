@@ -22,11 +22,11 @@ func TestCatchupTruePreencheALacuna(t *testing.T) {
 		Cron: "0 2 * * *", Timezone: "UTC", Catchup: true, Active: true,
 		LastSlot: ptr(inUTC("2026-01-01T02:00:00Z")),
 	}
-	slots, truncado, err := s.Slots(inUTC("2026-01-05T03:00:00Z"), 0)
+	slots, truncated, err := s.Slots(inUTC("2026-01-05T03:00:00Z"), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if truncado {
+	if truncated {
 		t.Error("it should not truncate")
 	}
 	if len(slots) != 4 { // 02, 03, 04, 05 de janeiro
@@ -64,14 +64,14 @@ func TestTheLimitTruncatesAndSaysSo(t *testing.T) {
 		Cron: "0 * * * *", Timezone: "UTC", Catchup: true, Active: true,
 		LastSlot: ptr(inUTC("2026-01-01T00:00:00Z")),
 	}
-	slots, truncado, err := s.Slots(inUTC("2026-02-01T00:00:00Z"), 10)
+	slots, truncated, err := s.Slots(inUTC("2026-02-01T00:00:00Z"), 10)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(slots) != 10 {
 		t.Errorf("slots = %d, wanted 10", len(slots))
 	}
-	if !truncado {
+	if !truncated {
 		t.Error("truncated should be true -- there were hundreds of slots")
 	}
 }
@@ -152,12 +152,12 @@ func TestValidation(t *testing.T) {
 // The author's YAML: "0 2 * * *", every day at 02:00.
 func TestTheCronFromTheAuthorsExample(t *testing.T) {
 	s := Schedule{Cron: "0 2 * * *", Timezone: "UTC", Active: true}
-	prox, err := s.Next(inUTC("2026-03-10T23:30:00Z"))
+	next, err := s.Next(inUTC("2026-03-10T23:30:00Z"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !prox.Equal(inUTC("2026-03-11T02:00:00Z")) {
-		t.Errorf("next = %v, wanted 11/03 02:00Z", prox)
+	if !next.Equal(inUTC("2026-03-11T02:00:00Z")) {
+		t.Errorf("next = %v, wanted 11/03 02:00Z", next)
 	}
 }
 
@@ -172,14 +172,14 @@ func TestCatchupFalseIsNotBypassedByTheTruncation(t *testing.T) {
 		LastSlot: ptr(inUTC("2026-01-01T00:00:00Z")),
 	}
 	// two months of hourly gap against a limit of 100 per cycle
-	slots, truncado, err := s.Slots(inUTC("2026-03-01T00:00:00Z"), 100)
+	slots, truncated, err := s.Slots(inUTC("2026-03-01T00:00:00Z"), 100)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(slots) != 1 {
 		t.Fatalf("slots = %d, wanted 1 — catchup=false discards the gap", len(slots))
 	}
-	if truncado {
+	if truncated {
 		t.Error("truncated = true; with no catchup there is nothing to truncate")
 	}
 	if !slots[0].Equal(inUTC("2026-03-01T00:00:00Z")) {

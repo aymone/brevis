@@ -135,8 +135,8 @@ type RunFilter struct {
 	// default": Running when something is in flight, else All.
 	All      bool
 	Workflow string
-	De       string // YYYY-MM-DDTHH, the same format the chart emits
-	Ate      string
+	From     string // YYYY-MM-DDTHH, the same format the chart emits
+	To       string
 	Label    string // descricao legivel do periodo, montada no servidor
 
 	Page    int

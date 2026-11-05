@@ -16,7 +16,7 @@ import (
 // has
 // a concrete cost when it is wrong -- which is why each case says what it is.
 func TestToJSONRowByRow(t *testing.T) {
-	casos := []struct {
+	cases := []struct {
 		name  string
 		input any
 		want  string // the JSON that comes out
@@ -114,7 +114,7 @@ func TestToJSONRowByRow(t *testing.T) {
 		},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			b, err := json.Marshal(ParaJSON(c.input))
 			if err != nil {
@@ -147,13 +147,13 @@ func TestNumericLosesNoPrecision(t *testing.T) {
 	// value changes. Written with a variable and not a constant on purpose --
 	// as a constant Go compares at compile time with arbitrary
 	// arbitraria, e a demonstracao vira sempre verdadeira.
-	exato := int64(9007199254740993)
-	pelaFloat := int64(float64(exato))
-	if pelaFloat == exato {
+	exact := int64(9007199254740993)
+	byFloat := int64(float64(exact))
+	if byFloat == exact {
 		t.Fatal("float64 represented 2^53+1 on this platform; the choice of string needs " +
 			"to be revisited, or this test no longer proves what it says")
 	}
-	if b, _ := json.Marshal(float64(exato)); string(b) == "9007199254740993" {
+	if b, _ := json.Marshal(float64(exact)); string(b) == "9007199254740993" {
 		t.Error("the float64 path did not lose precision; the test is not proving anything")
 	}
 }

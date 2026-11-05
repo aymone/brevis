@@ -47,7 +47,7 @@ func TestTheOverviewJSONCarriesTheWindowAndArraysNeverNull(t *testing.T) {
 func TestTheOverviewJSONHasTheIndicatorsTheRunsAndTheNextTriggers(t *testing.T) {
 	slot := time.Date(2026, 10, 26, 22, 18, 0, 0, time.UTC)
 	rec, body := apiGet(t, overviewUI(overviewReads{
-		ind: postgres.Indicators{Succeeded: 8, Failed: 2, Running: 1, Retried: 3, MeanDuration: 1500 * time.Millisecond},
+		indicators: postgres.Indicators{Succeeded: 8, Failed: 2, Running: 1, Retried: 3, MeanDuration: 1500 * time.Millisecond},
 		recent: []postgres.RunSummary{
 			{ID: "r1", WorkflowSlug: "daily", Status: "failed", TriggerType: "schedule", Attempt: 1, LogicalDate: &slot,
 				CreatedAt: slot, Duration: dur(2 * time.Second), Err: "boom"},
@@ -62,9 +62,9 @@ func TestTheOverviewJSONHasTheIndicatorsTheRunsAndTheNextTriggers(t *testing.T) 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
-	ind := body["indicators"].(map[string]any)
-	if ind["succeeded"] != 8.0 || ind["failed"] != 2.0 || ind["retried"] != 3.0 || ind["meanDurationMs"] != 1500.0 {
-		t.Errorf("indicators = %v", ind)
+	indicators := body["indicators"].(map[string]any)
+	if indicators["succeeded"] != 8.0 || indicators["failed"] != 2.0 || indicators["retried"] != 3.0 || indicators["meanDurationMs"] != 1500.0 {
+		t.Errorf("indicators = %v", indicators)
 	}
 	if body["queued"] != 2.0 {
 		t.Errorf("queued = %v", body["queued"])

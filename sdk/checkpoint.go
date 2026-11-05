@@ -113,7 +113,7 @@ func segment(s string) string {
 }
 
 // extractWithCheckpoint is runPipeline's Extract, with the depot in between.
-func extrairComCheckpoint(ctx context.Context, p *Pipeline) (*Data, *checkpointState, error) {
+func extractWithCheckpoint(ctx context.Context, p *Pipeline) (*Data, *checkpointState, error) {
 	est := &checkpointState{}
 
 	if p.Checkpoint.At == "" {
@@ -145,7 +145,7 @@ func extrairComCheckpoint(ctx context.Context, p *Pipeline) (*Data, *checkpointS
 	// run id, and this run starts here. Not looking avoids a warning per run
 	// saying it did not find what could not exist.
 	if p.Run.Attempt > 0 {
-		if d, ok := retomar(ctx, p, dep, est); ok {
+		if d, ok := resume(ctx, p, dep, est); ok {
 			return d, est, nil
 		}
 	}
@@ -170,7 +170,7 @@ func extrairComCheckpoint(ctx context.Context, p *Pipeline) (*Data, *checkpointS
 }
 
 // resume reads the previous attempt's depot, when it is whole.
-func retomar(ctx context.Context, p *Pipeline, dep *checkpoint.Depot,
+func resume(ctx context.Context, p *Pipeline, dep *checkpoint.Depot,
 	est *checkpointState) (*Data, bool) {
 
 	m, err := dep.Manifest(ctx)
@@ -216,17 +216,17 @@ func materialize(ctx context.Context, dep *checkpoint.Depot,
 
 	return func(yield func(Envelope, error) bool) {
 		esc := dep.Writer()
-		next, parar := iter.Pull2(source)
-		defer parar()
+		next, stop := iter.Pull2(source)
+		defer stop()
 
 		// degrade gives up on the depot without giving up on the run: it yields
 		// what already became an object, what stayed in the buffer, and then
 		// carries on straight from the source. It writes no manifest, so nobody
 		// resumes from a crippled depot.
-		degradar := func(causa error, pending *Envelope) {
-			est.err = causa.Error()
+		degrade := func(cause error, pending *Envelope) {
+			est.err = cause.Error()
 			slog.WarnContext(ctx, "checkpoint interrupted; the run carries on without it",
-				"pipeline", name, "checkpoint", est.path, "error", causa)
+				"pipeline", name, "checkpoint", est.path, "error", cause)
 
 			for env, err := range dep.Reread(ctx, esc.Written()) {
 				if !yield(env, err) {
@@ -264,19 +264,19 @@ func materialize(ctx context.Context, dep *checkpoint.Depot,
 				return
 			}
 			if e := esc.Add(env); e != nil {
-				degradar(e, &env) // it never entered the buffer, so it goes by hand
+				degrade(e, &env) // it never entered the buffer, so it goes by hand
 				return
 			}
 			if esc.Full() {
 				if e := esc.Flush(ctx); e != nil {
-					degradar(e, nil) // already in the buffer; Pending yields it
+					degrade(e, nil) // already in the buffer; Pending yields it
 					return
 				}
 			}
 		}
 
 		if err := esc.Finish(ctx, name, run); err != nil {
-			degradar(err, nil)
+			degrade(err, nil)
 			return
 		}
 

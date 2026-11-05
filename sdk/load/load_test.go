@@ -661,9 +661,9 @@ func TestDedupMergeRequiresTheIngestionIDColumn(t *testing.T) {
 	if err == nil {
 		t.Fatal("the merge matches on ingestion_id; without the declared column there is no way")
 	}
-	for _, quer := range []string{"ingestion_id", "sdk.IngestionID"} {
-		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("the error must say %q: %v", quer, err)
+	for _, wants := range []string{"ingestion_id", "sdk.IngestionID"} {
+		if !strings.Contains(err.Error(), wants) {
+			t.Errorf("the error must say %q: %v", wants, err)
 		}
 	}
 

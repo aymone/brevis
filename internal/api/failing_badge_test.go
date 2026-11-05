@@ -24,7 +24,7 @@ func (f failingFake) FailingWorkflows(context.Context) ([]postgres.FailingWorkfl
 }
 
 type runsFake struct {
-	api.Leitura
+	api.Reads
 	counts map[string]int
 	err    error
 }

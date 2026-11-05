@@ -95,7 +95,7 @@ func langChoices(all []postgres.WorkflowSummary, f pages.Filter, x listFacts) []
 	g := f
 	g.Lang = ""
 	kept := map[string]bool{}
-	for _, w := range filtrar(all, g, x) {
+	for _, w := range filter(all, g, x) {
 		kept[w.Slug] = true
 	}
 	counts := map[string]int{}
@@ -157,7 +157,7 @@ const connectsWindow = 90 * 24 * time.Hour
 // describeRows fills what each row of the page says beyond its summary: what
 // it runs, what it talks to, how many steps, whether it is failing.
 func (u *UI) describeRows(ctx context.Context, v *pages.WorkflowsScreen, x listFacts) {
-	wrote, err := u.leitura.Connects(ctx, time.Now().Add(-connectsWindow))
+	wrote, err := u.reads.Connects(ctx, time.Now().Add(-connectsWindow))
 	if err != nil {
 		u.log.Error("reading what the workflows wrote", "error", err)
 	}

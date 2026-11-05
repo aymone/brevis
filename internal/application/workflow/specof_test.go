@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	dominio "brevis.sh/brevis/internal/domain/workflow"
+	domain "brevis.sh/brevis/internal/domain/workflow"
 )
 
 // roundTrip publishes the YAML a workflow is shown as, and says whether it
 // is the same workflow.
-func roundTrip(t *testing.T, name string, w dominio.Workflow) {
+func roundTrip(t *testing.T, name string, w domain.Workflow) {
 	t.Helper()
 	y, err := YAML(w)
 	if err != nil {
@@ -65,42 +65,42 @@ func TestEveryExampleRoundTripsThroughItsYAML(t *testing.T) {
 // of a param, a step's every field.
 func TestAWorkflowWithEverythingRoundTrips(t *testing.T) {
 	yes := true
-	dag := dominio.Workflow{
-		Slug: "everything", Name: "everything", Kind: dominio.KindDAG, Schedule: "0 4 * * *",
+	dag := domain.Workflow{
+		Slug: "everything", Name: "everything", Kind: domain.KindDAG, Schedule: "0 4 * * *",
 		Description: "All of it.", Tags: []string{"a", "b"}, Image: "python:3.12",
-		Resources: dominio.Resources{CPU: "500m", Memory: "1Gi", MemoryLimit: "2Gi"},
+		Resources: domain.Resources{CPU: "500m", Memory: "1Gi", MemoryLimit: "2Gi"},
 		Env:       map[string]string{"LEVEL": "info"}, Secrets: map[string]string{"TOKEN": "warehouse/token"},
 		MaxActive: 1, Group: "warehouse",
-		Trigger: dominio.Trigger{OnLanded: []string{"bigquery://acme/bronze/orders"}, Debounce: 5 * time.Minute},
-		Params: []dominio.Param{
-			{Name: "full", Type: dominio.ParamBool, Default: "false", Title: "Full load", Group: "Load", Warn: "it costs", Uses: "bigquery"},
+		Trigger: domain.Trigger{OnLanded: []string{"bigquery://acme/bronze/orders"}, Debounce: 5 * time.Minute},
+		Params: []domain.Param{
+			{Name: "full", Type: domain.ParamBool, Default: "false", Title: "Full load", Group: "Load", Warn: "it costs", Uses: "bigquery"},
 			{Name: "layers", Type: "list|string", Enum: []string{"bronze", "silver"}, Default: "bronze"},
-			{Name: "since", Type: dominio.ParamString, Pattern: `^\d{4}-\d{2}-\d{2}$`, Description: "the first day"},
+			{Name: "since", Type: domain.ParamString, Pattern: `^\d{4}-\d{2}-\d{2}$`, Description: "the first day"},
 		},
-		Nodes: []dominio.Node{
+		Nodes: []domain.Node{
 			{ID: "fetch", Run: "python fetch.py --full={{ .full }}", Runtime: "python", Tools: []string{"dbt"}, Env: map[string]string{"X": "1"},
-				PersistContext: []string{"codes"}, Shell: &yes, Resources: dominio.Resources{CPU: "1"}, Host: "license-box"},
+				PersistContext: []string{"codes"}, Shell: &yes, Resources: domain.Resources{CPU: "1"}, Host: "license-box"},
 			{ID: "load", Action: "docker.run", With: map[string]any{"image": "acme/load:1"},
-				When: "all_done", OnError: &dominio.OnError{Type: "SLACK", When: "give_up"}},
+				When: "all_done", OnError: &domain.OnError{Type: "SLACK", When: "give_up"}},
 			{ID: "publish", Marker: true},
 		},
-		Edges: []dominio.Edge{{From: "fetch", To: "load", Label: "rows"}, {From: "fetch", To: "publish"}, {From: "load", To: "publish"}},
+		Edges: []domain.Edge{{From: "fetch", To: "load", Label: "rows"}, {From: "fetch", To: "publish"}, {From: "load", To: "publish"}},
 	}
 	roundTrip(t, "everything.yaml", dag)
 
-	chain := dominio.Workflow{Slug: "steps", Name: "steps", Kind: dominio.KindChain, MaxActive: 3,
-		Nodes: []dominio.Node{{ID: "a", Run: "echo a"}, {ID: "b", Run: "echo b"}, {ID: "c", Run: "echo c"}},
-		Edges: []dominio.Edge{{From: "a", To: "b"}, {From: "b", To: "c"}}}
+	chain := domain.Workflow{Slug: "steps", Name: "steps", Kind: domain.KindChain, MaxActive: 3,
+		Nodes: []domain.Node{{ID: "a", Run: "echo a"}, {ID: "b", Run: "echo b"}, {ID: "c", Run: "echo c"}},
+		Edges: []domain.Edge{{From: "a", To: "b"}, {From: "b", To: "c"}}}
 	roundTrip(t, "steps.yaml", chain)
 }
 
 // THE YAML READS LIKE A FILE SOMEBODY WROTE: no empty keys, a debounce in
 // its unit, a dependency with no label as its step's name.
 func TestTheDefinitionsYAMLReadsLikeAFile(t *testing.T) {
-	y, err := YAML(dominio.Workflow{Slug: "w", Name: "w", Kind: dominio.KindDAG,
-		Trigger: dominio.Trigger{OnLanded: []string{"gs://b/x"}, Debounce: 5 * time.Minute},
-		Nodes:   []dominio.Node{{ID: "a", Run: "echo a"}, {ID: "b", Run: "echo b"}},
-		Edges:   []dominio.Edge{{From: "a", To: "b"}}})
+	y, err := YAML(domain.Workflow{Slug: "w", Name: "w", Kind: domain.KindDAG,
+		Trigger: domain.Trigger{OnLanded: []string{"gs://b/x"}, Debounce: 5 * time.Minute},
+		Nodes:   []domain.Node{{ID: "a", Run: "echo a"}, {ID: "b", Run: "echo b"}},
+		Edges:   []domain.Edge{{From: "a", To: "b"}}})
 	if err != nil {
 		t.Fatal(err)
 	}

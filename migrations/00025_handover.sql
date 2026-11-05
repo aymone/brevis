@@ -14,7 +14,7 @@
 ALTER TABLE task_runs ADD COLUMN handover JSONB;
 
 COMMENT ON COLUMN task_runs.handover IS
-  'Onde o step continua rodando depois de entregue no desligamento; NULL = nao entregue.';
+  'Where the step keeps running after being handed over at shutdown; NULL = not handed over.';
 
 -- +goose Down
 ALTER TABLE task_runs DROP COLUMN handover;

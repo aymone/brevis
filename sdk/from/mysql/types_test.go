@@ -14,12 +14,12 @@ import (
 // would become
 // base64 in the JSON, and so would an INT.
 func TestToJSONRowByRow(t *testing.T) {
-	casos := []struct {
-		name      string
-		value     any
-		declarado string
-		quero     string
-		why       string
+	cases := []struct {
+		name     string
+		value    any
+		declared string
+		want     string
+		why      string
 	}{
 		{"NULL", nil, "VARCHAR", `null`, ""},
 		{
@@ -50,14 +50,14 @@ func TestToJSONRowByRow(t *testing.T) {
 		{"ENUM vira texto", []byte("ativo"), "ENUM", `"ativo"`, ""},
 	}
 
-	for _, c := range casos {
+	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			b, err := json.Marshal(ToJSON(c.value, c.declarado))
+			b, err := json.Marshal(ToJSON(c.value, c.declared))
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(b) != c.quero {
-				t.Errorf("= %s, want %s\n  %s", b, c.quero, c.why)
+			if string(b) != c.want {
+				t.Errorf("= %s, want %s\n  %s", b, c.want, c.why)
 			}
 		})
 	}
@@ -73,14 +73,14 @@ func TestToJSONRowByRow(t *testing.T) {
 func TestTheTwoInstantPathsAgree(t *testing.T) {
 	instant := time.Date(2026, 9, 5, 12, 30, 0, 0, time.UTC)
 
-	comParse := ToJSON(instant, "DATETIME")
-	semParse := ToJSON([]byte("2026-09-05 12:30:00"), "DATETIME")
+	withParse := ToJSON(instant, "DATETIME")
+	noParse := ToJSON([]byte("2026-09-05 12:30:00"), "DATETIME")
 
-	if comParse != semParse {
-		t.Errorf("the paths diverge: with parseTime %v, without %v", comParse, semParse)
+	if withParse != noParse {
+		t.Errorf("the paths diverge: with parseTime %v, without %v", withParse, noParse)
 	}
-	if comParse != "2026-09-05T12:30:00Z" {
-		t.Errorf("= %v", comParse)
+	if withParse != "2026-09-05T12:30:00Z" {
+		t.Errorf("= %v", withParse)
 	}
 }
 

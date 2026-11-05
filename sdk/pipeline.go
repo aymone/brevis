@@ -255,7 +255,7 @@ func runPipeline(ctx context.Context, p *Pipeline) error {
 	rep.finished(PhaseCheck, StateDone, nil)
 
 	rep.started(PhaseSource)
-	data, cp, err := extrairComCheckpoint(ctx, p)
+	data, cp, err := extractWithCheckpoint(ctx, p)
 	if err != nil {
 		rep.finished(PhaseSource, StateFailed, nil)
 		return err
@@ -279,21 +279,21 @@ func runPipeline(ctx context.Context, p *Pipeline) error {
 	// stages exist as boxes, and the target after them, so their indices have to
 	// be known before the first record moves.
 	if rep.on {
-		indicesDosEstagios := make([]int, len(stages))
+		stageIndexes := make([]int, len(stages))
 		for i := range stages {
-			indicesDosEstagios[i] = rep.nextIndex()
+			stageIndexes[i] = rep.nextIndex()
 		}
 		targetIndex := rep.nextIndex()
 
 		for i, st := range stages {
-			rep.startedAtIndex(st.kind, indicesDosEstagios[i])
+			rep.startedAtIndex(st.kind, stageIndexes[i])
 		}
 		applyStages(data, stages, counts, p.Source.From.Describe())
 
 		data.Records = onExhausted(data.Records, func() {
 			rep.finished(PhaseSource, StateDone, sourceNumbers(data, p))
 			for i, st := range stages {
-				rep.finishedAtIndex(st.kind, indicesDosEstagios[i], StateDone,
+				rep.finishedAtIndex(st.kind, stageIndexes[i], StateDone,
 					stageNumbers(counts[i]))
 			}
 			// Without batches nothing has been written yet: the Write only
@@ -438,8 +438,8 @@ func checkDestination(ctx context.Context, t Target) error {
 	if err := t.validate(); err != nil {
 		return err
 	}
-	checker, sabe := t.To.(core.DestinationChecker)
-	if !sabe {
+	checker, knows := t.To.(core.DestinationChecker)
+	if !knows {
 		return nil
 	}
 	return checker.CheckDestination(ctx, t.declaredColumns())

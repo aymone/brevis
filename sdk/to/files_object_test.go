@@ -15,7 +15,7 @@ import (
 	"brevis.sh/brevis/sdk/to"
 )
 
-func lote(n int) []sdk.Envelope {
+func batch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
 	for i := range out {
 		out[i] = sdk.Envelope{Payload: map[string]any{"i": i, "nome": fmt.Sprintf("linha %d", i)}}
@@ -33,7 +33,7 @@ func lote(n int) []sdk.Envelope {
 func TestFilesSaysWhatItWrote(t *testing.T) {
 	dir := t.TempDir()
 
-	res, err := to.Files{Path: dir}.Write(context.Background(), lote(3), sdk.WriteOptions{})
+	res, err := to.Files{Path: dir}.Write(context.Background(), batch(3), sdk.WriteOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestFilesSaysWhatItWrote(t *testing.T) {
 func TestFilesPathGoesBackIntoFromFiles(t *testing.T) {
 	dir := t.TempDir()
 
-	res, err := to.Files{Path: dir}.Write(context.Background(), lote(4), sdk.WriteOptions{})
+	res, err := to.Files{Path: dir}.Write(context.Background(), batch(4), sdk.WriteOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,15 +142,15 @@ func (f sourceOfN) Read(context.Context, sdk.ReadOptions) (iter.Seq2[sdk.Envelop
 func TestFilesWritesIntoTheConfiguredDirectory(t *testing.T) {
 	base := t.TempDir()
 
-	for _, sufixo := range []string{"", "/"} {
+	for _, suffix := range []string{"", "/"} {
 		dir := filepath.Join(base, "landing")
-		res, err := to.Files{Path: dir + sufixo}.Write(
-			context.Background(), lote(1), sdk.WriteOptions{})
+		res, err := to.Files{Path: dir + suffix}.Write(
+			context.Background(), batch(1), sdk.WriteOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
 		if got := filepath.Dir(res.Objects[0]); got != dir {
-			t.Errorf("Path %q wrote to %q, want %q", dir+sufixo, got, dir)
+			t.Errorf("Path %q wrote to %q, want %q", dir+suffix, got, dir)
 		}
 	}
 }
@@ -158,10 +158,10 @@ func TestFilesWritesIntoTheConfiguredDirectory(t *testing.T) {
 // TestFilesObjectInObjectStorage: with a scheme, the reported path is the full
 // URI -- it is what has to go back into a from.Files with no reassembly.
 func TestFilesObjectInObjectStorage(t *testing.T) {
-	var escritos []string
-	f := to.Files{Path: "s3://meu-bucket/landing", Store: storeFalso{&escritos}}
+	var written []string
+	f := to.Files{Path: "s3://meu-bucket/landing", Store: fakeStore{&written}}
 
-	res, err := f.Write(context.Background(), lote(1), sdk.WriteOptions{})
+	res, err := f.Write(context.Background(), batch(1), sdk.WriteOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,19 +172,19 @@ func TestFilesObjectInObjectStorage(t *testing.T) {
 		t.Errorf("path = %q; expected the full URI inside landing/", res.Objects[0])
 	}
 	// And it is the same one handed to the store, with no scheme and no bucket.
-	if len(escritos) != 1 || !strings.HasPrefix(escritos[0], "landing/parte-") {
-		t.Errorf("the key handed to the store was %v", escritos)
+	if len(written) != 1 || !strings.HasPrefix(written[0], "landing/parte-") {
+		t.Errorf("the key handed to the store was %v", written)
 	}
 }
 
-type storeFalso struct{ keys *[]string }
+type fakeStore struct{ keys *[]string }
 
-func (storeFalso) Scheme() string                                         { return "s3" }
-func (storeFalso) List(context.Context, string, string) ([]string, error) { return nil, nil }
-func (storeFalso) Open(context.Context, string, string) (io.ReadCloser, error) {
+func (fakeStore) Scheme() string                                         { return "s3" }
+func (fakeStore) List(context.Context, string, string) ([]string, error) { return nil, nil }
+func (fakeStore) Open(context.Context, string, string) (io.ReadCloser, error) {
 	return nil, nil
 }
-func (s storeFalso) Create(_ context.Context, _, key string, r io.Reader) error {
+func (s fakeStore) Create(_ context.Context, _, key string, r io.Reader) error {
 	*s.keys = append(*s.keys, key)
 	_, _ = io.ReadAll(r)
 	return nil

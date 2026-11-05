@@ -1294,7 +1294,7 @@ Auth: &from.Credential{
     Login: &from.Login{
         URL:   "https://api.example.com/oauth/token",
         Body:  from.JSONBody(map[string]any{"client_id": id, "client_secret": segredo}),
-        Token: from.CampoJSON("data.accessToken"),
+        Token: from.JSONToken("data.accessToken"),
     },
     Apply: from.AsBearer,
     TTL:   50 * time.Minute,

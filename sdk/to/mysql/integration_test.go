@@ -57,7 +57,7 @@ const defaultColumns = "" +
 	"source_key VARCHAR(64)," +
 	"valor DECIMAL(18,2)"
 
-func lote(n int) []sdk.Envelope {
+func batch(n int) []sdk.Envelope {
 	out := make([]sdk.Envelope, n)
 	now := time.Now().UTC().Format(time.RFC3339)
 	for i := range out {
@@ -79,7 +79,7 @@ func TestIntegrationARowActuallyGoesIn(t *testing.T) {
 	name := table(t, db, defaultColumns)
 
 	res, err := tomy.Table{DSN: dsn(t), Name: name}.Write(
-		context.Background(), lote(3), sdk.WriteOptions{})
+		context.Background(), batch(3), sdk.WriteOptions{})
 	if err != nil {
 		t.Fatalf("Write: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 	}
 
 	target := tomy.Table{DSN: dsn(t), Name: name}
-	l := lote(5)
+	l := batch(5)
 	opt := sdk.WriteOptions{Dedup: sdk.DedupMerge}
 
 	first, err := target.Write(context.Background(), l, opt)
@@ -145,13 +145,13 @@ func TestIntegrationDedupLoadsTheSameBatchTwice(t *testing.T) {
 		t.Errorf("first: %d loaded", first.RowsLoaded)
 	}
 
-	segunda, err := target.Write(context.Background(), l, opt)
+	second, err := target.Write(context.Background(), l, opt)
 	if err != nil {
 		t.Fatalf("segunda: %v", err)
 	}
-	if segunda.RowsLoaded != 0 || segunda.RowsIgnored != 5 {
+	if second.RowsLoaded != 0 || second.RowsIgnored != 5 {
 		t.Errorf("second: %d loaded, %d ignored -- expected 0 and 5",
-			segunda.RowsLoaded, segunda.RowsIgnored)
+			second.RowsLoaded, second.RowsIgnored)
 	}
 
 	var n int
@@ -196,7 +196,7 @@ func TestIntegrationDedupWithoutAnIndexRefuses(t *testing.T) {
 	name := table(t, db, defaultColumns)
 
 	_, err := tomy.Table{DSN: dsn(t), Name: name}.Write(
-		context.Background(), lote(1), sdk.WriteOptions{Dedup: sdk.DedupMerge})
+		context.Background(), batch(1), sdk.WriteOptions{Dedup: sdk.DedupMerge})
 	if err == nil {
 		t.Fatal("dedup without a unique index got through")
 	}
@@ -221,9 +221,9 @@ func TestIntegrationAFieldTheTableLacksIsRefused(t *testing.T) {
 	if err == nil {
 		t.Fatal("a field without a column got through")
 	}
-	for _, exigido := range []string{"coluna_inexistente", "remove the field in Transform"} {
-		if !strings.Contains(err.Error(), exigido) {
-			t.Errorf("the error does not say %q: %v", exigido, err)
+	for _, required := range []string{"coluna_inexistente", "remove the field in Transform"} {
+		if !strings.Contains(err.Error(), required) {
+			t.Errorf("the error does not say %q: %v", required, err)
 		}
 	}
 }
@@ -272,15 +272,15 @@ func TestIntegrationTheReadIsStreamed(t *testing.T) {
 	}
 
 	start := time.Now()
-	recebeu := false
+	received := false
 	for _, err := range seq {
 		if err != nil {
 			t.Fatal(err)
 		}
-		recebeu = true
+		received = true
 		break
 	}
-	if !recebeu {
+	if !received {
 		t.Fatal("no rows")
 	}
 	if d := time.Since(start); d > 2*time.Second {
@@ -333,9 +333,9 @@ func TestIntegrationTheTypesComeFromTheServer(t *testing.T) {
 		"texto":    "ola",
 		"vazio":    nil,
 	}
-	for field, quero := range expected {
-		if got := line[field]; got != quero {
-			t.Errorf("%s = %#v (%T), want %#v", field, got, got, quero)
+	for field, want := range expected {
+		if got := line[field]; got != want {
+			t.Errorf("%s = %#v (%T), want %#v", field, got, got, want)
 		}
 	}
 	if _, ok := line["documento"].(map[string]any); !ok {
@@ -406,8 +406,8 @@ func TestIntegrationMySQLToMySQL(t *testing.T) {
 	if first := runIt(); first.Rows != 100 {
 		t.Errorf("first load: %d rows, want 100", first.Rows)
 	}
-	if segunda := runIt(); segunda.Rows != 0 || segunda.Ignored != 100 {
-		t.Errorf("second load: %d loaded and %d ignored", segunda.Rows, segunda.Ignored)
+	if second := runIt(); second.Rows != 0 || second.Ignored != 100 {
+		t.Errorf("second load: %d loaded and %d ignored", second.Rows, second.Ignored)
 	}
 
 	var n int

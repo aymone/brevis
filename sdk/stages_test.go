@@ -24,7 +24,7 @@ func TestIdentityIsComputedAfterTheAggregation(t *testing.T) {
 	var box []Envelope
 	log, err := runIt(t, &Pipeline{
 		Name:   "fetcher",
-		Source: Source{From: countedSource{records: csvRows(), leituras: new(int)}},
+		Source: Source{From: countedSource{records: csvRows(), reads: new(int)}},
 		Stages: []Stage{
 			Aggregate(Reduce{
 				By:  GroupBy("area", "year"),
@@ -72,7 +72,7 @@ func TestAggregateRefusesRecordsThatAlreadyHaveIdentity(t *testing.T) {
 	var box []Envelope
 	_, err := runIt(t, &Pipeline{
 		Name:   "fetcher",
-		Source: Source{From: countedSource{records: csvRows(), leituras: new(int)}},
+		Source: Source{From: countedSource{records: csvRows(), reads: new(int)}},
 		Stages: []Stage{
 			Map(
 				Compute("provider", func(map[string]any) (any, error) { return "p", nil }),
@@ -133,7 +133,7 @@ func TestResultCountsEachStage(t *testing.T) {
 	var box []Envelope
 	p := &Pipeline{
 		Name:   "fetcher",
-		Source: Source{From: countedSource{records: csvRows(), leituras: new(int)}},
+		Source: Source{From: countedSource{records: csvRows(), reads: new(int)}},
 		Stages: []Stage{
 			Map(SkipWithout("id")),
 			Aggregate(Reduce{By: GroupBy("area"), Agg: map[string]Aggregator{"n": Count()}}),
@@ -146,25 +146,25 @@ func TestResultCountsEachStage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	contagens := make([]StageResult, len(stages))
+	counts := make([]StageResult, len(stages))
 	data, err := Extract(context.Background(), p.Source)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for i, st := range stages {
-		data.Records = st.apply(data.Records, &contagens[i], "teste")
+		data.Records = st.apply(data.Records, &counts[i], "teste")
 	}
 	if _, err := loadWith(context.Background(), data, p.Target, p.Run); err != nil {
 		t.Fatal(err)
 	}
 
-	if contagens[0].Kind != StageMap || contagens[0].In != 3 || contagens[0].Out != 3 {
-		t.Errorf("map stage: %+v", contagens[0])
+	if counts[0].Kind != StageMap || counts[0].In != 3 || counts[0].Out != 3 {
+		t.Errorf("map stage: %+v", counts[0])
 	}
-	if contagens[1].Kind != StageAggregate || contagens[1].In != 3 || contagens[1].Out != 2 {
-		t.Errorf("aggregate stage: %+v", contagens[1])
+	if counts[1].Kind != StageAggregate || counts[1].In != 3 || counts[1].Out != 2 {
+		t.Errorf("aggregate stage: %+v", counts[1])
 	}
-	if contagens[1].Groups != 2 {
-		t.Errorf("groups = %d, want 2", contagens[1].Groups)
+	if counts[1].Groups != 2 {
+		t.Errorf("groups = %d, want 2", counts[1].Groups)
 	}
 }

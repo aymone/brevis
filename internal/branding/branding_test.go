@@ -9,10 +9,10 @@ import (
 	"brevis.sh/brevis/internal/branding"
 )
 
-func writeFile(t *testing.T, conteudo string) string {
+func writeFile(t *testing.T, content string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "brand.yaml")
-	if err := os.WriteFile(path, []byte(conteudo), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	return path
@@ -127,13 +127,13 @@ theme:
 // and inject CSS -- on an operations panel, enough to hide a state
 // de falha atras de um seletor.
 func TestAnInvalidColourIsRefused(t *testing.T) {
-	venenos := []string{
+	poisons := []string{
 		`theme: {ink: "red"}`,
 		`theme: {ink: "#12345"}`,
 		`theme: {accent: "#fff;} body{display:none} .x{color:#fff"}`,
 		`theme: {success: "url(http://exemplo/x)"}`,
 	}
-	for _, v := range venenos {
+	for _, v := range poisons {
 		if _, err := branding.Load(writeFile(t, v)); err == nil {
 			t.Errorf("accepted an invalid color: %s", v)
 		}

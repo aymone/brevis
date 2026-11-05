@@ -163,6 +163,6 @@ func hasField(w sdk.Writer, name string) bool {
 	if t.Kind() != reflect.Struct {
 		return false
 	}
-	_, tem := t.FieldByName(name)
-	return tem
+	_, has := t.FieldByName(name)
+	return has
 }

@@ -44,7 +44,7 @@ func TestTwoRunsOfOneWorkflowShareAnAgent(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errs[i] = app.Runner{RunID: uuid.New(), Report: &coletor{}, Hosts: hosts}.
+			errs[i] = app.Runner{RunID: uuid.New(), Report: &collector{}, Hosts: hosts}.
 				Run(context.Background(), w)
 		}()
 		time.Sleep(300 * time.Millisecond)
