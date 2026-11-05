@@ -39,9 +39,12 @@ var locales embed.FS
 type message struct {
 	text                  string
 	one, few, many, other string
+	// isPlural is explicit because a plain message may be EMPTY: Japanese and Chinese join the clauses of a summary
+	// with no space at all (summary.sep.space).
+	isPlural bool
 }
 
-func (m message) plural() bool { return m.text == "" }
+func (m message) plural() bool { return m.isPlural }
 
 func (m message) forms() []string {
 	if !m.plural() {
@@ -97,7 +100,7 @@ func parse(raw []byte) (catalog, error) {
 		if err := json.Unmarshal(v, &forms); err != nil || forms.One == "" || forms.Other == "" {
 			return nil, fmt.Errorf("%s is neither a string nor {\"one\", \"other\"} (and optionally \"few\", \"many\")", key)
 		}
-		c[key] = message{one: forms.One, few: forms.Few, many: forms.Many, other: forms.Other}
+		c[key] = message{one: forms.One, few: forms.Few, many: forms.Many, other: forms.Other, isPlural: true}
 	}
 	return c, nil
 }

@@ -47,11 +47,12 @@ func TestTheSummaryIsSentAsKeysAndData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"$":"cat","v":[{"k":"summary.intake.json"}," ",{"k":"summary.stream.posted","a":{"path":"/v1/clicks"}},` +
-		`" ",{"k":"summary.stream.published","a":{"to":{"k":"summary.dest.topic","a":{"topic":"acme/clicks"}}}},` +
-		`", ",{"k":"summary.stream.merge"},", ",{"k":"summary.stream.batch.both","a":{"every":{"k":"summary.unit.minute","n":1},` +
+	sp, co, se, st := `{"k":"summary.sep.space"}`, `{"k":"summary.sep.comma"}`, `{"k":"summary.sep.semicolon"}`, `{"k":"summary.sep.stop"}`
+	want := `{"$":"cat","v":[{"k":"summary.intake.json"},` + sp + `,{"k":"summary.stream.posted","a":{"path":"/v1/clicks"}},` +
+		sp + `,{"k":"summary.stream.published","a":{"to":{"k":"summary.dest.topic","a":{"topic":"acme/clicks"}}}},` +
+		co + `,{"k":"summary.stream.merge"},` + co + `,{"k":"summary.stream.batch.both","a":{"every":{"k":"summary.unit.minute","n":1},` +
 		`"records":{"k":"summary.events","n":2000,"a":{"n":{"$":"num","v":2000}}}}},` +
-		`"; ",{"k":"summary.stream.refused","a":{"to":{"k":"summary.dest.files","a":{"path":"./dl/"}}}},"."]}`
+		se + `,{"k":"summary.stream.refused","a":{"to":{"k":"summary.dest.files","a":{"path":"./dl/"}}}},` + st + `]}`
 	if string(raw) != want {
 		t.Errorf("stream summary:\n got %s\nwant %s", raw, want)
 	}

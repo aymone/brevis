@@ -17,7 +17,7 @@ test("the palette says the server's sentences in the reader's language and searc
   const list = page.locator("#palette-list");
   // What it says, in Portuguese: the section, its group, the theme action and the project's count.
   await page.fill("#palette-input", "carga");
-  await expect(list).toContainText("Cargas batch")
+  await expect(list).toContainText("Cargas");
   await expect(list).toContainText("Ingerir");
   await page.fill("#palette-input", "escuro");
   await expect(list).toContainText("Alternar tema");

@@ -42,7 +42,7 @@ func Summary(c *postgres.WriterConfig) i18n.Cat {
 
 	b := i18n.Cat{intake(text("format"))}
 	if p := text("path"); p != "" {
-		b = append(b, " ", i18n.M("summary.stream.posted", "path", p))
+		b = append(b, sp(), i18n.M("summary.stream.posted", "path", p))
 	}
 
 	switch sink {
@@ -55,18 +55,18 @@ func Summary(c *postgres.WriterConfig) i18n.Cat {
 			}
 			tables = i18n.M("summary.stream.tables.named", "names", orList(names))
 		}
-		b = append(b, " ", i18n.M("summary.stream.become", "tables", tables))
+		b = append(b, sp(), i18n.M("summary.stream.become", "tables", tables))
 		if into := destination(text, "sink.into", false); into != nil {
-			b = append(b, " ", i18n.M("summary.stream.in", "into", into))
+			b = append(b, sp(), i18n.M("summary.stream.in", "into", into))
 		}
 	case "pubsub":
-		b = append(b, " ", i18n.M("summary.stream.published", "to", destination(text, "sink", true)))
+		b = append(b, sp(), i18n.M("summary.stream.published", "to", destination(text, "sink", true)))
 	case "files":
-		b = append(b, " ", i18n.M("summary.stream.written", "to", destination(text, "sink", true)))
+		b = append(b, sp(), i18n.M("summary.stream.written", "to", destination(text, "sink", true)))
 	case "bigquery", "postgres", "mysql", "redshift", "iceberg":
-		b = append(b, " ", i18n.M("summary.stream.land", "to", destination(text, "sink", true)))
+		b = append(b, sp(), i18n.M("summary.stream.land", "to", destination(text, "sink", true)))
 	default:
-		b = append(b, " ", i18n.M("summary.stream.sink", "sink", sink))
+		b = append(b, sp(), i18n.M("summary.stream.sink", "sink", sink))
 	}
 
 	write := text("sink.write")
@@ -75,25 +75,25 @@ func Summary(c *postgres.WriterConfig) i18n.Cat {
 	}
 	switch write {
 	case "append":
-		b = append(b, ", ", i18n.M("summary.stream.append"))
+		b = append(b, comma(), i18n.M("summary.stream.append"))
 	case "merge":
-		b = append(b, ", ", i18n.M("summary.stream.merge"))
+		b = append(b, comma(), i18n.M("summary.stream.merge"))
 	}
 
 	every, records := text("buffer.flush.every"), text("buffer.flush.records")
 	switch {
 	case every != "" && records != "":
-		b = append(b, ", ", i18n.M("summary.stream.batch.both", "every", durationWords(every), "records", events(records)))
+		b = append(b, comma(), i18n.M("summary.stream.batch.both", "every", durationWords(every), "records", events(records)))
 	case every != "":
-		b = append(b, ", ", i18n.M("summary.stream.batch.every", "every", durationWords(every)))
+		b = append(b, comma(), i18n.M("summary.stream.batch.every", "every", durationWords(every)))
 	case records != "":
-		b = append(b, ", ", i18n.M("summary.stream.batch.records", "records", events(records)))
+		b = append(b, comma(), i18n.M("summary.stream.batch.records", "records", events(records)))
 	}
 
 	if dl := destination(text, "dead_letter", true); dl != nil {
-		b = append(b, "; ", i18n.M("summary.stream.refused", "to", dl))
+		b = append(b, semi(), i18n.M("summary.stream.refused", "to", dl))
 	}
-	return append(b, ".")
+	return append(b, stop())
 }
 
 // intake is what a stream accepts, by its declared format.
@@ -157,9 +157,9 @@ func orList(items []string) i18n.Cat {
 		switch {
 		case i == 0:
 		case i == len(items)-1:
-			c = append(c, " ", i18n.M("summary.or"), " ")
+			c = append(c, sp(), i18n.M("summary.or"), sp())
 		default:
-			c = append(c, ", ")
+			c = append(c, comma())
 		}
 		c = append(c, it)
 	}
@@ -217,10 +217,10 @@ func pipelineSummary(fields []catalog.ManifestField, text func(string) string) i
 		engine := map[string]string{"postgres.Query": "Postgres", "mysql.Query": "MySQL"}[driver]
 		b = append(b, i18n.M("summary.read.query", "engine", engine))
 		if db := text("source.database"); db != "" {
-			b = append(b, " ", i18n.M("summary.read.database", "db", db))
+			b = append(b, sp(), i18n.M("summary.read.database", "db", db))
 		}
 		if host := text("source.host"); host != "" {
-			b = append(b, " ", i18n.M("summary.read.host", "host", host))
+			b = append(b, sp(), i18n.M("summary.read.host", "host", host))
 		}
 	case "from.Many":
 		n := 0
@@ -243,16 +243,16 @@ func pipelineSummary(fields []catalog.ManifestField, text func(string) string) i
 		}
 	}
 	if transformers > 0 {
-		b = append(b, ", ", i18n.MN("summary.applies", transformers))
+		b = append(b, comma(), i18n.MN("summary.applies", transformers))
 	}
 	for _, f := range fields {
 		if strings.HasPrefix(f.Path, "transform.") && strings.HasSuffix(f.Path, ".aggregate.by") {
-			b = append(b, ", ", i18n.M("summary.groups", "by", valueText(f.Value)))
+			b = append(b, comma(), i18n.M("summary.groups", "by", valueText(f.Value)))
 		}
 	}
 
 	target := text("target.driver")
-	b = append(b, " ")
+	b = append(b, sp())
 	switch target {
 	case "bigquery.Table":
 		b = append(b, i18n.M("summary.write.bigquery", "table", joinWords(".", text("target.project"), text("target.dataset"), text("target.table"))))
@@ -276,9 +276,17 @@ func pipelineSummary(fields []catalog.ManifestField, text func(string) string) i
 	case target == "pubsub.Topic":
 		// A message is published, not written into a table: neither word fits.
 	case text("target.dedup") == "merge":
-		b = append(b, ", ", i18n.M("summary.pipeline.merge"))
+		b = append(b, comma(), i18n.M("summary.pipeline.merge"))
 	default:
-		b = append(b, ", ", i18n.M("summary.pipeline.append"))
+		b = append(b, comma(), i18n.M("summary.pipeline.append"))
 	}
-	return append(b, ".")
+	return append(b, stop())
 }
+
+// The punctuation that joins the pieces of a summary is the reader's language's, not English's: a space,
+// a comma, a semicolon and a full stop are catalog messages (summary.sep.*), so Japanese says "、" and "。"
+// and writes no space between clauses.
+func sp() i18n.Msg    { return i18n.M("summary.sep.space") }
+func comma() i18n.Msg { return i18n.M("summary.sep.comma") }
+func semi() i18n.Msg  { return i18n.M("summary.sep.semicolon") }
+func stop() i18n.Msg  { return i18n.M("summary.sep.stop") }

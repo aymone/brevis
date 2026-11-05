@@ -42,3 +42,18 @@ describe("renderCat", () => {
     expect(renderMsg({ k: "x", a: { n: 1, d: "d", t: "t", inner: c } }, say)).toBe("1 in d at t: inner, b Stopped at s (exit 1)");
   });
 });
+
+describe("a summary's punctuation is the language's", () => {
+  // The server sends the pieces of a summary with its separators as messages (summary.sep.*): Japanese writes no space
+  // between clauses and ends with 。, English the opposite.
+  const pieces = { $: "cat", v: [{ k: "a" }, { k: "summary.sep.space" }, { k: "b" }, { k: "summary.sep.comma" }, { k: "c" }, { k: "summary.sep.stop" }] } as const;
+  const make = (sep: Record<string, string>) => ({
+    ...say,
+    t: (k: string) => ({ a: "A", b: "B", c: "C", ...sep })[k] ?? `[${k}]`,
+  });
+  it("joins with the language's own separators", async () => {
+    const { renderCat } = await import("./i18n");
+    expect(renderCat(pieces as never, make({ "summary.sep.space": " ", "summary.sep.comma": ", ", "summary.sep.stop": "." }) as never)).toBe("A B, C.");
+    expect(renderCat(pieces as never, make({ "summary.sep.space": "", "summary.sep.comma": "、", "summary.sep.stop": "。" }) as never)).toBe("AB、C。");
+  });
+});

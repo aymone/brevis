@@ -3,6 +3,7 @@ package i18n
 import (
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -52,7 +53,8 @@ func TestTheCatalogsAreCompleteAndConsistent(t *testing.T) {
 				continue
 			}
 			for i, form := range got.forms() {
-				if form == "" {
+				// summary.sep.* are punctuation: Japanese and Chinese join clauses with no space at all.
+				if form == "" && !strings.HasPrefix(key, "summary.sep.") {
 					t.Errorf("%s: %s is empty", lang, key)
 				}
 				// A form English has no counterpart for (few, many) is held to its "other". So is

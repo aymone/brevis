@@ -340,7 +340,7 @@ export default function LoadsRoute() {
           </ButtonLink>
         }
       />
-      <Lead before={t("loads.lead.before")} strong={t("loads.lead.strong")} after={` ${t("loads.lead.after")}`} />
+      <Lead before={t("loads.lead.before")} strong={t("loads.lead.strong")} after={t("loads.lead.after")} />
       {missing !== "" && (
         <p className="mb-3 rounded-card border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-muted">{t("loads.missing", { step: missing })}</p>
       )}

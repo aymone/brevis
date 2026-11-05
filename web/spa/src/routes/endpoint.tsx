@@ -390,7 +390,7 @@ function AnswerView({ a }: { a: Answer }) {
         </span>
         {a.cache && <span className="rounded-card border border-line px-1.5 py-px font-mono text-[0.7rem] font-semibold text-ink">{a.cache.toUpperCase()}</span>}
         <span className="tabular-nums">{a.millis} ms</span>
-        {a.status === 200 && <span className="tabular-nums">{t("endpoint.try.rows", { n: total })}</span>}
+        {a.status === 200 && <span className="tabular-nums">{n("endpoint.try.rows", a.received, { n: total })}</span>}
       </div>
       {cache && <p className="mb-2 text-[0.72rem] text-muted">{cache}</p>}
       {a.received > a.rows.length && <p className="mb-2 text-[0.72rem] text-muted">{t("endpoint.try.part", { shown: a.rows.length, n: a.received })}</p>}
