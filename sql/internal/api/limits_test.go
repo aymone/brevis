@@ -68,11 +68,11 @@ func TestAFifthRequestInFlightFromOneTenantIs429(t *testing.T) {
 	s := &slow{release: make(chan struct{}), entered: make(chan struct{}, 8)}
 	h := limitedServer(t, s, Limits{Timeout: 5 * time.Second})
 	var wg sync.WaitGroup
-	for i := 0; i < perTenantInFlight; i++ {
+	for i := 0; i < defaultMaxInFlightPerTenant; i++ {
 		wg.Add(1)
 		go func() { defer wg.Done(); get(h, "/v1/e") }()
 	}
-	for i := 0; i < perTenantInFlight; i++ {
+	for i := 0; i < defaultMaxInFlightPerTenant; i++ {
 		<-s.entered
 	}
 	rec := get(h, "/v1/e")
@@ -224,6 +224,43 @@ func TestTheWholeAPIHasACeilingInFlight(t *testing.T) {
 	}
 	close(s.release)
 	wg.Wait()
+}
+
+// THE FILE SETS HOW MANY A TENANT HOLDS: one key in front of a whole
+// product is many people, and four slots for all of them is a 429 on a
+// dashboard that fires its charts at once.
+func TestTheFileSetsTheSlotsPerTenant(t *testing.T) {
+	const perTenant = 6
+	s := &slow{release: make(chan struct{}), entered: make(chan struct{}, 2*perTenant)}
+	h := limitedServer(t, s, Limits{Timeout: 5 * time.Second, MaxInFlightPerTenant: perTenant})
+	var wg sync.WaitGroup
+	for i := 0; i < perTenant; i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); get(h, "/v1/e") }()
+	}
+	for i := 0; i < perTenant; i++ {
+		<-s.entered
+	}
+	rec := get(h, "/v1/e")
+	if rec.Code != http.StatusTooManyRequests || !strings.Contains(rec.Body.String(), "6 requests") {
+		t.Errorf("the seventh answered %d: %s", rec.Code, rec.Body)
+	}
+	close(s.release)
+	wg.Wait()
+}
+
+// A TENANT CANNOT HOLD MORE THAN THE WHOLE API, and a negative is no number.
+func TestASlotsPerTenantOverTheCeilingIsRefused(t *testing.T) {
+	sqlFile := map[string]string{"endpoints/clicks.sql": "select {{ tenant }} {{ campaign }}"}
+	for _, lim := range []string{
+		"{max_in_flight: 8, max_in_flight_per_tenant: 9}",
+		"{max_in_flight_per_tenant: -1}",
+	} {
+		_, err := fixture(t, strings.Replace(good, "listen:", "limits: "+lim+"\nlisten:", 1), sqlFile)
+		if err == nil || !strings.Contains(err.Error(), "max_in_flight_per_tenant") {
+			t.Errorf("%s: %v", lim, err)
+		}
+	}
 }
 
 func TestAMaxInFlightBelowOnePerTenantIsRefused(t *testing.T) {

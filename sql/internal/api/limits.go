@@ -28,6 +28,12 @@ type Limits struct {
 	// MaxInFlight is how many requests the whole API may have waiting on
 	// the warehouse at once -- each holds a connection. File-wide only.
 	MaxInFlight int `yaml:"max_in_flight"`
+
+	// MaxInFlightPerTenant is how many of those one tenant may hold, so one
+	// customer's dashboard cannot take the slots another's request needs.
+	// File-wide only, and at most max_in_flight. Raise it when one key
+	// serves many people, such as a gateway in front of a whole product.
+	MaxInFlightPerTenant int `yaml:"max_in_flight_per_tenant"`
 }
 
 const (
@@ -43,9 +49,9 @@ const (
 	// this is not that.
 	hardMaxRows = 100000
 
-	// perTenantInFlight is how many requests one tenant may have waiting on
-	// the warehouse at once. Fixed, for now -- see the plan.
-	perTenantInFlight = 4
+	// defaultMaxInFlightPerTenant is how many requests one tenant may have
+	// waiting on the warehouse at once, unless the file says otherwise.
+	defaultMaxInFlightPerTenant = 4
 
 	// defaultMaxInFlight is the whole API's, across tenants. Each request in
 	// flight is a warehouse connection, and Postgres's default
@@ -76,6 +82,17 @@ func (l *Limits) check(where string) error {
 	}
 	if l.MaxInFlight < 0 {
 		return fmt.Errorf("%s `max_in_flight` cannot be negative", where)
+	}
+	if l.MaxInFlightPerTenant < 0 {
+		return fmt.Errorf("%s `max_in_flight_per_tenant` cannot be negative", where)
+	}
+	ceiling := l.MaxInFlight
+	if ceiling == 0 {
+		ceiling = defaultMaxInFlight
+	}
+	if l.MaxInFlightPerTenant > ceiling {
+		return fmt.Errorf("%s `max_in_flight_per_tenant` is %d, over `max_in_flight` (%d): one tenant cannot hold more than the whole API",
+			where, l.MaxInFlightPerTenant, ceiling)
 	}
 	return nil
 }
@@ -110,6 +127,9 @@ func (l Limits) lowered(endpoint string, own *Limits) (Limits, error) {
 	}
 	if own.MaxInFlight != 0 {
 		return l, fmt.Errorf("endpoint %s sets `max_in_flight`, which bounds the whole API and is the file's", endpoint)
+	}
+	if own.MaxInFlightPerTenant != 0 {
+		return l, fmt.Errorf("endpoint %s sets `max_in_flight_per_tenant`, which bounds a tenant across the API and is the file's", endpoint)
 	}
 	raise := func(what string) error {
 		return fmt.Errorf("endpoint %s raises `%s` over the file's; an endpoint may only lower a limit", endpoint, what)
@@ -185,20 +205,21 @@ func (b ByteSize) String() string {
 
 // slots are each tenant's requests in flight.
 type slots struct {
-	mu   sync.Mutex
-	used map[string]int
+	mu    sync.Mutex
+	used  map[string]int
+	limit int // per tenant
 }
 
 // take reserves one of a tenant's slots, or reports there is none. It never
-// waits: a request queued behind four slow ones is a fifth slow one, and the
-// caller is better told to come back.
+// waits: a request queued behind the tenant's slow ones is one more slow
+// one, and the caller is better told to come back.
 func (s *slots) take(tenant string) (release func(), ok bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.used == nil {
 		s.used = map[string]int{}
 	}
-	if s.used[tenant] >= perTenantInFlight {
+	if s.used[tenant] >= s.limit {
 		return nil, false
 	}
 	s.used[tenant]++

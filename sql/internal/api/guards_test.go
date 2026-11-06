@@ -88,9 +88,10 @@ func TestAnEndpointMayNotRaiseALimit(t *testing.T) {
 	sqlFile := map[string]string{"endpoints/clicks.sql": "select {{ tenant }} {{ campaign }}"}
 	file := strings.Replace(good, "listen:", "limits: {timeout: 5s, max_bytes_billed: 1GiB}\nlisten:", 1)
 	for name, c := range map[string]struct{ own, says string }{
-		"timeout":          {"{timeout: 10s}", "timeout"},
-		"max_bytes_billed": {"{max_bytes_billed: 2GiB}", "max_bytes_billed"},
-		"max_in_flight":    {"{max_in_flight: 4}", "max_in_flight"},
+		"timeout":                  {"{timeout: 10s}", "timeout"},
+		"max_bytes_billed":         {"{max_bytes_billed: 2GiB}", "max_bytes_billed"},
+		"max_in_flight":            {"{max_in_flight: 4}", "max_in_flight"},
+		"max_in_flight_per_tenant": {"{max_in_flight_per_tenant: 2}", "max_in_flight_per_tenant"},
 	} {
 		_, err := fixture(t, file+"    limits: "+c.own+"\n", sqlFile)
 		if err == nil || !strings.Contains(err.Error(), c.says) {

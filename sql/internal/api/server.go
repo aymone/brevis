@@ -63,8 +63,14 @@ func New(cfg *Config) (*Server, error) {
 	if ceiling == 0 {
 		ceiling = defaultMaxInFlight
 	}
+	// The default is not held to the ceiling: it predates the setting, and a
+	// file with `max_in_flight: 2` still loads.
+	perTenant := cfg.Limits.MaxInFlightPerTenant
+	if perTenant == 0 {
+		perTenant = defaultMaxInFlightPerTenant
+	}
 	s := &Server{cfg: cfg, binder: b, mux: http.NewServeMux(), keys: keys, met: newMetrics(),
-		inFlight: make(chan struct{}, ceiling)}
+		inFlight: make(chan struct{}, ceiling), slots: slots{limit: perTenant}}
 	if cfg.Cache != nil {
 		kv := cfg.CacheKV
 		if kv == nil {
@@ -181,7 +187,7 @@ func (s *Server) endpoint(e *Endpoint) http.Handler {
 			if !free {
 				w.Header().Set("Retry-After", "1")
 				refuse(w, http.StatusTooManyRequests, fmt.Sprintf(
-					"%d requests from this key's tenant are already in flight", perTenantInFlight))
+					"%d requests from this key's tenant are already in flight", s.slots.limit))
 				return
 			}
 			ctx, cancel := context.WithTimeout(r.Context(), timeout)
@@ -326,7 +332,7 @@ func (s *Server) answer(parent context.Context, endpoint, tenant, query string, 
 	release, free := s.slots.take(tenant)
 	if !free {
 		return outcome{status: http.StatusTooManyRequests, retry: true, why: fmt.Sprintf(
-			"%d requests from this key's tenant are already waiting on the warehouse", perTenantInFlight)}
+			"%d requests from this key's tenant are already waiting on the warehouse", s.slots.limit)}
 	}
 	// THE SLOT IS HANDED TO THE AFTER when there is one, which gives it back
 	// when it returns -- after this has, if it hangs.

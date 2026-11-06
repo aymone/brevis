@@ -65,6 +65,7 @@ limits:                            # file-wide; an endpoint may only lower them
   max_bytes_billed: 1GiB           # BigQuery; Postgres has nothing to bill
   max_response_bytes: 8MiB         # one answer's JSON, 1KiB to 64MiB
   max_in_flight: 32                # requests waiting on the warehouse, whole API
+  max_in_flight_per_tenant: 4      # of those, how many one tenant may hold
 
 params:                            # definitions an endpoint names with `ref`
   period: {type: period, default: last_7_days}
@@ -248,7 +249,7 @@ would change what the warehouse plans.
 | `404` | authenticated, and the path is not declared |
 | `405` | anything but `GET` and `HEAD` |
 | `422` | BigQuery priced the query over `max_bytes_billed` |
-| `429` | four requests from this tenant are already waiting (`Retry-After`) |
+| `429` | `max_in_flight_per_tenant` requests (4 by default) from this tenant are already waiting (`Retry-After`) |
 | `503` | the API is at `max_in_flight` (`Retry-After`) |
 | `504` | `timeout` reached; the query was canceled, or a hook was abandoned |
 | `500` | the endpoint's SQL cannot render for this request, or one of its [hooks](#hooks-go-compiled-in) failed — its author's to fix; the reason is on the audit line |

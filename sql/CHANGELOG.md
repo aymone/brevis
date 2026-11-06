@@ -17,6 +17,18 @@ and the versions follow [SemVer](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added: `max_in_flight_per_tenant`
+
+- How many requests one tenant may have waiting on the warehouse, set in
+  the file's `limits`. It was fixed at 4 in code. Four is right for one
+  customer per key, and wrong for a key that serves many people, such as
+  a gateway in front of a whole product: there a dashboard that fires its
+  charts at once gets a 429 for every chart past the fourth.
+- Default 4, so a file that does not set it behaves as before. File-wide
+  only, like `max_in_flight`, and refused over it.
+
 ## [0.7.0] — 2026-11-02
 
 ### Changed: the module is `brevis.sh/brevis/sql`

@@ -59,7 +59,7 @@ func TestHangingHooksHoldTheirTenantsSlotsUntilTheyReturn(t *testing.T) {
 			e := build(gate)
 			e.timeout = 30 * time.Millisecond
 			s := beforeServer(t, &warehouse{cols: []string{"day", "n"}}, e, nil)
-			for i := 0; i < perTenantInFlight; i++ {
+			for i := 0; i < defaultMaxInFlightPerTenant; i++ {
 				if rec := get(s, e.Path); rec.Code != http.StatusGatewayTimeout {
 					t.Fatalf("hung request %d answered %d", i, rec.Code)
 				}
@@ -84,7 +84,7 @@ func TestHangingHooksHoldTheirTenantsSlotsUntilTheyReturn(t *testing.T) {
 // A HOOK THAT RETURNS IN TIME GIVES ITS SLOT BACK AT ONCE.
 func TestAHookInTimeHoldsNoSlotAfterwards(t *testing.T) {
 	s := beforeServer(t, &warehouse{cols: []string{"day", "n"}}, daily(t, dayFirst), nil)
-	for i := 0; i < 2*perTenantInFlight; i++ {
+	for i := 0; i < 2*defaultMaxInFlightPerTenant; i++ {
 		if rec := get(s, "/v1/daily"); rec.Code != http.StatusOK {
 			t.Fatalf("request %d answered %d", i, rec.Code)
 		}
